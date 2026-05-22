@@ -50,15 +50,35 @@ vault/
 ├── vault-guide.md         # canonical process doc — read this
 ├── install.sh             # idempotent command installer
 ├── templates/             # decision, feature, session, project-moc, process, architecture
-└── commands/              # work.md, m-capture.md — linked into ~/.claude/commands/ by install.sh
+├── commands/              # v-work.md, v-capture.md — linked into ~/.claude/commands/ by install.sh
+├── tests/                 # bats-core suite, runs in Docker (`make test`)
+└── Makefile               # `make test`, `make shell`
 ```
+
+## Tests
+
+Run the full suite in a Docker container (reproducible, no host pollution):
+
+```bash
+make test
+```
+
+Or scope it:
+
+```bash
+make test-unit
+make test-integration
+make test-e2e
+```
+
+The image is built from `tests/Dockerfile` (alpine + bats-core + bash/git/jq). The repo is mounted **read-only** at `/code`; tests use a tmpfs `$HOME`. Docker is the only host prerequisite.
 
 ## Commands provided
 
 | Command | Purpose |
 |---------|---------|
-| `/work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
-| `/m-capture` | Capture this session into the vault. Dedupes, updates indexes, extracts ADR candidates, cross-links Refs. |
+| `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
+| `/v-capture` | Capture this session into the vault. Dedupes, updates indexes, extracts ADR candidates, cross-links Refs. |
 
 See [`vault-guide.md`](vault-guide.md) §10 for the full command reference.
 

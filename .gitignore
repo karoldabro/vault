@@ -1,0 +1,22 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor swap/backup
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Tooling
+node_modules/
+
+# Test artifacts
+tests/tmp/
+tests/.bats-cache/
+tests/fixtures/**/.git/

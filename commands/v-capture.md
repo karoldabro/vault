@@ -1,10 +1,10 @@
 ---
-description: Capture this session as a vault sessions/*.md doc. Runs dedupe vs recent sessions, auto-updates indexes, extracts ADR candidates, cross-links Refs. Supercedes /m-save.
+description: Capture this session as a vault sessions/*.md doc. Runs dedupe vs recent sessions, auto-updates indexes, extracts ADR candidates, cross-links Refs.
 ---
 
-# /m-capture — Enhanced session capture
+# /v-capture — Enhanced session capture
 
-Force-write this session into the project vault. Beyond `/m-save`, this command:
+Force-write this session into the project vault. This command:
 
 1. **Dedupes** vs the last 10 sessions and offers to append to an existing one if topics overlap.
 2. **Auto-updates** `_moc.md` and `_feature-index.md` when affected.
@@ -167,7 +167,7 @@ One line per item. No further commentary unless the user asks.
 
 ## Idempotency
 
-Re-running `/m-capture` on the same session within the same minute:
+Re-running `/v-capture` on the same session within the same minute:
 - Same filename slug → overwrite is OK (content updates).
 - Do NOT duplicate the MOC line: check for existing wikilink to the same session file before prepending.
 - Do NOT re-extract ADR candidates that were already promoted in a prior run.

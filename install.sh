@@ -39,9 +39,26 @@ for src in "${COMMANDS_DIR}"/*.md; do
     fi
 done
 
+pruned=0
+# Prune stale symlinks: any symlink in TARGET_DIR pointing into our COMMANDS_DIR
+# whose source file no longer exists (renamed/deleted in framework).
+for link in "${TARGET_DIR}"/*.md; do
+    [ -L "${link}" ] || continue
+    src="$(readlink "${link}")"
+    case "${src}" in
+        "${COMMANDS_DIR}"/*)
+            if [ ! -e "${src}" ]; then
+                rm "${link}"
+                pruned=$((pruned + 1))
+            fi
+            ;;
+    esac
+done
+
 echo "Vault framework installed."
 echo "  Linked:  ${linked}"
 echo "  Skipped: ${skipped} (already correct)"
+echo "  Pruned:  ${pruned} (stale symlinks removed)"
 if [ "${refused}" -gt 0 ]; then
     echo "  Refused: ${refused} (see warnings above)" >&2
     exit 1

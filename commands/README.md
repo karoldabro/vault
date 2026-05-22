@@ -6,8 +6,8 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 
 | File | Slash command | What it does |
 |------|---------------|--------------|
-| `work.md` | `/work` | Vault-aware development lifecycle. |
-| `m-capture.md` | `/m-capture` | Enhanced session capture. |
+| `v-work.md` | `/v-work` | Vault-aware development lifecycle. |
+| `v-capture.md` | `/v-capture` | Enhanced session capture. |
 
 See `../vault-guide.md` §10 for usage notes.
 

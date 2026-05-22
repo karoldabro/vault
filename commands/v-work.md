@@ -2,7 +2,7 @@
 description: Vault-aware development lifecycle. Loads context → proposes solution + vault writes (with dedupe) → approval → execute → commit + capture.
 ---
 
-# /work — Vault-aware development lifecycle
+# /v-work — Vault-aware development lifecycle
 
 Mirrors `/dev` but vault-first: every step considers what knowledge to load and what to write back. Self-contained — no dependencies on `~/.claude/shared-commands/`.
 
@@ -173,7 +173,7 @@ git commit -m "docs(vault): <what changed>"
 
 ### 6.3 — Capture session
 
-Invoke `/m-capture` to write the session log. It will dedupe vs recent sessions, update indexes, extract ADR candidates, and cross-link Refs.
+Invoke `/v-capture` to write the session log. It will dedupe vs recent sessions, update indexes, extract ADR candidates, and cross-link Refs.
 
 Mark COMMIT + CAPTURE `completed`.
 

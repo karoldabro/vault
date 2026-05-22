@@ -82,7 +82,7 @@ Located in `_process/templates/`:
 |----------|---------|
 | `decision.md` | New ADR. Sequential ID from `_inventory.md`. |
 | `feature.md` | New feature dossier. |
-| `session.md` | New session log. Usually written by `/m-capture`. |
+| `session.md` | New session log. Usually written by `/v-capture`. |
 | `project-moc.md` | First-time project setup. |
 | `process.md` | Repeatable workflow. |
 | `architecture.md` | System-level design doc. |
@@ -130,7 +130,7 @@ If unsure between session and feature: session captures **this work**; feature c
 
 ## 7. Duplicate avoidance protocol
 
-**Before writing any new doc, run dedupe.** Both `/work` and `/m-capture` invoke this automatically; do it manually for ad-hoc writes.
+**Before writing any new doc, run dedupe.** Both `/v-work` and `/v-capture` invoke this automatically; do it manually for ad-hoc writes.
 
 Steps (OV-optional; works without OpenViking):
 
@@ -166,7 +166,7 @@ Re-running dedupe on the same input should produce stable results. If a doc is m
 
 ## 9. Keeping the vault current
 
-Post-work checklist (after `/work` finishes, or manually):
+Post-work checklist (after `/v-work` finishes, or manually):
 
 - [ ] New feature/process doc → linked from `_moc.md`?
 - [ ] Feature row changed → `_feature-index.md` updated?
@@ -189,14 +189,14 @@ Installed by `_process/install.sh` (symlinks to `~/.claude/commands/`):
 
 | Command | Purpose |
 |---------|---------|
-| `/work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
-| `/m-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs. Supercedes `/m-save`. |
+| `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
+| `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs. |
 
 Pre-existing host commands (separate install, not in this framework):
 
 | Command | Purpose |
 |---------|---------|
-| `/m-save` | Older capture; alias of `/m-capture` if installed. |
+| `/m-save` | Older capture; alias of `/v-capture` if installed. |
 | `/m-resume` | Force fresh context recall. |
 | `/vault-sync` | Re-ingest vault into OpenViking. |
 | `/link-project` | Declare coupled-group between projects. |

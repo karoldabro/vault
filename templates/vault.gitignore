@@ -1,0 +1,38 @@
+# Template gitignore for project vault repos (~/vault/<slug>/).
+# Copied by `vault init` into each new vault.
+
+# Machine layer — local-only symlinks, never commit.
+memory/parent
+memory/parent/
+memory/auto-recall/
+memory/cache/
+
+# Graphify output — lives in the code repo, symlinked here.
+graphify/
+graphify-out/
+
+# Serena — per-host MCP state.
+serena/
+.serena/
+
+# Obsidian per-host UI state. Keep core config (.obsidian/app.json etc.).
+.obsidian/workspace*.json
+.obsidian/cache/
+.obsidian/plugins/*/data.json
+.obsidian/hotkeys.json
+
+# Trash + scratch
+.trash/
+*.tmp.md
+*.draft.md
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
