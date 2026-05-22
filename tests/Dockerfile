@@ -7,6 +7,7 @@ RUN apk add --no-cache \
     grep \
     findutils \
     coreutils \
+    curl \
     jq
 
 WORKDIR /code

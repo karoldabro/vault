@@ -14,14 +14,31 @@ See [`vault-guide.md`](vault-guide.md) for full process documentation.
 
 ## Install (per machine)
 
-Clone, then run `install.sh`. It symlinks the commands into `~/.claude/commands/`.
-
 ```bash
 git clone git@github.com:karoldabro/vault.git ~/workspace/vault
-cd ~/workspace/vault && ./install.sh
+cd ~/workspace/vault && ./setup.sh --minimal --yes
 ```
 
-Idempotent. Re-run after pulling updates to refresh links. Refuses to overwrite any non-symlink file in `~/.claude/commands/`.
+`setup.sh` is the umbrella installer. It checks prereqs, scaffolds `~/vault/_global/`, optionally wires OpenViking + Graphify, then calls `install.sh` to symlink the slash commands.
+
+Flags:
+
+| Flag | Effect |
+|------|--------|
+| `--minimal` | Just the framework — skip OV + Graphify. |
+| `--with-ov` | Wire OpenViking (writes `~/.openviking/ov.conf`, prints Ollama / plugin install hints). |
+| `--with-graphify` | Print Graphify install hints. |
+| `--yes`, `-y` | Non-interactive. |
+
+Network-requiring installs (Ollama, pipx) are never auto-executed — `setup.sh` prints the exact command to run. Re-run anytime; it's idempotent.
+
+For just refreshing the symlinks after a `git pull`:
+
+```bash
+./install.sh
+```
+
+Idempotent; refuses to overwrite any non-symlink in `~/.claude/commands/`; prunes stale symlinks pointing at deleted command sources.
 
 ## Attach to a project (per project)
 
@@ -48,6 +65,7 @@ git submodule update --init
 vault/
 ├── README.md              # this file
 ├── vault-guide.md         # canonical process doc — read this
+├── setup.sh               # umbrella installer (prereqs, OV, Graphify, machine layer)
 ├── install.sh             # idempotent command installer
 ├── templates/             # decision, feature, session, project-moc, process, architecture
 ├── commands/              # v-work.md, v-capture.md — linked into ~/.claude/commands/ by install.sh
