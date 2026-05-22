@@ -42,14 +42,12 @@ Idempotent; refuses to overwrite any non-symlink in `~/.claude/commands/`; prune
 
 ## Attach to a project (per project)
 
-Inside a per-project vault repo:
-
 ```bash
-git submodule add git@github.com:karoldabro/vault.git _process
-git commit -m "chore(vault): attach framework as submodule"
+cd ~/workspace/<your-code-repo>
+~/workspace/vault/bin/vault-init.sh
 ```
 
-Then link `[[_process/vault-guide]]` from the project's `_moc.md`.
+This creates `~/vault/<slug>/`, attaches the framework as a `_process/` submodule, scaffolds folders + indexes, writes `.gitignore`, registers the slug in `~/vault/_global/coupled-groups.md`, appends a memory-stack snippet to the code repo's `CLAUDE.md`, and makes the initial commit. See `commands/v-init.md` for flags.
 
 After cloning a project vault elsewhere:
 
@@ -67,6 +65,7 @@ vault/
 ├── vault-guide.md         # canonical process doc — read this
 ├── setup.sh               # umbrella installer (prereqs, OV, Graphify, machine layer)
 ├── install.sh             # idempotent command installer
+├── bin/                   # vault-init.sh and other host-callable scripts
 ├── templates/             # decision, feature, session, project-moc, process, architecture
 ├── commands/              # v-work.md, v-capture.md — linked into ~/.claude/commands/ by install.sh
 ├── tests/                 # bats-core suite, runs in Docker (`make test`)

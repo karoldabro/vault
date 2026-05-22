@@ -26,10 +26,12 @@ teardown() {
 
 @test "install.sh is idempotent (second run links 0, skips all)" {
     "${VAULT_ROOT}/install.sh" >/dev/null
+    # Count command sources excluding the README, which install.sh skips.
+    expected="$(find "${VAULT_ROOT}/commands" -maxdepth 1 -name '*.md' ! -name 'README.md' | wc -l | tr -d ' ')"
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
     [[ "$output" == *"Linked:  0"* ]]
-    [[ "$output" == *"Skipped: 2"* ]]
+    [[ "$output" == *"Skipped: ${expected}"* ]]
 }
 
 @test "install.sh refuses to overwrite a non-symlink command file" {
