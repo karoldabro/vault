@@ -189,18 +189,13 @@ Installed by `_process/install.sh` (symlinks to `~/.claude/commands/`):
 
 | Command | Purpose |
 |---------|---------|
+| `/v-init` | Bootstrap a project vault for the current code repo. Creates `~/vault/<slug>/`, attaches framework as `_process/` submodule, scaffolds folders + indexes, wires CLAUDE.md. |
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
 | `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs. |
-
-Pre-existing host commands (separate install, not in this framework):
-
-| Command | Purpose |
-|---------|---------|
-| `/m-save` | Older capture; alias of `/v-capture` if installed. |
-| `/m-resume` | Force fresh context recall. |
-| `/vault-sync` | Re-ingest vault into OpenViking. |
-| `/link-project` | Declare coupled-group between projects. |
-| `/vault-onboard` | Wire a new repo into vault + OV + Graphify. |
+| `/v-resume` | Force fresh context recall from vault + OpenViking. Arg: topic, project slug, or `all`. |
+| `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. |
+| `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. |
+| `/v-backfill` | Targeted ingest of past Claude Code sessions for a project into OpenViking. |
 
 ---
 

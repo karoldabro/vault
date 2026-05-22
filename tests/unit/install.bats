@@ -14,8 +14,9 @@ teardown() {
 @test "install.sh creates symlinks for each command in commands/" {
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
-    assert_symlink_to "${HOME}/.claude/commands/v-work.md"    "${VAULT_ROOT}/commands/v-work.md"
-    assert_symlink_to "${HOME}/.claude/commands/v-capture.md" "${VAULT_ROOT}/commands/v-capture.md"
+    for cmd in v-init v-work v-capture v-resume v-sync v-link v-backfill; do
+        assert_symlink_to "${HOME}/.claude/commands/${cmd}.md" "${VAULT_ROOT}/commands/${cmd}.md"
+    done
 }
 
 @test "install.sh skips commands/README.md" {

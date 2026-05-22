@@ -19,7 +19,7 @@ OV-optional: every OV call has a grep fallback.
 
 1. From `$PWD` or the most-touched file path in this session, derive the project slug.
 2. Match against `~/vault/_global/coupled-groups.md` if present.
-3. Confirm `~/vault/<slug>/` exists. If not, stop and tell the user to run `/vault-onboard <repo-path>` first.
+3. Confirm `~/vault/<slug>/` exists. If not, stop and tell the user to run `/v-init` (from inside the code repo) first.
 
 ---
 
