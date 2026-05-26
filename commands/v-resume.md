@@ -26,8 +26,9 @@ For **project scope**, in this order, stop early when you have enough:
 
 For **topic scope**:
 
-1. Call OV `search_memory` MCP tool with the topic. Read top 5 hits at L1 detail.
-2. If OV is unavailable, fall back to `Grep` over `~/vault/` (markdown only) — slower but functional.
+1. Call OV `memory_recall(query=<topic>)` MCP tool. Read top 5 hits.
+2. In parallel, call claude-mem `search(query=<topic>)` → `timeline(anchor=<top_hit_id>)` for project history context.
+3. If OV is unreachable: call `memory_health()` to diagnose. Only fall back to `Grep` over `~/vault/` after confirming OV is down — grep is slower and misses semantic matches.
 
 For **`all`**:
 

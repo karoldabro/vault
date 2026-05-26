@@ -5,14 +5,19 @@
 #   1. Verify base prereqs (git, curl, jq).
 #   2. Create the machine-layer dir (~/vault/_global/) and coupled-groups.md.
 #   3. Detect Obsidian (hint only).
-#   4. Optional: wire OpenViking (--with-ov) — checks ollama + model + ov.conf.
-#   5. Optional: wire Graphify (--with-graphify) — checks pipx + graphifyy.
-#   6. Print the CLAUDE.md memory-stack snippet if not already present.
-#   7. Run install.sh to symlink slash commands.
+#   4. Required tool: OpenViking (--with-ov) — checks ollama + model + ov.conf.
+#   5. Required tool: Serena (--with-serena) — checks uv + serena binary.
+#   6. Required tool: MorphLLM Fast Apply (--with-morph) — checks MCP registration.
+#   7. Required tool: claude-mem (--with-claude-mem) — checks bun + mcp-search plugin.
+#   8. Optional: wire Graphify (--with-graphify) — checks pipx + graphifyy.
+#   9. Print the CLAUDE.md memory-stack snippet if not already present.
+#  10. Run install.sh to symlink slash commands.
 #
-# Network-requiring installs (ollama, pipx) are NOT auto-executed. setup.sh
-# detects what's missing and prints the exact command to run. This keeps the
-# script safe to re-run, test-friendly, and avoids surprise `curl | bash`.
+# Use --full to wire all four required tools + graphify in one pass.
+#
+# Network-requiring installs are NOT auto-executed. setup.sh detects what's
+# missing and prints the exact command to run. This keeps the script safe to
+# re-run, test-friendly, and avoids surprise `curl | bash`.
 #
 # Environment overrides (used by tests; safe to ignore in real use):
 #   VAULT_HOME              default: $HOME/vault
@@ -27,6 +32,9 @@ CLAUDE_HOME="${CLAUDE_HOME:-${HOME}/.claude}"
 SETUP_SKIP_INSTALL_SH="${SETUP_SKIP_INSTALL_SH:-0}"
 
 with_ov=0
+with_serena=0
+with_morph=0
+with_claude_mem=0
 with_graphify=0
 minimal=0
 assume_yes=0
@@ -35,26 +43,37 @@ usage() {
     cat <<EOF
 Usage: $0 [flags]
 
-Flags:
-  --with-ov         Wire OpenViking (Ollama + nomic-embed-text + ov.conf hint).
-  --with-graphify   Wire Graphify (pipx install graphifyy hint).
-  --minimal         Skip all optional integrations (default if no other flag).
-  --yes             Non-interactive; never prompt.
-  -h, --help        Show this help.
+Required tool flags (wire all four with --full):
+  --with-ov           Wire OpenViking (Ollama + nomic-embed-text + ov.conf hint).
+  --with-serena        Wire Serena language server (uv tool install hint).
+  --with-morph         Wire MorphLLM Fast Apply (MCP registration hint).
+  --with-claude-mem    Wire claude-mem mcp-search server (plugin check).
+  --full               Shorthand for all four required tools + graphify.
+
+Optional:
+  --with-graphify      Wire Graphify (pipx install graphifyy hint).
+  --minimal            Skip all tool wiring (base scaffold only).
+  --yes                Non-interactive; never prompt.
+  -h, --help           Show this help.
 
 Examples:
   $0 --minimal
-  $0 --with-ov --with-graphify --yes
+  $0 --full --yes
+  $0 --with-ov --with-serena --yes
 EOF
 }
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --with-ov)        with_ov=1 ;;
-        --with-graphify)  with_graphify=1 ;;
-        --minimal)        minimal=1 ;;
-        --yes|-y)         assume_yes=1 ;;
-        -h|--help)        usage; exit 0 ;;
+        --with-ov)         with_ov=1 ;;
+        --with-serena)     with_serena=1 ;;
+        --with-morph)      with_morph=1 ;;
+        --with-claude-mem) with_claude_mem=1 ;;
+        --with-graphify)   with_graphify=1 ;;
+        --full)            with_ov=1; with_serena=1; with_morph=1; with_claude_mem=1; with_graphify=1 ;;
+        --minimal)         minimal=1 ;;
+        --yes|-y)          assume_yes=1 ;;
+        -h|--help)         usage; exit 0 ;;
         *) echo "Unknown flag: $1" >&2; usage >&2; exit 2 ;;
     esac
     shift
@@ -62,6 +81,9 @@ done
 
 if [ "${minimal}" -eq 1 ]; then
     with_ov=0
+    with_serena=0
+    with_morph=0
+    with_claude_mem=0
     with_graphify=0
 fi
 
@@ -136,10 +158,10 @@ else
 fi
 
 #------------------------------------------------------------------------------
-# Step 4 — OpenViking (optional)
+# Step 4 — OpenViking (required tool)
 #------------------------------------------------------------------------------
 if [ "${with_ov}" -eq 1 ]; then
-    section "OpenViking"
+    section "OpenViking (required)"
 
     if command -v ollama >/dev/null 2>&1; then
         ok "ollama present"
@@ -172,7 +194,76 @@ EOF
 fi
 
 #------------------------------------------------------------------------------
-# Step 5 — Graphify (optional)
+# Step 5 — Serena (required tool)
+#------------------------------------------------------------------------------
+if [ "${with_serena}" -eq 1 ]; then
+    section "Serena (required)"
+
+    if command -v serena >/dev/null 2>&1; then
+        ok "serena binary present"
+    elif command -v uv >/dev/null 2>&1; then
+        if uv tool list 2>/dev/null | grep -q 'serena'; then
+            ok "serena installed via uv tools"
+        else
+            todo "Install Serena via uv:"
+            info "  uv tool install serena-agent@latest --prerelease=allow"
+        fi
+    else
+        todo "Install uv, then Serena:"
+        info "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+        info "  uv tool install serena-agent@latest --prerelease=allow"
+    fi
+
+    todo "Onboard your project after install:"
+    info "  cd <project-root> && serena init"
+fi
+
+#------------------------------------------------------------------------------
+# Step 6 — MorphLLM Fast Apply (required tool)
+#------------------------------------------------------------------------------
+if [ "${with_morph}" -eq 1 ]; then
+    section "MorphLLM Fast Apply (required)"
+
+    settings_json="${CLAUDE_HOME}/settings.json"
+    if [ -f "${settings_json}" ] && grep -q 'morph' "${settings_json}"; then
+        ok "MorphLLM MCP server found in ${settings_json}"
+    else
+        todo "Register MorphLLM Fast Apply MCP server in Claude Code:"
+        info "  Add to ~/.claude/settings.json mcpServers block:"
+        info '  "morphllm-fast-apply": {'
+        info '    "command": "npx",'
+        info '    "args": ["-y", "@razorback16/morph-mcp"],'
+        info '    "env": { "MORPH_API_KEY": "<your-key>" }'
+        info '  }'
+        info "  Get API key: https://www.morphllm.com"
+    fi
+fi
+
+#------------------------------------------------------------------------------
+# Step 7 — claude-mem / mcp-search (required tool)
+#------------------------------------------------------------------------------
+if [ "${with_claude_mem}" -eq 1 ]; then
+    section "claude-mem / mcp-search (required)"
+
+    if command -v bun >/dev/null 2>&1; then
+        ok "bun present"
+    else
+        todo "Install bun (required by mcp-search):"
+        info "  curl -fsSL https://bun.sh/install | bash"
+    fi
+
+    plugins_json="${CLAUDE_HOME}/plugins/installed_plugins.json"
+    if [ -f "${plugins_json}" ] && grep -q 'claude-mem\|thedotmack' "${plugins_json}"; then
+        ok "claude-mem plugin found"
+    else
+        todo "Install claude-mem plugin in Claude Code:"
+        info "  /plugin install claude-mem@thedotmack"
+        info "  Then verify mcp-search server starts: check ~/.claude/plugins/cache/claude-mem/"
+    fi
+fi
+
+#------------------------------------------------------------------------------
+# Step 8 — Graphify (optional)
 #------------------------------------------------------------------------------
 if [ "${with_graphify}" -eq 1 ]; then
     section "Graphify"
@@ -191,7 +282,7 @@ if [ "${with_graphify}" -eq 1 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 6 — CLAUDE.md snippet
+# Step 9 — CLAUDE.md snippet
 #------------------------------------------------------------------------------
 section "CLAUDE.md memory-stack snippet"
 
@@ -220,7 +311,7 @@ EOF
 fi
 
 #------------------------------------------------------------------------------
-# Step 7 — install.sh (symlink slash commands)
+# Step 10 — install.sh (symlink slash commands)
 #------------------------------------------------------------------------------
 if [ "${SETUP_SKIP_INSTALL_SH}" -eq 1 ]; then
     section "install.sh (skipped via SETUP_SKIP_INSTALL_SH)"

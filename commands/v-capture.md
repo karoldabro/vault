@@ -11,7 +11,7 @@ Force-write this session into the project vault. This command:
 3. **Extracts ADR candidates** by regex-scanning the session for decision-shaped sentences.
 4. **Cross-links** `Refs` by scanning content for `[[wikilinks]]`, `ADR-NNN`, and `features/NN-` patterns.
 
-OV-optional: every OV call has a grep fallback.
+Requires OpenViking and claude-mem. Both push steps are mandatory — do not skip silently.
 
 ---
 
@@ -133,20 +133,28 @@ For each affected feature (frontmatter `features:` array or wikilinks to `featur
 
 ---
 
-## Step 7 — Push to OpenViking (optional)
+## Step 7 — Push to OpenViking + claude-mem
 
-If OV is reachable:
+### 7.1 — OpenViking
+
+Verify OV is reachable:
 ```bash
 curl -sf --max-time 1 http://127.0.0.1:1933/health
 ```
 
-Call the OV `add_episode` MCP tool (registered by the openviking plugin) with:
+Call the OV `add_episode` MCP tool with:
 - `project`: resolved slug
 - `type`: `session`
 - `content`: markdown body
 - `source_path`: session file path
 
-If OV unreachable, skip silently — the vault file will be ingested on next OV reindex.
+If OV unreachable, call `memory_health()` to diagnose. Surface the issue to the user — do not skip silently.
+
+### 7.2 — claude-mem
+
+Call `memory_store(text=<session summary>, role="assistant")` via the mcp-search server to persist the session in the project history layer. Include: goal, key decisions, files touched, gotchas learned.
+
+This feeds the `search()` → `timeline()` → `get_observations()` progressive disclosure in future `/v-work` sessions.
 
 ---
 
@@ -158,7 +166,8 @@ Captured: ~/vault/<slug>/sessions/<filename>.md
   Indexes updated: <_moc.md, _feature-index.md, decisions/_inventory.md>
   ADR candidates: <N found, M promoted>
   Refs: <K links cross-linked>
-  OV: <pushed | skipped>
+  OV: <pushed | unreachable — user notified>
+  claude-mem: <stored | unreachable — user notified>
 ```
 
 One line per item. No further commentary unless the user asks.

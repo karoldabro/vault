@@ -183,23 +183,52 @@ Periodic hygiene (weekly or per-milestone):
 
 ---
 
-## 10. Commands reference
+## 10. Required tools
 
-Installed by `_process/install.sh` (symlinks to `~/.claude/commands/`):
+All vault commands assume these four tools are installed and reachable. Set them up once with `setup.sh`.
 
-| Command | Purpose |
-|---------|---------|
-| `/v-init` | Bootstrap a project vault for the current code repo. Creates `~/vault/<slug>/`, attaches framework as `_process/` submodule, scaffolds folders + indexes, wires CLAUDE.md. |
-| `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
-| `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs. |
-| `/v-resume` | Force fresh context recall from vault + OpenViking. Arg: topic, project slug, or `all`. |
-| `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. |
-| `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. |
-| `/v-backfill` | Targeted ingest of past Claude Code sessions for a project into OpenViking. |
+| Tool | Purpose | Install |
+|------|---------|---------|
+| **OpenViking** | Long-term semantic memory — vault, ADRs, sessions, pitfalls. MCP: `memory_recall`, `memory_store`, `memory_health`. | `setup.sh --with-ov` |
+| **Serena** | Symbol-aware code navigation and refactoring. MCP: `activate_project`, `find_symbol`, `rename`, `replace_symbol_body`. | `uv tool install serena-agent@latest --prerelease=allow` |
+| **MorphLLM Fast Apply** | Bulk multi-file edits at 10k+ tok/sec. MCP: `morph_edit(target_filepath, instructions, code_edit)`. | `setup.sh --with-morph` |
+| **claude-mem** | Project history — progressive disclosure search. MCP: `search`, `timeline`, `get_observations`, `memory_store`. | `setup.sh --with-claude-mem` |
+
+### Token-cost hierarchy (cheapest → most expensive)
+
+Use in order. Stop when you have enough context. Each layer costs 10–100× less than the next.
+
+| Priority | Source | Cost | Use for |
+|----------|--------|------|---------|
+| 1 | OV `memory_recall` | ~100–2000 tok | Vault decisions, ADRs, past sessions, pitfalls |
+| 2 | claude-mem `search` → `timeline` → `get_observations` | ~100→300→1000 tok | Project history, progressive disclosure |
+| 3 | Graphify `query` | ~hundreds tok | Structural orientation (requires `graphify-out/graph.json`) |
+| 4 | Serena `find_symbol`, `get_symbols_overview` | real-time | Semantic code navigation |
+| 5 | Grep / Read | ~1000–20k tok | Last resort — only after layers 1–4 come up empty |
+
+Reading 40 source files costs ~20k tokens. A vault hit costs ~100–2000. Wrong default wastes 100×.
 
 ---
 
-## 11. Project-specific overrides
+## 11. Commands reference
+
+Installed by `_process/install.sh` (symlinks to `~/.claude/commands/`).
+
+All commands require the four tools listed in §10.
+
+| Command | Purpose | Key tools |
+|---------|---------|-----------|
+| `/v-init` | Bootstrap a project vault for the current code repo. Creates `~/vault/<slug>/`, attaches framework as `_process/` submodule, scaffolds folders + indexes, wires CLAUDE.md. | git |
+| `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | OV, claude-mem, Serena, MorphLLM |
+| `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs, pushes to OV + claude-mem. | OV `add_episode`, claude-mem `memory_store` |
+| `/v-resume` | Force fresh context recall from vault + OpenViking + claude-mem. Arg: topic, project slug, or `all`. | OV `memory_recall`, claude-mem `search` |
+| `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. | OV |
+| `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. | — |
+| `/v-backfill` | Targeted ingest of past Claude Code sessions for a project into OpenViking. | OV |
+
+---
+
+## 12. Project-specific overrides
 
 Each project's `_moc.md` or `<project-vault>/conventions.md` may override:
 
