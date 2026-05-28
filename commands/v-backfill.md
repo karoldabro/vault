@@ -24,7 +24,7 @@ If no slug → stop, tell user the syntax + list known slugs from `~/vault/_glob
 
 ## Pre-flight check
 
-- OV server up: `curl -sf http://127.0.0.1:1933/health`. If not, stop with the same instruction as `/v-sync`.
+- OV reachable: call `memory_health()` MCP. If unreachable, stop with the same instruction as `/v-sync`.
 - `claude-extract` on PATH. If not, stop with `pipx install claude-conversation-extractor`.
 
 ## Extract sessions

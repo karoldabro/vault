@@ -142,7 +142,7 @@ Steps (OV-optional; works without OpenViking):
    done | sort -u
    ```
 3. **Check indexes**: open `_feature-index.md`, `decisions/_inventory.md`, `_moc.md`. Look for slug or topic match.
-4. **(Optional) OV semantic search**: if OpenViking is up (`curl -sf 127.0.0.1:1933/health`), call `search_memory` with the topic; read top 5 results.
+4. **(Optional) OV semantic search**: probe `memory_health()`; if healthy, call `memory_recall` with the topic and read top 5 results. (OV is a Claude Code MCP plugin — reachability is probed via MCP, not `curl`.)
 5. **Apply rule**: if any existing doc covers `>60%` of the topic → **update existing**, do not create a new file.
 6. **Naming guards**:
    - ADRs: next free sequential number from `_inventory.md`.
@@ -220,7 +220,7 @@ All commands require the four tools listed in §10.
 |---------|---------|-----------|
 | `/v-init` | Bootstrap a project vault for the current code repo. Creates `~/vault/<slug>/`, attaches framework as `_process/` submodule, scaffolds folders + indexes, wires CLAUDE.md. | git |
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | OV, claude-mem, Serena, MorphLLM |
-| `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs, pushes to OV + claude-mem. | OV `add_episode`, claude-mem `memory_store` |
+| `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs, pushes to OV. (claude-mem auto-captures via its SessionEnd hook — no explicit write.) | OV `memory_store`; claude-mem auto-capture (SessionEnd hook) |
 | `/v-resume` | Force fresh context recall from vault + OpenViking + claude-mem. Arg: topic, project slug, or `all`. | OV `memory_recall`, claude-mem `search` |
 | `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. | OV |
 | `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. | — |

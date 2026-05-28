@@ -14,7 +14,7 @@ All four tools are required. Check each at session start before proceeding.
 
 | Tool | Health check | If missing |
 |------|-------------|------------|
-| **OpenViking** | `curl -sf --max-time 1 http://127.0.0.1:1933/health` | WARN user — do not silently skip or grep-fallback |
+| **OpenViking** | `memory_health()` MCP call (OV is a Claude Code plugin — never `curl`) | WARN user — do not silently skip or grep-fallback |
 | **Serena** | `check_onboarding_performed()` | Ask user to run `serena init` and onboard the project |
 | **MorphLLM Fast Apply** | (MCP tool — no runtime check) | Required for all bulk multi-file edits; confirm server registered |
 | **claude-mem** | `search("test", limit=1)` via mcp-search | WARN user if mcp-search server unreachable |
@@ -298,15 +298,17 @@ git commit -m "docs(vault): <what changed>"
 
 ### 6.3 — Push to OpenViking
 
-Call the OV `add_episode` MCP tool with:
-- `project`: resolved slug
-- `type`: `session`
-- `content`: summary of what was done
-- `source_path`: session file path (written by /v-capture)
+Probe `memory_health()` first. If unreachable, surface to user and skip — do not fail silently.
 
-### 6.4 — Push to claude-mem
+Call the OV `memory_store` MCP tool with:
+- `text`: summary of what was done (link to session file written by `/v-capture`)
+- `role`: `"assistant"`
 
-Call `memory_store(text=<session summary>, role="assistant")` via mcp-search to persist the session in the project history layer.
+OV is a Claude Code MCP plugin — only `memory_store`, `memory_recall`, `memory_health`, `memory_forget` are available. There is no `add_episode` tool.
+
+### 6.4 — claude-mem
+
+No action needed. claude-mem auto-captures this session via its SessionEnd hook. The `mcp-search` server is read-only (search/timeline/get_observations only) — there is no write tool.
 
 ### 6.5 — Capture session
 

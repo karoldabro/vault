@@ -137,24 +137,17 @@ For each affected feature (frontmatter `features:` array or wikilinks to `featur
 
 ### 7.1 — OpenViking
 
-Verify OV is reachable:
-```bash
-curl -sf --max-time 1 http://127.0.0.1:1933/health
-```
+Probe `memory_health()` first. If unreachable, surface the issue to the user and skip the push — do not fail silently.
 
-Call the OV `add_episode` MCP tool with:
-- `project`: resolved slug
-- `type`: `session`
-- `content`: markdown body
-- `source_path`: session file path
+Call the OV `memory_store` MCP tool with:
+- `text`: session summary (goal, key decisions, files touched, gotchas learned, link to session file)
+- `role`: `"assistant"`
 
-If OV unreachable, call `memory_health()` to diagnose. Surface the issue to the user — do not skip silently.
+OV is a Claude Code MCP plugin (`mcp__plugin_openviking-memory_*`). Never `curl` it — the model has no HTTP reachability, only MCP tools.
 
 ### 7.2 — claude-mem
 
-Call `memory_store(text=<session summary>, role="assistant")` via the mcp-search server to persist the session in the project history layer. Include: goal, key decisions, files touched, gotchas learned.
-
-This feeds the `search()` → `timeline()` → `get_observations()` progressive disclosure in future `/v-work` sessions.
+No action needed. claude-mem auto-captures this session via its SessionEnd hook (compression). The `mcp-search` server is read-only — it exposes no write tool. Future `/v-work` sessions will see this session via `search()` → `timeline()` → `get_observations()`.
 
 ---
 
@@ -166,8 +159,8 @@ Captured: ~/vault/<slug>/sessions/<filename>.md
   Indexes updated: <_moc.md, _feature-index.md, decisions/_inventory.md>
   ADR candidates: <N found, M promoted>
   Refs: <K links cross-linked>
-  OV: <pushed | unreachable — user notified>
-  claude-mem: <stored | unreachable — user notified>
+  OV: <pushed via memory_store | memory_health unreachable — user notified>
+  claude-mem: auto-capture on session end
 ```
 
 One line per item. No further commentary unless the user asks.

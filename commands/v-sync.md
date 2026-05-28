@@ -61,5 +61,5 @@ If multiple slugs in a group, print one block per slug + a "Group total" footer.
 ## Safety
 
 - Never `ov rm viking://resources` (the root). Always operate on a specific sub-URI.
-- Confirm OV server is up before starting: `curl -sf http://127.0.0.1:1933/health`. If not, stop and say "OV server not running — `systemctl --user start openviking.service`" — do not attempt to start it from this command.
+- Confirm OV is reachable before starting: call `memory_health()` MCP. If unreachable, stop and tell the user "OV server not running — `systemctl --user start openviking.service`" — do not attempt to start it from this command. (OV is a Claude Code plugin; reachability is probed via MCP, not `curl`.)
 - This command is for re-ingest of *current* state. For raw chat backfill see `/v-backfill`.
