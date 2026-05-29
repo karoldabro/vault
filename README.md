@@ -19,15 +19,20 @@ git clone git@github.com:karoldabro/vault.git ~/workspace/vault
 cd ~/workspace/vault && ./setup.sh --minimal --yes
 ```
 
-`setup.sh` is the umbrella installer. It checks prereqs, scaffolds `~/vault/_global/`, optionally wires OpenViking + Graphify, then calls `install.sh` to symlink the slash commands.
+`setup.sh` is the umbrella installer. It checks prereqs, scaffolds `~/vault/_global/`, wires the
+required tools (OpenViking, Serena, MorphLLM, claude-mem) plus Graphify, then calls `install.sh` to
+symlink the slash commands. `--minimal` (above) skips the tools for a framework-only install — but
+the commands assume the tools are present, so prefer `--full` on a real workstation.
 
 Flags:
 
 | Flag | Effect |
 |------|--------|
-| `--minimal` | Just the framework — skip OV + Graphify. |
+| `--full` | Wire all four required tools + Graphify in one pass (recommended). |
+| `--minimal` | Framework only — skip the tools. Commands degrade without them. |
 | `--with-ov` | Wire OpenViking (writes `~/.openviking/ov.conf`, prints Ollama / plugin install hints). |
-| `--with-graphify` | Print Graphify install hints. |
+| `--with-serena` / `--with-morph` / `--with-claude-mem` | Wire one required tool. |
+| `--with-graphify` | Print Graphify install hints (per-project commit hook is installed by `/v-init`). |
 | `--yes`, `-y` | Non-interactive. |
 
 Network-requiring installs (Ollama, pipx) are never auto-executed — `setup.sh` prints the exact command to run. Re-run anytime; it's idempotent.
@@ -99,6 +104,21 @@ The image is built from `tests/Dockerfile` (alpine + bats-core + bash/git/jq). T
 
 See [`vault-guide.md`](vault-guide.md) §10 for the full command reference.
 
-## OpenViking is optional
+## Required tools
 
-Every command has a grep-based fallback for semantic search. The framework works without OpenViking installed; it just goes faster with it.
+The framework assumes four tools are installed and reachable — they are the cheap path that keeps
+token cost down. Wire them all with `./setup.sh --full`:
+
+| Tool | Role |
+|------|------|
+| **OpenViking** | Semantic vault memory (decisions, ADRs, sessions, pitfalls). |
+| **claude-mem** | Project history via progressive-disclosure search. |
+| **Serena** | Symbol-aware code navigation and refactoring. |
+| **MorphLLM Fast Apply** | Targeted multi-line / multi-file edits. |
+
+Plus **Graphify** for structural code questions — its `graph.json` is kept fresh by a per-project
+post-commit hook installed by `/v-init`, so querying it costs no tokens.
+
+Grep / full-file reads are the last resort, used only after these layers come up empty (or to verify
+an exact current line) — not a substitute. See [`vault-guide.md`](vault-guide.md) §10 for the
+token-cost hierarchy and [`tool-playbook.md`](tool-playbook.md) for per-tool rules + examples.

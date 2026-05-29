@@ -132,7 +132,7 @@ If unsure between session and feature: session captures **this work**; feature c
 
 **Before writing any new doc, run dedupe.** Both `/v-work` and `/v-capture` invoke this automatically; do it manually for ad-hoc writes.
 
-Steps (OV-optional; works without OpenViking):
+Steps (OV is the first dedupe layer — grep only after a confirmed `memory_health()` failure):
 
 1. **Extract keywords**: 3–6 short keywords from the intended title/topic.
 2. **Grep the vault**:
@@ -142,7 +142,7 @@ Steps (OV-optional; works without OpenViking):
    done | sort -u
    ```
 3. **Check indexes**: open `_feature-index.md`, `decisions/_inventory.md`, `_moc.md`. Look for slug or topic match.
-4. **(Optional) OV semantic search**: probe `memory_health()`; if healthy, call `memory_recall` with the topic and read top 5 results. (OV is a Claude Code MCP plugin — reachability is probed via MCP, not `curl`.)
+4. **OV semantic search (required)**: probe `memory_health()`; if healthy, call `memory_recall` with the topic and read top 5 results. (OV is a Claude Code MCP plugin — reachability is probed via MCP, not `curl`.) Grep (step 2) is the floor, not a substitute — OV catches semantic matches grep misses.
 5. **Apply rule**: if any existing doc covers `>60%` of the topic → **update existing**, do not create a new file.
 6. **Naming guards**:
    - ADRs: next free sequential number from `_inventory.md`.
@@ -202,11 +202,15 @@ Use in order. Stop when you have enough context. Each layer costs 10–100× les
 |----------|--------|------|---------|
 | 1 | OV `memory_recall` | ~100–2000 tok | Vault decisions, ADRs, past sessions, pitfalls |
 | 2 | claude-mem `search` → `timeline` → `get_observations` | ~100→300→1000 tok | Project history, progressive disclosure |
-| 3 | Graphify `query` | ~hundreds tok | Structural orientation (requires `graphify-out/graph.json`) |
-| 4 | Serena `find_symbol`, `get_symbols_overview` | real-time | Semantic code navigation |
+| 3 | Graphify `query` / `path` | ~hundreds tok | **Structural questions** — what calls X, where is Y defined, which modules touch Z. `graph.json` is auto-rebuilt by the post-commit hook (free, no LLM); query it, never grep |
+| 4 | Serena `find_symbol`, `get_symbols_overview` | real-time | Semantic code navigation — read a symbol, not the whole file |
 | 5 | Grep / Read | ~1000–20k tok | Last resort — only after layers 1–4 come up empty |
 
 Reading 40 source files costs ~20k tokens. A vault hit costs ~100–2000. Wrong default wastes 100×.
+
+**Graph before grep, symbol before full-file read.** The graphify graph stays fresh via a per-project
+post-commit hook (`graphify hook install`, wired by `/v-init`) — so layer 3 is always available at no
+token cost. Full rules + copy-paste examples for every tool: [`tool-playbook.md`](tool-playbook.md).
 
 ---
 

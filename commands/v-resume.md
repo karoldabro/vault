@@ -38,7 +38,10 @@ For **`all`**:
 ## Hard rule
 
 - Do NOT read source code in this command. Vault + memory only. The whole point is to skip the source-read.
-- If `graphify-out/graph.json` is relevant for the *next* user prompt, mention it exists — don't dump it.
+- If the *next* user prompt is likely structural (what calls X, where is Y, module deps), note that
+  the graphify graph is available — `graph.json` is kept fresh by the post-commit hook — and answer
+  from `graphify query` / `graphify path` rather than grepping source. Don't dump the graph here.
+  See [`_process/tool-playbook.md`](../tool-playbook.md) §3.
 
 ## Output
 

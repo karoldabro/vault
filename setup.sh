@@ -279,6 +279,8 @@ if [ "${with_graphify}" -eq 1 ]; then
         info "  macOS:   brew install pipx"
         info "  Then:    pipx install graphifyy"
     fi
+    info "Per-project graph: /v-init installs the post-commit hook so graph.json stays"
+    info "fresh for free — letting /v-work query structure instead of grepping source."
 fi
 
 #------------------------------------------------------------------------------

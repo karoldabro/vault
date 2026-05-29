@@ -57,6 +57,7 @@ Mark ANALYZE `completed`.
 Stop as soon as you have enough. **Do not read source code in this step.**
 
 Query in priority order — cheapest first. Each layer costs 10–100× less than reading source files.
+**Graph before grep, symbol before full-file read.** Full per-tool rules + examples: [`_process/tool-playbook.md`](../tool-playbook.md).
 
 ### 2.1 — OpenViking (vault memory — always first)
 
@@ -87,13 +88,21 @@ Stop after Layer 1 if nothing relevant. Progress to Layer 2/3 only for promising
 - Read `<project-vault>/_moc.md`.
 - Read `<project-vault>/_process/vault-guide.md` if not already read this session.
 
-### 2.4 — Graphify (structural orientation)
+### 2.4 — Graphify (structural orientation — REQUIRED for structural questions)
 
-If `graphify-out/graph.json` exists in the project root:
-- `graphify query "<question>"` — where is X defined, what calls Y, which modules touch Z
-- `graphify path "A" "B"` — dependency chain
+`graph.json` is kept fresh by the per-project post-commit hook (`graphify hook install`, wired by
+`/v-init`) — AST extraction, no LLM, no token cost. For **any** structural question — what calls X,
+where is Y defined, which modules touch Z, dependency chains — query the graph **before** Serena or
+grep. Never grep source to answer a structural question.
 
-Cost: ~hundreds of tokens vs thousands for recursive grep. Use this before opening any source files.
+```
+graphify query "validateUserToken callers"      # ~200 tok vs ~10k for recursive grep + reads
+graphify path "AuthModule" "DatabaseConnection"  # dependency chain with intermediate nodes
+```
+
+If `graphify-out/graph.json` is missing, the hook isn't installed: surface it and offer
+`graphify hook install` + an initial `graphify .` build. Do **not** silently grep instead. Full
+rules: [`_process/tool-playbook.md`](../tool-playbook.md) §3.
 
 ### 2.5 — Serena (semantic navigation — if code change implied)
 
@@ -167,9 +176,18 @@ Read selectively based on task keywords:
 | auth, permission, policy, role | Authorization patterns |
 | test, testing | Testing guidelines |
 
-Use `find_symbol()`, `get_symbols_overview()`, `find_referencing_symbols()` to locate relevant code before listing files in the proposal.
+Use `find_symbol()`, `get_symbols_overview()`, `find_referencing_symbols()` to locate relevant code
+before listing files — read symbols, not whole files:
 
-If Serena unavailable or project not onboarded, surface that to the user and proceed with Glob/Grep/Read.
+```
+get_symbols_overview(relative_path="src/services/PaymentProcessor.ts")   # outline, ~500 tok vs ~2-3k full file
+find_symbol(name_path="PaymentProcessor/process", include_body=false)    # locate without pulling the body
+find_referencing_symbols(name_path="fetchUser", relative_path="src/api/users.ts")  # all call sites, no grep
+```
+
+If Serena is unavailable or the project isn't onboarded, surface it and offer to run `serena init` /
+onboarding. Do **not** silently fall back to reading whole files with Glob/Grep/Read. Full rules:
+[`_process/tool-playbook.md`](../tool-playbook.md) §4.
 
 ### 3.2 — Dedupe per proposed write
 
@@ -235,7 +253,26 @@ git checkout -b feature/<descriptive-task-name>
 | Symbol rename (project-wide) | Serena `rename()` | `sed -i` across files |
 | Extract method / move function | Serena refactor tools | manual copy-paste |
 
-**MorphLLM triggers:** multi-file edits, framework updates, style enforcement, mass replacements. Parameters: `morph_edit(target_filepath, instructions, code_edit)` using `// ... existing code ...` markers. Token efficiency gain: 30–50%.
+**MorphLLM triggers:** multi-file edits, framework updates, style enforcement, mass replacements.
+`morph_edit(target_filepath, instructions, code_edit)`. **Always include `// ... existing code ...`
+markers at both ends** of `code_edit` — omitting them deletes the rest of the file. You transmit only
+changed lines, so a partial edit costs ~30–50% of a full-file rewrite.
+
+```
+morph_edit(
+  target_filepath="src/auth.ts",
+  instructions="Add validation for missing/short tokens to validateToken",
+  code_edit="""// ... existing code ...
+  function validateToken(token) {
+    if (!token) throw new Error("Token is required");
+    if (token.length < 20) throw new Error("Token too short");
+    return decode(token);
+  }
+  // ... existing code ..."""
+)
+```
+
+Full rules: [`_process/tool-playbook.md`](../tool-playbook.md) §5.
 
 **Serena triggers:** rename with dependency tracking, extract method, move function, project-wide symbol operations. Not for text replacements.
 
