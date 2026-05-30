@@ -27,12 +27,31 @@ teardown() {
 
 @test "install.sh is idempotent (second run links 0, skips all)" {
     "${VAULT_ROOT}/install.sh" >/dev/null
-    # Count command sources excluding the README, which install.sh skips.
-    expected="$(find "${VAULT_ROOT}/commands" -maxdepth 1 -name '*.md' ! -name 'README.md' | wc -l | tr -d ' ')"
+    # Count command sources (md files excluding README) plus command subdirectories — both are linked.
+    files="$(find "${VAULT_ROOT}/commands" -maxdepth 1 -name '*.md' ! -name 'README.md' | wc -l | tr -d ' ')"
+    dirs="$(find "${VAULT_ROOT}/commands" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+    expected=$((files + dirs))
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
     [[ "$output" == *"Linked:  0"* ]]
     [[ "$output" == *"Skipped: ${expected}"* ]]
+}
+
+@test "install.sh symlinks command subdirectories (e.g. v-work/)" {
+    run "${VAULT_ROOT}/install.sh"
+    [ "$status" -eq 0 ]
+    assert_symlink_to "${HOME}/.claude/commands/v-work" "${VAULT_ROOT}/commands/v-work"
+    # Step files resolve through the directory symlink.
+    [ -f "${HOME}/.claude/commands/v-work/steps/01-analyze.md" ]
+}
+
+@test "install.sh prunes a stale command-subdir symlink for a deleted source" {
+    "${VAULT_ROOT}/install.sh" >/dev/null
+    ln -s "${VAULT_ROOT}/commands/ghost-dir" "${HOME}/.claude/commands/ghost-dir"
+    run "${VAULT_ROOT}/install.sh"
+    [ "$status" -eq 0 ]
+    [ ! -L "${HOME}/.claude/commands/ghost-dir" ]
+    [[ "$output" == *"Pruned:  1"* ]]
 }
 
 @test "install.sh refuses to overwrite a non-symlink command file" {

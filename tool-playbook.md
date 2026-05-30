@@ -176,7 +176,7 @@ For project-wide symbol renames / extract-method, prefer Serena (it tracks refer
 
 - Grepping source to answer "what calls X / where is Y defined" → that's a graphify query (§3).
 - Reading a whole 800-line file to understand structure → `get_symbols_overview` (§4).
-- Rewriting an entire file to change 10 lines → `edit_file` with markers (§5).
+- Rewriting an entire file to change 10 lines → `morph_edit` with markers (§5).
 - `sed`/`awk`/`python`/heredocs to edit file content → use Edit / MultiEdit / Morph / Serena.
 - Silently falling back to grep when a required tool is "unavailable" → confirm it's down first,
   then say so. Don't degrade quietly.

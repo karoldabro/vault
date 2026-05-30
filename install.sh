@@ -39,10 +39,36 @@ for src in "${COMMANDS_DIR}"/*.md; do
     fi
 done
 
+# Symlink command subdirectories too (e.g. commands/v-work/ → ~/.claude/commands/v-work/).
+# A command may ship its step/ref files in a sibling directory; the dispatcher references them at
+# the stable global path ~/.claude/commands/<cmd>/... so they resolve from any project.
+for src in "${COMMANDS_DIR}"/*/; do
+    src="${src%/}"
+    [ -d "${src}" ] || continue
+    name="$(basename "${src}")"
+    target="${TARGET_DIR}/${name}"
+
+    if [ -L "${target}" ]; then
+        current="$(readlink "${target}")"
+        if [ "${current}" = "${src}" ]; then
+            skipped=$((skipped + 1))
+            continue
+        fi
+        ln -sfn "${src}" "${target}"
+        linked=$((linked + 1))
+    elif [ -e "${target}" ]; then
+        echo "REFUSED: ${target} exists and is not a symlink. Move or remove it manually." >&2
+        refused=$((refused + 1))
+    else
+        ln -s "${src}" "${target}"
+        linked=$((linked + 1))
+    fi
+done
+
 pruned=0
-# Prune stale symlinks: any symlink in TARGET_DIR pointing into our COMMANDS_DIR
-# whose source file no longer exists (renamed/deleted in framework).
-for link in "${TARGET_DIR}"/*.md; do
+# Prune stale symlinks: any symlink in TARGET_DIR pointing into our COMMANDS_DIR whose source no
+# longer exists (renamed/deleted in framework). Covers both command files and command subdirs.
+for link in "${TARGET_DIR}"/*; do
     [ -L "${link}" ] || continue
     src="$(readlink "${link}")"
     case "${src}" in
