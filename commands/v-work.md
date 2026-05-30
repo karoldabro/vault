@@ -25,7 +25,7 @@ If any required tool is unavailable, surface the issue before proceeding. Do not
 
 ## On start: create task list
 
-Use `TaskCreate` to add one task per step. Mark `in_progress` when starting, `completed` when done. The task list is the enforcement mechanism — do not skip a step.
+Use `TaskCreate` to add one task per step. Mark `in_progress` when starting, `completed` when done. The task list is the enforcement mechanism — do not skip a step. COMMIT + CAPTURE is only `completed` after `/v-capture` has run — never end the lifecycle without it.
 
 Tasks:
 1. ANALYZE
@@ -59,6 +59,12 @@ Stop as soon as you have enough. **Do not read source code in this step.**
 Query in priority order — cheapest first. Each layer costs 10–100× less than reading source files.
 **Graph before grep, symbol before full-file read.** Full per-tool rules + examples: [`_process/tool-playbook.md`](../tool-playbook.md).
 
+**Fan out with agents.** When scope is uncertain or spans multiple areas, launch up to 3
+**Explore** subagents in parallel (single message, multiple `Agent` calls) instead of serial
+reads — give each a distinct focus, e.g. vault decisions/guidelines · code structure · tests.
+One Explore agent is enough for an isolated task with known files. The agents return
+conclusions; you keep the context lean.
+
 ### 2.1 — OpenViking (vault memory — always first)
 
 **Required.** Call `memory_recall(query=<keywords>)` MCP. Covers vault: decisions, ADRs, past sessions, feature dossiers, pitfalls, lessons learned.
@@ -87,6 +93,31 @@ Stop after Layer 1 if nothing relevant. Progress to Layer 2/3 only for promising
 
 - Read `<project-vault>/_moc.md`.
 - Read `<project-vault>/_process/vault-guide.md` if not already read this session.
+
+### 2.3b — Vault patterns & guidelines (REQUIRED)
+
+Discover guidelines/conventions that constrain this task — **do not skip**. These docs
+override generic defaults.
+
+1. Use the Step-1 keywords. Find matching docs:
+   ```bash
+   grep -ril "<keyword>" <project-vault>/{features,processes,architecture}/ 2>/dev/null
+   ```
+2. Read every match (conventions, patterns, gotchas).
+3. Map common topics to docs you should expect to find:
+
+   | Keywords | Look for |
+   |----------|----------|
+   | api, endpoint, route | API conventions, openapi guide |
+   | queue, job, worker | Queue architecture |
+   | model, migration, schema | Model / DB patterns |
+   | frontend, component, view | Frontend patterns |
+   | auth, permission, policy | Authorization patterns |
+   | test, testing | Testing guidelines |
+
+   These live in `features/` · `processes/` · `architecture/` (per `vault-guide.md` §6) —
+   **not** Serena memories.
+4. If OV §2.1 already surfaced one of these, don't re-read it.
 
 ### 2.4 — Graphify (structural orientation — REQUIRED for structural questions)
 
@@ -140,6 +171,7 @@ Reading 40 source files costs ~20k tokens. A vault hit costs ~100–2000. Wrong 
 OV: [N results — decisions, sessions, pitfalls — or "nothing relevant"]
 claude-mem: [layers used — key findings — or "nothing relevant"]
 MOC: [skimmed]
+Guidelines: [docs read from features/·processes/·architecture/ — or "none matched"]
 Sessions: [top 3 mtime, brief topic each]
 ADRs: [relevant IDs]
 Graph: [used — key findings — or "not available"]
@@ -165,16 +197,9 @@ activate_project()
 list_memories()
 ```
 
-Read selectively based on task keywords:
-
-| Keywords | Memories to read |
-|----------|-----------------|
-| api, endpoint, controller, route | API conventions, openapi guide |
-| queue, job, async, worker | Queue architecture |
-| model, database, migration, schema | Model patterns, DB conventions |
-| frontend, component, view | Frontend patterns |
-| auth, permission, policy, role | Authorization patterns |
-| test, testing | Testing guidelines |
+Read Serena memories relevant to the task keywords (project-specific code conventions).
+Vault guidelines from `features/·processes/·architecture/` were already loaded in §2.3b —
+don't duplicate that here.
 
 Use `find_symbol()`, `get_symbols_overview()`, `find_referencing_symbols()` to locate relevant code
 before listing files — read symbols, not whole files:
@@ -222,6 +247,8 @@ Mark PROPOSE `completed`.
 ## Step 4 — APPROVAL GATE
 
 **STOP.** Present the proposal. Do not proceed until the user explicitly approves.
+Approval covers the whole lifecycle **through capture** (Step 6, including `/v-capture`) —
+not just code execution. Don't re-ask for permission to commit or capture later.
 
 - Approval ("looks good", "go", "yes", "approved") → Step 5
 - Feedback → revise proposal, present again
@@ -235,10 +262,10 @@ Implement code **and** vault docs in lockstep. Do not batch vault writes for the
 
 ### 5.1 — Branch
 
-If not already on a feature branch:
-```bash
-git checkout -b feature/<descriptive-task-name>
-```
+`/v-work` never creates branches. Work on the branch already checked out
+(captured in §2.8 — Git context), including `main`. If isolation is wanted,
+the user branches manually before invoking or asks mid-session. Do not run
+`git checkout -b`.
 
 ### 5.2 — File editing rules
 
@@ -290,6 +317,15 @@ Use `TaskCreate` sub-tasks per unit if work spans many files.
 ### 5.4 — Tests
 
 Run tests after each phase using the project's detected test command (from CLAUDE.md or framework detection). Fix failures before proceeding. After all phases, run the full suite.
+
+### 5.4b — Delegate verification
+
+- After code changes land, spawn `test-writer-fixer` (via the `Agent` tool) to write/repair
+  and run tests for the changed surface.
+- BIG scope (>15 files or API/schema changes): spawn `deploy-review-panel` for
+  architecture / code / test review before COMMIT.
+
+Keep delegation to these two agents — no domain-agent spawning in `/v-work`.
 
 ### 5.5 — Self-review
 
@@ -347,11 +383,15 @@ OV is a Claude Code MCP plugin — only `memory_store`, `memory_recall`, `memory
 
 No action needed. claude-mem auto-captures this session via its SessionEnd hook. The `mcp-search` server is read-only (search/timeline/get_observations only) — there is no write tool.
 
-### 6.5 — Capture session
+### 6.5 — Capture session (mandatory)
 
 Invoke `/v-capture` to write the session log. It will dedupe vs recent sessions, update indexes, extract ADR candidates, and cross-link Refs.
 
-Mark COMMIT + CAPTURE `completed`.
+This is **not optional and needs no user prompt** — it is part of the lifecycle the user
+already approved (Step 4). The COMMIT + CAPTURE task stays `in_progress` until `/v-capture`
+has actually run. Never close out `/v-work` without it.
+
+Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
 
 ---
 
