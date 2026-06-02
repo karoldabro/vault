@@ -45,6 +45,7 @@ Rule of thumb: if a teammate cloning your project repo wouldn't need it, it belo
 ├── features/                # Subject-matter dossiers, one per feature/domain
 │   └── <NN>-<slug>.md or <slug>.md
 ├── graphify/                # Code graph slices (symlinks; .gitignored)
+├── guides/                  # Cross-project integration contracts (API shapes, enums, data flow; no impl code)
 ├── legal/                   # Policies, sub-processors (optional)
 ├── marketing/               # Channels, listings (optional)
 ├── memory/                  # Auto-memory mountpoint (symlink; .gitignored)
@@ -123,6 +124,7 @@ Ask: **what kind of artifact is this?**
 | Time-bound work log: what you did, what you learned, what's next | `sessions/` | `YYYY-MM-DD-HHMM-<slug>.md` |
 | Repeatable workflow (how-to) | `processes/` | `<slug>.md` |
 | Per-machine auto-curated rule | `memory/` (machine layer) | auto-managed |
+| Integration guide (cross-project API contract) | `guides/` | `<slug>.md` |
 
 If unsure between session and feature: session captures **this work**; feature captures **the topic**. Often a session leads to a new/updated feature doc plus the session log itself.
 
@@ -229,6 +231,7 @@ All commands require the four tools listed in §10.
 | `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. | OV |
 | `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. | — |
 | `/v-backfill` | Targeted ingest of past Claude Code sessions for a project into OpenViking. | OV |
+| `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from an existing feature. | OV, graphify, MorphLLM |
 
 ---
 

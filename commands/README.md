@@ -13,6 +13,7 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 | `v-sync.md` | `/v-sync` | Re-ingest curated knowledge into OpenViking. |
 | `v-link.md` | `/v-link` | Declare two projects as coupled. |
 | `v-backfill.md` | `/v-backfill` | Targeted ingest of past Claude Code sessions. |
+| `v-guide.md` | `/v-guide` | Generate a cross-project integration guide from an existing feature. |
 
 See `../vault-guide.md` §10 for usage notes.
 
