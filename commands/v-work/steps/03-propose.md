@@ -53,7 +53,7 @@ run concurrently; serialise only on hard dependencies (schema before service lay
 
 Numbered, ordered **schema/models → services/logic → controllers/routes → views/components → tests**.
 Each step specifies: **File** (exact path), **Action** (class/method/logic summary), **Tool** (from
-`_process/tool-playbook.md` §5), **Pattern** (which existing pattern it follows, from 3a.1).
+`$VAULT_FRAMEWORK_PATH/tool-playbook.md` §5), **Pattern** (which existing pattern it follows, from 3a.1).
 
 ### 3a.5 Test plan
 

@@ -9,6 +9,7 @@ Entry point for the vault framework (`~/workspace/vault/`). Generic process docs
 ## Commands
 
 - [[commands/v-init]] — Bootstrap a project vault
+- [[commands/v-migrate]] — Convert a submodule vault to the global model
 - [[commands/v-work]] — Vault-aware dev lifecycle
 - [[commands/v-capture]] — Session capture + dedupe
 - [[commands/v-resume]] — Force fresh context recall
@@ -19,13 +20,15 @@ Entry point for the vault framework (`~/workspace/vault/`). Generic process docs
 
 ## Templates
 
-- [[_process/templates/decision]] — ADR template
-- [[_process/templates/feature]] — Feature dossier template
-- [[_process/templates/session]] — Session log template
-- [[_process/templates/project-moc]] — Project MOC template
-- [[_process/templates/process]] — Repeatable workflow template
-- [[_process/templates/architecture]] — System-level design doc template
-- [[_process/templates/integration-guide]] — Cross-project API contract template
+- [[templates/decision]] — ADR template
+- [[templates/feature]] — Feature dossier template
+- [[templates/indication]] — Working rule / pattern / standard template
+- [[templates/session]] — Session log template
+- [[templates/project-moc]] — Project MOC template
+- [[templates/process]] — Repeatable workflow template
+- [[templates/architecture]] — System-level design doc template
+- [[templates/integration-guide]] — Cross-project API contract template
+- [[templates/VAULT]] — Per-repo vault config template
 
 ## Guides
 

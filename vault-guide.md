@@ -5,7 +5,7 @@ tags: [framework, process, guide]
 
 # Vault Guide — How to work with the vault
 
-Canonical process doc for any project using the vault framework. Generic and project-agnostic. Project-specific overrides live in the project's own `CLAUDE.md` or `<project-vault>/conventions.md`.
+Canonical process doc for any project using the vault framework. Generic and project-agnostic. Project-specific overrides live in the repo's `VAULT.md` (§1.1), the project's own `CLAUDE.md`, or `<project-vault>/conventions.md`.
 
 > **TL;DR**: The vault is markdown-only knowledge organized in a fixed folder layout. Before writing a new doc, search for duplicates. After meaningful work, capture a session. After a decision, capture an ADR. Update indexes when files appear or change.
 
@@ -17,11 +17,41 @@ Three layers. Each owns different content. Don't mix.
 
 | Layer | Owns | Source of truth | Storage |
 |------|------|------|------|
-| **Framework** | Process docs, templates, commands. Generic. | `git@github.com:karoldabro/vault.git` | Cloned to `~/workspace/vault/`; attached to each project vault as submodule at `_process/` |
-| **Project** | Features, decisions, sessions, MOC, architecture for one product. Specific. | Per-project repo (e.g. `vault.<project>.com`) | `~/vault/<project>/` |
-| **Machine** | Local state: coupled-groups, auto-memory dirs, OV index. Not committed. | Local-only | `~/vault/_global/`, `~/vault/<project>/memory/parent`, OV index |
+| **Framework** | Process docs, templates, commands. Generic. | `git@github.com:karoldabro/vault.git` | Installed once per machine at `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault/`). Read globally — **never** vendored into a project. |
+| **Project** | Features, decisions, sessions, MOC, architecture for one product. Specific. | Per-project vault (global `~/vault/<project>/` or in-repo `<code-repo>/vault/`) | Resolved per command — see §1.1 |
+| **Machine** | Local state: coupled-groups, auto-memory dirs, OV index, install config. Not committed. | Local-only | `~/vault/_global/` (incl. `config.md`), `~/vault/<project>/memory/parent`, OV index |
 
 Rule of thumb: if a teammate cloning your project repo wouldn't need it, it belongs in machine layer, not project.
+
+---
+
+## 1.1 Vault location & config resolution
+
+The framework is a single global install; it is **not** a submodule. Every command resolves two paths
+at the start of a run:
+
+**Framework path** — `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault`, captured at install in
+`~/vault/_global/config.md`). Holds `vault-guide.md`, `templates/`, `tool-playbook.md`, commands. Any
+template or guide reference resolves under it.
+
+**Vault path** — resolved in precedence order (first hit wins):
+
+1. **`<code-repo>/VAULT.md`** → `vault_path` key. Relative paths resolve against the repo root, so
+   `vault_path: ./vault` keeps the vault **inside the repository**; an absolute path
+   (`~/vault/givore`) keeps it global. This is how a repo opts into a non-default location.
+2. **`~/vault/_global/config.md`** → `vault_home` (the global default chosen at install).
+3. **Built-in default** `~/vault/<slug>/`, slug resolved from `coupled-groups.md` or the repo basename.
+
+`VAULT.md` (optional, repo root — template in `$VAULT_FRAMEWORK_PATH/templates/VAULT.md`) carries three
+bounded sections, read on **every** command and folded into the lifecycle:
+
+| Section | Keys | Effect |
+|---------|------|--------|
+| `config` | `vault_path`, `framework_path`, `slug` | Path + identity resolution (above). |
+| `structure` | `add_folders: [...]`, `rename: {std: alias}`, `optional: [...]` | Scaffold extra folders, alias standard ones locally, silence "missing folder" for optional ones. |
+| `behaviour` | `load_context_extra: [...]`, `capture_indications: true\|false` | Folders Step 2 loads beyond defaults; whether capture runs the indication scan. |
+
+Unknown keys are ignored. Absent `VAULT.md` → all defaults, global vault.
 
 ---
 
@@ -32,7 +62,6 @@ Rule of thumb: if a teammate cloning your project repo wouldn't need it, it belo
 ├── _moc.md                  # Map of Contents — entry point, hand-edited
 ├── _feature-index.md        # Master cross-reference table (optional but recommended)
 ├── _tags.md                 # Tag registry (optional)
-├── _process/                # Submodule: framework (read-only from here)
 ├── architecture/            # System-level design docs
 │   └── _overview.md
 ├── business/                # Strategy, roadmap, competitors (optional)
@@ -46,6 +75,9 @@ Rule of thumb: if a teammate cloning your project repo wouldn't need it, it belo
 │   └── <NN>-<slug>.md or <slug>.md
 ├── graphify/                # Code graph slices (symlinks; .gitignored)
 ├── guides/                  # Cross-project integration contracts (API shapes, enums, data flow; no impl code)
+├── indications/             # How to work ON this project: patterns, standards, testing rules
+│   ├── _index.md
+│   └── <slug>.md ...
 ├── legal/                   # Policies, sub-processors (optional)
 ├── marketing/               # Channels, listings (optional)
 ├── memory/                  # Auto-memory mountpoint (symlink; .gitignored)
@@ -69,6 +101,7 @@ Underscore prefix `_*` = meta / index / mountpoint. Always present at folder top
 | `_moc.md` | New feature, process, or architecture doc appears. New section is added. |
 | `_feature-index.md` | A feature row changes (new tables, new pages, new doc). |
 | `decisions/_inventory.md` | Every new ADR. Assigns sequential ID. |
+| `indications/_index.md` | Every new indication (working rule/pattern/standard). |
 | `_tags.md` | New tag introduced. |
 
 If you don't update indexes, the dedupe protocol (§7) won't find your work.
@@ -77,16 +110,18 @@ If you don't update indexes, the dedupe protocol (§7) won't find your work.
 
 ## 4. Templates
 
-Located in `_process/templates/`:
+Located in `$VAULT_FRAMEWORK_PATH/templates/` (default `~/workspace/vault/templates/`):
 
 | Template | Use for |
 |----------|---------|
 | `decision.md` | New ADR. Sequential ID from `_inventory.md`. |
 | `feature.md` | New feature dossier. |
+| `indication.md` | New working rule / pattern / standard. Catalogued in `indications/_index.md`. |
 | `session.md` | New session log. Usually written by `/v-capture`. |
 | `project-moc.md` | First-time project setup. |
 | `process.md` | Repeatable workflow. |
 | `architecture.md` | System-level design doc. |
+| `VAULT.md` | Per-repo config (written into the code repo by `/v-init`). |
 
 Instantiate: copy template, fill frontmatter, write content. Never edit the template itself from a project.
 
@@ -107,7 +142,7 @@ To find stubs:
 ```bash
 grep -rilE "status: ?stub|<!-- TODO -->" <project-vault>/
 # Or by length:
-find <project-vault>/ -name "*.md" -not -path "*/_process/*" \
+find <project-vault>/ -name "*.md" \
   | xargs wc -l | awk '$1 < 40 && $2 != "total" { print }'
 ```
 
@@ -121,12 +156,23 @@ Ask: **what kind of artifact is this?**
 |---------|---------|----------|
 | Reusable trade-off / chosen approach with rationale | `decisions/` | `ADR-NNN-<slug>.md` |
 | Subject-matter knowledge spanning multiple sessions | `features/` (or `architecture/` if system-level) | `<NN>-<slug>.md` or `<slug>.md` |
+| How to work on **this** project: pattern, coding standard, testing convention, instruction | `indications/` | `<slug>.md` |
 | Time-bound work log: what you did, what you learned, what's next | `sessions/` | `YYYY-MM-DD-HHMM-<slug>.md` |
 | Repeatable workflow (how-to) | `processes/` | `<slug>.md` |
 | Per-machine auto-curated rule | `memory/` (machine layer) | auto-managed |
 | Integration guide (cross-project API contract) | `guides/` | `<slug>.md` |
 
 If unsure between session and feature: session captures **this work**; feature captures **the topic**. Often a session leads to a new/updated feature doc plus the session log itself.
+
+**`indications/` vs `guides/` vs `features/`** — easy to confuse, different jobs:
+
+- **`indications/`** is *intra-project*: the patterns, standards, and instructions for working **on this
+  repo** ("controllers stay thin", "tests use factories not fixtures", "migrations are reversible"). Read
+  early in every `/v-work` run; grown ADR-style at capture (§7b).
+- **`guides/`** is *cross-project*: the external contract one repo publishes so **other** repos can build
+  against it (API endpoints, enums, data flow). Written by `/v-guide`.
+- **`features/`** is *subject-matter*: what a domain **does** (scope, contracts, coupling, gotchas) — the
+  dossier for a feature, not the rules for working on the codebase.
 
 ---
 
@@ -140,7 +186,7 @@ Steps (OV is the first dedupe layer — grep only after a confirmed `memory_heal
 2. **Grep the vault**:
    ```bash
    for kw in <keywords>; do
-     grep -ril "$kw" <project-vault>/{decisions,features,sessions,processes,architecture} 2>/dev/null
+     grep -ril "$kw" <project-vault>/{decisions,features,indications,sessions,processes,architecture} 2>/dev/null
    done | sort -u
    ```
 3. **Check indexes**: open `_feature-index.md`, `decisions/_inventory.md`, `_moc.md`. Look for slug or topic match.
@@ -153,6 +199,23 @@ Steps (OV is the first dedupe layer — grep only after a confirmed `memory_heal
    - Avoid two docs with the same slug across folders.
 
 Re-running dedupe on the same input should produce stable results. If a doc is missing from the grep, the indexes were not updated — fix that first.
+
+---
+
+## 7b. Growing `indications/` (working rules)
+
+Indications are detected and promoted ADR-style, at capture time — the same mechanism as ADR candidates,
+aimed at *how-we-work* statements instead of decisions.
+
+1. **Scan** the session + recent conversation for convention-shaped phrasing: `convention:`, `pattern:`,
+   `rule:`, `standard`, `always <verb>`, `never <verb>`, `we use .* for`, `prefer .* over`,
+   `the .* way is`, testing-approach statements.
+2. **Present** each match as a one-line candidate; the user promotes the ones worth keeping.
+3. **Write** each promoted candidate to `indications/<slug>.md` from `indication.md`, append a row to
+   `indications/_index.md`.
+
+Gated by `behaviour.capture_indications` in `VAULT.md` (default on). `/v-work` Step 2 reads `indications/`
+first-class so an existing rule constrains the work instead of being rediscovered.
 
 ---
 
@@ -171,8 +234,9 @@ Re-running dedupe on the same input should produce stable results. If a doc is m
 Post-work checklist (after `/v-work` finishes, or manually):
 
 - [ ] New feature/process doc → linked from `_moc.md`?
-- [ ] Feature row changed → `_feature-index.md` updated?
+- [ ] Feature touched → dossier **created or updated** per the gate (§6 / capture), `_feature-index.md` reconciled?
 - [ ] New ADR → appended to `decisions/_inventory.md`?
+- [ ] New working rule/pattern surfaced → promoted to `indications/` + `_index.md`?
 - [ ] New tag used → registered in `_tags.md`?
 - [ ] Stub upgraded → frontmatter `status: stub` removed?
 - [ ] Session has `Refs` section populated?
@@ -218,13 +282,14 @@ token cost. Full rules + copy-paste examples for every tool: [`tool-playbook.md`
 
 ## 11. Commands reference
 
-Installed by `_process/install.sh` (symlinks to `~/.claude/commands/`).
+Installed by `$VAULT_FRAMEWORK_PATH/install.sh` (symlinks to `~/.claude/commands/`).
 
 All commands require the four tools listed in §10.
 
 | Command | Purpose | Key tools |
 |---------|---------|-----------|
-| `/v-init` | Bootstrap a project vault for the current code repo. Creates `~/vault/<slug>/`, attaches framework as `_process/` submodule, scaffolds folders + indexes, wires CLAUDE.md. | git |
+| `/v-init` | Bootstrap a project vault for the current code repo. Creates the vault (global `~/vault/<slug>/` or in-repo with `--in-repo`), writes a repo `VAULT.md`, scaffolds folders + indexes, wires CLAUDE.md. | git |
+| `/v-migrate` | Convert an existing submodule-based vault to the global model: de-init the `_process/` submodule, write `VAULT.md`, repoint the MOC. | git |
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | OV, claude-mem, Serena, MorphLLM |
 | `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs, pushes to OV. (claude-mem auto-captures via its SessionEnd hook — no explicit write.) | OV `memory_store`; claude-mem auto-capture (SessionEnd hook) |
 | `/v-resume` | Force fresh context recall from vault + OpenViking + claude-mem. Arg: topic, project slug, or `all`. | OV `memory_recall`, claude-mem `search` |
@@ -237,11 +302,15 @@ All commands require the four tools listed in §10.
 
 ## 12. Project-specific overrides
 
-Each project's `_moc.md` or `<project-vault>/conventions.md` may override:
+Two layers, checked in order:
 
-- Feature numbering scheme (e.g. fixed 20-domain set vs free-form slugs).
-- Sub-repo session prefix (e.g. `api-`, `app-`, `dashboard-` for multi-repo products).
-- Whether `architecture/` or `business/` is used.
-- Additional tags beyond the framework default.
+1. **`<code-repo>/VAULT.md`** (§1.1) — structured, machine-read on every command: vault path, extra/renamed
+   folders, per-step load hints, capture toggles.
+2. **`_moc.md` / `<project-vault>/conventions.md`** — prose conventions the framework can't express as
+   config:
+   - Feature numbering scheme (e.g. fixed 20-domain set vs free-form slugs).
+   - Sub-repo session prefix (e.g. `api-`, `app-`, `dashboard-` for multi-repo products).
+   - Whether `architecture/` or `business/` is used.
+   - Additional tags beyond the framework default.
 
-The framework never assumes these; check the project's own conventions before applying.
+The framework never assumes these; check `VAULT.md` then the project's own conventions before applying.

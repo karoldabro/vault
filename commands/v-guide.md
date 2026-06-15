@@ -96,7 +96,7 @@ If a section cannot be determined from context, mark it `<!-- TODO: fill from so
 
 ## Step 4 — Write guide
 
-1. Instantiate `_process/templates/integration-guide.md`:
+1. Instantiate `$VAULT_FRAMEWORK_PATH/templates/integration-guide.md` (default `~/workspace/vault/templates/`):
    - Copy template structure
    - Fill all sections from Step 3 extraction
    - Set frontmatter: `source_project`, `feature_slug`, `generated` (today's date)

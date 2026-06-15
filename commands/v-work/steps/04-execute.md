@@ -26,13 +26,13 @@ including `main`. If isolation is wanted the user branches manually. Do not run 
 `morph_edit(target_filepath, instructions, code_edit)` — **always include `// ... existing code ...`
 markers at both ends** of `code_edit` (omitting them deletes the rest of the file). **Serena** for
 dependency-tracked renames / extract-method. **Best combo:** Serena finds the semantic context →
-Morph applies the precise edit. Full rules + worked example: `_process/tool-playbook.md` §5.
+Morph applies the precise edit. Full rules + worked example: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §5.
 
 ## 4.3 Supporting tools
 
 Framework/library docs → `Context7` (version-specific, not training guesses). 3+ interconnected
 components / root-cause analysis → `Sequential`. UI component → `Magic`. Browser E2E (login, forms,
-journeys) → `Playwright`. Full reference: `_process/tool-playbook.md`.
+journeys) → `Playwright`. Full reference: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
 ## 4.4 Domain mindset
 
@@ -68,8 +68,9 @@ Check every changed file before marking complete.
 
 **Code quality (all scopes):** no god classes (>200 lines / >5 responsibilities) · no deep nesting
 (>3 levels) · no magic numbers/strings · no unused imports / dead / commented-out code ·
-`sed`/`awk`/`python` not used for edits · pattern compliance · input validation at boundaries ·
-no copy-pasted logic (extract shared) · KISS/YAGNI (no premature abstraction).
+`sed`/`awk`/`python` not used for edits · pattern compliance · **every `indications/` rule loaded in
+§2.3a honored** · input validation at boundaries · no copy-pasted logic (extract shared) · KISS/YAGNI
+(no premature abstraction).
 
 **Test quality:** happy + edge + error covered · no happy-path-only · no assertions on internals ·
 no hardcoded test data · names describe scenario + outcome.

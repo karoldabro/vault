@@ -38,7 +38,15 @@ No action — claude-mem auto-captures via its SessionEnd hook. `mcp-search` is 
 
 Invoke `/v-capture` to write the session log — it dedupes vs recent sessions, updates indexes,
 extracts ADR candidates, cross-links Refs. This is part of the lifecycle already approved at the
-gate; it needs no fresh prompt. If you learned any generic, reusable patterns, capture those too.
+gate; it needs no fresh prompt.
+
+`/v-capture` also runs two gates this step depends on — make sure they actually fire:
+
+- **Feature dossier gate** — for every feature this session touched, capture decides CREATE (new
+  domain, no dossier), UPDATE (contracts/gotchas/coupling changed), or SKIP (no durable knowledge),
+  and reconciles `_feature-index.md`. Don't let it silently no-op.
+- **Indication scan** — if a reusable working rule / pattern / standard surfaced, capture offers to
+  promote it to `indications/` (gated by `behaviour.capture_indications`). Confirm the candidates.
 
 ## 5.6 Completion report
 

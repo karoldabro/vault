@@ -41,7 +41,7 @@ For **`all`**:
 - If the *next* user prompt is likely structural (what calls X, where is Y, module deps), note that
   the graphify graph is available — `graph.json` is kept fresh by the post-commit hook — and answer
   from `graphify query` / `graphify path` rather than grepping source. Don't dump the graph here.
-  See [`_process/tool-playbook.md`](../tool-playbook.md) §3.
+  See `$VAULT_FRAMEWORK_PATH/tool-playbook.md` (default `~/workspace/vault/`) §3.
 
 ## Output
 

@@ -3,7 +3,7 @@
 #
 # Responsibilities (idempotent):
 #   1. Verify base prereqs (git, curl, jq).
-#   2. Create the machine-layer dir (~/vault/_global/) and coupled-groups.md.
+#   2. Create the machine-layer dir (~/vault/_global/), config.md, and coupled-groups.md.
 #   3. Detect Obsidian (hint only).
 #   4. Required tool: OpenViking (--with-ov) — checks ollama + model + ov.conf.
 #   5. Required tool: Serena (--with-serena) — checks uv + serena binary.
@@ -120,6 +120,30 @@ section "Machine layer (${VAULT_HOME})"
 
 mkdir -p "${VAULT_HOME}/_global"
 ok "${VAULT_HOME}/_global/"
+
+# Machine config — the global defaults every vault command falls back to when a
+# repo has no VAULT.md. framework_path is this install; vault_home is the default
+# location for global vaults.
+config_md="${VAULT_HOME}/_global/config.md"
+if [ -f "${config_md}" ]; then
+    ok "config.md present"
+else
+    cat > "${config_md}" <<EOF
+---
+type: machine-config
+tags: [config]
+---
+
+# Machine vault config (local-only)
+
+Global defaults for vault commands. A repo's \`VAULT.md\` overrides these per-repo.
+
+## config
+framework_path: ${VAULT_ROOT}
+vault_home: ${VAULT_HOME}
+EOF
+    ok "wrote ${config_md}"
+fi
 
 coupled="${VAULT_HOME}/_global/coupled-groups.md"
 if [ -f "${coupled}" ]; then
@@ -299,15 +323,16 @@ else
   ---8<--- snippet ---8<---
   ## ${snippet_marker}
 
-  Three layers — framework, project, machine. Framework is reachable as
-  \`~/workspace/vault/\` (this repo) or as the \`_process/\` submodule inside
-  any per-project vault under \`~/vault/<slug>/\`.
+  Three layers — framework, project, machine. The framework is a single global
+  install at \`${VAULT_ROOT}\` (\$VAULT_FRAMEWORK_PATH); it is never vendored into
+  a project. Each repo's vault lives globally at \`~/vault/<slug>/\` or in-repo —
+  recorded in the repo's optional \`VAULT.md\`.
 
   Vault commands (installed by this framework):
   - /v-work     — vault-aware dev lifecycle.
   - /v-capture  — capture this session into the vault.
 
-  See \`~/workspace/vault/vault-guide.md\`.
+  See \`${VAULT_ROOT}/vault-guide.md\`.
   ---8<--- snippet ---8<---
 EOF
 fi

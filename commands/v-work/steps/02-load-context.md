@@ -2,7 +2,7 @@
 
 Load all relevant context **before touching source code**. Query cheapest-first; stop as soon as
 you have enough. Each layer costs 10–100× less than reading source. **Graph before grep, symbol
-before full-file read.** Full per-tool rules + examples: `_process/tool-playbook.md`.
+before full-file read.** Full per-tool rules + examples: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
 **Tools are preferred, not gating.** When a token-saving tool is present, use it — do not hand-roll
 grep / full-file reads in its place. When one is genuinely unavailable, confirm via its health check,
@@ -28,20 +28,32 @@ already built, coupled projects (`~/vault/_global/coupled-groups.md`). Cost: ~10
 
 ### 2.3 — Vault MOC + process guide
 
-Read `<project-vault>/_moc.md`. Read `<project-vault>/_process/vault-guide.md` if not already read
+Read `<project-vault>/_moc.md`. Read `$VAULT_FRAMEWORK_PATH/vault-guide.md` if not already read
 this session.
+
+### 2.3a — Indications (working rules — read first-class, do not skip)
+
+`indications/` is the canonical home for *how to work on this project*: patterns, coding standards,
+testing conventions, instructions. Load it before grepping — an existing rule should constrain the
+work, not be rediscovered.
+
+1. Read `<project-vault>/indications/_index.md` (the catalog).
+2. Load every indication whose row matches a Step-1 keyword or the files/layer this task touches.
+3. Treat them as binding constraints for the design (Step 3) and self-review (Step 4 §4.8).
 
 ### 2.3b — Vault patterns & guidelines (do not skip)
 
-Discover guidelines/conventions that constrain this task — they override generic defaults.
+Discover any remaining guidelines/conventions that constrain this task — they override generic defaults.
 
-1. With the Step-1 keywords: `grep -ril "<keyword>" <project-vault>/{features,processes,architecture}/ 2>/dev/null`
+1. With the Step-1 keywords: `grep -ril "<keyword>" <project-vault>/{indications,features,processes,architecture}/ 2>/dev/null`
+   (plus any `load_context_extra` folders from `VAULT.md`).
 2. Read every match (conventions, patterns, gotchas).
 3. Expected docs by topic: api/endpoint→API conventions · queue/job→queue architecture ·
    model/migration→model/DB patterns · frontend/component→frontend patterns ·
    auth/permission→authorization patterns · test→testing guidelines.
-   These live in `features/·processes/·architecture/` (per `vault-guide.md` §6) — **not** Serena.
-4. If OV §2.1 already surfaced one, don't re-read it.
+   Working rules live in `indications/`; subject-matter context in `features/·processes/·architecture/`
+   (per `vault-guide.md` §6) — **not** Serena.
+4. If §2.1/§2.3a already surfaced one, don't re-read it.
 
 ### 2.4 — Graphify (structural orientation)
 
@@ -49,7 +61,7 @@ Discover guidelines/conventions that constrain this task — they override gener
 what calls X, where is Y defined, which modules touch Z, dependency chains — query the graph before
 Serena or grep: `graphify query "<q>"`, `graphify path "A" "B"`. If `graphify-out/graph.json` is
 missing the hook isn't installed: surface it and offer `graphify hook install` + an initial
-`graphify .` build before falling back to grep. Full rules: `_process/tool-playbook.md` §3.
+`graphify .` build before falling back to grep. Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §3.
 
 ### 2.5 — Serena (semantic navigation — if code change implied)
 
@@ -82,6 +94,7 @@ costs ~20k tokens; a vault hit costs ~100–2000. Wrong default wastes 100×.
 OV: [results — decisions, sessions, pitfalls — or "nothing relevant" / "unavailable, fell back to grep"]
 claude-mem: [layers used — key findings — or "nothing relevant"]
 MOC: [skimmed]
+Indications: [working rules loaded from indications/ — or "none matched"]
 Guidelines: [docs read from features/·processes/·architecture/ — or "none matched"]
 Sessions: [top 3 mtime, brief topic each]
 ADRs: [relevant IDs]

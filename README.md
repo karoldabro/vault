@@ -1,14 +1,16 @@
 # vault — knowledge framework for software projects
 
-Markdown-only, Obsidian-readable, git-tracked. Attached as a submodule to per-project vaults so the process travels with the repo.
+Markdown-only, Obsidian-readable, git-tracked. A single **global** install per machine; each project's
+vault lives globally (`~/vault/<slug>/`) or inside the repo, with an optional `VAULT.md` recording the
+choice. (No submodules — the framework is read from `$VAULT_FRAMEWORK_PATH`, never vendored.)
 
 ## Layers
 
 | Layer | Owns | Where |
 |-------|------|-------|
-| **Framework** (this repo) | Process docs, templates, commands. Generic. | `git@github.com:karoldabro/vault.git` |
-| **Project vault** | Features, decisions, sessions, MOC for one product. | Per-project repo, attaches this one at `_process/` |
-| **Machine** | Local state: coupled-groups, auto-memory, OV index. | `~/vault/_global/`, never committed |
+| **Framework** (this repo) | Process docs, templates, commands. Generic. | Installed once at `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault/`) |
+| **Project vault** | Features, decisions, sessions, MOC for one product. | `~/vault/<slug>/` or in-repo `<code-repo>/vault/` — resolved via `VAULT.md` |
+| **Machine** | Local state: coupled-groups, config, auto-memory, OV index. | `~/vault/_global/`, never committed |
 
 See [`vault-guide.md`](vault-guide.md) for full process documentation.
 
@@ -50,17 +52,22 @@ Idempotent; refuses to overwrite any non-symlink in `~/.claude/commands/`; prune
 ```bash
 cd ~/workspace/<your-code-repo>
 ~/workspace/vault/bin/vault-init.sh
+# …or keep the vault inside the repo:
+~/workspace/vault/bin/vault-init.sh --in-repo
 ```
 
-This creates `~/vault/<slug>/`, attaches the framework as a `_process/` submodule, scaffolds folders + indexes, writes `.gitignore`, registers the slug in `~/vault/_global/coupled-groups.md`, appends a memory-stack snippet to the code repo's `CLAUDE.md`, and makes the initial commit. See `commands/v-init.md` for flags.
+This creates the vault (global `~/vault/<slug>/`, or `<code-repo>/vault/` with `--in-repo`), scaffolds folders + indexes (incl. `indications/`), writes `.gitignore`, writes a `VAULT.md` at the repo root recording the vault path, registers the slug in `~/vault/_global/coupled-groups.md`, appends a memory-stack snippet to the code repo's `CLAUDE.md`, and (for global vaults) makes the initial commit. See `commands/v-init.md` for flags.
 
-After cloning a project vault elsewhere:
+### Migrating an old submodule vault
+
+Vaults created before the global model carried a `_process/` submodule. Convert one in place:
 
 ```bash
-git clone <project-vault-url>
-cd <project-vault>
-git submodule update --init
+cd ~/workspace/<your-code-repo>
+~/workspace/vault/bin/vault-migrate.sh
 ```
+
+It de-inits the submodule, writes `VAULT.md`, repoints the MOC, and commits. Idempotent.
 
 ## Contents
 
@@ -70,8 +77,8 @@ vault/
 ├── vault-guide.md         # canonical process doc — read this
 ├── setup.sh               # umbrella installer (prereqs, OV, Graphify, machine layer)
 ├── install.sh             # idempotent command installer
-├── bin/                   # vault-init.sh and other host-callable scripts
-├── templates/             # decision, feature, session, project-moc, process, architecture
+├── bin/                   # vault-init.sh, vault-migrate.sh and other host-callable scripts
+├── templates/             # decision, feature, indication, session, project-moc, process, architecture, VAULT
 ├── commands/              # v-work.md, v-capture.md — linked into ~/.claude/commands/ by install.sh
 ├── tests/                 # bats-core suite, runs in Docker (`make test`)
 └── Makefile               # `make test`, `make shell`

@@ -9,17 +9,24 @@ Force-write this session into the project vault. This command:
 1. **Dedupes** vs the last 10 sessions and offers to append to an existing one if topics overlap.
 2. **Auto-updates** `_moc.md` and `_feature-index.md` when affected.
 3. **Extracts ADR candidates** by regex-scanning the session for decision-shaped sentences.
-4. **Cross-links** `Refs` by scanning content for `[[wikilinks]]`, `ADR-NNN`, and `features/NN-` patterns.
+4. **Extracts indication candidates** — reusable working rules / patterns / standards — the same way.
+5. **Runs the feature dossier gate** — create / update / skip a `features/` doc per the work done.
+6. **Cross-links** `Refs` by scanning content for `[[wikilinks]]`, `ADR-NNN`, and `features/NN-` patterns.
 
 Requires OpenViking and claude-mem. Both push steps are mandatory — do not skip silently.
 
 ---
 
-## Resolve project
+## Resolve project + vault path
 
 1. From `$PWD` or the most-touched file path in this session, derive the project slug.
 2. Match against `~/vault/_global/coupled-groups.md` if present.
-3. Confirm `~/vault/<slug>/` exists. If not, stop and tell the user to run `/v-init` (from inside the code repo) first.
+3. Resolve the vault path per `vault-guide.md` §1.1: `<repo-root>/VAULT.md` → `vault_path`, else
+   `~/vault/_global/config.md`, else `~/vault/<slug>/`. Note any `behaviour.capture_indications` toggle.
+4. Confirm the vault dir exists. If not, stop and tell the user to run `/v-init` (or `/v-migrate` for an
+   old submodule vault) from inside the code repo first.
+
+Below, `<vault>` means the resolved vault path (which may be in-repo, e.g. `<code-repo>/vault`).
 
 ---
 
@@ -38,7 +45,7 @@ From the conversation, derive:
 ## Step 2 — Dedupe vs recent sessions
 
 ```bash
-ls -t ~/vault/<slug>/sessions/*.md 2>/dev/null | head -10
+ls -t <vault>/sessions/*.md 2>/dev/null | head -10
 ```
 
 For each recent session file, grep for the keywords:
@@ -60,9 +67,9 @@ If `<60%` for all, write a fresh session.
 
 ## Step 3 — Write session file
 
-Use template `~/vault/<slug>/_process/templates/session.md` (or `~/workspace/vault/templates/session.md` if submodule absent).
+Use template `$VAULT_FRAMEWORK_PATH/templates/session.md` (default `~/workspace/vault/templates/session.md`).
 
-Path: `~/vault/<slug>/sessions/YYYY-MM-DD-HHMM-<slug>.md`.
+Path: `<vault>/sessions/YYYY-MM-DD-HHMM-<slug>.md`.
 
 If a sub-slug applies (multi-repo product, e.g. `vivi/api`), prefix the filename: `api-YYYY-MM-DD-HHMM-<slug>.md`.
 
@@ -100,6 +107,36 @@ For each confirmed candidate:
 
 ---
 
+## Step 4b — Indication candidate extraction
+
+Skip if `behaviour.capture_indications` is `false` in `VAULT.md`. Otherwise mirror the ADR scan, but for
+*how-we-work* statements — reusable working rules, patterns, standards, testing conventions.
+
+Regex-scan the session + recent conversation:
+
+```
+patterns: "convention:", "pattern:", "rule:", "standard", "always <verb>", "never <verb>",
+          "we use .* for", "prefer .* over", "the .* way is", "<x> should always|never",
+          testing-approach statements ("test .* with", "mock .* not")
+```
+
+Dedupe against existing `indications/_index.md` rows first (don't re-offer a rule already captured).
+Present remaining matches as one-line candidates:
+
+```
+Indication candidates found:
+  1. "controllers stay thin — business logic goes in actions"
+  2. "feature tests use factories, never hardcoded fixtures"
+  Promote any to indications? (y/N + numbers)
+```
+
+For each confirmed candidate:
+- Create `indications/<slug>.md` from `indication.md` template (Rule = the statement; fill Rationale /
+  Examples / Applies-to from context, leave `<!-- TODO -->` where unknown).
+- Append a row to `indications/_index.md`: `| <slug> | <one-line rule> | <applies-to> |`.
+
+---
+
 ## Step 5 — Cross-link Refs
 
 Scan session body for these patterns and materialize all into the `Refs` section:
@@ -107,9 +144,28 @@ Scan session body for these patterns and materialize all into the `Refs` section
 - `[[wikilink]]` patterns already present.
 - `ADR-\d+` references → resolve to `[[../decisions/ADR-NNN-<slug>]]` by looking up the inventory.
 - `features/NN-<slug>` → resolve to `[[../features/NN-<slug>]]`.
-- File paths under `~/vault/<slug>/` → wikilink form.
+- File paths under `<vault>/` → wikilink form.
 
 Deduplicate. Sort alphabetically.
+
+---
+
+## Step 5b — Feature dossier gate
+
+`features/` goes stale because capture reads it but rarely writes it. Force an explicit decision here —
+do not silently no-op. For each feature/domain this session touched (from files changed, ADRs linked, or
+explicit mentions), pick exactly one:
+
+- **CREATE** `features/<slug>.md` (from `feature.md`) when the session introduced a new feature/domain
+  with no existing dossier. Use the dedupe ≥60% novelty threshold from `/v-work` §3b — below it, it's
+  not new, so UPDATE instead.
+- **UPDATE** an existing dossier when the session changed its **contracts, gotchas, or coupling** — a
+  touched file maps to it, a new ADR links to it, or an endpoint/table/event/enum changed. Edit the
+  affected section(s) and add the session wikilink under `## Sessions`.
+- **SKIP** when the work carried no durable domain knowledge (pure bugfix, cosmetic, config bump).
+
+Report the verdict per feature in the output (`created | updated | skipped: <reason>`). Then reconcile
+`_feature-index.md` in Step 6.
 
 ---
 
@@ -126,10 +182,14 @@ Keep only the last 5 entries (older ones can be found by browsing `sessions/`).
 
 ### `_feature-index.md`
 
-For each affected feature (frontmatter `features:` array or wikilinks to `features/*`):
-- Find the row in the table.
-- If a "Last touched" column exists, update the date.
-- Otherwise no-op.
+For each feature from the Step 5b gate:
+- **Created** → add a new row (Feature, Status, Last touched = today, Notes).
+- **Updated** → find the row; if a "Last touched" column exists, set it to today.
+- **Skipped** → no-op.
+
+### `indications/_index.md`
+
+Already appended in Step 4b for any promoted indication — verify the row is present.
 
 ---
 
@@ -154,10 +214,12 @@ No action needed. claude-mem auto-captures this session via its SessionEnd hook 
 ## Output
 
 ```
-Captured: ~/vault/<slug>/sessions/<filename>.md
+Captured: <vault>/sessions/<filename>.md
   Dedupe: <new | appended-to-PREV | continues-from-PREV>
-  Indexes updated: <_moc.md, _feature-index.md, decisions/_inventory.md>
+  Indexes updated: <_moc.md, _feature-index.md, decisions/_inventory.md, indications/_index.md>
   ADR candidates: <N found, M promoted>
+  Indication candidates: <N found, M promoted | skipped (capture_indications=false)>
+  Features: <created: a · updated: b · skipped: c>
   Refs: <K links cross-linked>
   OV: <pushed via memory_store | memory_health unreachable — user notified>
   claude-mem: auto-capture on session end
@@ -173,3 +235,5 @@ Re-running `/v-capture` on the same session within the same minute:
 - Same filename slug → overwrite is OK (content updates).
 - Do NOT duplicate the MOC line: check for existing wikilink to the same session file before prepending.
 - Do NOT re-extract ADR candidates that were already promoted in a prior run.
+- Do NOT re-offer indication candidates already present in `indications/_index.md`.
+- The feature gate is re-runnable: an already-updated dossier with no new changes resolves to SKIP.

@@ -19,8 +19,8 @@ make_code_repo() {
 setup() {
     make_test_home
     export VAULT_HOME="${TEST_HOME}/vault"
-    # /code is mounted read-only; use it as the framework URL via file:// allowance.
-    export VAULT_FRAMEWORK_URL="/code"
+    # The framework is read globally; /code is the mounted framework install.
+    export VAULT_FRAMEWORK_PATH="/code"
     export VAULT_INIT_GIT_FLAGS="-c protocol.file.allow=always"
     export CODE_REPO="${TEST_HOME}/work/myproject"
     make_code_repo "${CODE_REPO}"
@@ -54,36 +54,56 @@ teardown() {
 @test "scaffolds the expected folder layout" {
     cd "${CODE_REPO}"
     "${VAULT_ROOT}/bin/vault-init.sh" --yes >/dev/null
-    for sub in sessions decisions features processes architecture; do
+    for sub in sessions decisions features indications processes architecture; do
         [ -d "${VAULT_HOME}/myproject/${sub}" ]
     done
     [ -f "${VAULT_HOME}/myproject/_moc.md" ]
     [ -f "${VAULT_HOME}/myproject/_feature-index.md" ]
     [ -f "${VAULT_HOME}/myproject/decisions/_inventory.md" ]
+    [ -f "${VAULT_HOME}/myproject/indications/_index.md" ]
     [ -f "${VAULT_HOME}/myproject/.gitignore" ]
 }
 
-@test "_moc.md substitutes the slug into the template" {
+@test "_moc.md substitutes the slug and points at the global framework guide" {
     cd "${CODE_REPO}"
     "${VAULT_ROOT}/bin/vault-init.sh" --yes >/dev/null
     grep -q "myproject — Map of Contents" "${VAULT_HOME}/myproject/_moc.md"
-    grep -q "_process/vault-guide" "${VAULT_HOME}/myproject/_moc.md"
+    grep -q "vault-guide.md" "${VAULT_HOME}/myproject/_moc.md"
+    # The framework is global now — no submodule pointer.
+    ! grep -q "_process/vault-guide" "${VAULT_HOME}/myproject/_moc.md"
 }
 
-@test "attaches framework as _process submodule" {
+@test "does NOT create a _process submodule" {
     cd "${CODE_REPO}"
     "${VAULT_ROOT}/bin/vault-init.sh" --yes >/dev/null
-    [ -f "${VAULT_HOME}/myproject/.gitmodules" ]
-    grep -q "_process" "${VAULT_HOME}/myproject/.gitmodules"
-    [ -d "${VAULT_HOME}/myproject/_process" ]
-    [ -f "${VAULT_HOME}/myproject/_process/vault-guide.md" ]
+    [ ! -f "${VAULT_HOME}/myproject/.gitmodules" ]
+    [ ! -e "${VAULT_HOME}/myproject/_process" ]
 }
 
-@test "--no-submodule skips submodule entirely" {
+@test "writes VAULT.md to the code repo with slug and global vault_path" {
     cd "${CODE_REPO}"
-    "${VAULT_ROOT}/bin/vault-init.sh" --no-submodule --yes >/dev/null
-    [ ! -f "${VAULT_HOME}/myproject/.gitmodules" ]
-    [ ! -d "${VAULT_HOME}/myproject/_process" ]
+    "${VAULT_ROOT}/bin/vault-init.sh" --yes >/dev/null
+    [ -f "${CODE_REPO}/VAULT.md" ]
+    grep -q "slug: myproject" "${CODE_REPO}/VAULT.md"
+    grep -qE "^vault_path: .*vault/myproject" "${CODE_REPO}/VAULT.md"
+}
+
+@test "--no-vault-md skips writing VAULT.md" {
+    cd "${CODE_REPO}"
+    "${VAULT_ROOT}/bin/vault-init.sh" --no-vault-md --yes >/dev/null
+    [ ! -f "${CODE_REPO}/VAULT.md" ]
+}
+
+@test "--in-repo keeps the vault inside the code repo, not a nested git repo" {
+    cd "${CODE_REPO}"
+    "${VAULT_ROOT}/bin/vault-init.sh" --in-repo --yes >/dev/null
+    [ -d "${CODE_REPO}/vault/sessions" ]
+    [ -d "${CODE_REPO}/vault/indications" ]
+    # In-repo vault is tracked by the code repo — no nested .git.
+    [ ! -e "${CODE_REPO}/vault/.git" ]
+    # No global vault dir was created.
+    [ ! -d "${VAULT_HOME}/myproject" ]
+    grep -q "vault_path: ./vault" "${CODE_REPO}/VAULT.md"
 }
 
 @test "--slug overrides the derived name" {

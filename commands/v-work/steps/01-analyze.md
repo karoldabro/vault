@@ -28,6 +28,19 @@ Also note: `docker-compose.yml`/`compose.yaml` (commands may need `docker compos
 `package.json` `scripts` (project-specific `test`/`build`/`lint` override defaults), `.claude/`.
 CLAUDE.md (read in Step 2) overrides all of these.
 
+## 1.4 Resolve vault path + config
+
+The whole lifecycle runs against a resolved vault — do this before Step 2 loads anything. Per
+`vault-guide.md` §1.1:
+
+1. **Framework path** — `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault`; override in
+   `~/vault/_global/config.md` → `framework_path`). Templates, `vault-guide.md`, and
+   `tool-playbook.md` resolve under it.
+2. **Vault path** — first hit wins: `<repo-root>/VAULT.md` → `vault_path` (relative resolves against
+   the repo root, so `./vault` is in-repo) → `~/vault/_global/config.md` → `~/vault/<slug>/`.
+3. **Read `VAULT.md`** if present and apply its `structure` (extra/renamed/optional folders) and
+   `behaviour` (`load_context_extra`, `capture_indications`) keys. Carry them through the run.
+
 ## Required output
 
 ```
@@ -35,6 +48,7 @@ Task: <one-sentence restatement>
 Keywords: <kw1>, <kw2>, ...
 Stack: <detected type + test command>
 Docker: <yes | no>
+Vault: <resolved vault path> (config: <VAULT.md applied | defaults>)
 Scope: <code-only | vault-only | both>
 ```
 

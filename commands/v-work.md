@@ -26,7 +26,7 @@ OpenViking, claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-
 | MorphLLM | (MCP — no runtime check) | `Edit` / `MultiEdit` |
 | graphify | `graphify-out/graph.json` present | offer `graphify hook install`, then grep |
 
-Full rules + worked examples: `_process/tool-playbook.md`.
+Full rules + worked examples: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` (default `~/workspace/vault/`).
 
 ---
 
@@ -77,5 +77,6 @@ Read `~/.claude/commands/v-work/steps/05-commit-capture.md`, then execute. Mark 
 - Never write source code in Step 2. Vault-first means no premature source reads.
 - If dedupe returns conflicting results (OV finds doc X, claude-mem finds doc Y), read both — the
   vault may hold parallel docs that need merging. Flag it to the user.
-- If `_process/vault-guide.md` is missing, the framework folder isn't wired. Re-run `/v-init` or
-  check the `_process/` link in the project vault.
+- If `$VAULT_FRAMEWORK_PATH/vault-guide.md` can't be found, the framework install path is wrong —
+  check `~/vault/_global/config.md` (`framework_path`) or re-run `setup.sh`. If the resolved vault
+  dir is missing, the repo isn't wired: run `/v-init` (or `/v-migrate` for an old submodule vault).

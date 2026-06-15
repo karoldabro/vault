@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # vault-init — bootstrap a project vault for the code repo at $PWD.
 #
+# The framework is a single global install (read from $VAULT_FRAMEWORK_PATH). It is NOT vendored
+# into the vault as a submodule. The vault lives either globally ($VAULT_HOME/$slug) or inside the
+# code repo (--in-repo → <code-repo>/vault); a VAULT.md at the repo root records the choice so every
+# vault command resolves the same location.
+#
 # What it does:
-#   1. Resolve slug (arg or PWD basename).
-#   2. Refuse if $VAULT_HOME/$slug already exists.
-#   3. Create vault repo at $VAULT_HOME/$slug, git init.
-#   4. Attach framework as `_process/` submodule (URL configurable).
-#   5. Scaffold folders + index files + .gitignore + _moc.md.
+#   1. Resolve slug (arg or PWD basename) + vault path (global or --in-repo).
+#   2. Refuse if the vault dir already exists.
+#   3. Create vault repo, git init.
+#   4. Scaffold folders + index files + .gitignore + _moc.md (incl. indications/).
+#   5. Write <code-repo>/VAULT.md (vault_path + slug) if absent.
 #   6. Append entry to $VAULT_HOME/_global/coupled-groups.md.
 #   7. Append memory-stack snippet to <code-repo>/CLAUDE.md (idempotent).
 #   8. Install graphify post-commit hook + build initial graph in the code repo (if graphify present).
@@ -14,14 +19,14 @@
 #
 # Environment overrides:
 #   VAULT_HOME              default: $HOME/vault
-#   VAULT_FRAMEWORK_URL     default: git@github.com:karoldabro/vault.git
-#                           For local testing: file:///path/to/framework or /path
+#   VAULT_FRAMEWORK_PATH    default: this framework install (parent of bin/)
 #   VAULT_INIT_GIT_FLAGS    extra git flags (tests use: -c protocol.file.allow=always)
 #
 # Flags:
 #   --slug NAME             override derived slug
-#   --framework-url URL     override VAULT_FRAMEWORK_URL
-#   --no-submodule          skip submodule add (useful for fully-offline init)
+#   --in-repo               keep the vault inside the code repo at <code-repo>/vault
+#   --framework-path PATH   override VAULT_FRAMEWORK_PATH
+#   --no-vault-md           do not write <code-repo>/VAULT.md
 #   --no-claude-md          do not touch <code-repo>/CLAUDE.md
 #   --no-graphify           skip graphify hook install + initial graph build
 #   --yes                   non-interactive (currently informational)
@@ -31,11 +36,12 @@ set -euo pipefail
 
 VAULT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VAULT_HOME="${VAULT_HOME:-${HOME}/vault}"
-VAULT_FRAMEWORK_URL="${VAULT_FRAMEWORK_URL:-git@github.com:karoldabro/vault.git}"
+VAULT_FRAMEWORK_PATH="${VAULT_FRAMEWORK_PATH:-${VAULT_ROOT}}"
 VAULT_INIT_GIT_FLAGS="${VAULT_INIT_GIT_FLAGS:-}"
 
 slug=""
-no_submodule=0
+in_repo=0
+no_vault_md=0
 no_claude_md=0
 no_graphify=0
 
@@ -46,8 +52,9 @@ usage() {
 while [ $# -gt 0 ]; do
     case "$1" in
         --slug)            slug="$2"; shift 2 ;;
-        --framework-url)   VAULT_FRAMEWORK_URL="$2"; shift 2 ;;
-        --no-submodule)    no_submodule=1; shift ;;
+        --in-repo)         in_repo=1; shift ;;
+        --framework-path)  VAULT_FRAMEWORK_PATH="$2"; shift 2 ;;
+        --no-vault-md)     no_vault_md=1; shift ;;
         --no-claude-md)    no_claude_md=1; shift ;;
         --no-graphify)     no_graphify=1; shift ;;
         --yes|-y)          shift ;;
@@ -71,7 +78,15 @@ if [ -z "${slug}" ]; then
     slug="$(basename "${code_repo}")"
 fi
 
-vault_dir="${VAULT_HOME}/${slug}"
+# Resolve vault dir + the vault_path value recorded in VAULT.md.
+if [ "${in_repo}" -eq 1 ]; then
+    vault_dir="${code_repo}/vault"
+    vault_path_value="./vault"
+else
+    vault_dir="${VAULT_HOME}/${slug}"
+    # Record with a leading ~ when under $HOME so VAULT.md stays portable.
+    vault_path_value="${vault_dir/#${HOME}/\~}"
+fi
 
 if [ -e "${vault_dir}" ]; then
     echo "ERROR: ${vault_dir} already exists. Refusing to overwrite." >&2
@@ -80,31 +95,26 @@ if [ -e "${vault_dir}" ]; then
 fi
 
 echo "Initializing vault for: ${code_repo}"
-echo "  slug:          ${slug}"
-echo "  vault dir:     ${vault_dir}"
-echo "  framework URL: ${VAULT_FRAMEWORK_URL}"
+echo "  slug:           ${slug}"
+echo "  vault dir:      ${vault_dir}"
+echo "  framework path: ${VAULT_FRAMEWORK_PATH}"
 
 #------------------------------------------------------------------------------
 # Create vault repo
 #------------------------------------------------------------------------------
+# Global vaults are their own git repo. In-repo vaults are tracked by the code
+# repo itself — no nested git repo (which git would treat as an embedded repo).
 mkdir -p "${vault_dir}"
-# shellcheck disable=SC2086
-git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" init --quiet --initial-branch=main 2>/dev/null \
-    || git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" init --quiet
-
-#------------------------------------------------------------------------------
-# Submodule
-#------------------------------------------------------------------------------
-if [ "${no_submodule}" -eq 0 ]; then
+if [ "${in_repo}" -eq 0 ]; then
     # shellcheck disable=SC2086
-    git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" submodule add --quiet \
-        "${VAULT_FRAMEWORK_URL}" _process
+    git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" init --quiet --initial-branch=main 2>/dev/null \
+        || git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" init --quiet
 fi
 
 #------------------------------------------------------------------------------
 # Scaffold folders + placeholders
 #------------------------------------------------------------------------------
-for sub in sessions decisions features processes architecture; do
+for sub in sessions decisions features indications processes architecture; do
     mkdir -p "${vault_dir}/${sub}"
     # .gitkeep so empty dirs survive initial commit
     : > "${vault_dir}/${sub}/.gitkeep"
@@ -117,11 +127,11 @@ cp "${VAULT_ROOT}/templates/vault.gitignore" "${vault_dir}/.gitignore"
 sed "s/{{project}}/${slug}/g" "${VAULT_ROOT}/templates/project-moc.md" \
     > "${vault_dir}/_moc.md"
 
-# Add a Start Here pointer to the framework guide.
+# Add a Start Here pointer to the framework guide (global install, not vendored here).
 cat >> "${vault_dir}/_moc.md" <<EOF
 
 ## Start Here
-- [[_process/vault-guide]] — process documentation (framework submodule)
+- Process docs: \`${VAULT_FRAMEWORK_PATH}/vault-guide.md\` (global framework install)
 EOF
 
 # Feature index stub
@@ -152,6 +162,20 @@ tags: [index, decisions]
 |----|-------|------|--------|
 EOF
 
+# Indications index stub
+cat > "${vault_dir}/indications/_index.md" <<EOF
+---
+type: index
+project: ${slug}
+tags: [index, indications]
+---
+
+# ${slug} — Indications (working rules, patterns, standards)
+
+| Slug | Rule | Applies-to |
+|------|------|------------|
+EOF
+
 #------------------------------------------------------------------------------
 # coupled-groups.md entry
 #------------------------------------------------------------------------------
@@ -174,6 +198,20 @@ if ! grep -qE "^- ${slug}$" "${coupled}" 2>/dev/null; then
 fi
 
 #------------------------------------------------------------------------------
+# VAULT.md in code repo (records where the vault lives + per-repo config)
+#------------------------------------------------------------------------------
+if [ "${no_vault_md}" -eq 0 ]; then
+    vault_md="${code_repo}/VAULT.md"
+    if [ -f "${vault_md}" ]; then
+        echo "  VAULT.md already present — leaving it untouched."
+    else
+        sed -e "s|{{slug}}|${slug}|g" \
+            -e "s|^vault_path: ./vault|vault_path: ${vault_path_value}|" \
+            "${VAULT_ROOT}/templates/VAULT.md" > "${vault_md}"
+    fi
+fi
+
+#------------------------------------------------------------------------------
 # CLAUDE.md snippet in code repo
 #------------------------------------------------------------------------------
 if [ "${no_claude_md}" -eq 0 ]; then
@@ -188,8 +226,8 @@ if [ "${no_claude_md}" -eq 0 ]; then
 
 This project is wired into the vault knowledge framework.
 
-- Per-project vault: \`${vault_dir}\`
-- Process docs: \`${vault_dir}/_process/vault-guide.md\`
+- Per-project vault: \`${vault_dir}\` (also recorded in \`VAULT.md\`)
+- Process docs: \`${VAULT_FRAMEWORK_PATH}/vault-guide.md\` (global framework install)
 - Map of contents: \`${vault_dir}/_moc.md\`
 
 Use \`/v-work\` for development, \`/v-capture\` to save the session.
@@ -220,21 +258,27 @@ if [ "${no_graphify}" -eq 0 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Initial commit
+# Initial commit (global vaults only — in-repo vaults commit via the code repo)
 #------------------------------------------------------------------------------
-# shellcheck disable=SC2086
-git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" add -A
-# Configure committer identity if absent (tests run with no global config).
-if ! git -C "${vault_dir}" config user.email >/dev/null 2>&1; then
-    git -C "${vault_dir}" config user.email "vault-init@localhost"
-    git -C "${vault_dir}" config user.name  "vault-init"
+if [ "${in_repo}" -eq 0 ]; then
+    # shellcheck disable=SC2086
+    git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" add -A
+    # Configure committer identity if absent (tests run with no global config).
+    if ! git -C "${vault_dir}" config user.email >/dev/null 2>&1; then
+        git -C "${vault_dir}" config user.email "vault-init@localhost"
+        git -C "${vault_dir}" config user.name  "vault-init"
+    fi
+    # shellcheck disable=SC2086
+    git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" commit --quiet \
+        -m "chore(vault): initialize project vault for ${slug}"
 fi
-# shellcheck disable=SC2086
-git ${VAULT_INIT_GIT_FLAGS} -C "${vault_dir}" commit --quiet \
-    -m "chore(vault): initialize project vault for ${slug}"
 
 echo ""
 echo "Vault initialized at ${vault_dir}"
 echo "Next:"
-echo "  - Push the vault repo to a remote of your choice (gh repo create / git remote add)."
+if [ "${in_repo}" -eq 1 ]; then
+    echo "  - The vault lives inside this repo (vault/) — commit it with your code."
+else
+    echo "  - Push the vault repo to a remote of your choice (gh repo create / git remote add)."
+fi
 echo "  - Run /v-work in this code repo to start a vault-aware session."
