@@ -7,6 +7,7 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 | File | Slash command | What it does |
 |------|---------------|--------------|
 | `v-init.md` | `/v-init` | Bootstrap a project vault for the current code repo. |
+| `v-migrate.md` | `/v-migrate` | Convert a submodule-based vault to the global framework model. |
 | `v-work.md` | `/v-work` | Vault-aware development lifecycle. |
 | `v-capture.md` | `/v-capture` | Enhanced session capture. |
 | `v-resume.md` | `/v-resume` | Force fresh context recall (vault + OpenViking). |
@@ -15,7 +16,7 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 | `v-backfill.md` | `/v-backfill` | Targeted ingest of past Claude Code sessions. |
 | `v-guide.md` | `/v-guide` | Generate a cross-project integration guide from an existing feature. |
 
-See `../vault-guide.md` §10 for usage notes.
+See `../vault-guide.md` §11 for the command reference (and §1.1 for vault path/config resolution).
 
 ## Why symlinks instead of copies
 
