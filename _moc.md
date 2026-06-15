@@ -36,4 +36,5 @@ _(none yet — created by `/v-guide` when run on a feature)_
 
 ## Sessions (recent)
 
+- [[sessions/2026-06-15-0900-global-framework-indications]] — Ditch submodules: global framework + indications/ + feature gate
 - [[sessions/2026-06-02-1156-v-guide-command]] — Add /v-guide integration guide command
