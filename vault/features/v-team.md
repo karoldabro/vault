@@ -43,7 +43,10 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - Personas are focus/rubric, not competence — each must run its bound analyzer; unbacked claims are
   `advisory`, never blocking.
 - Do not run `/v-team` inside harness plan mode (blocks the `plans/` write; Step 4 is its own gate).
-- `nuxt`/`flutter` packs are drafts — validate analyzer commands before relying on them.
+- `nuxt`/`flutter` packs are grounded against the real givore repos but kept **generic** (state
+  approach detected, not hardcoded); project specifics (state pattern, service layer, brand, domain
+  rules) flow in from each repo's `indications/`. Each has 3 local lenses (Nuxt: Component/State,
+  Integration/SSR, Accessibility & i18n · Flutter: Widget/State, Platform Integration, UX & Resilience).
 
 ## Sessions
 - [[../sessions/2026-06-16-1038-v-team-persona-critique-command]]
