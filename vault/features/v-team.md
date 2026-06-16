@@ -50,3 +50,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 
 ## Sessions
 - [[../sessions/2026-06-16-1038-v-team-persona-critique-command]]
+- [[../sessions/2026-06-16-1135-v-team-nuxt-flutter-packs]]
