@@ -27,3 +27,14 @@ slug: {{slug}}
 <!-- Bounded hooks the lifecycle honors. All optional; defaults shown. -->
 # load_context_extra: [runbooks]       # folders Step 2 loads beyond the defaults
 capture_indications: true              # run the indication-candidate scan at capture time
+
+<!-- /v-team multi-agent persona config (all optional). Selects which critic personas review the
+     plan + diff. Auto-detected from the stack if omitted. See personas/_resolution.md. -->
+# project_type: api-laravel            # api-laravel | nuxt | flutter — selects the default persona pack
+# personas:
+#   use: api-laravel                   # explicit pack (defaults to project_type)
+#   add: [./vault/personas/billing-domain.md]   # custom persona files (repo-relative)
+#   skip: [skeptic]                    # drop a persona by id
+# team_max_rounds: 2                   # plan-critique loop cap
+# team_max_review_rounds: 2            # diff-review loop cap
+# team_max_parallel_critics: 3         # critics selected per change (hard max 5)

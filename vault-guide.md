@@ -82,6 +82,7 @@ Unknown keys are ignored. Absent `VAULT.md` → all defaults, global vault.
 ├── marketing/               # Channels, listings (optional)
 ├── memory/                  # Auto-memory mountpoint (symlink; .gitignored)
 ├── operations/              # Runbook, support, vendors (optional)
+├── plans/                   # /v-team converged plans + critique trails (opt-in via add_folders)
 ├── processes/               # Repeatable workflows
 ├── research/                # User research, qual data (optional)
 ├── serena/                  # Serena memories mountpoint (symlink; .gitignored)
@@ -118,6 +119,7 @@ Located in `$VAULT_FRAMEWORK_PATH/templates/` (default `~/workspace/vault/templa
 | `feature.md` | New feature dossier. |
 | `indication.md` | New working rule / pattern / standard. Catalogued in `indications/_index.md`. |
 | `session.md` | New session log. Usually written by `/v-capture`. |
+| `plan.md` | `/v-team` converged plan + critique trail + proposed-test backlog. Lives in `plans/`. |
 | `project-moc.md` | First-time project setup. |
 | `process.md` | Repeatable workflow. |
 | `architecture.md` | System-level design doc. |
@@ -291,6 +293,7 @@ All commands require the four tools listed in §10.
 | `/v-init` | Bootstrap a project vault for the current code repo. Creates the vault (global `~/vault/<slug>/` or in-repo with `--in-repo`), writes a repo `VAULT.md`, scaffolds folders + indexes, wires CLAUDE.md. | git |
 | `/v-migrate` | Convert an existing submodule-based vault to the global model: de-init the `_process/` submodule, write `VAULT.md`, repoint the MOC. | git |
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | OV, claude-mem, Serena, MorphLLM |
+| `/v-team` | Persona-critique lifecycle for BIG/high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (resolved from `VAULT.md` `project_type`/`personas` then stack auto-detect; defined in `personas/`) review the plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, OV, claude-mem, Serena, MorphLLM |
 | `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs, pushes to OV. (claude-mem auto-captures via its SessionEnd hook — no explicit write.) | OV `memory_store`; claude-mem auto-capture (SessionEnd hook) |
 | `/v-resume` | Force fresh context recall from vault + OpenViking + claude-mem. Arg: topic, project slug, or `all`. | OV `memory_recall`, claude-mem `search` |
 | `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. | OV |

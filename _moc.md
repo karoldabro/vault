@@ -11,6 +11,7 @@ Entry point for the vault framework (`~/workspace/vault/`). Generic process docs
 - [[commands/v-init]] — Bootstrap a project vault
 - [[commands/v-migrate]] — Convert a submodule vault to the global model
 - [[commands/v-work]] — Vault-aware dev lifecycle
+- [[commands/v-team]] — Persona-critique lifecycle (parallel critics loop over plan + diff)
 - [[commands/v-capture]] — Session capture + dedupe
 - [[commands/v-resume]] — Force fresh context recall
 - [[commands/v-sync]] — Re-ingest curated knowledge into OV
@@ -24,11 +25,18 @@ Entry point for the vault framework (`~/workspace/vault/`). Generic process docs
 - [[templates/feature]] — Feature dossier template
 - [[templates/indication]] — Working rule / pattern / standard template
 - [[templates/session]] — Session log template
+- [[templates/plan]] — /v-team converged plan + critique trail template
 - [[templates/project-moc]] — Project MOC template
 - [[templates/process]] — Repeatable workflow template
 - [[templates/architecture]] — System-level design doc template
 - [[templates/integration-guide]] — Cross-project API contract template
 - [[templates/VAULT]] — Per-repo vault config template
+
+## Personas (`/v-team` critic library)
+
+Shared lenses (`personas/_shared/`): security · performance · quality · skeptic. Stack packs compose
+them + add stack-local architects: `personas/api-laravel.md` (full), `personas/nuxt.md` +
+`personas/flutter.md` (draft). Selection rules: `personas/_resolution.md`.
 
 ## Guides
 
