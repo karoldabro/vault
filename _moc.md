@@ -38,6 +38,11 @@ Shared lenses (`personas/_shared/`): security · performance · quality · skept
 them + add stack-local architects: `personas/api-laravel.md` (full), `personas/nuxt.md` +
 `personas/flutter.md` (draft). Selection rules: `personas/_resolution.md`.
 
+## Prompts
+
+Reusable, vault-agnostic procedure docs (paste into a session, fill the variables):
+- [[prompts/consolidate-into-indications]] — sweep a vault's scattered guidelines into `indications/`
+
 ## Guides
 
 _(none yet — created by `/v-guide` when run on a feature)_
