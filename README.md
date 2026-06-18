@@ -79,6 +79,34 @@ cd ~/workspace/<your-code-repo>
 
 It de-inits the submodule, writes `VAULT.md`, repoints the MOC, and commits. Idempotent.
 
+## Vault location & `VAULT.md`
+
+Every command resolves two paths at startup:
+
+- **Framework path** — `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault`), recorded at install time in
+  `~/vault/_global/config.md`. Holds the guide, templates, and commands. Files that get committed (a
+  repo's `VAULT.md`, the `CLAUDE.md` snippet, an in-repo vault's `_moc.md`) reference it **symbolically**
+  as `$VAULT_FRAMEWORK_PATH` — never a resolved absolute path — so a shared repo stays portable across
+  machines and users (each resolves it from their own env / `config.md`).
+
+- **Vault path** — first hit wins:
+  1. `<repo-root>/VAULT.md` → `vault_path` (relative `./vault` = in-repo; absolute or `~/…` = global).
+  2. `~/vault/_global/config.md` → `vault_home` (the global default).
+  3. Built-in default `~/vault/<slug>/`.
+
+`VAULT.md` (repo root, optional, written by `/v-init`) is the **per-repo config**. Delete it to fall back
+to the global default. It carries bounded sections, read on every command:
+
+| Section | Keys | Effect |
+|---------|------|--------|
+| `config` | `vault_path`, `framework_path`, `slug` | Path + identity resolution (above). |
+| `structure` | `add_folders`, `rename`, `optional` | Scaffold extra folders, alias standard ones, silence missing optional ones. |
+| `behaviour` | `load_context_extra`, `capture_indications` | Extra folders Step 2 loads; whether capture runs the indication scan. |
+| `personas` *(for `/v-team`)* | `use`, `add`, `skip`, `team_max_*` | Which critic pack + critics review the plan/diff. |
+
+Unknown keys are ignored; an absent `VAULT.md` means all defaults + a global vault. Full resolution rules:
+[`vault-guide.md`](vault-guide.md) §1.1.
+
 ## Contents
 
 ```
