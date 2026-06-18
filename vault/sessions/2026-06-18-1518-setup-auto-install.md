@@ -59,6 +59,18 @@ auto-installer + onboarder for the whole tool stack, run via `/v-team`.
 - Latent: `_redact_args` only catches `KEY=val` suffixes — fine while no secret ships (Morph dropped);
   revisit if a keyed installer returns.
 
+## Continuation 2026-06-18-1600 — onboarding model
+- **Dropped** the global `~/.claude/CLAUDE.md` snippet from `setup.sh` — it was stale and the installer
+  shouldn't author user-owned global config. Framework path now lives only in `$VAULT_FRAMEWORK_PATH` +
+  `~/vault/_global/config.md`. setup.sh instead prints a per-repo onboarding instruction (run
+  `bin/vault-init.sh` / `/v-init` in the repo) and an optional `export VAULT_FRAMEWORK_PATH=…` line.
+- **Portability fix** in `bin/vault-init.sh`: committed per-repo files (code-repo `CLAUDE.md`, in-repo
+  `_moc.md` Start Here) now write the **literal** `$VAULT_FRAMEWORK_PATH/vault-guide.md` instead of the
+  resolved absolute path — so a shared repo's pointer resolves per-user, not to one dev's install dir.
+- Decision: install stays machine-level; onboarding stays an explicit per-folder step (user's call).
+- Updated `tests/integration/setup.bats` (onboarding-instruction + "don't touch global CLAUDE.md");
+  removed now-dead `CLAUDE_HOME` from setup.sh. All green: 34 unit + 35 integration.
+
 ## Refs
 - [[../decisions/ADR-005-installer-auto-exec]]
 - [[../plans/2026-06-18-1518-setup-auto-install]]

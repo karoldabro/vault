@@ -13,7 +13,7 @@
 #   5. Serena (--with-serena): uv + serena-agent.
 #   6. claude-mem (--with-claude-mem): bun + claude-mem plugin.
 #   7. Graphify (--with-graphify): pipx + graphifyy.
-#   8. Print/own the CLAUDE.md memory-stack snippet.
+#   8. Print per-repo onboarding instructions (vault-init).
 #   9. Run install.sh to symlink slash commands.
 #  10. Doctor pass — verify what landed; non-zero exit only if a required tool failed.
 #
@@ -26,7 +26,6 @@
 #
 # Environment overrides (used by tests; safe to ignore in real use):
 #   VAULT_HOME              default: $HOME/vault
-#   CLAUDE_HOME             default: $HOME/.claude
 #   SETUP_SKIP_INSTALL_SH   default: 0 — set to 1 to skip calling install.sh
 #   VAULT_SETUP_DRY_RUN     default: 0 — set to 1 (or pass --dry-run) to echo every
 #                           side-effecting command instead of executing it
@@ -35,7 +34,6 @@ set -euo pipefail
 
 VAULT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VAULT_HOME="${VAULT_HOME:-${HOME}/vault}"
-CLAUDE_HOME="${CLAUDE_HOME:-${HOME}/.claude}"
 SETUP_SKIP_INSTALL_SH="${SETUP_SKIP_INSTALL_SH:-0}"
 export VAULT_SETUP_DRY_RUN="${VAULT_SETUP_DRY_RUN:-0}"
 
@@ -334,34 +332,19 @@ if [ "${with_graphify}" -eq 1 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 8 — CLAUDE.md snippet  (pure-local — never via run())
+# Step 8 — Per-repo onboarding instructions
 #------------------------------------------------------------------------------
-section "CLAUDE.md memory-stack snippet"
-
-claude_md="${CLAUDE_HOME}/CLAUDE.md"
-snippet_marker="Cross-project memory stack"
-
-if [ -f "${claude_md}" ] && grep -q "${snippet_marker}" "${claude_md}"; then
-    ok "snippet already present in ${claude_md}"
-else
-    todo "Paste this snippet into ${claude_md}:"
-    cat <<EOF
-  ---8<--- snippet ---8<---
-  ## ${snippet_marker}
-
-  Three layers — framework, project, machine. The framework is a single global
-  install at \`${VAULT_ROOT}\` (\$VAULT_FRAMEWORK_PATH); it is never vendored into
-  a project. Each repo's vault lives globally at \`~/vault/<slug>/\` or in-repo —
-  recorded in the repo's optional \`VAULT.md\`.
-
-  Vault commands (installed by this framework):
-  - /v-work     — vault-aware dev lifecycle.
-  - /v-capture  — capture this session into the vault.
-
-  See \`${VAULT_ROOT}/vault-guide.md\`.
-  ---8<--- snippet ---8<---
-EOF
-fi
+# The installer no longer writes a snippet into the user-owned ~/.claude/CLAUDE.md.
+# The framework path lives in $VAULT_FRAMEWORK_PATH (recorded below in config.md);
+# each code repo is onboarded explicitly with vault-init, which writes a VAULT.md
+# in that folder and references $VAULT_FRAMEWORK_PATH (portable across users).
+section "Onboard a code repo"
+todo "Run this inside each code repo you want vault-aware:"
+info "  cd <your-repo> && ${VAULT_ROOT}/bin/vault-init.sh"
+info "  (or /v-init from Claude Code) — writes VAULT.md + scaffolds the vault."
+info "Framework path recorded in ${VAULT_HOME}/_global/config.md as \$VAULT_FRAMEWORK_PATH."
+info "Optional (stable per-user): add to your shell profile —"
+info "  export VAULT_FRAMEWORK_PATH=\"${VAULT_ROOT}\""
 
 #------------------------------------------------------------------------------
 # Step 9 — install.sh (symlink slash commands)  (pure-local — never via run())
