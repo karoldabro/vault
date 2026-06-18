@@ -128,10 +128,12 @@ sed "s/{{project}}/${slug}/g" "${VAULT_ROOT}/templates/project-moc.md" \
     > "${vault_dir}/_moc.md"
 
 # Add a Start Here pointer to the framework guide (global install, not vendored here).
+# Use the literal $VAULT_FRAMEWORK_PATH reference (not the resolved path) so a committed
+# vault stays portable — each user resolves it from their env / ~/vault/_global/config.md.
 cat >> "${vault_dir}/_moc.md" <<EOF
 
 ## Start Here
-- Process docs: \`${VAULT_FRAMEWORK_PATH}/vault-guide.md\` (global framework install)
+- Process docs: \`\$VAULT_FRAMEWORK_PATH/vault-guide.md\` (global framework install)
 EOF
 
 # Feature index stub
@@ -220,6 +222,8 @@ if [ "${no_claude_md}" -eq 0 ]; then
     if [ -f "${claude_md}" ] && grep -q "${marker}" "${claude_md}"; then
         :
     else
+        # $VAULT_FRAMEWORK_PATH is written literally (resolved per-user from the env /
+        # ~/vault/_global/config.md), so this committed file is portable across machines.
         cat >> "${claude_md}" <<EOF
 
 ## ${marker}
@@ -227,7 +231,7 @@ if [ "${no_claude_md}" -eq 0 ]; then
 This project is wired into the vault knowledge framework.
 
 - Per-project vault: \`${vault_dir}\` (also recorded in \`VAULT.md\`)
-- Process docs: \`${VAULT_FRAMEWORK_PATH}/vault-guide.md\` (global framework install)
+- Process docs: \`\$VAULT_FRAMEWORK_PATH/vault-guide.md\` (global framework install)
 - Map of contents: \`${vault_dir}/_moc.md\`
 
 Use \`/v-work\` for development, \`/v-capture\` to save the session.

@@ -70,17 +70,19 @@ teardown() {
     [ ! -f "${HOME}/.openviking/ov.conf" ]
 }
 
-@test "prints CLAUDE.md snippet TODO when ~/.claude/CLAUDE.md is absent" {
+@test "prints per-repo onboarding instructions (vault-init / VAULT.md)" {
     run "${VAULT_ROOT}/setup.sh" --minimal --yes
     [ "$status" -eq 0 ]
-    [[ "$output" == *"snippet"* ]]
-    [[ "$output" == *"/v-work"* ]]
+    [[ "$output" == *"bin/vault-init.sh"* ]]
+    [[ "$output" == *"VAULT.md"* ]]
+    [[ "$output" == *"VAULT_FRAMEWORK_PATH"* ]]
 }
 
-@test "skips CLAUDE.md snippet when marker already present in CLAUDE.md" {
+@test "does not write into the user-owned ~/.claude/CLAUDE.md" {
     mkdir -p "${CLAUDE_HOME}"
-    printf '## Cross-project memory stack\n\nalready wired.\n' > "${CLAUDE_HOME}/CLAUDE.md"
+    printf 'MY OWN CLAUDE.md\n' > "${CLAUDE_HOME}/CLAUDE.md"
     run "${VAULT_ROOT}/setup.sh" --minimal --yes
     [ "$status" -eq 0 ]
-    [[ "$output" == *"snippet already present"* ]]
+    # The installer must leave the user's global CLAUDE.md exactly as it was.
+    [ "$(cat "${CLAUDE_HOME}/CLAUDE.md")" = "MY OWN CLAUDE.md" ]
 }

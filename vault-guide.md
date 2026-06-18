@@ -258,8 +258,8 @@ All vault commands assume these four tools are installed and reachable. Set them
 | Tool | Purpose | Install |
 |------|---------|---------|
 | **OpenViking** | Long-term semantic memory — vault, ADRs, sessions, pitfalls. MCP: `memory_recall`, `memory_store`, `memory_health`. | `setup.sh --with-ov` |
-| **Serena** | Symbol-aware code navigation and refactoring. MCP: `activate_project`, `find_symbol`, `rename`, `replace_symbol_body`. | `uv tool install serena-agent@latest --prerelease=allow` |
-| **MorphLLM Fast Apply** | Bulk multi-file edits at 10k+ tok/sec. MCP: `morph_edit(target_filepath, instructions, code_edit)`. | `setup.sh --with-morph` |
+| **Serena** | Symbol-aware code navigation and refactoring. MCP: `activate_project`, `find_symbol`, `rename`, `replace_symbol_body`. | `setup.sh --with-serena` |
+| **MorphLLM Fast Apply** | Bulk multi-file edits at 10k+ tok/sec. MCP: `morph_edit(target_filepath, instructions, code_edit)`. | not auto-installed (paid key): `claude mcp add` — see ADR-005 |
 | **claude-mem** | Project history — progressive disclosure search. MCP: `search`, `timeline`, `get_observations`, `memory_store`. | `setup.sh --with-claude-mem` |
 
 ### Token-cost hierarchy (cheapest → most expensive)
