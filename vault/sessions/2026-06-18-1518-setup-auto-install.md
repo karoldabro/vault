@@ -71,6 +71,16 @@ auto-installer + onboarder for the whole tool stack, run via `/v-team`.
 - Updated `tests/integration/setup.bats` (onboarding-instruction + "don't touch global CLAUDE.md");
   removed now-dead `CLAUDE_HOME` from setup.sh. All green: 34 unit + 35 integration.
 
+## Continuation 2026-06-18-1620 — README completeness
+- Audited README vs the implementation; closed gaps: documented the two test tiers (offline unit+integration
+  default vs opt-in real-Ubuntu e2e behind `VAULT_E2E=1`), listed all 10 shipped commands (was 2 — `/v-team`,
+  `/v-init`, etc. missing), refreshed the Contents tree (`personas/`, `commands/`, `tests/e2e/`).
+- Added a **"Vault location & `VAULT.md`"** section: two-path resolution (framework path via
+  `$VAULT_FRAMEWORK_PATH` + `~/vault/_global/config.md`; vault path via `VAULT.md` → config.md → default),
+  the portability rule, and the `VAULT.md` config/structure/behaviour/personas key table.
+- Confirmed no stale legacy in README (`--with-morph`, "never auto-executed", "paste this snippet" all gone).
+- Merged `feat/setup-auto-install` → `main` and pushed.
+
 ## Refs
 - [[../decisions/ADR-005-installer-auto-exec]]
 - [[../plans/2026-06-18-1518-setup-auto-install]]
