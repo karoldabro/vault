@@ -1,0 +1,18 @@
+# Ubuntu image for the e2e harness: actually runs setup.sh's auto-install path
+# against the real network. Heavier and slower than the offline alpine unit image
+# — opt-in only (VAULT_E2E=1), never on the default `make test` path.
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Prereqs the installer expects to find or apt-install. bats runs the suite.
+# pipx is pre-installed so the graphify path exercises `pipx install` (not the apt
+# step) deterministically; setup.sh still apt-installs anything missing at runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        bats git curl jq ca-certificates sudo unzip \
+        python3 python3-pip pipx \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /code
+ENTRYPOINT ["bats"]
+CMD ["--recursive", "tests/e2e"]

@@ -18,26 +18,36 @@ See [`vault-guide.md`](vault-guide.md) for full process documentation.
 
 ```bash
 git clone git@github.com:karoldabro/vault.git ~/workspace/vault
-cd ~/workspace/vault && ./setup.sh --minimal --yes
+cd ~/workspace/vault && ./setup.sh --full --yes
 ```
 
-`setup.sh` is the umbrella installer. It checks prereqs, scaffolds `~/vault/_global/`, wires the
-required tools (OpenViking, Serena, MorphLLM, claude-mem) plus Graphify, then calls `install.sh` to
-symlink the slash commands. `--minimal` (above) skips the tools for a framework-only install — but
-the commands assume the tools are present, so prefer `--full` on a real workstation.
+`setup.sh` is the umbrella installer. On **Ubuntu** (apt + sudo) `--full` **auto-installs** the whole
+tool stack — ollama + `nomic-embed-text`, uv + Serena, bun + claude-mem, pipx + Graphify, and the
+OpenViking / claude-mem Claude Code plugins — scaffolds `~/vault/_global/`, runs a health-check
+(`doctor`) pass, then calls `install.sh` to symlink the slash commands. Restart Claude Code afterwards so
+the new plugins load.
+
+Auto-install is **consent-gated**: it prompts before touching anything (skip the prompt with `--yes`),
+prints every remote source URL it runs for an audit trail, and is fully idempotent. On a host **without
+apt/sudo** (macOS, containers) it degrades to printing the exact install commands instead of executing —
+it never half-installs or hangs. Verify any time with `./setup.sh --doctor`.
 
 Flags:
 
 | Flag | Effect |
 |------|--------|
-| `--full` | Wire all four required tools + Graphify in one pass (recommended). |
+| `--full` | Install the whole stack: OpenViking, Serena, claude-mem, Graphify (recommended). |
 | `--minimal` | Framework only — skip the tools. Commands degrade without them. |
-| `--with-ov` | Wire OpenViking (writes `~/.openviking/ov.conf`, prints Ollama / plugin install hints). |
-| `--with-serena` / `--with-morph` / `--with-claude-mem` | Wire one required tool. |
-| `--with-graphify` | Print Graphify install hints (per-project commit hook is installed by `/v-init`). |
-| `--yes`, `-y` | Non-interactive. |
+| `--with-ov` | OpenViking: ollama + `nomic-embed-text` + `~/.openviking/ov.conf` + the OV plugin. |
+| `--with-serena` / `--with-claude-mem` | Install one tool (uv+Serena / bun+claude-mem). |
+| `--with-graphify` | Install pipx + Graphify (per-project commit hook is installed by `/v-init`). |
+| `--yes`, `-y` | Consent non-interactively (CI/automation). |
+| `--dry-run` | Echo every command that would run, without executing it. |
+| `--doctor` | Only run the tool-health check, then exit. |
 
-Network-requiring installs (Ollama, pipx) are never auto-executed — `setup.sh` prints the exact command to run. Re-run anytime; it's idempotent.
+Auto-install runs vendor `curl\|sh` scripts (ollama/uv/bun) and adds two third-party Claude marketplaces
+— every source is printed before it runs. See `vault/decisions/ADR-005-installer-auto-exec.md`. (Morph
+Fast Apply is not wired by the installer — it needs a paid API key.)
 
 For just refreshing the symlinks after a `git pull`:
 
@@ -75,7 +85,8 @@ It de-inits the submodule, writes `VAULT.md`, repoints the MOC, and commits. Ide
 vault/
 ├── README.md              # this file
 ├── vault-guide.md         # canonical process doc — read this
-├── setup.sh               # umbrella installer (prereqs, OV, Graphify, machine layer)
+├── setup.sh               # umbrella installer — Ubuntu auto-install + onboarding
+├── lib/installers.sh      # per-tool install_X/check_X + the run() executor seam
 ├── install.sh             # idempotent command installer
 ├── bin/                   # vault-init.sh, vault-migrate.sh and other host-callable scripts
 ├── templates/             # decision, feature, indication, session, project-moc, process, architecture, VAULT
@@ -113,18 +124,18 @@ See [`vault-guide.md`](vault-guide.md) §10 for the full command reference.
 
 ## Required tools
 
-The framework assumes four tools are installed and reachable — they are the cheap path that keeps
-token cost down. Wire them all with `./setup.sh --full`:
+The framework leans on a few tools that keep token cost down. `./setup.sh --full` installs them on
+Ubuntu:
 
 | Tool | Role |
 |------|------|
 | **OpenViking** | Semantic vault memory (decisions, ADRs, sessions, pitfalls). |
 | **claude-mem** | Project history via progressive-disclosure search. |
 | **Serena** | Symbol-aware code navigation and refactoring. |
-| **MorphLLM Fast Apply** | Targeted multi-line / multi-file edits. |
+| **Graphify** | Structural code questions — `graph.json` kept fresh by a per-project post-commit hook (installed by `/v-init`), so querying it costs no tokens. |
 
-Plus **Graphify** for structural code questions — its `graph.json` is kept fresh by a per-project
-post-commit hook installed by `/v-init`, so querying it costs no tokens.
+**MorphLLM Fast Apply** (targeted multi-file edits) is supported but **not** wired by the installer —
+it needs a paid API key; register it yourself with `claude mcp add` if you want it.
 
 Grep / full-file reads are the last resort, used only after these layers come up empty (or to verify
 an exact current line) — not a substitute. See [`vault-guide.md`](vault-guide.md) §10 for the
