@@ -90,35 +90,55 @@ vault/
 ├── install.sh             # idempotent command installer
 ├── bin/                   # vault-init.sh, vault-migrate.sh and other host-callable scripts
 ├── templates/             # decision, feature, indication, session, project-moc, process, architecture, VAULT
-├── commands/              # v-work.md, v-capture.md — linked into ~/.claude/commands/ by install.sh
-├── tests/                 # bats-core suite, runs in Docker (`make test`)
-└── Makefile               # `make test`, `make shell`
+├── personas/              # /v-team critic packs (api-laravel, nuxt, flutter, marketing) + _shared lenses
+├── commands/              # v-work, v-team, v-capture, v-init … — linked into ~/.claude/commands/ by install.sh
+├── tests/                 # bats-core: unit/ + integration/ (offline alpine) + e2e/ (opt-in Ubuntu)
+└── Makefile               # `make test` (offline), `VAULT_E2E=1 make test-e2e`, `make shell`
 ```
 
 ## Tests
 
-Run the full suite in a Docker container (reproducible, no host pollution):
+Two tiers, both in Docker. Docker is the only host prerequisite.
+
+**Offline suite** (default, PR-blocking) — unit + integration on alpine, no network or sudo:
 
 ```bash
-make test
-```
-
-Or scope it:
-
-```bash
+make test              # unit + integration
 make test-unit
 make test-integration
-make test-e2e
 ```
 
-The image is built from `tests/Dockerfile` (alpine + bats-core + bash/git/jq). The repo is mounted **read-only** at `/code`; tests use a tmpfs `$HOME`. Docker is the only host prerequisite.
+The repo is mounted **read-only** at `/code`; tests use a tmpfs `$HOME`. The image is built from
+`tests/Dockerfile` (alpine + bats-core + bash/git/jq). The installer's execute path is covered here via
+the `--dry-run` transcript (`tests/unit/setup-autoinstall.bats`) — real command construction, no real installs.
+
+**End-to-end** (opt-in, slow) — actually runs `setup.sh` on a throwaway **Ubuntu** container with real
+network, proving the installers land on disk:
+
+```bash
+VAULT_E2E=1 make test-e2e
+```
+
+Gated behind `VAULT_E2E=1` (errors otherwise) and kept off the default `make test` path. Built from
+`tests/e2e/Dockerfile.ubuntu`. Covers the lightweight installers (uv via `curl|sh`, Graphify via pipx);
+the ollama daemon and `claude` plugin paths are covered only at the dry-run level (see `tests/e2e/run.sh`).
 
 ## Commands provided
+
+Installed into `~/.claude/commands/` by `install.sh`:
 
 | Command | Purpose |
 |---------|---------|
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
-| `/v-capture` | Capture this session into the vault. Dedupes, updates indexes, extracts ADR candidates, cross-links Refs. |
+| `/v-team` | Heavier sibling of `/v-work` for high-stakes work — parallel persona critics review the plan + diff in tool-grounded loops. |
+| `/v-capture` | Capture this session into the vault. Dedupes, updates indexes, extracts ADR + indication candidates, cross-links Refs. |
+| `/v-init` | Bootstrap a project vault for the current code repo (writes `VAULT.md`, scaffolds folders + indexes). |
+| `/v-migrate` | Convert an old `_process/` submodule vault to the global model. |
+| `/v-resume` | Force a fresh recall from the vault + OpenViking. |
+| `/v-sync` | Re-ingest a project's curated knowledge into OpenViking. |
+| `/v-link` | Declare two projects as a coupled group (shared recall). |
+| `/v-backfill` | Ingest past Claude Code chat transcripts into OpenViking. |
+| `/v-guide` | Generate a cross-project integration guide from a feature. |
 
 See [`vault-guide.md`](vault-guide.md) §10 for the full command reference.
 
