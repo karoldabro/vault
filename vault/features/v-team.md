@@ -23,6 +23,10 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
   composed by stack packs `personas/{api-laravel,nuxt,flutter}.md` via `use_shared` + overlays + local
   architects. Selection + resolution: `personas/_resolution.md`. Authoring specs: `_persona-template.md`,
   `_pack-template.md`.
+- **Testing critic group**: `personas/_shared/testing/` — 6 stack-agnostic testing lenses
+  (test-behaviorist, assertion-auditor, edge-case-hunter, test-double-critic, flakiness-sentinel,
+  test-harness-critic), one AI-test-failure cluster + one bound analyzer each. Selected on test-touching
+  changes via `_resolution.md` §2.1 (cap 3). Rule: [[../indications/testing-persona-group]].
 - **Config** (`VAULT.md` `behaviour`): `project_type`, `personas.{use,add,skip}`, `team_max_rounds`
   (2), `team_max_review_rounds` (2), `team_max_parallel_critics` (3, hard max 5).
 - **Artifact**: `templates/plan.md` → `<vault>/plans/YYYY-MM-DD-HHMM-<slug>.md` (converged plan +
@@ -51,3 +55,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 ## Sessions
 - [[../sessions/2026-06-16-1038-v-team-persona-critique-command]]
 - [[../sessions/2026-06-16-1135-v-team-nuxt-flutter-packs]]
+- [[../sessions/2026-06-19-0954-testing-persona-group]]
