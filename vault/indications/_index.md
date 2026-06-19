@@ -13,3 +13,4 @@ tags: [index, indications]
 | [[confirmed-vs-advisory-findings]] | A finding blocks only when tool-confirmed; unbacked = advisory | `personas/**`, `commands/v-team/steps/**` |
 | [[packs-detect-not-assume]] | Packs detect the project's stack/state approach; never hardcode a library | `personas/<stack>.md` |
 | [[installer-dry-run-seam]] | Installer side-effects go through a dry-run-able `run()` seam; offline tests assert the transcript, e2e proves the real install | `setup.sh`, `lib/installers.sh`, `tests/**` |
+| [[per-user-installer-no-sudo]] | Installer runs as the user, escalates internally for apt only; refuse `sudo` invocation (`$SUDO_USER` set), accept interactive sudo | `setup.sh`, `lib/installers.sh`, `bin/*.sh` |

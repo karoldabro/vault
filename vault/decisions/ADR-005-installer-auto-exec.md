@@ -48,3 +48,12 @@ Morph Fast Apply was **dropped** from the installer (it needs a paid API key; ou
 - Removing `--with-morph` is a clean break (no deprecation stub) — it is now an unknown flag.
 - Supply-chain trust is explicit: the user consents to vendor `curl|sh` scripts and two third-party
   marketplaces (`Castor6/openviking-plugins`, `thedotmack/claude-mem`), printed for an audit trail.
+
+### Follow-up (2026-06-19) — privilege model correction
+Real-world onboarding exposed a deadlock: the installer is **per-user** (uv/bun/plugins/`ov.conf` in
+`$HOME`), yet (a) the auto path was gated on *passwordless* sudo, so a normal user got hint-only, and
+(b) running it under `sudo` flipped `$HOME` to `/root`, stranding every artifact and hiding `claude`.
+Resolved (`98ac293`): run **as the user, escalate internally for apt only**, accept **interactive**
+sudo (prompt at the escalation point), and **refuse a `sudo` invocation** (`$SUDO_USER` set; override
+`VAULT_ALLOW_SUDO=1`) — genuine container/CI root (no `$SUDO_USER`) is unaffected. See
+[[../indications/per-user-installer-no-sudo]] and [[../sessions/2026-06-19-0831-setup-sudo-deadlock-fix]].
