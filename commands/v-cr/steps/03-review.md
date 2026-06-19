@@ -44,15 +44,27 @@ produced more confirmed findings, keep the highest-severity N and note the count
 (no silent truncation). `--max-comments <n>` raises it but requires re-confirmation at the gate.
 
 ## 3.5 Build the comment set
-Assemble what step 4 will preview/post:
-- **1 summary comment**: verdict, a files-changed table, counts by severity, task-alignment note
-  (satisfied / gaps vs the ticket), and the advisory (summary-only) findings.
-- **≤N inline comments**: each = `file:line` + severity + issue + advisory recommendation, each tagged
-  with its fingerprint `cr_fingerprint <file> <rule> <code_hash>` (step 4 attaches the marker).
+Assemble what step 4 will preview/post. **Be short, concise, precise** — brevity is a hard rule, not a
+preference:
+- **1 summary comment**, terse, in this order:
+  - `verdict`;
+  - **coverage line (mandatory)** — `Reviewed <N> files · inline on <M> · <N−M> silent (no confirmed
+    findings)`, so sparse comments read as *deliberate precision*, not missed files;
+  - **test-posture line (mandatory)** — without `--sandbox`: `Tests: not executed (static review only —
+    re-run with --sandbox to gate on tests)`; with `--sandbox`: `Tests: <pass | new-failure | red-unattributed>`;
+  - counts by severity + a files-changed table;
+  - task-alignment note (satisfied / gaps vs the ticket);
+  - ≤3 advisory (summary-only) bullets — drop the rest, don't pad.
+- **≤N inline comments**, each **≤3 lines**: `file:line` + severity + `issue` (one sentence) +
+  `recommendation` (one sentence, advisory). Never restate the diff or re-explain the surrounding code.
+  Each tagged with its fingerprint `cr_fingerprint <file> <rule> <code_hash>` (step 4 attaches the marker).
 
 ## Required output
 ```
 Panel: <pack> → [critics]   (or GENERIC FALLBACK)
+Spawned: [<persona> → <base_agent>, …]   # actual Agent calls — MUST match [critics]; if empty, the panel did not run
+Coverage: reviewed <N> files · inline on <M> · <N−M> silent (no confirmed findings)
+Tests: <not executed (static review only) | pass | new-failure | red-unattributed>
 Confirmed actionable: <n> inline   ·   Advisory (summary-only): <m>
 Suppressed (already posted): <k>
 Task alignment: <satisfied | gaps: …>

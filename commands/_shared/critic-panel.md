@@ -53,10 +53,12 @@ the full panel ran.
 
 ## (c) Generate (parallel, read-only)
 
-One message, multiple `Agent` calls — one per selected persona, spawned as its `base_agent` (fallback:
-`Explore` with the persona block as the prompt). Critics are **read-only** and **independent** (they
-share state only through this procedure's inputs — no agent-to-agent chatter). Each runs its bound
-analyzer first and cites real signals. Each returns findings in the schema below.
+One message, multiple **real `Agent` calls** — one per selected persona, spawned as its `base_agent`
+(fallback: `Explore` with the persona block as the prompt). This spawn is **mandatory**: do NOT inline
+the personas' reasoning in the main thread and present it as a panel — an un-spawned panel is
+non-conformant and must be reported as such (see Output `Spawned:`). Critics are **read-only** and
+**independent** (they share state only through this procedure's inputs — no agent-to-agent chatter).
+Each runs its bound analyzer first and cites real signals. Each returns findings in the schema below.
 
 ## (d) Finding schema
 
@@ -99,10 +101,14 @@ ConfidenceFilter / Sourcery's validation pass all do). Machine-checked, not pros
 
 ```
 Panel: <pack> → [selected critics]   (or: generic fallback)
+Spawned: [<persona> → <base_agent>, …]   # actual Agent calls made — MUST match the selected critics
 Confirmed actionable: [findings — file:line · severity · issue · recommendation]
 Advisory (summary-only): [findings]
 Suppressed (already posted): [n]
 Conflicts / escalations: [...]
 ```
+
+`Spawned:` is a conformance check, not decoration: if it is empty or shorter than the selected set, the
+panel did not actually run — say so and do not present inlined reasoning as panel output.
 
 The caller decides what to do with this (post it, fix-and-reloop, etc.). This module never writes.
