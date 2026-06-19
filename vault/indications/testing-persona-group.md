@@ -38,4 +38,5 @@ Hora & Robbes MSR'26 agent over-mocking → `test-double-critic`).
 ## Applies-to
 `personas/_shared/testing/**`, `personas/_resolution.md` (§2.1 selection) — authoring or selecting
 testing critics. Links [[shared-vs-stack-persona-factoring]], [[confirmed-vs-advisory-findings]],
-[[packs-detect-not-assume]], [[ADR-004-generic-packs-specifics-in-indications]].
+[[packs-detect-not-assume]], [[ADR-004-generic-packs-specifics-in-indications]],
+[[ADR-006-testing-critic-group]].

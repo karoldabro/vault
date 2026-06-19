@@ -11,7 +11,7 @@ tags: [moc]
 
 ## Decisions
 <!-- Auto: link to [[decisions/]] folder. Notable ADRs: -->
-- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]]
+- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]] · [[decisions/ADR-006-testing-critic-group]]
 
 ## Indications
 - See [[indications/_index]] — v-team authoring rules (persona factoring, loop stops, grounded findings)

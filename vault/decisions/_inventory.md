@@ -13,3 +13,4 @@ tags: [index, decisions]
 | [[ADR-003-tool-grounded-findings]] | Persona findings are tool-grounded (confirmed vs advisory) | 2026-06-16 | accepted |
 | [[ADR-004-generic-packs-specifics-in-indications]] | Generic packs; project specifics in indications | 2026-06-16 | accepted |
 | [[ADR-005-installer-auto-exec]] | setup.sh auto-installs the tool stack on Ubuntu (consent-gated) | 2026-06-18 | accepted |
+| [[ADR-006-testing-critic-group]] | Testing critique is a one-cluster-per-persona grounded group | 2026-06-19 | accepted |
