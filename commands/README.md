@@ -10,6 +10,8 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 | `v-migrate.md` | `/v-migrate` | Convert a submodule-based vault to the global framework model. |
 | `v-work.md` | `/v-work` | Vault-aware development lifecycle. |
 | `v-team.md` | `/v-team` | Persona-critique lifecycle: parallel project-specific critics loop over plan + diff. |
+| `v-ask.md` | `/v-ask` | Read-only, vault-aware Q&A. Loads context, answers, no edits/approval/capture. |
+| `v-do.md` | `/v-do` | Small low-risk change — no approval gate; orient → execute → self-review, capture optional. |
 | `v-capture.md` | `/v-capture` | Enhanced session capture. |
 | `v-resume.md` | `/v-resume` | Force fresh context recall (vault + OpenViking). |
 | `v-sync.md` | `/v-sync` | Re-ingest curated knowledge into OpenViking. |
@@ -20,6 +22,10 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 Multi-step commands (`v-work`, `v-team`) keep their steps in a sibling subdirectory (`v-work/steps/`,
 `v-team/steps/`) loaded on demand. `/v-team` reuses `/v-work`'s steps 01/02/05 and adds looped variants
 for propose/execute; its critic definitions live in `../personas/` (shared lenses + per-stack packs).
+
+`/v-ask` and `/v-do` are the **light siblings** — single-file, no step subdirectory, no approval gate.
+Use them when the gated lifecycle is overkill: `/v-ask` for a grounded read-only answer, `/v-do` for a
+small low-risk change. Both escalate to `/v-work` (or `/v-team`) the moment scope grows.
 
 See `../vault-guide.md` §11 for the command reference (and §1.1 for vault path/config resolution).
 
