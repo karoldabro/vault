@@ -36,6 +36,25 @@ quality:     { analyzer: "project eslint + typecheck (vue-tsc / `nuxi typecheck`
                            DEFER to the repo's indications for the canonical conventions] }
 ```
 
+## Testing-group overlays
+Bind when the testing group (`personas/_shared/testing/`) is selected on a test-touching change
+(`_resolution.md` §2.1). Assumes Vitest; detect Jest and swap flags if the repo uses it.
+
+```
+test-behaviorist:  { analyzer: "eslint-plugin-testing-library + @testing-library/vue queries; eslint-plugin-vitest (JS = confirmed tier)",
+                     note: "assert rendered output / emitted events, not wrapper.vm internals" }
+assertion-auditor: { analyzer: "StrykerJS (@stryker-mutator/core) + eslint-plugin-vitest expect-expect",
+                     note: "survived mutant = weak assertion; ban assertion-free + bare snapshot-only tests" }
+edge-case-hunter:  { analyzer: "vitest --coverage (v8/istanbul) --coverage.branches; fast-check",
+                     note: "loading / error / empty states, boundary props, error responses" }
+test-double-critic:{ analyzer: "grep vi.mock / vi.fn / mockNuxtImport / mockComponent density",
+                     note: "prefer @nuxt/test-utils real renders; flag mocking the component under test" }
+flakiness-sentinel:{ analyzer: "vitest --sequence.shuffle; grep Date.now()/Math.random()/setTimeout/real $fetch",
+                     note: "vi.useFakeTimers + seed; mock $fetch, don't hit the network" }
+test-harness-critic:{ analyzer: "run vitest run + verify @nuxt/test-utils setup; component (vitest) vs e2e (Playwright) layer",
+                     note: "mountSuspended/registerEndpoint wired? don't push unit logic into a Playwright e2e" }
+```
+
 ## Stack-local personas
 
 ## Persona: Component / State Architect  (base_agent: frontend-architect)

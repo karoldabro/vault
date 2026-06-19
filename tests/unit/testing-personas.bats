@@ -70,6 +70,19 @@ setup() {
     grep -qi 'behaviour\|behavior' "${TESTING_DIR}/test-behaviorist.md"
 }
 
+@test "each stack pack wires a testing-group overlay with stack mutation tooling" {
+    declare -A mut=( [api-laravel]=infection [nuxt]=stryker [flutter]=mutation_test )
+    for pack in api-laravel nuxt flutter; do
+        local f="${VAULT_ROOT}/personas/${pack}.md"
+        grep -q 'Testing-group overlays' "${f}" || { echo "${pack}: no testing overlay"; return 1; }
+        grep -qi "${mut[$pack]}" "${f}" || { echo "${pack}: missing mutation tool ${mut[$pack]}"; return 1; }
+        # all six lenses bound in the overlay
+        for p in test-behaviorist assertion-auditor edge-case-hunter test-double-critic flakiness-sentinel test-harness-critic; do
+            grep -q "${p}:" "${f}" || { echo "${pack}: overlay missing ${p}"; return 1; }
+        done
+    done
+}
+
 @test "testing group is indexed in README and indications" {
     grep -q '_shared/testing'        "${VAULT_ROOT}/README.md"
     grep -q 'testing-persona-group'  "${VAULT_ROOT}/vault/indications/_index.md"

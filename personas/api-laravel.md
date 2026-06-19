@@ -30,6 +30,25 @@ quality:     { analyzer: "Larastan/PHPStan (project level) + duplication grep / 
 `skeptic` is included only on high-risk changes (auth, billing, migrations, multi-tenant) per
 `_resolution.md`.
 
+## Testing-group overlays
+Bind when the testing group (`personas/_shared/testing/`) is selected on a test-touching change
+(`_resolution.md` §2.1). The generic lens is reused untouched; this binds the Laravel/PHPUnit tooling.
+
+```
+test-behaviorist:  { analyzer: "phpmd + Pest/PHPUnit naming/structure (PHP = structural tier; coupling stays heuristic)",
+                     note: "assert via response + DB state, not protected props or call order" }
+assertion-auditor: { analyzer: "infection (MSI + covered MSI) + `phpunit --fail-on-risky`",
+                     note: "survived mutant = confirmed weak assertion; risky test = assertion-free" }
+edge-case-hunter:  { analyzer: "phpunit --coverage-xml with Xdebug pathCoverage (branch); Eris / Pest property plugin",
+                     note: "validation rules + 403/404/422 paths + empty/boundary inputs; a bugfix ships a failing-first test" }
+test-double-critic:{ analyzer: "grep createMock / Mockery::mock / $this->mock / prophesize density + concrete-vs-interface",
+                     note: "Http::fake / Queue::fake / Event::fake / Bus::fake are sanctioned fakes, NOT over-mocking; flag mocking the SUT" }
+flakiness-sentinel:{ analyzer: "phpunit --order-by=random (+ --random-order-seed); grep now()/Carbon::now() w/o setTestNow|travel, rand()/fake() unseeded, sleep(",
+                     note: "use Carbon::setTestNow / travel(); RefreshDatabase for isolation" }
+test-harness-critic:{ analyzer: "run vendor/bin/phpunit|pest; --log-junit durations; Unit/ vs Feature/ layer counts",
+                     note: "a >500ms Unit test is a mislabeled Feature test; DB-touching tests belong in Feature" }
+```
+
 ## Stack-local personas
 
 ## Persona: Software Architect  (base_agent: system-architect)

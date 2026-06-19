@@ -36,6 +36,25 @@ quality:     { analyzer: "`flutter analyze` (flutter_lints / very_good_analysis)
                            DEFER to the repo's indications for the canonical conventions] }
 ```
 
+## Testing-group overlays
+Bind when the testing group (`personas/_shared/testing/`) is selected on a test-touching change
+(`_resolution.md` §2.1). Dart has the weakest test tooling of the three packs — declare tiers honestly.
+
+```
+test-behaviorist:  { analyzer: "dart analyze + custom_lint (Dart = advisory tier — no standard test-smell pack)",
+                     note: "assert via Finder/matcher on the rendered widget, not private State fields" }
+assertion-auditor: { analyzer: "mutation_test (Dart pkg — weaker/slower) + verify expect()/expectLater present",
+                     note: "no expect-less testWidgets; survived mutant = weak assertion" }
+edge-case-hunter:  { analyzer: "flutter test --coverage (LCOV line-oriented; Dart branch coverage is limited — note it); glados PBT",
+                     note: "error / empty / loading widget states, Result<T> failure paths, boundary inputs" }
+test-double-critic:{ analyzer: "grep mockito / mocktail when( / verify( density + verify-count",
+                     note: "over-verify() = brittle interaction test; prefer real objects / fakes; flag mocking the SUT" }
+flakiness-sentinel:{ analyzer: "flutter test --test-randomize-ordering-seed=random; grep DateTime.now()/Random() unseeded, Future.delayed",
+                     note: "use fakeAsync + injected Clock; pumpAndSettle over fixed delays" }
+test-harness-critic:{ analyzer: "run flutter test; verify testWidgets pump/pumpAndSettle; unit vs widget vs integration_test layer; golden files",
+                     note: "a missing pump = silent no-op; goldens still need a semantic assertion" }
+```
+
 ## Stack-local personas
 
 ## Persona: Widget / State Architect  (base_agent: mobile-app-builder)

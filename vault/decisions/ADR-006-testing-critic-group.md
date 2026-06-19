@@ -40,9 +40,10 @@ Testing critics form a **group** at `personas/_shared/testing/` with these rules
 ## Consequences
 - Testing critique gets the same grounded, decorrelated panel rigor as production code; the persona set
   maps 1:1 to evidence, so each seat is justifiable.
-- Stack packs must add per-stack analyzer **overlays** for the group (infection/stryker/mutmut, coverage
-  flags, randomize flags, mock greps) — without them the critics fall back toward advisory and lose their
-  teeth. This is the main outstanding work.
+- Stack packs add per-stack analyzer **overlays** for the group (infection/stryker/mutation_test,
+  coverage flags, randomize flags, mock greps) — without them the critics fall back toward advisory and
+  lose their teeth. Done for `api-laravel`, `nuxt`, `flutter` (2026-06-19); future packs must include a
+  Testing-group overlay block.
 - Adding a future testing concern requires showing it is (a) a distinct failure cluster and (b)
   decorrelated from the six — otherwise it belongs in a mandate or the synthesizer rubric, not a new
   persona. Guards against persona sprawl.
