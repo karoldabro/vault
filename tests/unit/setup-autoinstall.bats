@@ -54,6 +54,9 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     [[ "$output" == *"claude plugin marketplace add Castor6/openviking-plugins"* ]]
     [[ "$output" == *"claude plugin install claude-code-memory-plugin@openviking-plugin"* ]]
     [[ "$output" == *"claude plugin marketplace add thedotmack/claude-mem"* ]]
+    # The marketplace name is "thedotmack" (from marketplace.json), not "claude-mem":
+    # the qualified id MUST be claude-mem@thedotmack or fresh installs fail.
+    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
 }
 
 @test "pipx installs pin a Python interpreter (--python)" {
@@ -132,6 +135,28 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     [[ "$output" == *"source: https://astral.sh/uv/install.sh"* ]]
 }
 
+@test "ensure_zstd installs zstd via apt when absent (ollama tarball needs it)" {
+    # zstd absent, apt-get present → ensure_zstd must run `apt-get install -y zstd`.
+    # The test image may ship zstd, so force `have zstd` false; drop the sudo prefix
+    # so the apt call lands on our stub directly.
+    stub apt-get 'echo "apt-get $*"; exit 0'
+    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
+      . "${VAULT_ROOT}/lib/installers.sh"
+      have() { [ "$1" = zstd ] && return 1; command -v "$1" >/dev/null 2>&1; }
+      _priv() { :; }
+      ensure_zstd ) > "${TEST_HOME}/out" 2>&1
+    grep -q 'apt-get install -y zstd' "${TEST_HOME}/out"
+}
+
+@test "ensure_zstd is a no-op when zstd is already present" {
+    stub zstd 'exit 0'
+    stub apt-get 'echo "SHOULD-NOT-RUN apt-get $*"; exit 0'
+    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
+      . "${VAULT_ROOT}/lib/installers.sh"
+      ensure_zstd ) > "${TEST_HOME}/out" 2>&1
+    ! grep -q 'SHOULD-NOT-RUN' "${TEST_HOME}/out"
+}
+
 #------------------------------------------------------------------------------
 # Idempotency: already-present tools are skipped
 #------------------------------------------------------------------------------
@@ -155,8 +180,8 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     stub claude '
 case "$1 $2" in
   "plugin --help") exit 0 ;;
-  "plugin list") echo "claude-code-memory-plugin@openviking-plugin"; echo "claude-mem@claude-mem"; exit 0 ;;
-  "plugin marketplace") echo "openviking-plugin"; echo "claude-mem"; exit 0 ;;
+  "plugin list") echo "claude-code-memory-plugin@openviking-plugin"; echo "claude-mem@thedotmack"; exit 0 ;;
+  "plugin marketplace") echo "openviking-plugin"; echo "thedotmack"; exit 0 ;;
 esac
 exit 0'
     run_setup --with-ov --with-claude-mem --dry-run

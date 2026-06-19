@@ -212,12 +212,23 @@ ensure_ollama_running() {
     warn "ollama daemon did not become ready within 10s"
     return 1
 }
+# ollama's install.sh extracts a zstd-compressed tarball, so the `zstd` binary must
+# exist before it runs (newer releases hard-fail without it). apt hosts only — elsewhere
+# we warn and let the installer's own error guide the user, never fatal.
+ensure_zstd() {
+    have zstd && return 0
+    if _dry; then info "would install zstd (ollama tarball needs it)"; return 0; fi
+    have apt-get || { warn "zstd missing and no apt-get — ollama may fail to extract its tarball"; return 0; }
+    apt_install zstd || warn "could not install zstd — ollama install may fail"
+}
 install_ollama() {
     if check_ollama; then
         ok "ollama present"
     elif _dry; then
+        ensure_zstd
         run_shell "https://ollama.com/install.sh" "curl -fsSL https://ollama.com/install.sh | sh"
     else
+        ensure_zstd
         run_shell "https://ollama.com/install.sh" "curl -fsSL https://ollama.com/install.sh | sh" || return 1
         ensure_session_path
         have ollama || { warn "ollama not on PATH after install"; return 1; }
@@ -353,8 +364,10 @@ install_openviking_plugin() {
 }
 install_claude_mem_plugin() {
     _marketplace_add "thedotmack/claude-mem" "claude-mem" || return 1
-    # marketplace name == plugin name for this repo; bun is auto-installed by claude-mem.
-    _plugin_install "claude-mem@claude-mem" "claude-mem" || return 1
+    # marketplace.json declares name "thedotmack" (plugin "claude-mem"), so the
+    # qualified id is claude-mem@thedotmack — NOT claude-mem@claude-mem. bun is
+    # auto-installed by claude-mem.
+    _plugin_install "claude-mem@thedotmack" "claude-mem" || return 1
     ok "claude-mem plugin wired"
 }
 
