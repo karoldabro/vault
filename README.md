@@ -30,10 +30,11 @@ cd ~/workspace/vault && ./setup.sh --full --yes
 > command — OpenViking is the MCP plugin + ollama backend; check it via `./setup.sh --doctor`.
 
 `setup.sh` is the umbrella installer. On **Ubuntu** (apt + sudo) `--full` **auto-installs** the whole
-tool stack — ollama + `nomic-embed-text`, uv + Serena, bun + claude-mem, pipx + Graphify, and the
-OpenViking / claude-mem Claude Code plugins — scaffolds `~/vault/_global/`, runs a health-check
-(`doctor`) pass, then calls `install.sh` to symlink the slash commands. Restart Claude Code afterwards so
-the new plugins load.
+tool stack — ollama + `nomic-embed-text`, the OpenViking server (`pipx install openviking`) + its
+`~/.openviking/` config + a systemd `--user` service on :1933, uv + Serena, bun + claude-mem, pipx +
+Graphify, and the OpenViking / claude-mem Claude Code plugins (incl. the plugin client config the MCP
+requires) — scaffolds `~/vault/_global/`, runs a health-check (`doctor`) pass, then calls `install.sh`
+to symlink the slash commands. Restart Claude Code afterwards so the new plugins load.
 
 Auto-install is **consent-gated**: it prompts before touching anything (skip the prompt with `--yes`),
 prints every remote source URL it runs for an audit trail, and is fully idempotent. On a host **without
@@ -47,7 +48,7 @@ Flags:
 |------|--------|
 | `--full` | Install the whole stack: OpenViking, Serena, claude-mem, Graphify (recommended). |
 | `--minimal` | Framework only — skip the tools. Commands degrade without them. |
-| `--with-ov` | OpenViking: ollama + `nomic-embed-text` + `~/.openviking/ov.conf` + the OV plugin. |
+| `--with-ov` | OpenViking: ollama + `nomic-embed-text`, the `openviking` server (pipx) + `ov.conf` + client `config.json` + `:1933` user service, and the OV plugin. |
 | `--with-serena` / `--with-claude-mem` | Install one tool (uv+Serena / bun+claude-mem). |
 | `--with-graphify` | Install pipx + Graphify (per-project commit hook is installed by `/v-init`). |
 | `--yes`, `-y` | Consent non-interactively (CI/automation). |

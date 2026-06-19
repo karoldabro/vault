@@ -267,24 +267,94 @@ fi
 if [ "${with_ov}" -eq 1 ]; then
     section "OpenViking"
 
-    # ov.conf is pure-local scaffold — written directly, always, on --with-ov.
-    ov_conf="${HOME}/.openviking/ov.conf"
-    if [ -f "${ov_conf}" ]; then
+    # OpenViking has THREE parts, all needed for the memory MCP to connect:
+    #   1. server  — `openviking` pipx pkg (`openviking-server` + `ov` CLI), runs on :1933.
+    #   2. ov.conf — the server's JSON config (host/port/storage/embedding).
+    #   3. plugin client config — ~/.openviking/claude-code-memory-plugin/config.json,
+    #      which the MCP server REQUIRES ({ "mode": "local" }); without it the plugin
+    #      exits and Claude Code shows "Connection closed".
+    # Config files + the systemd unit are pure-local scaffold — written directly here;
+    # the network/privileged installs (pipx, systemctl) go through install_* / run().
+    ov_dir="${HOME}/.openviking"
+    ov_conf="${ov_dir}/ov.conf"
+    # A valid config has the JSON "server" block; the old 3-line "workspace =" format is
+    # rewritten (the server can't parse it, and the plugin reads port/key from here).
+    if [ -f "${ov_conf}" ] && grep -q '"server"' "${ov_conf}" 2>/dev/null; then
         ok "ov.conf present"
     else
-        ( umask 077; mkdir -p "$(dirname "${ov_conf}")" )
-        chmod 700 "$(dirname "${ov_conf}")" 2>/dev/null || true
+        ( umask 077; mkdir -p "${ov_dir}/data" "${ov_dir}/logs" )
+        chmod 700 "${ov_dir}" 2>/dev/null || true
         ( umask 077; cat > "${ov_conf}" <<EOF
-workspace = ${VAULT_HOME}
-provider  = ollama
-model     = nomic-embed-text
+{
+  "server": { "host": "127.0.0.1", "port": 1933 },
+  "storage": {
+    "workspace": "${ov_dir}/data",
+    "vectordb": { "backend": "local" },
+    "agfs": { "backend": "local", "port": 1833 }
+  },
+  "embedding": {
+    "dense": {
+      "provider": "litellm",
+      "model": "ollama/nomic-embed-text",
+      "api_base": "http://127.0.0.1:11434",
+      "dimension": 768
+    }
+  }
+}
 EOF
         )
         ok "wrote ${ov_conf} (0600)"
     fi
 
+    # Plugin client config — the file the MCP server requires to start.
+    cc_conf="${ov_dir}/claude-code-memory-plugin/config.json"
+    if [ -f "${cc_conf}" ]; then
+        ok "client config.json present"
+    else
+        mkdir -p "$(dirname "${cc_conf}")"
+        cat > "${cc_conf}" <<'EOF'
+{
+  "mode": "local",
+  "agentId": "claude-code",
+  "recallLimit": 6,
+  "captureMode": "semantic",
+  "captureTimeoutMs": 30000,
+  "captureAssistantTurns": false
+}
+EOF
+        ok "wrote ${cc_conf}"
+    fi
+
+    # systemd --user unit that keeps openviking-server running on :1933 (%h = $HOME).
+    ov_unit="${HOME}/.config/systemd/user/openviking.service"
+    if [ -f "${ov_unit}" ]; then
+        ok "openviking.service unit present"
+    else
+        mkdir -p "$(dirname "${ov_unit}")"
+        cat > "${ov_unit}" <<'EOF'
+[Unit]
+Description=OpenViking memory server (vault + Claude Code)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/openviking-server --config %h/.openviking/ov.conf
+Restart=on-failure
+RestartSec=5
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+StandardOutput=append:%h/.openviking/logs/openviking.log
+StandardError=append:%h/.openviking/logs/openviking.err
+
+[Install]
+WantedBy=default.target
+EOF
+        ok "wrote ${ov_unit}"
+    fi
+
     if [ "${auto}" -eq 1 ]; then
         tool_try ollama install_ollama
+        tool_try openviking-server install_openviking_server
         if claude_cli_ok; then
             tool_try openviking-plugin install_openviking_plugin
         else
@@ -296,6 +366,10 @@ EOF
         todo "Install Ollama + embedding model:"
         info "  curl -fsSL https://ollama.com/install.sh | sh"
         info "  ollama pull nomic-embed-text"
+        todo "Install the OpenViking server + ov CLI:"
+        info "  pipx install openviking"
+        todo "Enable the memory server (user service on :1933):"
+        info "  systemctl --user enable --now openviking.service"
         todo "Install the OpenViking Claude Code plugin:"
         info "  claude plugin marketplace add Castor6/openviking-plugins"
         info "  claude plugin install claude-code-memory-plugin@openviking-plugin"

@@ -49,6 +49,8 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     [[ "$output" == *"uv tool install -p 3.13 serena-agent"* ]]
     [[ "$output" == *"curl -fsSL https://bun.com/install | bash"* ]]
     [[ "$output" == *"pipx install graphifyy"* ]]
+    [[ "$output" == *"pipx install openviking"* ]]
+    [[ "$output" == *"systemctl --user enable --now openviking.service"* ]]
     [[ "$output" == *"claude plugin marketplace add Castor6/openviking-plugins"* ]]
     [[ "$output" == *"claude plugin install claude-code-memory-plugin@openviking-plugin"* ]]
     [[ "$output" == *"claude plugin marketplace add thedotmack/claude-mem"* ]]

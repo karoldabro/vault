@@ -237,6 +237,58 @@ install_serena() {
 }
 
 #------------------------------------------------------------------------------
+# OpenViking server (PyPI `openviking` → `openviking-server` + `ov` CLI) + the
+# systemd --user service that keeps it running on :1933. The Claude Code MCP
+# plugin (installed separately below) connects to this server in local mode.
+#------------------------------------------------------------------------------
+check_openviking_server() { ensure_session_path; have openviking-server || have ov; }
+# Write + enable the user service (setup.sh has already written the unit file). Best
+# effort: degrade cleanly where there is no user systemd (containers/CI) by starting
+# a detached server instead. Never fatal.
+ov_enable_service() {
+    if [ "${VAULT_SETUP_DRY_RUN:-0}" = "1" ]; then
+        printf '  [dry-run] systemctl --user enable --now openviking.service\n'
+        return 0
+    fi
+    if have systemctl && systemctl --user show-environment >/dev/null 2>&1; then
+        run systemctl --user daemon-reload || true
+        if run systemctl --user enable --now openviking.service; then
+            ok "openviking.service enabled (:1933)"
+            # Survive logout; needs privilege, so best-effort + a hint when it can't.
+            loginctl enable-linger "$(id -un)" >/dev/null 2>&1 \
+                || info "for boot persistence: sudo loginctl enable-linger $(id -un)"
+        else
+            warn "could not enable openviking.service — start it with: systemctl --user start openviking.service"
+            return 1
+        fi
+    else
+        warn "no user systemd — starting openviking-server detached (no auto-restart)"
+        ( openviking-server --config "${HOME}/.openviking/ov.conf" >/dev/null 2>&1 & disown 2>/dev/null ) || true
+    fi
+}
+install_openviking_server() {
+    if check_openviking_server; then
+        ok "openviking-server present"
+    elif _dry; then
+        run pipx install openviking
+        ok "openviking (dry-run)"
+        ov_enable_service
+        return 0
+    else
+        if ! have pipx; then
+            apt_install pipx || return 1
+            run pipx ensurepath || true
+            ensure_session_path
+        fi
+        run pipx install openviking || return 1
+        ensure_session_path
+        have openviking-server || { warn "openviking-server not on PATH after install"; return 1; }
+        ok "openviking installed"
+    fi
+    ov_enable_service
+}
+
+#------------------------------------------------------------------------------
 # Claude Code plugins / marketplaces (scriptable `claude` CLI)
 #------------------------------------------------------------------------------
 # Minimum claude CLI version exposing `plugin`/`mcp` subcommands.
@@ -295,6 +347,9 @@ doctor() {
 
     _doctor_row "ollama"               have ollama || true
     _doctor_row "  nomic-embed-text"   bash -c 'ollama list 2>/dev/null | grep -q "^nomic-embed-text"' || true
+    _doctor_row "openviking-server"    have openviking-server || true
+    _doctor_row "  OV server (:1933)"  bash -c 'curl -fsS -m 2 http://127.0.0.1:1933/health 2>/dev/null | grep -q healthy' || true
+    _doctor_row "  client config.json" test -f "${HOME}/.openviking/claude-code-memory-plugin/config.json" || true
     _doctor_row "uv"                   have uv || true
     _doctor_row "bun"                  have bun || true
     _doctor_row "graphify"             have graphify || true

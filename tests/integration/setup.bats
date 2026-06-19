@@ -56,12 +56,29 @@ teardown() {
     grep -q "USER CONTENT" "${VAULT_HOME}/_global/coupled-groups.md"
 }
 
-@test "--with-ov writes ov.conf with VAULT_HOME workspace" {
+@test "--with-ov writes a valid JSON ov.conf + plugin client config + service unit" {
     run "${VAULT_ROOT}/setup.sh" --with-ov --yes
     [ "$status" -eq 0 ]
+    # Server config: JSON the server can actually parse (not the old 3-line format).
     [ -f "${HOME}/.openviking/ov.conf" ]
-    grep -q "workspace = ${VAULT_HOME}" "${HOME}/.openviking/ov.conf"
-    grep -q "model     = nomic-embed-text" "${HOME}/.openviking/ov.conf"
+    grep -q '"server"' "${HOME}/.openviking/ov.conf"
+    grep -q '"port": 1933' "${HOME}/.openviking/ov.conf"
+    grep -q 'nomic-embed-text' "${HOME}/.openviking/ov.conf"
+    # Plugin client config — the file whose absence makes the MCP exit ("Connection closed").
+    [ -f "${HOME}/.openviking/claude-code-memory-plugin/config.json" ]
+    grep -q '"mode": "local"' "${HOME}/.openviking/claude-code-memory-plugin/config.json"
+    # systemd --user unit that runs the server.
+    [ -f "${HOME}/.config/systemd/user/openviking.service" ]
+    grep -q 'openviking-server --config' "${HOME}/.config/systemd/user/openviking.service"
+}
+
+@test "--with-ov rewrites a stale 3-line ov.conf into JSON" {
+    mkdir -p "${HOME}/.openviking"
+    printf 'workspace = /old\nprovider  = ollama\nmodel     = nomic-embed-text\n' > "${HOME}/.openviking/ov.conf"
+    run "${VAULT_ROOT}/setup.sh" --with-ov --yes
+    [ "$status" -eq 0 ]
+    grep -q '"server"' "${HOME}/.openviking/ov.conf"
+    ! grep -q 'workspace = /old' "${HOME}/.openviking/ov.conf"
 }
 
 @test "--minimal beats --with-ov (no ov.conf written)" {
