@@ -59,6 +59,12 @@ Auto-install runs vendor `curl\|sh` scripts (ollama/uv/bun) and adds two third-p
 — every source is printed before it runs. See `vault/decisions/ADR-005-installer-auto-exec.md`. (Morph
 Fast Apply is not wired by the installer — it needs a paid API key.)
 
+> The pipx-installed tools (`openviking`, `graphifyy`) require **Python ≥3.10**; the installer pins a
+> `python3.12`/`3.11`/`3.10` it finds on PATH. On an old host (e.g. WSL/Ubuntu 20.04 = Python 3.8) pipx
+> would otherwise fail with the misleading "No matching distribution found" — install `python3.12`
+> (`sudo apt install -y python3.12 python3.12-venv`, or the deadsnakes PPA) and re-run. `--doctor` flags
+> a missing ≥3.10 interpreter.
+
 For just refreshing the symlinks after a `git pull`:
 
 ```bash

@@ -56,6 +56,28 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     [[ "$output" == *"claude plugin marketplace add thedotmack/claude-mem"* ]]
 }
 
+@test "pipx installs pin a Python interpreter (--python)" {
+    stub_claude_empty
+    run_setup --full --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"pipx install openviking --python"* ]]
+    [[ "$output" == *"pipx install graphifyy --python"* ]]
+}
+
+@test "pick_python picks a >=3.10 interpreter and rejects <3.10" {
+    # Stub every candidate as an old 3.8 first → none qualifies.
+    for c in python3.13 python3.12 python3.11 python3.10 python3 python; do
+        printf '#!/usr/bin/env bash\necho 3.8.10\n' > "${FAKEBIN}/${c}"; chmod +x "${FAKEBIN}/${c}"
+    done
+    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
+      . "${VAULT_ROOT}/lib/installers.sh"
+      if pick_python >/dev/null; then echo "old=picked-BAD"; else echo "old=rejected"; fi
+      printf '#!/usr/bin/env bash\necho 3.12\n' > "${FAKEBIN}/python3.12"; chmod +x "${FAKEBIN}/python3.12"
+      echo "new=$(pick_python)" ) > "${TEST_HOME}/out" 2>&1
+    grep -q 'old=rejected' "${TEST_HOME}/out"
+    grep -q 'new=python3.12' "${TEST_HOME}/out"
+}
+
 @test "dry-run prints each install via the [dry-run] marker (nothing really executed)" {
     stub_claude_empty
     run_setup --full --dry-run

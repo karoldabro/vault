@@ -372,7 +372,7 @@ EOF
         info "  curl -fsSL https://ollama.com/install.sh | sh"
         info "  ollama pull nomic-embed-text"
         todo "Install the OpenViking server + ov CLI:"
-        info "  pipx install openviking"
+        info "  pipx install openviking --python python3.12   # needs Python >=3.10"
         todo "Enable the memory server (user service on :1933):"
         info "  systemctl --user enable --now openviking.service"
         todo "Install the OpenViking Claude Code plugin:"
@@ -427,8 +427,8 @@ if [ "${with_graphify}" -eq 1 ]; then
         tool_try graphify install_graphify
     else
         todo "Install pipx, then Graphify:"
-        info "  sudo apt install -y pipx && pipx ensurepath"
-        info "  pipx install graphifyy"
+        info "  sudo apt install -y pipx python3.12 python3.12-venv && pipx ensurepath"
+        info "  pipx install graphifyy --python python3.12   # needs Python >=3.10"
     fi
     info "Per-project graph: /v-init installs the post-commit hook (graphify hook install)."
 fi

@@ -112,6 +112,38 @@ _priv() { [ "$(id -u)" -eq 0 ] || printf 'sudo'; }
 # apt_install <pkg...> — idempotent-ish; apt itself skips already-installed pkgs.
 apt_install() { run $(_priv) apt-get install -y "$@"; }
 
+# pick_python — echo the first python>=3.10 command on PATH, or return 1. pipx builds
+# each tool's venv with whatever `python3` it finds; on old hosts (WSL/Ubuntu 20.04 =
+# Python 3.8) packages that require >=3.10 resolve to nothing and pip reports the
+# baffling "No matching distribution found / from versions: none". Pinning a modern
+# interpreter avoids that trap.
+pick_python() {
+    local c v
+    for c in python3.13 python3.12 python3.11 python3.10 python3 python; do
+        have "$c" || continue
+        v="$("$c" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null)" || continue
+        case "$v" in
+            3.1[0-9]|3.[2-9][0-9]|[4-9].*|[1-9][0-9].*) printf '%s\n' "$c"; return 0 ;;
+        esac
+    done
+    return 1
+}
+
+# pipx_install <pkg> — pipx install pinned to a python>=3.10. Under dry-run, echo a
+# representative command even when no interpreter is present (transcript stability).
+pipx_install() {
+    local pkg="$1" py
+    py="$(pick_python || true)"
+    if [ -z "$py" ]; then
+        if _dry; then py="python3.12"; else
+            warn "no Python >=3.10 on PATH — pipx can't build ${pkg} (it needs >=3.10)."
+            warn "  install one, e.g.: $(_priv) apt-get install -y python3.12 python3.12-venv"
+            return 1
+        fi
+    fi
+    run pipx install "$pkg" --python "$py"
+}
+
 #------------------------------------------------------------------------------
 # Per-tool status tracking + continue-on-error wrapper
 #------------------------------------------------------------------------------
@@ -216,7 +248,7 @@ install_graphify() {
         run pipx ensurepath || true
         ensure_session_path
     fi
-    run pipx install graphifyy || return 1
+    pipx_install graphifyy || return 1
     _dry && { ok "graphify (dry-run)"; info "per-repo: 'graphify hook install' (or /v-init)"; return 0; }
     ensure_session_path
     have graphify && ok "graphify installed" || { warn "graphify not on PATH after install"; return 1; }
@@ -270,7 +302,7 @@ install_openviking_server() {
     if check_openviking_server; then
         ok "openviking-server present"
     elif _dry; then
-        run pipx install openviking
+        pipx_install openviking
         ok "openviking (dry-run)"
         ov_enable_service
         return 0
@@ -280,7 +312,7 @@ install_openviking_server() {
             run pipx ensurepath || true
             ensure_session_path
         fi
-        run pipx install openviking || return 1
+        pipx_install openviking || return 1
         ensure_session_path
         have openviking-server || { warn "openviking-server not on PATH after install"; return 1; }
         ok "openviking installed"
@@ -378,6 +410,7 @@ doctor() {
     _doctor_row "  client config.json" test -f "${HOME}/.openviking/claude-code-memory-plugin/config.json" || true
     _doctor_row "uv"                   have uv || true
     _doctor_row "bun"                  have bun || true
+    _doctor_row "python >=3.10 (pipx)" pick_python || true
     _doctor_row "graphify"             have graphify || true
     _doctor_row "serena"               check_serena || true
     if claude_cli_ok; then
