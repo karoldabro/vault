@@ -18,6 +18,11 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 
 ## Contracts
 - Dispatcher `commands/v-cr.md` → 5 steps `commands/v-cr/steps/01-detect..05-capture.md`.
+- **Optional `--sandbox` path** (ADR-009): isolated-execution contract `commands/v-cr/sandbox.md`; pure
+  core `lib/cr-sandbox.sh` (offline-tested `tests/unit/cr-sandbox.bats`). Adds adapter op `fetch_ref`
+  (`adapters.md`) + an optional dynamic-evidence bundle to `_shared/critic-panel.md`. Flags `--sandbox`,
+  `--baseline`, `--allow-net-install`, `--sandbox-gc`, `--no-post`. Decision:
+  [[../decisions/ADR-009-v-cr-sandboxed-execution]]; safety: [[../indications/sandboxed-cr-safety]].
 - Shared panel sub-procedure `commands/_shared/critic-panel.md` (also used by v-team §5.3).
 - Forge adapter interface `commands/v-cr/adapters.md` → `adapters/{github,bitbucket-cloud,bitbucket-server}.md`.
 - Task-source contract → `tasks/{jira,asana,forge-issue}.md`.
