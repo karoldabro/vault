@@ -30,6 +30,10 @@ More personas ≠ more signal (correlated critics collapse to ~2 effective votes
 relevant, decorrelated** set, capped by `team_max_parallel_critics` (default 3, hard max 5):
 
 - **Architect persona(s): always in** — they own structure and reuse.
+- **`correctness` (bug-hunter): default-in for diff review** — `/v-cr` and `/v-team`'s diff-review loop
+  review *existing code's behaviour*, where logic/edge/null/race bugs are the highest-value findings
+  (`_shared/correctness.md`). For pure plan critique (no diff yet) it is optional. Decorrelated from
+  `skeptic` (assumptions) and `quality` (cleanliness) — see that file's Output note.
 - **Add the 1–2 lenses the change most implicates** — derive from the Step-1 keywords / impact scope:
   auth·tenant·permission·upload → `security`; query·index·list·job·report → `performance`;
   refactor·duplication·new-module → `quality`; contract·endpoint·filter·response → integration architect.

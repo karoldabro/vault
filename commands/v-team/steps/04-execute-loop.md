@@ -33,6 +33,11 @@ Stamp each backlog row's `disposition` (implement | change | skip) + reason in t
 
 ## 5.3 Diff-review loop (panel → synthesize → re-loop, tool-first)
 
+The single-pass panel sub-procedure (ground → select → generate → grounding-gate verify → synthesize) is
+defined canonically in `commands/_shared/critic-panel.md` (shared with `/v-cr`). This section **wraps**
+that procedure in v-team's own fix-and-reloop control flow — the *apply-fixes-between-rounds* and
+*re-spawn* steps below belong to v-team (it owns and mutates the local diff), not to the shared module.
+
 Run after **each phase** for BIG scope (>15 files or API/schema change), or **once at the end** for
 small scope (v-work §4.7 heuristic).
 
