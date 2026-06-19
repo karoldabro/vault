@@ -23,6 +23,16 @@ Usage:
 - `/v-cr --post` — skip *re-confirmation* once a target was confirmed this session (the first post to any
   `host/owner/repo#PR` is **always** gated — see step 4).
 - `/v-cr --unpost` — remove every comment this tool posted to the target PR (the undo / cleanup path).
+- `/v-cr --no-post` — review + capture only; never post (the same outcome as declining the gate, made
+  explicit for non-interactive runs). Findings are still saved to the vault so nothing is lost.
+- `/v-cr --sandbox` — **optional isolated-execution path** (default OFF): fetch the PR into a throwaway
+  clone, build a locked-down Docker sandbox, run a tests-first gate, then review with **runtime-verified**
+  evidence, then tear it all down. GitHub-validated; Bitbucket is fetch-capability-gated. Runs attacker
+  code → see `commands/v-cr/sandbox.md` + `vault/decisions/ADR-009-v-cr-sandboxed-execution.md`.
+  Sub-flags: `--baseline` (run the upstream base too, so only *new* test failures gate),
+  `--allow-net-install` (unrestricted egress during install — off by default).
+- `/v-cr --sandbox-gc` — maintenance: reap orphaned sandbox containers/volumes/dirs left by a crashed
+  `--sandbox` run (matched by the `com.vault.v-cr.sandbox` label + `vcr-*` dirs under the sandbox root).
 
 ---
 
@@ -32,6 +42,7 @@ Usage:
 |---------|-----------|
 | Forges (post comments) | **GitHub**, **Bitbucket Cloud**, **Bitbucket Server/DC** |
 | Task sources (context) | PR/MR description, **Jira**, **Asana**, native forge issues |
+| Isolated execution (`--sandbox`) | **GitHub** validated; Bitbucket fetch-capability-gated → falls back to API-only. Static analyzers + tests-first gate + runtime-verified findings in a throwaway Docker sandbox. See `commands/v-cr/sandbox.md`. |
 | Deferred to v1 | GitLab (adapter contract is forge-agnostic — slots in), webhook/CI auto-trigger, whole-repo RAG, auto-suppression |
 
 ---
@@ -64,6 +75,13 @@ done — the list is the enforcement mechanism, do not skip a step.
 5. CAPTURE
 
 ---
+
+> **`--sandbox` augments (never replaces) the pipeline.** When the flag is on: step 1 also resolves a
+> fetchable ref (or falls back to API-only), and step 2 **delegates to `commands/v-cr/sandbox.md`** to
+> provision the clone + sandbox and run the tests-first gate, returning a dynamic-evidence bundle that
+> step 3's panel consumes. Cleanup is owned by `sandbox.md` (armed at provision). With the flag off, the
+> steps below run exactly as before. `--sandbox-gc` and `--unpost` are maintenance subcommands that run
+> step 1 (target/host resolution) then their own action — not the full pipeline.
 
 ## Step 1 — DETECT
 Read `~/.claude/commands/v-cr/steps/01-detect.md`, then execute. Mark DETECT `completed`.

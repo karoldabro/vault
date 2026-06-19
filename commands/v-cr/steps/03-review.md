@@ -17,6 +17,15 @@ The module handles the untrusted-input fencing, critic selection (`_resolution.m
 grounding-gate verify (generate-then-verify), and de-biased synthesis. **The verdict and what is
 postable come from that gate — never from a critic's prose.**
 
+**Under `--sandbox`**, also pass the **dynamic-evidence bundle** from step 2.6 as the panel's optional
+input (static analyzers = deterministic precision floor; diff-coverage; test results; runtime
+reproduction). Two specifics:
+- If the test gate returned **`new-failure` (blocking)**, the headline finding is the failing test —
+  emit that as the summary verdict and **skip the deep panel** (the user's "tests fail → fail"); a
+  `red-unattributed` gate is an **advisory** summary note, not a block.
+- A **runtime/repro finding** is postable only when reproduced N times (default 2); tag it
+  `runtime-observed` so step 4 ages it correctly. Static-analyzer findings are confirmed as usual.
+
 ## 3.2 Large-diff guard (skeptic-8)
 Before spawning, check diff size. Above the threshold (default ~1500 changed lines or >40 files), either
 **chunk by file/hunk** with a per-chunk critic budget, or **warn and require `--force`**. Enforce a

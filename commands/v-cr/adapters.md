@@ -9,6 +9,7 @@ only pays for the one forge in play. Task sources have a parallel contract in `t
 | Op | Used by | Contract |
 |----|---------|----------|
 | `resolve_pr` | step 1 | branch → `{number, base owner/repo, head, is_fork, is_public}` from the forge API (not the local tree) |
+| `fetch_ref` | step 1 (`--sandbox` only) | PR → a **fetchable git ref** for the PR head (incl. fork heads), or **`unsupported`**. GitHub: `refs/pull/<n>/head` (guaranteed). Bitbucket: capability-probed (`git ls-remote`) — PR refs are admin-gated and a fork is a separate repo, so return `unsupported` when the ref is absent. The caller (01-detect §1.6) then refuses `--sandbox` and falls back to API-only. Keeps the step forge-agnostic. |
 | `fetch_diff` | step 2 | PR → unified diff / patch |
 | `fetch_meta` | step 2 | PR → `{title, body, base/head branch, linked_issues[]}` |
 | `list_comments` | step 2/4 | PR → existing comments with `{id, author, body, is_bot, has_human_replies}` (for the suppression set + safe-resolve) |

@@ -59,10 +59,22 @@ Fork/public: <yes|no>                         # drives the egress policy (steps 
 Local match: <local HEAD == PR repo/branch? yes|no>   # gates local-only context (step 2)
 ```
 
+## 1.6 Resolve the fetchable ref — only under `--sandbox`
+The isolated-execution path (`commands/v-cr/sandbox.md`) needs a **fetchable git ref** for the PR head.
+Resolve it through the adapter `fetch_ref` op (forge-agnostic; see `adapters.md`), never hard-coded here:
+- **GitHub** → `refs/pull/<n>/head` (guaranteed, incl. fork heads).
+- **Bitbucket Cloud/Server** → capability-probed (`git ls-remote`); PR refs are admin-gated and a fork is
+  a separate repo, so the op may return **`unsupported`**.
+
+If `fetch_ref` returns `unsupported` (or the host trust gate would forbid the fetch), **refuse
+`--sandbox`, fall back to API-only review, and state the reason** — never materialize/run a tree that is
+not provably the PR's. (Without `--sandbox`, skip this section entirely.)
+
 ## Required output
 ```
 Forge: <adapter> @ <host>  (trust: allowlisted | self-hosted-confirmed | REJECTED)
 PR/MR: #<n> "<title>"  ·  base <owner>/<repo>  ·  fork/public: <y/n>  ·  local-match: <y/n>
+Sandbox: <off | on — fetch ref <ref> | on-requested → DOWNGRADED to API-only: <reason>>
 ```
 If trust is REJECTED or no PR resolves, **stop** with a clear message naming the `/v-cr <url>` override.
 Mark DETECT `completed`.

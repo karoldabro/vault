@@ -36,6 +36,12 @@ On re-review (using the step-2.5 suppression set):
 - **Update** the single sticky summary comment in place (find it by author == bot AND body contains
   `<!-- v-cr:summary -->`), don't add a second.
 
+**Dynamic-finding exception (`--sandbox`, skeptic-5).** A finding tagged `runtime-observed` is
+non-deterministic (it depends on the sandbox env), so the post-once-suppress-forever rule is relaxed for
+**that class only**: mark its comment `<!-- v-cr:fp=… class=runtime -->` and, on a later run where it no
+longer reproduces, **re-resolve** the thread (per §4.4's safe-resolve rules) instead of leaving a stale
+"bug" comment. Static + LLM-class fingerprints (`sha256(file:rule:code_hash)`) are unchanged.
+
 ## 4.4 Resolve stale — only safe threads (skeptic-3)
 A previously-posted finding that is no longer in the current set may be resolved — **only** when the
 thread's first comment is bot-authored, carries a `v-cr` fingerprint, **and has zero human replies**.

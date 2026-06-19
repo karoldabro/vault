@@ -52,11 +52,28 @@ posted. Carry this set into step 3 so the panel **suppresses findings already ra
 re-deriving and re-posting them. Note which bot threads have **human replies** (step 4 must not resolve
 those).
 
+## 2.6 Provision + test gate — only under `--sandbox` (delegated)
+When `--sandbox` is on and step 1 resolved a fetch ref, **invoke `commands/v-cr/sandbox.md`** here — this
+step does NOT itself clone, build, or run code; it delegates and carries back the result. The contract
+provisions the throwaway clone + locked-down sandbox (S0–S4), runs the **attribution-aware test gate**
+(S5), and assembles the **dynamic-evidence bundle** (S6 — static analyzers, diff-coverage, test results,
+runtime reproduction), all `cr_redact_runtime`-scrubbed and fenced as untrusted data. Teardown is armed
+at provision (S7), so it fires even if a later step throws.
+
+Carry forward to step 3:
+- the **dynamic-evidence bundle** (becomes the panel's `confirmed` analyzer input — see
+  `_shared/critic-panel.md` Inputs);
+- the **test-gate verdict**: `pass` · `new-failure (blocking → skip deep panel)` · `red-unattributed
+  (advisory)` · `could-not-provision (infra, NOT a code finding)`.
+Because the real PR tree is now materialized, the local-only layers (graph/Serena) MAY run against the
+clone even when step-1 `local-match` was no — note that they ran against the sandbox clone.
+
 ## Required output
 ```
 Diff: <n files, +a/-b>  ·  secrets: <none | N redacted (warned)>
 Task: <JIRA-KEY / asana:GID / #N "summary"> | none
 Vault: <pack resolved | GENERIC FALLBACK>  ·  layers: [vault-only | + graph/serena/CLAUDE.md]
 Suppression set: <n prior v-cr fingerprints>  (<m> threads have human replies)
+Sandbox: <off | recipe <source> · test-gate <pass|new-failure|red-unattributed|could-not-provision> · evidence [analyzers/coverage/repro]>
 ```
 Mark GATHER CONTEXT `completed`.
