@@ -24,11 +24,11 @@ tags: [moc]
 
 ## Sessions (recent)
 <!-- Last N session entries appended by /save or OV auto-capture. -->
+- [[sessions/2026-06-19-1526-setup-zstd-claude-mem-fixes]] — fix fresh-install: zstd prereq for ollama + correct claude-mem marketplace qualifier (claude-mem@thedotmack)
 - [[sessions/2026-06-19-1325-v-cr-sandbox-path]] — add optional /v-cr --sandbox: runtime-verified review in a throwaway clone+Docker sandbox (ADR-009)
 - [[sessions/2026-06-19-1132-v-cr-code-review-command]] — build /v-cr: automated remote-PR code review (forge+task auto-detect, single-pass critic swarm, posts comments)
 - [[sessions/2026-06-19-1114-light-command-siblings]] — add /v-ask + /v-do, light no-approval-gate siblings of /v-work·/v-team
 - [[sessions/2026-06-19-0954-testing-persona-group]] — add a 6-persona testing critic group to /v-team (panel-built, research-grounded)
-- [[sessions/2026-06-19-0943-pin-pipx-python]] — pin pipx tools to Python >=3.10 (fixes "No matching distribution")
 
 ## Code
 - Graph: `graphify/<repo>/graph.json` per sub-repo.
