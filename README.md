@@ -67,6 +67,26 @@ For just refreshing the symlinks after a `git pull`:
 
 Idempotent; refuses to overwrite any non-symlink in `~/.claude/commands/`; prunes stale symlinks pointing at deleted command sources.
 
+> `--with-ov` also points Claude at the OV configs by writing `OPENVIKING_CC_CONFIG_FILE` and
+> `OPENVIKING_CONFIG_FILE` into `~/.claude/settings.json` (`env`) — the stock OV plugin `.mcp.json`
+> references those, and without them the MCP exits with "Connection closed". The merge is
+> non-clobbering: a user value that points at a real file is kept; only absent or stale (missing-file)
+> values are set.
+
+### Uninstall
+
+```bash
+./bin/vault-uninstall.sh --yes          # remove framework wiring (reversible, no data loss)
+./bin/vault-uninstall.sh --dry-run      # preview the plan
+```
+
+Default removes only the **wiring**: command symlinks, the OpenViking `--user` service, `ov.conf` +
+the plugin client config, the two `settings.json` env keys, and the OV/claude-mem plugins. Opt into
+more: `--tools` (uninstall `openviking`/`graphifyy`/`serena-agent`; never the shared
+ollama/uv/bun/node), `--purge-data` (delete `~/.openviking` + `~/vault/_global` — destructive),
+`--all` (both). Without `--yes` (and no TTY) it just prints the plan. Project vaults and your repos are
+never touched.
+
 ## Attach to a project (per project)
 
 ```bash
@@ -126,7 +146,7 @@ vault/
 ├── setup.sh               # umbrella installer — Ubuntu auto-install + onboarding
 ├── lib/installers.sh      # per-tool install_X/check_X + the run() executor seam
 ├── install.sh             # idempotent command installer
-├── bin/                   # vault-init.sh, vault-migrate.sh and other host-callable scripts
+├── bin/                   # vault-init.sh, vault-migrate.sh, vault-uninstall.sh — host-callable scripts
 ├── templates/             # decision, feature, indication, session, project-moc, process, architecture, VAULT
 ├── personas/              # /v-team critic packs (api-laravel, nuxt, flutter, marketing) + _shared lenses
 ├── commands/              # v-work, v-team, v-capture, v-init … — linked into ~/.claude/commands/ by install.sh

@@ -325,6 +325,11 @@ EOF
         ok "wrote ${cc_conf}"
     fi
 
+    # Point Claude at those configs via ~/.claude/settings.json env, so the plugin's
+    # stock .mcp.json placeholders resolve (else the MCP exits: "Connection closed").
+    ov_set_env_key "${HOME}/.claude/settings.json" OPENVIKING_CC_CONFIG_FILE "${cc_conf}" || true
+    ov_set_env_key "${HOME}/.claude/settings.json" OPENVIKING_CONFIG_FILE   "${ov_conf}" || true
+
     # systemd --user unit that keeps openviking-server running on :1933 (%h = $HOME).
     ov_unit="${HOME}/.config/systemd/user/openviking.service"
     if [ -f "${ov_unit}" ]; then

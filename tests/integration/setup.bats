@@ -81,6 +81,36 @@ teardown() {
     ! grep -q 'workspace = /old' "${HOME}/.openviking/ov.conf"
 }
 
+@test "--with-ov sets the OPENVIKING_*_CONFIG_FILE keys in settings.json" {
+    run "${VAULT_ROOT}/setup.sh" --with-ov --yes
+    [ "$status" -eq 0 ]
+    [ -f "${HOME}/.claude/settings.json" ]
+    [ "$(jq -r '.env.OPENVIKING_CC_CONFIG_FILE' "${HOME}/.claude/settings.json")" = "${HOME}/.openviking/claude-code-memory-plugin/config.json" ]
+    [ "$(jq -r '.env.OPENVIKING_CONFIG_FILE' "${HOME}/.claude/settings.json")" = "${HOME}/.openviking/ov.conf" ]
+}
+
+@test "--with-ov preserves existing settings.json keys and is idempotent" {
+    mkdir -p "${HOME}/.claude"
+    printf '{ "model": "opus", "env": { "FOO": "bar" } }\n' > "${HOME}/.claude/settings.json"
+    "${VAULT_ROOT}/setup.sh" --with-ov --yes >/dev/null
+    "${VAULT_ROOT}/setup.sh" --with-ov --yes >/dev/null   # second run = no-op
+    [ "$(jq -r '.model' "${HOME}/.claude/settings.json")" = "opus" ]
+    [ "$(jq -r '.env.FOO' "${HOME}/.claude/settings.json")" = "bar" ]
+    [ "$(jq -r '.env.OPENVIKING_CONFIG_FILE' "${HOME}/.claude/settings.json")" = "${HOME}/.openviking/ov.conf" ]
+}
+
+@test "--with-ov keeps a user override whose config file exists" {
+    mkdir -p "${HOME}/.claude" "${HOME}/custom"
+    printf '{}\n' > "${HOME}/custom/cc.json"
+    printf '{ "env": { "OPENVIKING_CC_CONFIG_FILE": "%s/custom/cc.json" } }\n' "${HOME}" > "${HOME}/.claude/settings.json"
+    run "${VAULT_ROOT}/setup.sh" --with-ov --yes
+    [ "$status" -eq 0 ]
+    # Existing-and-valid override is preserved, not clobbered.
+    [ "$(jq -r '.env.OPENVIKING_CC_CONFIG_FILE' "${HOME}/.claude/settings.json")" = "${HOME}/custom/cc.json" ]
+    # The other (absent) key is still added.
+    [ "$(jq -r '.env.OPENVIKING_CONFIG_FILE' "${HOME}/.claude/settings.json")" = "${HOME}/.openviking/ov.conf" ]
+}
+
 @test "--minimal beats --with-ov (no ov.conf written)" {
     run "${VAULT_ROOT}/setup.sh" --with-ov --minimal --yes
     [ "$status" -eq 0 ]

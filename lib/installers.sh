@@ -327,6 +327,32 @@ install_claude_mem_plugin() {
 }
 
 #------------------------------------------------------------------------------
+# Claude settings.json env — make the OV plugin's stock .mcp.json placeholders
+# (${OPENVIKING_CC_CONFIG_FILE} / ${OPENVIKING_CONFIG_FILE}) resolve. Without these
+# Claude injects the literal "${VAR}" as a path and the MCP exits ("Connection closed").
+#------------------------------------------------------------------------------
+# ov_set_env_key <settings.json> <key> <value> — non-clobbering + self-healing:
+# add when absent; keep a present value that points at a real file (deliberate
+# override); rewrite only a value whose file is missing (stale). Other keys untouched.
+ov_set_env_key() {
+    local f="$1" k="$2" v="$3" cur tmp
+    if ! have jq; then warn "jq missing — add ${k} to ${f} manually (= ${v})"; return 1; fi
+    mkdir -p "$(dirname "$f")"
+    [ -s "$f" ] || printf '{}\n' > "$f"
+    cur="$(jq -r --arg k "$k" '.env[$k] // empty' "$f" 2>/dev/null || true)"
+    if [ -n "$cur" ] && [ -e "$cur" ]; then
+        if [ "$cur" = "$v" ]; then ok "settings.json: ${k} already set"; else info "settings.json: kept your ${k} (${cur})"; fi
+        return 0
+    fi
+    tmp="$(mktemp)"
+    if jq --arg k "$k" --arg v "$v" '.env = (.env // {}) | .env[$k] = $v' "$f" > "$tmp" 2>/dev/null; then
+        mv "$tmp" "$f"; ok "settings.json: ${k} → ${v}"
+    else
+        rm -f "$tmp"; warn "could not merge ${k} into ${f} (invalid JSON?) — add it manually"; return 1
+    fi
+}
+
+#------------------------------------------------------------------------------
 # Doctor — verify what actually landed; owns the exit code
 #------------------------------------------------------------------------------
 # doctor_check <label> <test-cmd...> ; prints ✓/✗, returns the test status.
