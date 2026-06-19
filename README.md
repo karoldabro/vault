@@ -195,6 +195,7 @@ Installed into `~/.claude/commands/` by `install.sh`:
 |---------|---------|
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. |
 | `/v-team` | Heavier sibling of `/v-work` for high-stakes work — parallel persona critics review the plan + diff in tool-grounded loops. |
+| `/v-cr` | Automated code review on a remote PR/MR — auto-detects the forge, gathers diff + linked task + vault knowledge, runs the critic panel, posts inline + summary comments. Optional `--sandbox` runs the PR in an isolated Docker clone for runtime-verified findings. See [Code review (`/v-cr`)](#code-review-v-cr) below. |
 | `/v-capture` | Capture this session into the vault. Dedupes, updates indexes, extracts ADR + indication candidates, cross-links Refs. |
 | `/v-init` | Bootstrap a project vault for the current code repo (writes `VAULT.md`, scaffolds folders + indexes). |
 | `/v-migrate` | Convert an old `_process/` submodule vault to the global model. |
@@ -205,6 +206,76 @@ Installed into `~/.claude/commands/` by `install.sh`:
 | `/v-guide` | Generate a cross-project integration guide from a feature. |
 
 See [`vault-guide.md`](vault-guide.md) §10 for the full command reference.
+
+## Code review (`/v-cr`)
+
+`/v-cr` reviews a remote pull/merge request and posts grounded comments back. It auto-detects the forge
+from your git remote, gathers the diff + linked task (Jira/Asana/forge issue) + your vault knowledge, runs
+the tool-grounded critic panel, and writes deduplicated inline + summary comments. **It never commits,
+pushes, or applies code** — read-only on the codebase, write-only to the forge's comments.
+
+```bash
+/v-cr                      # review the PR for the current branch (auto-detected)
+/v-cr <url|number>         # review a specific PR/MR
+/v-cr --no-post            # review + capture only; never post (findings still saved to the vault)
+/v-cr --post               # skip re-confirmation after a target was confirmed this session
+/v-cr --unpost             # remove every comment this tool posted to the target PR
+```
+
+**The first post to any `host/owner/repo#PR` is always gated** — `/v-cr` renders the exact comment bodies
+and targets and stops for your confirmation before writing anything. `--post` only skips *re-confirmation*
+within a session. Setup: works out of the box for GitHub (`gh auth status`) and Bitbucket Cloud/Server.
+Self-hosted hosts: map them with `VCR_HOST_MAP` (host→platform). Jira/Asana context is opt-in via
+`VCR_JIRA_PROJECTS` (key allowlist) / the Asana MCP. Comments are deduplicated by a stable
+`sha256(file:rule:code_hash)` fingerprint, so re-running on an updated PR won't repost unchanged findings.
+
+### `--sandbox` — runtime-verified review (optional, off by default)
+
+Plain `/v-cr` only *reads* the diff. `--sandbox` actually **runs** the PR so the panel can *prove* a
+finding (reproduce a bug, run a failing test) instead of guessing — the precision multiplier. It fetches
+the PR into a **throwaway clone** (never a git worktree against your repo), builds a locked-down Docker
+sandbox, runs a **tests-first gate**, hands the panel runtime evidence (analyzers, diff-coverage, repro),
+then **tears everything down**.
+
+```bash
+/v-cr --sandbox                  # fetch → isolate → tests-first → runtime-verified review → teardown
+/v-cr --sandbox --baseline       # also run the upstream base, so only NEW test failures gate the PR
+/v-cr --sandbox --allow-net-install   # allow unrestricted egress during install (off by default)
+/v-cr --sandbox-gc               # maintenance: reap orphaned sandbox containers/volumes/dirs
+```
+
+**Prerequisites & setup:**
+- **Docker** running on the host. **GitHub** is the validated path; Bitbucket is fetch-capability-gated and
+  falls back to API-only review if the PR ref isn't fetchable.
+- **`VCR_SANDBOX_MAP`** (user/global env) is the **isolation envelope** — network policy, resource caps
+  (`--memory`/`--cpus`/`--pids-limit`), env-passthrough policy, mounts, and the package-registry proxy +
+  allowlist. It is **framework-owned**: it is read only from per-stack defaults + your user/global config,
+  **never** from the repo or a project indication. A PR's own Dockerfile/compose can be built and run only
+  *inside* this envelope — it can never widen it.
+- A project may override only **benign recipe bits** (image / install / test / lint / ports / build) via
+  its vault `indications/` or `VAULT.md` `behaviour.sandbox`. Every isolation-envelope key is stripped from
+  a repo/indication recipe before merging.
+- Optional `VCR_SANDBOX_ROOT` relocates where throwaway clones live (default `$TMPDIR/v-cr-sandbox`).
+
+**Concurrency.** Yes — you can run several `/v-cr --sandbox` at once, even on the same PR. Each run gets a
+unique sandbox (clone dir + Docker objects labelled `com.vault.v-cr.sandbox=<name>` + its own free ports)
+keyed by a per-run nonce, so concurrent runs never collide. Because provisioning is a clone (not a
+worktree), a crashed run never leaves an orphan in your repo's `.git/worktrees`; sweep any leftover Docker
+objects/dirs with `/v-cr --sandbox-gc`.
+
+**Test gate behaviour.** A *new* failure attributable to the PR → headline **blocking** finding (the deep
+panel is skipped — this is "tests fail → fail"). A red suite with **unverified attribution** (no CI signal,
+no `--baseline`) → **advisory** only; the panel continues, so an honest PR is never blocked on someone
+else's broken `main`.
+
+**Safety posture.** `--sandbox` runs **attacker-authorable code**. Docker is *not* a true sandbox for
+hostile code, so the posture is *make escape irrelevant*: no host secrets in the container (empty env,
+allow-list only), **no egress during execution**, resource caps, non-root, everything throwaway, and a
+human gate on every write. All runtime output (test logs, analyzer output, even a `postinstall` body
+surfaced as a finding) is secret-scrubbed and fenced as untrusted data before it reaches a critic, comment,
+or the vault. Residual risk: a kernel exploit can still escape — for a hostile threat model, run rootless
+Docker / gVisor / a microVM runtime. See `commands/v-cr/sandbox.md`,
+`vault/decisions/ADR-009-v-cr-sandboxed-execution.md`, and `vault/indications/sandboxed-cr-safety.md`.
 
 ## Required tools
 
