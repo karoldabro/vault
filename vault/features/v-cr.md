@@ -51,6 +51,11 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 - **Non-bypassable first-post gate** per `host/owner/repo#PR`; `--post` only skips re-confirmation.
 - **resolve-stale** touches only bot-authored, zero-human-reply threads.
 - Sourced libs avoid IFS word-splitting (zsh vs bash parity).
+- **Panel spawn is mandatory + proven**: `critic-panel.md` (c) requires one real `Agent` per critic and
+  reports a `Spawned:` line; an inlined panel is non-conformant. The review summary must surface
+  **coverage** (reviewed/inline/silent), **test posture** (tests run only under `--sandbox`), and keep
+  comments short (inline ≤3 lines). See [[../indications/cr-panel-spawn-and-visibility]].
 
 ## Sessions
 - [[../sessions/2026-06-19-1132-v-cr-code-review-command]] — designed + built via /v-team design panel
+- [[../sessions/2026-06-19-1605-v-cr-panel-spawn-coverage-brevity]] — enforce real panel spawn, surface coverage + test posture, tighten comments
