@@ -14,3 +14,4 @@ tags: [index, indications]
 | [[packs-detect-not-assume]] | Packs detect the project's stack/state approach; never hardcode a library | `personas/<stack>.md` |
 | [[installer-dry-run-seam]] | Installer side-effects go through a dry-run-able `run()` seam; offline tests assert the transcript, e2e proves the real install | `setup.sh`, `lib/installers.sh`, `tests/**` |
 | [[per-user-installer-no-sudo]] | Installer runs as the user, escalates internally for apt only; refuse `sudo` invocation (`$SUDO_USER` set), accept interactive sudo | `setup.sh`, `lib/installers.sh`, `bin/*.sh` |
+| [[openviking-three-part-install]] | OpenViking = server (pipx) + JSON `ov.conf` + plugin client `config.json`; install all three or the MCP shows "Connection closed" | `setup.sh`, `lib/installers.sh`, `~/.openviking/**` |

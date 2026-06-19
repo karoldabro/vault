@@ -22,6 +22,7 @@ tags: [moc]
 
 ## Sessions (recent)
 <!-- Last N session entries appended by /save or OV auto-capture. -->
+- [[sessions/2026-06-19-0901-openviking-server-installer]] — setup.sh installs the OV server + configs, not just the plugin
 - [[sessions/2026-06-19-0831-setup-sudo-deadlock-fix]] — fix setup.sh sudo deadlock; per-user run auto-installs, refuse `sudo`
 - [[sessions/2026-06-18-1518-setup-auto-install]] — setup.sh → consent-gated Ubuntu auto-installer + onboarding
 - [[sessions/2026-06-16-1135-v-team-nuxt-flutter-packs]] — Ground nuxt/flutter packs, +1 lens each
