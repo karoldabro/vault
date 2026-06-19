@@ -154,7 +154,7 @@ vault/
 ├── install.sh             # idempotent command installer
 ├── bin/                   # vault-init.sh, vault-migrate.sh, vault-uninstall.sh — host-callable scripts
 ├── templates/             # decision, feature, indication, session, project-moc, process, architecture, VAULT
-├── personas/              # /v-team critic packs (api-laravel, nuxt, flutter, marketing) + _shared lenses
+├── personas/              # /v-team critic packs (api-laravel, nuxt, flutter, marketing) + _shared lenses (incl. _shared/testing/ group)
 ├── commands/              # v-work, v-team, v-capture, v-init … — linked into ~/.claude/commands/ by install.sh
 ├── tests/                 # bats-core: unit/ + integration/ (offline alpine) + e2e/ (opt-in Ubuntu)
 └── Makefile               # `make test` (offline), `VAULT_E2E=1 make test-e2e`, `make shell`

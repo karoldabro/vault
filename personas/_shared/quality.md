@@ -14,7 +14,8 @@ checks via its `quality` overlay.
 Protect the codebase from avoidable complexity and rework: logic that already exists (reinvented
 wheels), duplication (copy-paste blocks), functionality replaceable by an existing maintained package,
 SOLID violations (esp. single-responsibility / god classes), KISS/YAGNI violations (premature
-abstraction), dead/commented-out code, and tests that assert internals instead of behaviour.
+abstraction), and dead/commented-out code. Test-code quality (behaviour-vs-internals, smells,
+assertions) is owned by the testing group ([[test-behaviorist]] et al.), not this lens.
 
 ## Bound analyzer
 Run the pack's bound quality analyzer first (overlay `quality.analyzer` — linter, static analysis,
@@ -34,8 +35,11 @@ wheel". Cite the existing symbol/path. No analyzer → grep + symbol search, mar
 - [ ] Single responsibility per class/module; no god class (>200 lines / >5 responsibilities).
 - [ ] KISS/YAGNI — no premature abstraction; nesting ≤3 levels.
 - [ ] No copy-pasted blocks (extract shared); no dead / commented-out code.
-- [ ] Tests express behaviour, not internals.
+<!-- "Tests express behaviour, not internals" moved to the testing group's [[test-behaviorist]]
+     (personas/_shared/testing/) to avoid a double-vote with the dedicated test lens. -->
+
 
 ## Output
 Per `commands/v-team/steps/03-propose-loop.md` §d. Confirmed findings only may be BLOCKER/MAJOR
-(a "reinvented wheel" BLOCKER must cite the existing implementation). ≤3 proposed tests.
+(a "reinvented wheel" BLOCKER must cite the existing implementation). ≤3 proposed tests. Test-code
+quality (behaviour-vs-internals, smells, assertions) is owned by the testing group, not this lens.

@@ -43,6 +43,22 @@ Record the outcome in the ANALYZE output:
 Personas: <pack> → [Software Architect, security, performance]   (skipped: quality, skeptic)
 ```
 
+### 2.1 Testing-critic group (test-touching changes)
+When the change **adds or modifies test files** — path globs `*test*`, `*spec*`, `tests/`, `__tests__/`,
+`*.test.*`, `*_test.*` (stack-appropriate) — or the task itself is test-writing, select critics from the
+**testing group** at `personas/_shared/testing/` (loader resolves `_shared/testing/<id>.md`, not the flat
+`_shared/`). The same cap applies (`team_max_parallel_critics`, default 3).
+
+- **Default pick:** `test-behaviorist` + `assertion-auditor` + the one lens the diff most implicates —
+  collaborators/mocks → `test-double-critic`; stateful/async/time → `flakiness-sentinel`; new branches →
+  `edge-case-hunter`; new or failing harness/framework code → `test-harness-critic`.
+- **Drop `test-double-critic`** if its mandatory mock-density metric can't be produced on the stack
+  (grounding rule — a metric-less double-critic is advisory-only, so it doesn't earn a panel seat).
+- Mixed diffs (production + test code): keep the production-code critics for the source change and add
+  **one** testing critic for the test change, still within the cap; note the trade-off in the trail.
+- See `personas/_shared/testing/README.md` for the lens table, decorrelation boundaries, and per-stack
+  analyzer overlays.
+
 ---
 
 ## 3. base_agent fallback

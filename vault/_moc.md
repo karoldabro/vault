@@ -19,6 +19,7 @@ tags: [moc]
 ## Features
 <!-- Link to [[features/]] folder. Active features: -->
 - [[features/v-team]] — persona-critique dev lifecycle command
+- Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
 <!-- Last N session entries appended by /save or OV auto-capture. -->
