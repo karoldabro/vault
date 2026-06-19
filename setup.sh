@@ -94,6 +94,19 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+# Footgun guard: setup.sh installs PER-USER (uv/bun/plugins/ov.conf all land in $HOME).
+# Running it under sudo flips $HOME to /root, hides the user's `claude` from PATH, and
+# strands every per-user artifact in root's home. $SUDO_USER is set only when a non-root
+# user invokes sudo — genuine root (containers / CI, e.g. the e2e harness) has it unset,
+# so this never trips there. We escalate for apt/ollama ourselves; you don't pre-sudo.
+if [ -n "${SUDO_USER:-}" ] && [ "${VAULT_ALLOW_SUDO:-0}" != "1" ]; then
+    warn "Do not run setup.sh with sudo — it installs per-user and writes to \$HOME."
+    warn "Run it as your normal user:  ./setup.sh --full --yes"
+    warn "(it prompts for your sudo password when it reaches apt / ollama)."
+    warn "Override only if you truly mean it: VAULT_ALLOW_SUDO=1 sudo -E ./setup.sh ..."
+    exit 1
+fi
+
 if [ "${doctor_only}" -eq 1 ]; then
     doctor
     exit $?
@@ -137,6 +150,16 @@ if [ "${any_tool}" -gt 0 ]; then
             auto_reason="declined / no TTY — printing install hints"
         fi
     fi
+fi
+
+# Pre-warm sudo so the apt/ollama steps prompt for the password ONCE up front rather
+# than at each escalation point. Best-effort: only when we'll auto-install, aren't root,
+# have sudo, and it actually needs a password. A failed prime warns and continues — the
+# sudo-free tools (uv/bun/serena/plugins) still install regardless.
+if [ "${auto}" -eq 1 ] && [ "${VAULT_SETUP_DRY_RUN}" != "1" ] \
+   && [ "$(id -u)" -ne 0 ] && have sudo && ! sudo -n true 2>/dev/null; then
+    info "Auto-install needs apt — you'll be prompted for your sudo password once."
+    sudo -v || warn "sudo not primed — apt-dependent tools (pipx/graphify) may be skipped."
 fi
 
 #------------------------------------------------------------------------------
@@ -366,6 +389,12 @@ fi
 
 section "Done"
 info "Re-run setup.sh anytime; it is idempotent."
+if [ "${auto}" -eq 1 ]; then
+    info "Open a fresh shell (exec \$SHELL -l) so new PATH entries (uv/bun/pipx) take effect"
+    info "before running graphify/serena from the terminal."
+    info "OpenViking has no standalone 'ov' command — it is the MCP plugin (+ ollama backend);"
+    info "'ov: command not found' is expected. Health = the plugin rows above / in --doctor."
+fi
 if [ "${#TOOLS_FAILED[@]}" -gt 0 ]; then
     warn "Some tools failed to install: ${TOOLS_FAILED[*]} — re-run or see hints above."
 fi

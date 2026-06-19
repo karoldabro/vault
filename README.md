@@ -21,6 +21,14 @@ git clone git@github.com:karoldabro/vault.git ~/workspace/vault
 cd ~/workspace/vault && ./setup.sh --full --yes
 ```
 
+> **Run it as your normal user — not with `sudo`.** The installer is per-user: uv, bun, the
+> plugins, and `~/.openviking/ov.conf` all land in `$HOME`. It escalates *for you* — when it
+> reaches the apt/ollama steps it prompts once for your sudo password. Running `sudo ./setup.sh`
+> would flip `$HOME` to `/root` and strand everything there, so it's refused (override with
+> `VAULT_ALLOW_SUDO=1` only if you truly mean it). After it finishes, open a fresh shell
+> (`exec $SHELL -l`) so the new PATH entries (uv/bun/pipx) are visible. Note there is no `ov`
+> command — OpenViking is the MCP plugin + ollama backend; check it via `./setup.sh --doctor`.
+
 `setup.sh` is the umbrella installer. On **Ubuntu** (apt + sudo) `--full` **auto-installs** the whole
 tool stack — ollama + `nomic-embed-text`, uv + Serena, bun + claude-mem, pipx + Graphify, and the
 OpenViking / claude-mem Claude Code plugins — scaffolds `~/vault/_global/`, runs a health-check
@@ -29,7 +37,8 @@ the new plugins load.
 
 Auto-install is **consent-gated**: it prompts before touching anything (skip the prompt with `--yes`),
 prints every remote source URL it runs for an audit trail, and is fully idempotent. On a host **without
-apt/sudo** (macOS, containers) it degrades to printing the exact install commands instead of executing —
+apt** (macOS) — or **non-interactively without passwordless sudo** (headless CI, where it can't prompt
+for the apt/ollama steps) — it degrades to printing the exact install commands instead of executing, so
 it never half-installs or hangs. Verify any time with `./setup.sh --doctor`.
 
 Flags:

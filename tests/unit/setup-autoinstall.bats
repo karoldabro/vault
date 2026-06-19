@@ -203,6 +203,51 @@ exit 0'
 }
 
 #------------------------------------------------------------------------------
+# Sudo footgun guard + sudo_available privilege model
+#------------------------------------------------------------------------------
+@test "running under sudo (SUDO_USER set) is refused with guidance, non-zero exit" {
+    run env SUDO_USER=alice PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --full --yes
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"Do not run setup.sh with sudo"* ]]
+    # It must bail before scaffolding anything.
+    [[ "$output" != *"Machine layer"* ]]
+}
+
+@test "VAULT_ALLOW_SUDO=1 overrides the sudo guard and proceeds" {
+    stub_claude_empty
+    run env SUDO_USER=alice VAULT_ALLOW_SUDO=1 PATH="${FAKEBIN}:${PATH}" \
+        "${VAULT_ROOT}/setup.sh" --full --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Machine layer"* ]]
+    [[ "$output" != *"Do not run setup.sh with sudo"* ]]
+}
+
+@test "sudo_available is true as root and with passwordless sudo, false otherwise" {
+    # Root branch: id -u == 0 short-circuits true regardless of sudo.
+    stub id 'echo 0'
+    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
+      . "${VAULT_ROOT}/lib/installers.sh"
+      sudo_available && echo "root=yes" ) > "${TEST_HOME}/out"
+    grep -q 'root=yes' "${TEST_HOME}/out"
+
+    # Non-root with a passwordless sudo stub (`sudo -n true` exits 0) → true.
+    stub id 'echo 1000'
+    stub sudo 'exit 0'
+    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
+      . "${VAULT_ROOT}/lib/installers.sh"
+      sudo_available && echo "passwordless=yes" ) > "${TEST_HOME}/out"
+    grep -q 'passwordless=yes' "${TEST_HOME}/out"
+
+    # Non-root, sudo that always fails (`-n` denied), no TTY (bats stdin/stdout
+    # are pipes) → false: cannot escalate, caller must degrade to hints.
+    stub sudo 'exit 1'
+    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
+      . "${VAULT_ROOT}/lib/installers.sh"
+      if sudo_available; then echo "noprompt=yes"; else echo "noprompt=no"; fi ) </dev/null >"${TEST_HOME}/out" 2>&1
+    grep -q 'noprompt=no' "${TEST_HOME}/out"
+}
+
+#------------------------------------------------------------------------------
 # Flag surface
 #------------------------------------------------------------------------------
 @test "--doctor runs only the health check and exits 0 on a clean tree" {

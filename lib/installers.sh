@@ -95,10 +95,16 @@ ensure_session_path() {
 }
 
 apt_available()  { have apt-get; }
-# True when we can run apt non-interactively (root, or passwordless sudo).
+# True when we can run apt: root, passwordless sudo, or an interactive sudo we can
+# prompt on (a TTY is attached). The last case is the common workstation — the user
+# runs setup.sh as themselves and sudo asks for their password when apt is reached.
+# Only a non-interactive shell without passwordless sudo is a real "no": there we
+# cannot escalate, so the caller degrades to printing hints.
 sudo_available() {
     [ "$(id -u)" -eq 0 ] && return 0
-    have sudo && sudo -n true >/dev/null 2>&1
+    have sudo || return 1
+    sudo -n true >/dev/null 2>&1 && return 0   # passwordless
+    [ -t 0 ] || [ -t 1 ]                        # interactive → sudo can prompt
 }
 # Emit the right privilege prefix for apt ("" as root, "sudo" otherwise).
 _priv() { [ "$(id -u)" -eq 0 ] || printf 'sudo'; }
