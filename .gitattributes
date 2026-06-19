@@ -1,0 +1,17 @@
+# Normalize line endings. This repo's scripts run on Linux/WSL and MUST stay LF in
+# the working tree even on Windows checkouts (Git for Windows' core.autocrlf=true
+# would otherwise rewrite them to CRLF and break the `#!/usr/bin/env bash` shebang
+# → "/usr/bin/env: 'bash\r': No such file or directory"). eol=lf overrides autocrlf.
+* text=auto eol=lf
+
+# Be explicit for the executable + test toolchain.
+*.sh    text eol=lf
+*.bats  text eol=lf
+*.mjs   text eol=lf
+Makefile text eol=lf
+
+# Binary types git should never touch.
+*.png binary
+*.jpg binary
+*.zip binary
+*.ovpack binary
