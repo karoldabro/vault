@@ -17,6 +17,9 @@ installer must set up all of them or the MCP fails with "Connection closed":
    `embedding`). The old `workspace = …` 3-line format is unparseable; rewrite it.
 3. **Plugin client config** — `~/.openviking/claude-code-memory-plugin/config.json` with at least
    `{ "mode": "local" }`. The MCP server **requires** this file; its absence makes the plugin exit.
+4. **Claude settings.json env** — `OPENVIKING_CC_CONFIG_FILE` + `OPENVIKING_CONFIG_FILE` in
+   `~/.claude/settings.json` (`env`). The stock plugin `.mcp.json` references these as `${VAR}`
+   placeholders; when unset, Claude injects the **literal** `${VAR}` as a path and the plugin exits.
 
 ## Rationale
 The MCP plugin only talks to a local OV server; it does not embed one. Installing the plugin alone
