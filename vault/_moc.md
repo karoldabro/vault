@@ -22,10 +22,10 @@ tags: [moc]
 
 ## Sessions (recent)
 <!-- Last N session entries appended by /save or OV auto-capture. -->
+- [[sessions/2026-06-19-0943-pin-pipx-python]] — pin pipx tools to Python >=3.10 (fixes "No matching distribution")
 - [[sessions/2026-06-19-0924-settings-env-and-uninstall]] — settings.json env for the OV plugin + new vault-uninstall.sh
 - [[sessions/2026-06-19-0901-openviking-server-installer]] — setup.sh installs the OV server + configs, not just the plugin
 - [[sessions/2026-06-19-0831-setup-sudo-deadlock-fix]] — fix setup.sh sudo deadlock; per-user run auto-installs, refuse `sudo`
-- [[sessions/2026-06-18-1518-setup-auto-install]] — setup.sh → consent-gated Ubuntu auto-installer + onboarding
 
 ## Code
 - Graph: `graphify/<repo>/graph.json` per sub-repo.
