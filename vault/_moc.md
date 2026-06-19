@@ -11,7 +11,7 @@ tags: [moc]
 
 ## Decisions
 <!-- Auto: link to [[decisions/]] folder. Notable ADRs: -->
-- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]] · [[decisions/ADR-006-testing-critic-group]]
+- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]] · [[decisions/ADR-006-testing-critic-group]] · [[decisions/ADR-008-v-cr-remote-pr-review]]
 
 ## Indications
 - See [[indications/_index]] — v-team authoring rules (persona factoring, loop stops, grounded findings)
@@ -19,6 +19,7 @@ tags: [moc]
 ## Features
 <!-- Link to [[features/]] folder. Active features: -->
 - [[features/v-team]] — persona-critique dev lifecycle command
+- `/v-cr` — automated code review on a remote PR (forge+task auto-detect, critic swarm, posts comments); see [[decisions/ADR-008-v-cr-remote-pr-review]] + [[plans/2026-06-19-1106-v-cr-command]]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
