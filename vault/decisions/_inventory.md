@@ -14,3 +14,4 @@ tags: [index, decisions]
 | [[ADR-004-generic-packs-specifics-in-indications]] | Generic packs; project specifics in indications | 2026-06-16 | accepted |
 | [[ADR-005-installer-auto-exec]] | setup.sh auto-installs the tool stack on Ubuntu (consent-gated) | 2026-06-18 | accepted |
 | [[ADR-006-testing-critic-group]] | Testing critique is a one-cluster-per-persona grounded group | 2026-06-19 | accepted |
+| [[ADR-007-light-siblings-guardrail]] | Light command siblings drop the approval gate for a scope guardrail | 2026-06-19 | accepted |
