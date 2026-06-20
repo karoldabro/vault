@@ -19,6 +19,13 @@ tags: [session]
 ## Learned
 <!-- Non-obvious facts. Gotchas. Confirmations of assumptions. What surprised you. -->
 
+## Behaviors & rules
+<!-- Prescriptive domain rules / expected outcomes / edge cases this session established or relied on,
+     phrased so a test could assert them. Suggested shape: `precondition → expected outcome [; edge:
+     when X then Y]`. Distinct from Learned (descriptive discovery). Only rules the work established or
+     validated — never aspirational "should build" items. OMIT this section entirely when the session
+     carried no domain rules (pure infra / refactor / config). -->
+
 ## Next
 <!-- Open threads. Follow-ups. Anything blocked. -->
 

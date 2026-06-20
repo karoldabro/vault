@@ -77,6 +77,13 @@ Fill honestly from actual conversation:
 - **Goal** — one sentence.
 - **Did** — concrete steps. Real file paths.
 - **Learned** — non-obvious facts. Gotchas. Surprises.
+- **Behaviors & rules** — domain rules / expected outcomes / edge cases the work **established or
+  validated**, phrased so a test could assert them (suggested shape: `precondition → expected outcome
+  [; edge: when X then Y]`). Only rules this session established or validated — never aspirational
+  "should build" items (✓ `idempotency key = sha256(file:rule:code)`; ✗ `we should add rate limiting`).
+  Keep it modest: ~3–7 bullets. **Omit the section entirely** for sessions with no domain rules (pure
+  infra / refactor / config). This is the raw material for later business / feature / integration / UI
+  tests, so write it test-shaped — but don't manufacture rules the work didn't touch.
 - **Next** — open threads, deferred items.
 - **Refs** — see Step 5.
 
@@ -120,6 +127,10 @@ patterns: "convention:", "pattern:", "rule:", "standard", "always <verb>", "neve
           testing-approach statements ("test .* with", "mock .* not")
 ```
 
+Rule-shaped bullets in a session's `## Behaviors & rules` are natural candidates here — a domain rule
+that recurs across features belongs in `indications/` (durable), not just one session. The
+always/never/rule: scan above already catches them; no separate pass needed.
+
 Dedupe against existing `indications/_index.md` rows first (don't re-offer a rule already captured).
 Present remaining matches as one-line candidates:
 
@@ -159,9 +170,12 @@ explicit mentions), pick exactly one:
 - **CREATE** `features/<slug>.md` (from `feature.md`) when the session introduced a new feature/domain
   with no existing dossier. Use the dedupe ≥60% novelty threshold from `/v-work` §3b — below it, it's
   not new, so UPDATE instead.
-- **UPDATE** an existing dossier when the session changed its **contracts, gotchas, or coupling** — a
-  touched file maps to it, a new ADR links to it, or an endpoint/table/event/enum changed. Edit the
-  affected section(s) and add the session wikilink under `## Sessions`.
+- **UPDATE** an existing dossier when the session changed its **contracts, behaviors/rules, gotchas, or
+  coupling** — a touched file maps to it, a new ADR links to it, an endpoint/table/event/enum changed, or
+  a domain rule / acceptance criterion was established. Edit the affected section(s) and add the session
+  wikilink under `## Sessions`. When behavior changed, populate `## Behaviors & rules` with the durable
+  invariants/acceptance criteria the session established (~3–7 bullets, test-shaped) — keep each rule in
+  one section (Behaviors, not duplicated in Gotchas; cross-link if it is also a trap).
 - **SKIP** when the work carried no durable domain knowledge (pure bugfix, cosmetic, config bump).
 
 Report the verdict per feature in the output (`created | updated | skipped: <reason>`). Then reconcile
