@@ -24,11 +24,11 @@ tags: [moc]
 
 ## Sessions (recent)
 <!-- Last N session entries appended by /save or OV auto-capture. -->
+- [[sessions/2026-06-20-1900-v-capture-business-logic]] — /v-capture captures test-shaped `## Behaviors & rules` in sessions + features for business/feature/integration/UI test enablement
 - [[sessions/2026-06-19-1605-v-cr-panel-spawn-coverage-brevity]] — harden /v-cr: enforce real panel spawn (+`Spawned:` proof), surface coverage + test posture, tighten comments
 - [[sessions/2026-06-19-1526-setup-zstd-claude-mem-fixes]] — fix fresh-install: zstd prereq for ollama + correct claude-mem marketplace qualifier (claude-mem@thedotmack)
 - [[sessions/2026-06-19-1325-v-cr-sandbox-path]] — add optional /v-cr --sandbox: runtime-verified review in a throwaway clone+Docker sandbox (ADR-009)
 - [[sessions/2026-06-19-1132-v-cr-code-review-command]] — build /v-cr: automated remote-PR code review (forge+task auto-detect, single-pass critic swarm, posts comments)
-- [[sessions/2026-06-19-1114-light-command-siblings]] — add /v-ask + /v-do, light no-approval-gate siblings of /v-work·/v-team
 
 ## Code
 - Graph: `graphify/<repo>/graph.json` per sub-repo.
