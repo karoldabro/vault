@@ -24,9 +24,27 @@ slug: {{slug}}
 # optional: [research, legal]          # folders that may be absent without a warning
 
 ## behaviour
-<!-- Bounded hooks the lifecycle honors. All optional; defaults shown. -->
+<!-- Bounded toggles the lifecycle honors. All optional; defaults shown. -->
 # load_context_extra: [runbooks]       # folders Step 2 loads beyond the defaults
 capture_indications: true              # run the indication-candidate scan at capture time
+# suggest_rename: true                 # step 1 surfaces a `/rename <slug>` for you to paste (default: on)
+
+## hooks
+<!-- Per-project, per-step INSTRUCTION (prose only — never run as a shell command; there is no `run:`
+     syntax). Both /v-work and /v-team honor them; read once at step 1, carried through the run. 14
+     phases: on_start ·
+     pre_/post_analyze · pre_/post_load_context · pre_/post_propose · pre_/post_execute ·
+     pre_/post_commit · pre_/post_capture · on_end. Full contract + precedence: vault-guide.md §1.1. -->
+# on_start: "This repo tracks work in Jira (project VAULT). If the task names a ticket, fetch it via the Jira MCP first."
+# post_commit: "Remind me to move the Jira ticket to In Review (don't transition it automatically)."
+
+## tools
+<!-- Per-project tool guidance (suggestion, not a gate). Lets the lifecycle fetch ticket context from
+     the tracker this repo actually uses. See tool-playbook.md §6. -->
+# task_tracker: jira                   # jira | asana | linear | github-issues | none
+# task_tracker_mcp: <jira mcp server>  # which MCP to query
+# task_tracker_key: VAULT              # Jira project key / Asana project gid / repo
+# guidance: "Fetch the ticket's description + acceptance criteria before proposing."
 
 <!-- /v-team multi-agent persona config (all optional). Selects which critic personas review the
      plan + diff. Auto-detected from the stack if omitted. See personas/_resolution.md. -->

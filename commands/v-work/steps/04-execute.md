@@ -4,6 +4,10 @@ Implement the approved plan. The **code change is the primary goal**; vault docs
 alongside it (secondary) so Refs stay accurate — but never let documentation crowd out the
 engineering.
 
+**Hooks.** Honor any carried `pre_execute` hook before implementing (it fires **after** the gate is
+approved) and `post_execute` after. Hooks were loaded at step 1 (§1.4) and persisted — don't re-read
+`VAULT.md`. See `vault-guide.md` §1.1.
+
 ## 4.1 Branch
 
 `/v-work` never creates branches. Work on the branch already checked out (captured in §2.8),
@@ -80,4 +84,5 @@ concerns maintained · migrations reversible, indexes on new FKs/query columns.
 
 Review loop: issues → fix, re-run relevant checks (max 3 iterations) → still failing → present to user.
 
-Mark EXECUTE `completed`.
+Before marking complete, honor any carried `post_execute` hook (surface + apply). Mark EXECUTE
+`completed`.

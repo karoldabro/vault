@@ -9,6 +9,11 @@ grep / full-file reads in its place. When one is genuinely unavailable, confirm 
 warn once, then proceed with the documented fallback (OV→Grep over `~/vault`, graphify→grep,
 Serena→Glob/Grep/LSP). Never halt the lifecycle for a missing tool.
 
+**Hooks.** Hooks are loaded once at step 1 (§1.4) and persisted in context — no need to re-read
+`VAULT.md`. Honor any carried `pre_load_context` hook before loading and `post_load_context` after — treat
+each as binding, override on conflict with `CLAUDE.md`/`indications`, fall back + surface if an MCP it
+needs is down. See `vault-guide.md` §1.1.
+
 **Fan out with agents.** When scope is uncertain or spans multiple areas, launch up to 3 **Explore**
 subagents in parallel (single message, multiple `Agent` calls) instead of serial reads — give each a
 distinct focus (vault decisions/guidelines · code structure · tests). One Explore agent is enough for
@@ -54,6 +59,15 @@ Discover any remaining guidelines/conventions that constrain this task — they 
    Working rules live in `indications/`; subject-matter context in `features/·processes/·architecture/`
    (per `vault-guide.md` §6) — **not** Serena.
 4. If §2.1/§2.3a already surfaced one, don't re-read it.
+
+### 2.3c — Project task tracker (if the task references a ticket)
+
+If the restatement names a ticket/issue (e.g. `VAULT-123`, `#42`) and the carried `tools` config declares
+a `task_tracker` + `task_tracker_mcp`, that MCP is usually the best first source for ticket context —
+query it before grep/web. (Suggestion, not a gate: `task_tracker_key` scopes it; `tools.guidance` adds
+project specifics.) None declared → ask which tracker, or skip. MCP down → fall back to web/grep and
+surface it; never halt. This is how a repo declares "we use Jira" vs "we use Asana" so the lifecycle pulls
+the right ticket. See `tool-playbook.md` §6.
 
 ### 2.4 — Graphify (structural orientation)
 
@@ -101,7 +115,9 @@ ADRs: [relevant IDs]
 Graph: [used — key findings — or "not available"]
 Serena: [used — symbols found — or "not applicable"]
 CLAUDE.md: [key overrides | none]
+Task tracker: [tracker queried + ticket pulled | none declared | n/a]
 Branch: [name] [clean / dirty]
 ```
 
-Mark LOAD CONTEXT `completed`.
+Before marking complete, honor any carried `post_load_context` hook (surface + apply). Mark LOAD CONTEXT
+`completed`.

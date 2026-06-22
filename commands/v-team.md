@@ -34,6 +34,11 @@ backbone. Plus the **Agent** tool for the critic panel (parallel spawn).
 
 Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Persona resolution: `$VAULT_FRAMEWORK_PATH/personas/_resolution.md`.
 
+**Per-project hooks + tools.** A repo's `VAULT.md` can attach `hooks` (per-phase instructions) and
+`tools` (task-tracker MCP guidance), read once at step 1 and carried through the run — `pre_/post_propose`
+and `pre_/post_execute` fire at the panel-loop outer boundary (rounds non-hookable). Contract:
+`$VAULT_FRAMEWORK_PATH/vault-guide.md` §1.1.
+
 ---
 
 ## On start: create task list

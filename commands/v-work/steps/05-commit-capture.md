@@ -5,6 +5,8 @@ until `/v-capture` has actually run — never close out `/v-work` without it.
 
 ## 5.1 Code commit
 
+Honor any carried `pre_commit` hook before staging.
+
 ```bash
 git status
 git diff --stat
@@ -13,6 +15,10 @@ git diff --stat
 Stage **specific files only** — never `git add -A` / `git add .` (avoids `.env`, credentials,
 generated or unrelated files). Commit with a conventional message (`feat`/`fix`/`refactor`/`test`/
 `docs`/`chore`, subject ≤50 chars, body only when the "why" isn't obvious). Do not auto-push.
+
+After the commit lands (before `/v-capture`), honor any carried `post_commit` hook — e.g. "remind to
+move the Jira ticket to In Review" (it never transitions anything itself; instruction-only). See
+`vault-guide.md` §1.1.
 
 ## 5.2 Vault commit (if applicable)
 
@@ -36,9 +42,9 @@ No action — claude-mem auto-captures via its SessionEnd hook. `mcp-search` is 
 
 ## 5.5 Capture session (mandatory)
 
-Invoke `/v-capture` to write the session log — it dedupes vs recent sessions, updates indexes,
-extracts ADR candidates, cross-links Refs. This is part of the lifecycle already approved at the
-gate; it needs no fresh prompt.
+Honor any carried `pre_capture` hook, then invoke `/v-capture` to write the session log — it dedupes vs
+recent sessions, updates indexes, extracts ADR candidates, cross-links Refs. This is part of the
+lifecycle already approved at the gate; it needs no fresh prompt.
 
 `/v-capture` also runs two gates this step depends on — make sure they actually fire:
 
@@ -60,4 +66,6 @@ Branch: [name] @ [short commit hash]
 Follow-up: [deferred items, open threads]
 ```
 
-Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
+After `/v-capture` completes, honor any carried `post_capture` hook, then the `on_end` hook (also fired
+on early termination — gate rejection or abort). Mark COMMIT + CAPTURE `completed` — only after
+`/v-capture` has run.
