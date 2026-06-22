@@ -3,6 +3,9 @@
 Implement the approved plan, triage the proposed tests, then run a **diff-review panel loop** — the same
 personas in review posture, tool-first, fixing between rounds until convergence.
 
+**Hooks.** `pre_execute` fires once before implementation (after the gate) and `post_execute` once after
+the review loop converges — the internal review **rounds are non-hookable**. See `vault-guide.md` §1.1.
+
 ---
 
 ## 5.1 Implement

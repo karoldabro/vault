@@ -25,9 +25,20 @@ add_folders: [plans]                   # /v-team plan artifacts
 # optional: [research, legal]          # folders that may be absent without a warning
 
 ## behaviour
-<!-- Bounded hooks the lifecycle honors. All optional; defaults shown. -->
+<!-- Bounded toggles the lifecycle honors. All optional; defaults shown. -->
 # load_context_extra: [runbooks]       # folders Step 2 loads beyond the defaults
 capture_indications: true              # run the indication-candidate scan at capture time
+# suggest_rename: true                 # step 1 surfaces a `/rename <slug>` for you to paste (default: on)
+
+## hooks
+<!-- Per-project, per-step INSTRUCTION (prose only — never run as a shell command). 14 phases:
+     on_start · pre_/post_analyze · pre_/post_load_context · pre_/post_propose · pre_/post_execute ·
+     pre_/post_commit · pre_/post_capture · on_end. Contract + precedence: vault-guide.md §1.1.
+     This framework repo declares none (no external tracker); examples are commented in templates/VAULT.md. -->
+
+## tools
+<!-- Per-project tool guidance (task-tracker MCP, etc.). Suggestion, not a gate. See tool-playbook.md §6.
+     This repo declares none — it has no external task tracker. -->
 
 <!-- /v-team multi-agent persona config (all optional). Selects which critic personas review the
      plan + diff. Auto-detected from the stack if omitted. See personas/_resolution.md. -->

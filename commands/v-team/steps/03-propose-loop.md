@@ -4,6 +4,9 @@ Draft a plan, then run a **panel → synthesize → re-loop** until it converges
 each through its own tool-grounded lens, and share state **only via the revised plan** (no agent-to-
 agent messaging — independence is what makes the panel worth its cost). Do not write source code here.
 
+**Hooks.** `pre_propose` fires once before this loop starts and `post_propose` once after it converges
+(before the approval gate) — the internal critic **rounds are non-hookable**. See `vault-guide.md` §1.1.
+
 ---
 
 ## (a) Draft plan v0

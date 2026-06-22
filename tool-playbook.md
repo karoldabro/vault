@@ -14,6 +14,10 @@ symbol query costs ~hundreds. Reading 40 source files costs ~20k. **Picking the 
 wastes 100×.** Default to the cheap path; reach for grep / full-file reads only when the cheap
 layers genuinely come up empty.
 
+> **These are suggestions, not rules.** Claude selects the tool that fits the moment — the cost
+> hierarchy below is a sensible default, not a gate. The exception is genuine **safety** notes (e.g.
+> Morph's `// ... existing code ...` markers): those stay firm.
+
 ---
 
 ## Cost hierarchy — use in order, stop when you have enough
@@ -83,7 +87,8 @@ graph is always fresh. **Query the graph; never grep source to answer a structur
 
 Tools: `graphify query "<q>"`, `graphify path "A" "B"`, `graphify explain "<node>"`.
 
-**When:** what calls X, where is X defined, which modules touch Z, dependency/call chains.
+**When:** what calls X, where is X defined, which modules touch Z, dependency/call chains. Prefer the
+graph over grepping source for these — usually far cheaper.
 **When NOT:** exact current line of one known symbol (read that line) or non-structural prose.
 **If `graphify-out/graph.json` is missing:** the hook isn't installed. Surface it and offer
 `graphify hook install` + an initial `graphify .` build. Do **not** silently grep instead.
@@ -172,11 +177,37 @@ For project-wide symbol renames / extract-method, prefer Serena (it tracks refer
 
 ---
 
-## Anti-patterns (don't do these)
+## Anti-patterns (usually avoid)
 
-- Grepping source to answer "what calls X / where is Y defined" → that's a graphify query (§3).
+- Grepping source to answer "what calls X / where is Y defined" → usually a graphify query (§3).
 - Reading a whole 800-line file to understand structure → `get_symbols_overview` (§4).
 - Rewriting an entire file to change 10 lines → `morph_edit` with markers (§5).
 - `sed`/`awk`/`python`/heredocs to edit file content → use Edit / MultiEdit / Morph / Serena.
-- Silently falling back to grep when a required tool is "unavailable" → confirm it's down first,
-  then say so. Don't degrade quietly.
+- Silently falling back to grep when a tool is "unavailable" → confirm it's down first, then say so.
+  Don't degrade quietly.
+
+---
+
+## 6. Project tools (task trackers & team MCPs)
+
+Beyond the backbone above, a repo may use **project-specific MCPs** — most often a task tracker (Jira,
+Asana, Linear, GitHub Issues). The framework hard-wires none: a repo declares its own in `VAULT.md` →
+`tools` (see `vault-guide.md` §1.1) and the lifecycle picks it up.
+
+**Suggestion, not a rule:** if the task references a ticket (e.g. `VAULT-123`, `#42`) and the repo
+declares a `task_tracker` + `task_tracker_mcp`, that MCP is usually the best first source for ticket
+context — reach for it before grep or web. None declared → ask which tracker (or skip). MCP down → fall
+back to web/grep and say so; never halt.
+
+```
+# VAULT.md
+## tools
+task_tracker: jira
+task_tracker_mcp: <jira mcp server>
+task_tracker_key: VAULT
+guidance: "Fetch the ticket's description + acceptance criteria before proposing."
+```
+
+The per-step *when* (fetch at LOAD CONTEXT, remind at post-commit) is expressed with `VAULT.md` `hooks`
+(§1.1) — e.g. `on_start`/`pre_load_context` to fetch, `post_commit` to remind. This file stays generic;
+the project fills in the specifics. (Layer-picking rules are §§1–5 above — not repeated here.)

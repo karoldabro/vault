@@ -42,16 +42,50 @@ template or guide reference resolves under it.
 2. **`~/vault/_global/config.md`** → `vault_home` (the global default chosen at install).
 3. **Built-in default** `~/vault/<slug>/`, slug resolved from `coupled-groups.md` or the repo basename.
 
-`VAULT.md` (optional, repo root — template in `$VAULT_FRAMEWORK_PATH/templates/VAULT.md`) carries three
-bounded sections, read on **every** command and folded into the lifecycle:
+`VAULT.md` (optional, repo root — template in `$VAULT_FRAMEWORK_PATH/templates/VAULT.md`) carries five
+bounded sections, read **once** at the start of every command (`01-analyze.md` §1.4) and **carried
+forward** through the whole lifecycle (steps 2–6 do not re-read it):
 
 | Section | Keys | Effect |
 |---------|------|--------|
 | `config` | `vault_path`, `framework_path`, `slug` | Path + identity resolution (above). |
 | `structure` | `add_folders: [...]`, `rename: {std: alias}`, `optional: [...]` | Scaffold extra folders, alias standard ones locally, silence "missing folder" for optional ones. |
-| `behaviour` | `load_context_extra: [...]`, `capture_indications: true\|false` | Folders Step 2 loads beyond defaults; whether capture runs the indication scan. |
+| `behaviour` | `load_context_extra: [...]`, `capture_indications: true\|false`, `suggest_rename: true\|false` | Folders Step 2 loads beyond defaults; whether capture runs the indication scan; whether step 1 suggests a session rename (below). |
+| `hooks` | `<phase>: <prose>` | Per-project, per-step **instruction** injected at a lifecycle phase (below). Instruction-only — never executed as a shell command. |
+| `tools` | `task_tracker`, `task_tracker_mcp`, `task_tracker_key`, `guidance` | Per-project tool guidance — e.g. which task-tracker MCP this repo uses (Jira/Asana/…) so the lifecycle can fetch ticket context. Suggestion, not a gate. |
 
 Unknown keys are ignored. Absent `VAULT.md` → all defaults, global vault.
+
+### Lifecycle hooks — phases, precedence & failure modes
+
+`hooks` attaches a **prose instruction** to a lifecycle phase; both `/v-work` and `/v-team` honor them.
+Read once at step 1 (§1.4) into the carried config, then surfaced and treated as a binding instruction
+for that phase. **Instruction-only**: a hook value is injected into the agent's prompt, never run as a
+shell command.
+
+**14 phases** — global bookends plus a `pre_`/`post_` pair per machine step:
+
+| Phase | Fires |
+|-------|-------|
+| `on_start` | Lifecycle begins — first action after config resolution (§1.4), before any step work. |
+| `pre_analyze` / `post_analyze` | Around ANALYZE (step 1). |
+| `pre_load_context` / `post_load_context` | Around LOAD CONTEXT (step 2). |
+| `pre_propose` / `post_propose` | Around PROPOSE (step 3). `post_propose` fires **before** the approval gate. |
+| `pre_execute` / `post_execute` | Around EXECUTE (step 5). `pre_execute` fires **after** the gate is approved. |
+| `pre_commit` / `post_commit` | Around `git commit` (step 6 §5.1). `post_commit` is after the commit, **before** `/v-capture`. |
+| `pre_capture` / `post_capture` | Around `/v-capture` (step 6 §5.5). |
+| `on_end` | Lifecycle terminates by **any** path — success, gate rejection, or abort. |
+
+The APPROVAL GATE (step 4) is **not** hookable — it's a user decision, not a machine phase. In `/v-team`,
+the internal **panel / review loop rounds** are also non-hookable: `pre_/post_propose` and
+`pre_/post_execute` fire at the loop's outer boundary, not per critic round.
+
+**Precedence & failure modes** (framework ethos — never halt):
+1. A hook is **never executed as a shell command** — prose guidance only.
+2. On conflict, **`CLAUDE.md` and `indications/` rules win** over a hook — surface the conflict at the
+   approval gate; don't silently obey the hook.
+3. A hook that needs a down MCP → attempt, then **fall back and surface** — never halt.
+4. Malformed / empty hook prose → **skip and note it**; don't fail the lifecycle.
 
 ---
 

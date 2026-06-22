@@ -3,6 +3,10 @@
 Two parts, **engineering first**: design the change (3a), then list the vault writes it produces
 (3b). Design before implementing — do not write code in this step.
 
+**Hooks.** Honor any carried `pre_propose` hook before designing and `post_propose` after (it fires
+**before** the approval gate). Hooks were loaded at step 1 (§1.4) and persisted — don't re-read
+`VAULT.md`. See `vault-guide.md` §1.1.
+
 ---
 
 ## 3a — Engineering design
@@ -93,4 +97,5 @@ Index updates:
   - _moc.md / _feature-index.md / decisions/_inventory.md as needed
 ```
 
-Mark PROPOSE `completed`.
+Before marking complete, honor any carried `post_propose` hook (surface + apply). Mark PROPOSE
+`completed`.

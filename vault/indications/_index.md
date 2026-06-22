@@ -10,6 +10,7 @@ tags: [index, indications]
 |------|------|------------|
 | [[shared-vs-stack-persona-factoring]] | Generic critics live once in `_shared/`; stack packs compose via `use_shared` + overlays | `personas/**` |
 | [[testing-persona-group]] | Testing critics = group in `_shared/testing/`; one AI-failure cluster + one real analyzer per lens; selected on test-touching changes | `personas/_shared/testing/**`, `personas/_resolution.md` |
+| [[tools-suggestions-not-rules]] | Tool guidance is suggestion not gate — Claude auto-selects; cost hierarchy is a default; only safety notes (Morph markers) stay firm | `tool-playbook.md`, `commands/**`, `VAULT.md` `tools` |
 | [[critique-loop-stop-conditions]] | Loops stop on round cap or no-new-confirmed-blockers, never on approval alone | `commands/v-team/steps/**` |
 | [[confirmed-vs-advisory-findings]] | A finding blocks only when tool-confirmed; unbacked = advisory | `personas/**`, `commands/v-team/steps/**` |
 | [[packs-detect-not-assume]] | Packs detect the project's stack/state approach; never hardcode a library | `personas/<stack>.md` |

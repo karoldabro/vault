@@ -28,6 +28,10 @@ OpenViking, claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-
 
 Full rules + worked examples: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` (default `~/workspace/vault/`).
 
+**Per-project hooks + tools.** A repo's `VAULT.md` can attach `hooks` (per-phase instructions, e.g.
+"fetch the Jira ticket on start") and `tools` (task-tracker MCP guidance), read once at step 1 and
+carried through the run. Contract + phases: `$VAULT_FRAMEWORK_PATH/vault-guide.md` §1.1.
+
 ---
 
 ## On start: create task list

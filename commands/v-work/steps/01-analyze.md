@@ -38,8 +38,32 @@ The whole lifecycle runs against a resolved vault — do this before Step 2 load
    `tool-playbook.md` resolve under it.
 2. **Vault path** — first hit wins: `<repo-root>/VAULT.md` → `vault_path` (relative resolves against
    the repo root, so `./vault` is in-repo) → `~/vault/_global/config.md` → `~/vault/<slug>/`.
-3. **Read `VAULT.md`** if present and apply its `structure` (extra/renamed/optional folders) and
-   `behaviour` (`load_context_extra`, `capture_indications`) keys. Carry them through the run.
+3. **Read `VAULT.md`** if present and load **all five sections** into a config you **carry through the
+   whole run** — steps 2–6 do not re-read it: `config`, `structure` (extra/renamed/optional folders),
+   `behaviour` (`load_context_extra`, `capture_indications`, `suggest_rename`), `hooks` (per-phase
+   instructions), and `tools` (task-tracker guidance). Hook phases + precedence: `vault-guide.md` §1.1.
+
+## 1.4b Fire `on_start` + `pre_analyze` hooks
+
+Right after config resolution (§1.4) — i.e. after the restatement/keywords/stack of §§1.1–1.3, so the
+restatement is available — if the carried `hooks` config defines `on_start` or `pre_analyze`, surface
+each and treat it as a binding instruction now, before proceeding to LOAD CONTEXT — e.g. "this
+repo tracks work in Jira; if the task names a ticket, fetch it via the Jira MCP first". A hook that
+conflicts with `CLAUDE.md`/`indications` is overridden (surface the conflict); a hook needing a down MCP
+falls back and is surfaced — never halt. See `vault-guide.md` §1.1.
+
+## 1.5 Suggest session rename
+
+After the restatement (§1.1), unless carried `behaviour.suggest_rename` is `false` (default: suggest),
+compute a short kebab slug from the restatement and surface the exact command **for the user to run**:
+
+```
+Suggested session name — paste to apply:  /rename <slug>
+```
+
+The model **cannot** invoke `/rename` itself (built-in slash commands run only from user input), so this
+is a one-paste manual action — present the line plainly, don't claim the rename happened. Both `/v-work`
+and `/v-team` get this (v-team reuses this step verbatim). Skip silently if `suggest_rename: false`.
 
 ## Required output
 
@@ -49,7 +73,10 @@ Keywords: <kw1>, <kw2>, ...
 Stack: <detected type + test command>
 Docker: <yes | no>
 Vault: <resolved vault path> (config: <VAULT.md applied | defaults>)
+Hooks: <phases defined in VAULT.md — or "none">
+Rename: /rename <slug>  (suggested — paste to apply)  | "skipped (suggest_rename: false)"
 Scope: <code-only | vault-only | both>
 ```
 
-Mark ANALYZE `completed`.
+Before marking complete, honor any carried `post_analyze` hook (surface + apply). Mark ANALYZE
+`completed`.
