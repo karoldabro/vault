@@ -17,3 +17,4 @@ tags: [index, decisions]
 | [[ADR-007-light-siblings-guardrail]] | Light command siblings drop the approval gate for a scope guardrail | 2026-06-19 | accepted |
 | [[ADR-008-v-cr-remote-pr-review]] | /v-cr reviews remote PRs by reusing the panel single-pass, precision-first, untrusted-input | 2026-06-19 | accepted |
 | [[ADR-009-v-cr-sandboxed-execution]] | /v-cr optional --sandbox path: runtime-verified review, framework-owned isolation envelope, attribution-aware test gate | 2026-06-19 | accepted |
+| [[ADR-010-lifecycle-hooks-tools-rename]] | Per-project lifecycle customization via instruction-only VAULT.md hooks + tools; rename is a suggestion | 2026-06-22 | accepted |
