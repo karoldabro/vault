@@ -14,8 +14,9 @@ Thin dispatcher — each step is loaded on demand. Reuses `/v-work` steps 01/02/
 PROPOSE and EXECUTE get looped variants. `/v-team` therefore **depends on `/v-work` being installed**
 (both ship in the same framework repo).
 
-Use `/v-work` for routine work. `/v-team` spends more (up to ~3 critics × 2 rounds × 2 loops) to buy
-design + review rigor — reach for it on architecture, schema, auth, billing, or cross-repo contracts.
+Use `/v-work` for routine work. `/v-team` spends more (up to ~3 critics × 2 rounds × 2 loops, plus up to
+`team_max_test_designers` generators in the PROPOSE test-design fan-out) to buy design + review rigor —
+reach for it on architecture, schema, auth, billing, or cross-repo contracts.
 
 ---
 
@@ -66,7 +67,10 @@ pack, and **select the critics for this change** (§2 there). Append one line to
 Read `~/.claude/commands/v-work/steps/02-load-context.md`, then execute. Mark LOAD CONTEXT `completed`.
 
 ## Step 3 — PROPOSE (panel loop)
-Read `~/.claude/commands/v-team/steps/03-propose-loop.md`, then execute. Mark PROPOSE `completed`.
+Read `~/.claude/commands/v-team/steps/03-propose-loop.md`, then execute. The design panel converges
+first, then sub-phase **(f2)** fans out the generative test-design group (`personas/_shared/testing/
+design/`) to author the Test Design Dossier + Proposed test backlog (test design is split out of solution
+design). Mark PROPOSE `completed`.
 
 ## Step 4 — APPROVAL GATE
 **STOP. Present the converged plan + critique trail + proposed-test backlog. Do not proceed until the

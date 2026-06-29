@@ -71,6 +71,19 @@ seventh critic: a good test trades **protection-against-regressions × resistanc
 feedback × maintainability**. The first two are in tension — flag a test that maximizes one by
 destroying another, and prefer deleting a zero-value test over patching it.
 
+## Generators vs critics
+These six lenses are **critics** — they review *written* tests in the EXECUTE diff-review loop, each bound
+to a real analyzer, and own the post-impl VOTE. Their generative counterpart is the **test-design
+generator group** at `design/` (see `design/README.md`): generators run in the PROPOSE sub-phase `(f2)`,
+ground in the *design plan* (not code), bind **no** analyzer, emit `advisory` dossier entries, and
+**never seat on this panel**. The `(f2)` fan-out feeds the Proposed test backlog that this critic panel
+then confirms post-impl. The seventh critic, `system-domain-expert.md`, is grounded in the repo's own
+`indications/`+`features/` rules and is seated whenever `(f2)` ran (see `_resolution.md` §2.1a).
+
+`edge-case-hunter`'s post-impl branch-coverage VOTE spans **both** single-axis and multi-condition
+branches — the `design/business-logic-cartographer`'s "multi-condition" ownership is generation-scoped
+only, not a coverage carve-out.
+
 ## Selection (default for a test-touching change)
 Cap is 3 (per `_resolution.md` §2). Default pick: **test-behaviorist + assertion-auditor + the lens the
 diff most implicates** (collaborators → test-double-critic; stateful/async → flakiness-sentinel; new

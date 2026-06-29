@@ -22,15 +22,26 @@ proposed-test backlog. Reviewed at the approval gate; drives EXECUTE.
      File (exact path) · Action · Tool · Pattern. -->
 
 ## Test plan
-<!-- Per unit: type · scenarios · file location (v-work 03 §3a.5 shape). -->
+<!-- Harness/level strategy. Per unit: type · scenarios · file location (v-work 03 §3a.5 shape). -->
+
+## Test Design Dossier
+<!-- Authored by the PROPOSE (f2) test-design fan-out (v-team). The generated test design, split out of
+     solution design: decision tables (variant/type rules), fault hypotheses + metamorphic relations,
+     boundary partitions + property invariants. Each entry is `advisory` until a bound critic confirms it
+     post-impl in EXECUTE (routing: personas/_shared/testing/design/README.md).
+     TRACEABILITY: every dossier artifact below must map to ≥1 Proposed test backlog row. -->
+
+### Advisory test hints
+<!-- Design-critic PROPOSED_TESTS (demoted, not authoritative) the (f2) fan-out reconciles into the backlog. -->
 
 ## Proposed test backlog
-<!-- Aggregated from every critic's PROPOSED_TESTS. `disposition` is filled during EXECUTE by the
+<!-- Sole authoritative writer: the (f2) test-design fan-out (critic hints above are advisory inputs).
+     `source` = the generator/critic that proposed the row. `disposition` is filled during EXECUTE by the
      testing agent (implement | change | skip + reason). -->
 
-| id | persona | kind | target | intent | priority | disposition |
-|----|---------|------|--------|--------|----------|-------------|
-|    |         |      |        |        |          |             |
+| id | source | kind | target | intent | priority | disposition |
+|----|--------|------|--------|--------|----------|-------------|
+|    |        |      |        |        |          |             |
 
 ## Open trade-offs / deferrals
 <!-- Conflicts surfaced to the user (e.g. perf cache vs security freshness), accepted MINOR/NIT

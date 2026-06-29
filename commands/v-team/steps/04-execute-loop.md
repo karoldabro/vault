@@ -55,6 +55,16 @@ Each round:
 4. **Apply fixes** between rounds with the §4.2 tools; **re-run the relevant tests** (§4.6).
 5. Re-spawn for the next round.
 
+**Confirm the Test Design Dossier here (post-impl half of the generate→confirm loop).** When PROPOSE
+`(f2)` produced a dossier, this loop is where its `advisory` entries get confirmed against real code —
+generators emit pre-impl, critics confirm post-impl. Seat [[system-domain-expert]] in the panel whenever
+`(f2)` ran (it confirms each [[business-logic-cartographer]] decision-table row maps to a covered branch
+and each [[fault-relation-prospector]] metamorphic relation preserves a real rule). Routing per
+`personas/_shared/testing/design/README.md`:
+decision-table/boundary rows → `edge-case-hunter` (coverage); metamorphic relations + property invariants →
+`assertion-auditor` (strength) **and** `system-domain-expert` (rule existence). A
+`system-domain-expert`/`edge-case-hunter` co-fire on the same branch is **corroboration**, counted once.
+
 **Stop on ANY:** `team_max_review_rounds` (default **2**) reached, or no new **confirmed** BLOCKER/MAJOR.
 Not on approval alone. Cap hit with open confirmed blockers → **present to user** (mirrors v-work §4.8).
 Append each review round + metrics to the plan's Critique trail.

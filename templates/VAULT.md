@@ -56,3 +56,4 @@ capture_indications: true              # run the indication-candidate scan at ca
 # team_max_rounds: 2                   # plan-critique loop cap
 # team_max_review_rounds: 2            # diff-review loop cap
 # team_max_parallel_critics: 3         # critics selected per change (hard max 5)
+# team_max_test_designers: 3           # generators in the PROPOSE (f2) test-design fan-out
