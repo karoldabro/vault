@@ -65,6 +65,14 @@ For each new/changed unit: **type** (unit = pure logic; feature/integration = en
 middleware; e2e = critical journeys), **scenarios** (happy path + edge cases + error paths + data
 integrity), **file location** (project's test conventions). List the concrete test cases.
 
+Two design moves keep this off the happy path (the heavyweight generative version is `/v-team`'s PROPOSE
+`(f2)` fan-out — here it is a checklist):
+- **Variant/type-dependent logic → a decision table.** When behaviour or required params change by a
+  type/variant/flag (e.g. `post.type` = text|poll|link), enumerate the conditions × values and write one
+  test per rule, not just the default path.
+- **Name the fault for each happy path.** For every pass-case, name one fault that would break it (bad
+  input, missing precondition, partial failure) and add the negative/error case it reveals.
+
 ---
 
 ## 3b — Vault writes

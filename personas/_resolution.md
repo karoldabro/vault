@@ -63,6 +63,17 @@ When the change **adds or modifies test files** — path globs `*test*`, `*spec*
 - See `personas/_shared/testing/README.md` for the lens table, decorrelation boundaries, and per-stack
   analyzer overlays.
 
+#### 2.1a Test-design generators (PROPOSE) + the system-domain-expert seat (EXECUTE)
+- **Generators** (`personas/_shared/testing/design/`) are **not critics** and are **never selected into a
+  panel**. They fan out in the PROPOSE sub-phase `(f2)` to author the test plan; see that group's
+  `README.md` for the generator↔critic contract.
+- **`system-domain-expert`** is a critic seat for the EXECUTE diff-review loop, grounded in the repo's own
+  `indications/`+`features/` rules. **Seat it whenever the PROPOSE `(f2)` fan-out ran** (i.e. a business-
+  logic-touching change) — **regardless of the test-file glob above**, because new untested business logic
+  has no test files in the diff at selection time yet is exactly the case this seat exists to catch. It is
+  a **priority pick** within the cap for business-logic-heavy changes (variant/type params, state
+  machines, billing/permission rules).
+
 ---
 
 ## 3. base_agent fallback

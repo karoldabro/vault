@@ -80,8 +80,11 @@ The synthesizer is itself an LLM-judge, so neutralise its known biases:
    pick a side.**
 4. **Revise the plan:** apply confirmed BLOCKER/MAJOR recommendations; record MINOR/NIT and advisory as
    "Open trade-offs / deferrals" with rationale. Bump to v(R+1).
-5. **Merge `PROPOSED_TESTS`** into the artifact's **Proposed test backlog** (dedupe overlapping, keep
-   provenance; `disposition` stays blank until EXECUTE).
+5. **Demote `PROPOSED_TESTS` to advisory test hints.** Design critics review *design*, not written tests,
+   so their `PROPOSED_TESTS` are **not** authoritative — write them to an **"Advisory test hints"**
+   subsection of the plan artifact. The §(f2) test-design fan-out is the **sole authoritative writer** of
+   the Proposed test backlog and reconciles these hints into it. (The §(d) schema still emits
+   `PROPOSED_TESTS`; only their consumption changes.)
 6. **Append** round R to the **Critique trail** with each finding's disposition (applied / deferred /
    rejected + reason) and **metrics**: new confirmed blockers, findings-delta, per-persona overlap,
    confirmed-vs-advisory counts, token cost.
@@ -96,6 +99,31 @@ The synthesizer is itself an LLM-judge, so neutralise its known biases:
 and flag the plan `CONVERGENCE: capped with N open blockers` for the approval gate. **Never loop past
 the cap.** (Observability note: if round 2 routinely yields no new confirmed blocker on your projects,
 set `team_max_rounds: 1` and make round 2 opt-in for high-risk work.)
+
+## (f2) Test-design fan-out (generation only)
+
+After the *design* plan converges (f) and before finalise (g), design the tests as a **first-class
+generative activity** — split out of solution design. This sub-phase performs **no confirmation**: it
+**only generates** (all confirmation is post-impl in EXECUTE §5.3 — the generators bind no analyzer and
+never seat on the critique panel). It is the **sole authoritative writer** of the Proposed test backlog.
+
+**Gating — fail open.** Run `(f2)` by default for any diff touching endpoints/handlers/migrations/business
+logic. **Skip only** pure refactor/docs/formatting diffs, with a one-line note surfaced at the approval
+gate (the happy-path bias this counters must not gate its own activation).
+
+1. **Spawn the generators** (parallel, one message — reuse only the spawn-and-merge skeleton of (c)+(e),
+   not the grounding-gate/de-bias prose). Default all three from `personas/_shared/testing/design/`,
+   capped by `team_max_test_designers` (default 3): [[fault-relation-prospector]] (fault hypotheses +
+   metamorphic relations), [[business-logic-cartographer]] (decision-table / state-transition / variant
+   rules — the post-`type` case), [[boundary-property-explorer]] (BVA/EP + property invariants). Each
+   envelope: the converged design plan + LOAD-CONTEXT digest + the **advisory test hints** (the demoted
+   design-critic `PROPOSED_TESTS`, see §(e) item 5) + its persona block.
+2. **Merge dossiers with cross-generator dedup.** Collapse same-branch error/partition intents emitted by
+   more than one generator into a single backlog row (horizontal decorrelation is by intent, not output).
+3. **Write the Test Design Dossier** into the plan artifact (decision tables, fault hypotheses,
+   metamorphic relations, property invariants) and **populate the Proposed test backlog** from it.
+   **Traceability (mandatory):** every dossier artifact maps to ≥1 backlog row; generator entries are
+   `advisory` until a bound critic confirms them in EXECUTE (routing table: `design/README.md`).
 
 ## (g) Finalise
 
