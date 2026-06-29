@@ -8,6 +8,7 @@ tags: [index, indications]
 
 | Slug | Rule | Applies-to |
 |------|------|------------|
+| [[docs-readme-landing-page]] | README is a landing page (what-it-is + one-line install + attach + commands + links); deep detail lives in linked pages; humanize prose but keep reference tables/code dense | `README.md`, `INSTALL.md`, `vault-guide.md`, `tool-playbook.md` |
 | [[shared-vs-stack-persona-factoring]] | Generic critics live once in `_shared/`; stack packs compose via `use_shared` + overlays | `personas/**` |
 | [[testing-persona-group]] | Testing critics = group in `_shared/testing/`; one AI-failure cluster + one real analyzer per lens; selected on test-touching changes | `personas/_shared/testing/**`, `personas/_resolution.md` |
 | [[tools-suggestions-not-rules]] | Tool guidance is suggestion not gate — Claude auto-selects; cost hierarchy is a default; only safety notes (Morph markers) stay firm | `tool-playbook.md`, `commands/**`, `VAULT.md` `tools` |
