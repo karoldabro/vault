@@ -28,7 +28,7 @@ install (`$VAULT_FRAMEWORK_PATH`, default `~/workspace/vault`); it is **not** ve
 
 ## How to invoke
 
-Direct script (preferred for now):
+Run the script directly:
 
 ```bash
 cd ~/workspace/<your-repo>

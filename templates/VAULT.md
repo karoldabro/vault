@@ -5,9 +5,9 @@ tags: [config]
 
 # VAULT.md — per-repo vault configuration
 
-Optional. Place at the **code repo root**. Every vault command reads it first and folds it into the
-lifecycle. Delete it to fall back to the global default (`~/vault/<slug>/`). Edit the `key: value`
-lines below; comments (`#`) are ignored.
+Optional. Put it at the code repo root. Every vault command reads it first and folds it into the run.
+Delete it to fall back to the global default (`~/vault/<slug>/`). Edit the `key: value` lines below;
+comments (`#`) are ignored.
 
 ## config
 <!-- Where this repo's vault lives. Relative paths resolve against the repo root, so `./vault` keeps
@@ -30,11 +30,11 @@ capture_indications: true              # run the indication-candidate scan at ca
 # suggest_rename: true                 # step 1 surfaces a `/rename <slug>` for you to paste (default: on)
 
 ## hooks
-<!-- Per-project, per-step INSTRUCTION (prose only — never run as a shell command; there is no `run:`
-     syntax). Both /v-work and /v-team honor them; read once at step 1, carried through the run. 14
-     phases: on_start ·
-     pre_/post_analyze · pre_/post_load_context · pre_/post_propose · pre_/post_execute ·
-     pre_/post_commit · pre_/post_capture · on_end. Full contract + precedence: vault-guide.md §1.1. -->
+<!-- Per-project, per-step instruction (prose only; never run as a shell command, there is no `run:`
+     syntax). Both /v-work and /v-team honor them: read once at step 1, carried through the run. The 14
+     phases are on_start, pre_/post_analyze, pre_/post_load_context, pre_/post_propose,
+     pre_/post_execute, pre_/post_commit, pre_/post_capture, and on_end. Full contract and precedence
+     in vault-guide.md §1.1. -->
 # on_start: "This repo tracks work in Jira (project VAULT). If the task names a ticket, fetch it via the Jira MCP first."
 # post_commit: "Remind me to move the Jira ticket to In Review (don't transition it automatically)."
 

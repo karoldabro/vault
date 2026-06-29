@@ -4,7 +4,7 @@ type: moc
 
 # Vault Framework — Map of Contents
 
-Entry point for the vault framework (`~/workspace/vault/`). Generic process docs, templates, and commands for all projects.
+The entry point for the vault framework (`~/workspace/vault/`). Generic process docs, templates, and commands for all projects.
 
 ## Commands
 
@@ -12,6 +12,9 @@ Entry point for the vault framework (`~/workspace/vault/`). Generic process docs
 - [[commands/v-migrate]] — Convert a submodule vault to the global model
 - [[commands/v-work]] — Vault-aware dev lifecycle
 - [[commands/v-team]] — Persona-critique lifecycle (parallel critics loop over plan + diff)
+- [[commands/v-do]] — Small, low-risk change with no approval gate
+- [[commands/v-ask]] — Read-only, vault-aware Q&A
+- [[commands/v-cr]] — Review a remote PR and post comments back
 - [[commands/v-capture]] — Session capture + dedupe
 - [[commands/v-resume]] — Force fresh context recall
 - [[commands/v-sync]] — Re-ingest curated knowledge into OV
@@ -49,5 +52,6 @@ _(none yet — created by `/v-guide` when run on a feature)_
 
 ## Sessions (recent)
 
+- [[sessions/2026-06-29-1233-humanize-docs]] — Humanize + slim instruction docs; split out INSTALL.md
 - [[sessions/2026-06-15-0900-global-framework-indications]] — Ditch submodules: global framework + indications/ + feature gate
 - [[sessions/2026-06-02-1156-v-guide-command]] — Add /v-guide integration guide command
