@@ -26,9 +26,16 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - **Testing critic group**: `personas/_shared/testing/` — 6 stack-agnostic testing lenses
   (test-behaviorist, assertion-auditor, edge-case-hunter, test-double-critic, flakiness-sentinel,
   test-harness-critic), one AI-test-failure cluster + one bound analyzer each. Selected on test-touching
-  changes via `_resolution.md` §2.1 (cap 3). Rule: [[../indications/testing-persona-group]].
+  changes via `_resolution.md` §2.1 (cap 3). Rule: [[../indications/testing-persona-group]]. Plus a 7th
+  critic `system-domain-expert` (grounded in the repo's own `indications/`+`features/` rules), seated in
+  EXECUTE §5.3 whenever the (f2) fan-out ran (`_resolution.md` §2.1a).
+- **Test-design generators** (ADR-011): `personas/_shared/testing/design/` — fault-relation-prospector,
+  business-logic-cartographer, boundary-property-explorer. Run in PROPOSE sub-phase **(f2)** (generation
+  only, no analyzer, never on the panel); author the Test Design Dossier + Proposed test backlog;
+  confirmed post-impl in EXECUTE. Rule: [[../indications/generators-emit-critics-confirm]].
 - **Config** (`VAULT.md` `behaviour`): `project_type`, `personas.{use,add,skip}`, `team_max_rounds`
-  (2), `team_max_review_rounds` (2), `team_max_parallel_critics` (3, hard max 5).
+  (2), `team_max_review_rounds` (2), `team_max_parallel_critics` (3, hard max 5),
+  `team_max_test_designers` (3).
 - **Artifact**: `templates/plan.md` → `<vault>/plans/YYYY-MM-DD-HHMM-<slug>.md` (converged plan +
   critique trail + proposed-test backlog).
 - **Finding schema**: severity (BLOCKER/MAJOR/MINOR/NIT) + `grounding` (confirmed|advisory) +
@@ -56,3 +63,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-06-16-1038-v-team-persona-critique-command]]
 - [[../sessions/2026-06-16-1135-v-team-nuxt-flutter-packs]]
 - [[../sessions/2026-06-19-0954-testing-persona-group]]
+- [[../sessions/2026-06-29-0818-split-test-planning-step]]
