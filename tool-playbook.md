@@ -5,18 +5,18 @@ tags: [process, tools, tokens]
 
 # Tool playbook — token-saving tools
 
-Canonical rules + worked examples for the tools every vault command depends on. The commands
-(`/v-work`, `/v-resume`, …) carry a short inline example at the point of use and link back here for
-the full ruleset. **This file is the source of truth.**
+Rules and worked examples for the tools every vault command depends on. The commands (`/v-work`,
+`/v-resume`, and the rest) carry a short inline example at the point of use and link back here for the
+full ruleset. This file is the source of truth.
 
-The whole point is cost. A vault hit costs ~100–2000 tokens. A graph slice costs ~hundreds. A
-symbol query costs ~hundreds. Reading 40 source files costs ~20k. **Picking the wrong default
-wastes 100×.** Default to the cheap path; reach for grep / full-file reads only when the cheap
-layers genuinely come up empty.
+The reason is token cost. A vault hit costs about 100–2000 tokens. A graph slice or a symbol query costs
+a few hundred. Reading 40 source files costs about 20k. Pick the wrong default and you waste 100×, so
+default to the cheap path and reach for grep or full-file reads only when the cheap layers genuinely come
+up empty.
 
-> **These are suggestions, not rules.** Claude selects the tool that fits the moment — the cost
-> hierarchy below is a sensible default, not a gate. The exception is genuine **safety** notes (e.g.
-> Morph's `// ... existing code ...` markers): those stay firm.
+> These are suggestions, not rules. Claude picks the tool that fits the moment, and the cost hierarchy
+> below is a sensible default rather than a gate. The exception is genuine safety notes (like Morph's
+> `// ... existing code ...` markers): those stay firm.
 
 ---
 

@@ -5,9 +5,9 @@ tags: [config]
 
 # VAULT.md — per-repo vault configuration
 
-Optional. Place at the **code repo root**. Every vault command reads it first and folds it into the
-lifecycle. Delete it to fall back to the global default (`~/vault/<slug>/`). Edit the `key: value`
-lines below; comments (`#`) are ignored.
+Optional. Put it at the code repo root. Every vault command reads it first and folds it into the run.
+Delete it to fall back to the global default (`~/vault/<slug>/`). Edit the `key: value` lines below;
+comments (`#`) are ignored.
 
 ## config
 <!-- Where this repo's vault lives. Relative paths resolve against the repo root, so `./vault` keeps
