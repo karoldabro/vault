@@ -10,8 +10,10 @@ in the wild, before drafting. Cite sources in the plan.
 
 ## (a) Draft the generic plan v0
 Write a project-agnostic plan: the problem, the user-facing outcome, scope + non-goals, the shape of the
-solution across the products, and the sequencing (which project moves first — usually the api). Follow
-the BMAD principle: capture enough context that each project can act without re-deriving the whole thing.
+solution across the products, and the sequencing (which project moves first — usually the api). Ground it
+in the **Step 2 LOAD CONTEXT digest** — reuse existing contracts / decisions / overlapping feature
+dossiers instead of reinventing the seam. Follow the BMAD principle: capture enough context that each
+project can act without re-deriving the whole thing.
 
 ## (b) The pipeline — sequential, each stage consumes the last
 Unlike `/v-team`'s **parallel** design panel, planning is a **linear pipeline**: each critic refines the
@@ -20,7 +22,8 @@ sub-steps from `v-team/steps/03-propose-loop.md` §(d)/§(e) — **not** `_share
 module reviews a code diff and has nothing to ground on here).
 
 Run in order (spawn each as an `Agent`; read-only; feed it the current draft + all prior stages'
-findings):
+findings + the **LOAD CONTEXT digest** from Step 2, so each critic reasons from real project knowledge,
+not blind):
 1. **business / market advisor** — is this worth doing? ROI, the cheaper path, what's unsaid, the real
    user need behind the ask.
 2. **product owner** — scope, acceptance criteria, what's in / out of the first cut, sequencing.

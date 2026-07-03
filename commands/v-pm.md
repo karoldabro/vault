@@ -36,10 +36,20 @@ features, so a thread never orphans just because you didn't reopen the right ses
 
 ---
 
-## Tools
-Same token-saving backbone as `/v-team` (OpenViking, claude-mem, Serena, graphify) + the **Agent** tool
-for the planning panel. Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Web research (soft — the
-AI decides, or force with `--research` / disable with `--no-research`) per `tool-playbook.md` §7.
+## Tools — preferred, force when present (never gating)
+The token-saving backbone from `/v-team`, plus the **Agent** tool for the planning panel. LOAD CONTEXT
+(Step 2) probes these and falls back to the next layer; it never halts.
+
+| Tool | Health check | Fallback if down |
+|------|-------------|------------------|
+| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
+| claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
+| graphify | `<repo>/graphify-out/graph.json` present | grep the repo |
+| Serena | `check_onboarding_performed()` | graphify → Glob/Grep |
+
+Search precedence (`CLAUDE.md`): vault + OV → graph → source. Full rules:
+`$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Web research (soft — the AI decides, or force with `--research`
+/ disable with `--no-research`) per `tool-playbook.md` §7.
 
 ---
 
@@ -47,28 +57,34 @@ AI decides, or force with `--research` / disable with `--no-research`) per `tool
 `TaskCreate` one task per step; mark `in_progress` / `completed` as you go.
 
 1. INTAKE
-2. PLAN PANEL
-3. SEED WORKSPACE
+2. LOAD CONTEXT
+3. PLAN PANEL
+4. SEED WORKSPACE
 
 ### Step 1 — INTAKE
 Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/01-intake.md`, then execute. The clarify gate
 hard-blocks on a no-safe-default fork; a **single-participant** feature hands off to `/v-team` and ends
 the run.
 
-### Step 2 — PLAN PANEL
-Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/02-plan-panel.md`, then execute. Emits `generic-plan.md`
+### Step 2 — LOAD CONTEXT
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/02-load-context.md`, then execute. Vault-first, **across
+every participant's vault** + `_global` + `_features/` (OV → claude-mem → graph → grep). Produces the
+context digest the panel plans from — so the PM grounds in accumulated project knowledge, not blindly.
+
+### Step 3 — PLAN PANEL
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/03-plan-panel.md`, then execute. Emits `generic-plan.md`
 + structured `contracts.md`.
 
-### Step 3 — SEED WORKSPACE
-Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/03-seed-workspace.md`, then execute. Scaffolds
+### Step 4 — SEED WORKSPACE
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/04-seed-workspace.md`, then execute. Scaffolds
 `_features/<feature>/` and symlinks it into each participant project's vault. Then STOP: tell the user
 the workspace is ready and to run `/v-team <feature>` in each project.
 
 ## reconcile mode
-Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/04-reconcile.md`, then execute.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/05-reconcile.md`, then execute.
 
 ## status mode
-Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/05-status.md`, then execute.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/06-status.md`, then execute.
 
 ---
 

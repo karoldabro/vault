@@ -17,8 +17,9 @@ through file-based conversation threads instead of the human relaying context. N
 
 ## Contracts
 - **Command**: `/v-pm <necessity>` (plan) · `/v-pm reconcile <feature>` · `/v-pm status`. Dispatcher
-  `commands/v-pm.md` + steps `01-intake` · `02-plan-panel` · `03-seed-workspace` · `04-reconcile` ·
-  `05-status`.
+  `commands/v-pm.md` (with a tool health-check/fallback table) + steps `01-intake` · `02-load-context`
+  (vault-first, OV-first, across every participant vault + `_global` + `_features`) · `03-plan-panel` ·
+  `04-seed-workspace` · `05-reconcile` · `06-status`.
 - **Workspace** `~/vault/_features/<feature>/`: `header.md` · `generic-plan.md` (only v-pm writes) ·
   structured `contracts.md` · `conversation/` · `projects/<proj>/plan.md`. No `ledger.md` (derived).
 - **Thread protocol**: filename encodes state — `THREAD_<n>_OPEN_→<proj|pm>.md` →

@@ -32,54 +32,73 @@ teardown() {
     grep -qi '2+ repos\|spans 2'            "${PM}"
 }
 
-@test "all five v-pm step files exist" {
+@test "v-pm dispatcher has a tool health-check + fallback table and the search precedence" {
+    grep -qi 'memory_health'                "${PM}"
+    grep -qi 'fallback'                     "${PM}"
+    grep -qi 'claude-mem'                   "${PM}"
+    grep -qi 'graphify'                     "${PM}"
+    grep -qi 'precedence'                   "${PM}"
+}
+
+@test "all six v-pm step files exist (intake, load-context, plan-panel, seed, reconcile, status)" {
     [ -f "${STEPS}/01-intake.md" ]
-    [ -f "${STEPS}/02-plan-panel.md" ]
-    [ -f "${STEPS}/03-seed-workspace.md" ]
-    [ -f "${STEPS}/04-reconcile.md" ]
-    [ -f "${STEPS}/05-status.md" ]
+    [ -f "${STEPS}/02-load-context.md" ]
+    [ -f "${STEPS}/03-plan-panel.md" ]
+    [ -f "${STEPS}/04-seed-workspace.md" ]
+    [ -f "${STEPS}/05-reconcile.md" ]
+    [ -f "${STEPS}/06-status.md" ]
+}
+
+@test "load-context is vault-first, OV-first, ACROSS every participant vault, and emits a digest" {
+    grep -qi 'memory_recall\|OpenViking'    "${STEPS}/02-load-context.md"
+    grep -qi 'every participant\|each participant\|participant' "${STEPS}/02-load-context.md"
+    grep -qi '_global'                      "${STEPS}/02-load-context.md"
+    grep -qi '_features'                    "${STEPS}/02-load-context.md"
+    grep -qi 'digest'                       "${STEPS}/02-load-context.md"
+    grep -qi 'fallback'                     "${STEPS}/02-load-context.md"
+    # cheapest-first precedence, no source reads here
+    grep -qi 'cheapest-first\|precedence'   "${STEPS}/02-load-context.md"
 }
 
 @test "intake clarify-hard-blocks and hands a single-participant feature off to /v-team" {
     grep -qi 'clarify'                      "${STEPS}/01-intake.md"
     grep -qi 'wait\|hard-block'             "${STEPS}/01-intake.md"
-    # break-even gate: 1 participant -> hand off, no workspace
     grep -qi '1 participant\|single-participant' "${STEPS}/01-intake.md"
     grep -qi 'hand off\|hand-off\|/v-team'  "${STEPS}/01-intake.md"
 }
 
-@test "plan-panel is a sequential 4-critic pipeline that borrows from 03-propose-loop, NOT critic-panel" {
-    grep -qi 'sequential'                   "${STEPS}/02-plan-panel.md"
-    grep -qi 'business'                     "${STEPS}/02-plan-panel.md"
-    grep -qi 'product owner'                "${STEPS}/02-plan-panel.md"
-    grep -qi 'architect'                    "${STEPS}/02-plan-panel.md"
-    grep -qi 'contract'                     "${STEPS}/02-plan-panel.md"
-    grep -qi 'pm_max_rounds'                "${STEPS}/02-plan-panel.md"
-    grep -qi '03-propose-loop'              "${STEPS}/02-plan-panel.md"
-    # explicitly NOT the diff-review module
-    grep -qi 'not.*critic-panel'            "${STEPS}/02-plan-panel.md"
+@test "plan-panel is a sequential 4-critic pipeline, consumes the LOAD CONTEXT digest, borrows 03-propose-loop NOT critic-panel" {
+    grep -qi 'sequential'                   "${STEPS}/03-plan-panel.md"
+    grep -qi 'business'                     "${STEPS}/03-plan-panel.md"
+    grep -qi 'product owner'                "${STEPS}/03-plan-panel.md"
+    grep -qi 'architect'                    "${STEPS}/03-plan-panel.md"
+    grep -qi 'contract'                     "${STEPS}/03-plan-panel.md"
+    grep -qi 'pm_max_rounds'                "${STEPS}/03-plan-panel.md"
+    grep -qi '03-propose-loop'              "${STEPS}/03-plan-panel.md"
+    grep -qi 'not.*critic-panel'            "${STEPS}/03-plan-panel.md"
+    # each critic reasons from the loaded vault context
+    grep -qi 'LOAD CONTEXT digest\|Step 2'  "${STEPS}/03-plan-panel.md"
 }
 
 @test "seed-workspace lists the workspace entries and has NO ledger file (derived view)" {
-    grep -qi 'header.md'                    "${STEPS}/03-seed-workspace.md"
-    grep -qi 'generic-plan.md'              "${STEPS}/03-seed-workspace.md"
-    grep -qi 'contracts.md'                 "${STEPS}/03-seed-workspace.md"
-    grep -qi 'conversation/'                "${STEPS}/03-seed-workspace.md"
-    grep -qi 'projects/'                    "${STEPS}/03-seed-workspace.md"
-    # the ledger is derived, not a written file (kills the write-race)
-    grep -qi 'derived view\|no.*ledger'     "${STEPS}/03-seed-workspace.md"
-    grep -qi 'symlink'                      "${STEPS}/03-seed-workspace.md"
+    grep -qi 'header.md'                    "${STEPS}/04-seed-workspace.md"
+    grep -qi 'generic-plan.md'              "${STEPS}/04-seed-workspace.md"
+    grep -qi 'contracts.md'                 "${STEPS}/04-seed-workspace.md"
+    grep -qi 'conversation/'                "${STEPS}/04-seed-workspace.md"
+    grep -qi 'projects/'                    "${STEPS}/04-seed-workspace.md"
+    grep -qi 'derived view\|no.*ledger'     "${STEPS}/04-seed-workspace.md"
+    grep -qi 'symlink'                      "${STEPS}/04-seed-workspace.md"
 }
 
 @test "status mode is a no-write cross-feature sweep" {
-    grep -qi 'sweep'                        "${STEPS}/05-status.md"
-    grep -qi 'no writes\|no write'          "${STEPS}/05-status.md"
-    grep -qi 'cross-feature\|every.*_features' "${STEPS}/05-status.md"
+    grep -qi 'sweep'                        "${STEPS}/06-status.md"
+    grep -qi 'no writes\|no write'          "${STEPS}/06-status.md"
+    grep -qi 'cross-feature\|every.*_features' "${STEPS}/06-status.md"
 }
 
 @test "reconcile drains to:pm threads and flags staleness" {
-    grep -qi 'to: pm\|→pm\|OPEN_→pm'        "${STEPS}/04-reconcile.md"
-    grep -qi 'stale'                        "${STEPS}/04-reconcile.md"
+    grep -qi 'to: pm\|→pm\|OPEN_→pm'        "${STEPS}/05-reconcile.md"
+    grep -qi 'stale'                        "${STEPS}/05-reconcile.md"
 }
 
 @test "all five _features templates exist" {
@@ -121,7 +140,6 @@ teardown() {
     grep -qi '_features'                     "${VAULT_ROOT}/vault-guide.md"
     grep -qi 'derived view'                  "${VAULT_ROOT}/vault-guide.md"
     grep -qi 'latency contract'              "${VAULT_ROOT}/vault-guide.md"
-    # landing-page rule: README is a one-liner, not the manual
     grep -q  '/v-pm'                         "${VAULT_ROOT}/README.md"
     grep -q  'v-pm.md'                       "${VAULT_ROOT}/commands/README.md"
 }
