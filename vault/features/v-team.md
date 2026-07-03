@@ -40,6 +40,10 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
   critique trail + proposed-test backlog).
 - **Finding schema**: severity (BLOCKER/MAJOR/MINOR/NIT) + `grounding` (confirmed|advisory) +
   PROPOSED_TESTS; only `confirmed` findings may block.
+- **PROPOSE front gates** (ADR-012, shared `§3a`): `§3a.0a` clarify (assumptions + `AskUserQuestion`
+  for plan-changing doubts) and `§3a.0b` external research (ground vs the wild; reconcile contradicting
+  consensus in writing). Run in the v0 draft **before the panel spawns**; an unresearched design /
+  unsound assumption is a legitimate critic finding. Rule: [[../indications/propose-front-gates]].
 
 ## Coupling
 - Reuses Claude Code agent types as persona `base_agent`s (system-architect, backend-architect,
@@ -64,3 +68,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-06-16-1135-v-team-nuxt-flutter-packs]]
 - [[../sessions/2026-06-19-0954-testing-persona-group]]
 - [[../sessions/2026-06-29-0818-split-test-planning-step]]
+- [[../sessions/2026-07-03-1205-propose-clarify-research-gates]]

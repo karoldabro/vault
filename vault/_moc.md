@@ -24,11 +24,11 @@ tags: [moc]
 
 ## Sessions (recent)
 <!-- Last N session entries appended by /save or OV auto-capture. -->
+- [[sessions/2026-07-03-1205-propose-clarify-research-gates]] — add clarify (§3a.0a) + online-research (§3a.0b) front gates to shared PROPOSE §3a; both /v-work and /v-team; reconcile contradicting consensus in writing (ADR-012)
 - [[sessions/2026-06-29-0818-split-test-planning-step]] — split test design into a generative PROPOSE (f2) fan-out (fault/business-logic/boundary generators) + system-domain-expert critic; generators emit pre-impl, critics confirm post-impl (ADR-011)
 - [[sessions/2026-06-22-1152-framework-hooks-tools-rename]] — add per-project VAULT.md `hooks` (14 instruction-only phases) + `tools` (task-tracker MCP) + step-1 `/rename` suggestion to both lifecycles (ADR-010)
 - [[sessions/2026-06-20-1900-v-capture-business-logic]] — /v-capture captures test-shaped `## Behaviors & rules` in sessions + features for business/feature/integration/UI test enablement
 - [[sessions/2026-06-19-1605-v-cr-panel-spawn-coverage-brevity]] — harden /v-cr: enforce real panel spawn (+`Spawned:` proof), surface coverage + test posture, tighten comments
-- [[sessions/2026-06-19-1526-setup-zstd-claude-mem-fixes]] — fix fresh-install: zstd prereq for ollama + correct claude-mem marketplace qualifier (claude-mem@thedotmack)
 
 ## Code
 - Graph: `graphify/<repo>/graph.json` per sub-repo.

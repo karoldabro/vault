@@ -19,3 +19,4 @@ tags: [index, decisions]
 | [[ADR-009-v-cr-sandboxed-execution]] | /v-cr optional --sandbox path: runtime-verified review, framework-owned isolation envelope, attribution-aware test gate | 2026-06-19 | accepted |
 | [[ADR-010-lifecycle-hooks-tools-rename]] | Per-project lifecycle customization via instruction-only VAULT.md hooks + tools; rename is a suggestion | 2026-06-22 | accepted |
 | [[ADR-011-generative-test-design-subphase]] | Test design is a generative PROPOSE sub-phase; generators emit pre-impl, critics confirm post-impl | 2026-06-29 | accepted |
+| [[ADR-012-propose-clarify-research-gates]] | PROPOSE opens with clarify + online-research front gates (shared §3a); contradicting consensus reconciled in writing | 2026-07-03 | accepted |
