@@ -60,6 +60,7 @@ Search precedence (`CLAUDE.md`): vault + OV → graph → source. Full rules:
 2. LOAD CONTEXT
 3. PLAN PANEL
 4. SEED WORKSPACE
+5. CAPTURE
 
 ### Step 1 — INTAKE
 Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/01-intake.md`, then execute. The clarify gate
@@ -77,14 +78,20 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/03-plan-panel.md`, then execute.
 
 ### Step 4 — SEED WORKSPACE
 Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/04-seed-workspace.md`, then execute. Scaffolds
-`_features/<feature>/` and symlinks it into each participant project's vault. Then STOP: tell the user
-the workspace is ready and to run `/v-team <feature>` in each project.
+`_features/<feature>/` and symlinks it into each participant project's vault. → Step 5.
+
+### Step 5 — CAPTURE
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/05-capture.md`, then execute. Writes the planning-session
+record + cross-project ADR candidates into the workspace, pushes the rationale to OpenViking, and commits
+the whole workspace. Then STOP: tell the user the workspace is ready and to run `/v-team <feature>` in
+each project.
 
 ## reconcile mode
-Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/05-reconcile.md`, then execute.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/06-reconcile.md`, then execute (it ends by running CAPTURE
+to record the reconciliation + any new decisions).
 
 ## status mode
-Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/06-status.md`, then execute.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/07-status.md`, then execute. (Read-only — no capture.)
 
 ---
 

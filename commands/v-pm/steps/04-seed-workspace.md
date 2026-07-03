@@ -10,6 +10,7 @@ Create `~/vault/_features/<feature>/` from `$VAULT_FRAMEWORK_PATH/templates/_fea
   generic-plan.md    the project-agnostic plan (Step 2)             (only v-pm writes)
   contracts.md       structured cross-project interface (Step 2)
   conversation/      empty — threads land here
+  sessions/          empty — planning-session records (CAPTURE writes here)
   projects/          one project-shard per participant (each project's /v-team writes its own)
 ```
 Instantiate `generic-plan.md` + `contracts.md` from what Step 2 produced. Instantiate one
@@ -27,14 +28,14 @@ ln -s ~/vault/_features/<feature>  ~/vault/<proj>/features/<feature>
 Ensure the symlink is **gitignored** in the participant repo — the `templates/vault.gitignore` entry for
 workspace symlinks covers it; confirm it's present in each project vault's `.gitignore`.
 
-## 3.3 Commit the workspace
-`_features/` is its own committed vault: stage + commit the new `<feature>/` (explicit paths) and let
-`/v-sync` ingest it.
+## 3.3 Stage the workspace (commit happens in CAPTURE)
+Leave the new `<feature>/` **staged, not committed** — the CAPTURE step (05) commits it together with the
+planning-session record and any ADRs, in one commit. (`_features/` is its own committed vault; `/v-sync`
+ingests it.)
 
 ## Required output
 ```
-Workspace: ~/vault/_features/<feature>/  [seeded]
+Workspace: ~/vault/_features/<feature>/  [seeded, staged]
 Symlinks: [<proj>/features/<feature> → workspace, per participant]
-Next: run `/v-team <feature>` in each project.
 ```
-Mark SEED WORKSPACE `completed`. Tell the user the workspace is ready.
+Mark SEED WORKSPACE `completed` → Step 5 (CAPTURE).

@@ -40,13 +40,26 @@ teardown() {
     grep -qi 'precedence'                   "${PM}"
 }
 
-@test "all six v-pm step files exist (intake, load-context, plan-panel, seed, reconcile, status)" {
+@test "all seven v-pm step files exist (intake, load-context, plan-panel, seed, capture, reconcile, status)" {
     [ -f "${STEPS}/01-intake.md" ]
     [ -f "${STEPS}/02-load-context.md" ]
     [ -f "${STEPS}/03-plan-panel.md" ]
     [ -f "${STEPS}/04-seed-workspace.md" ]
-    [ -f "${STEPS}/05-reconcile.md" ]
-    [ -f "${STEPS}/06-status.md" ]
+    [ -f "${STEPS}/05-capture.md" ]
+    [ -f "${STEPS}/06-reconcile.md" ]
+    [ -f "${STEPS}/07-status.md" ]
+}
+
+@test "capture writes a planning-session record, extracts cross-project ADRs, and pushes to OV" {
+    grep -qi 'planning-session'             "${STEPS}/05-capture.md"
+    grep -qi 'sessions/'                    "${STEPS}/05-capture.md"
+    grep -qi 'ADR'                          "${STEPS}/05-capture.md"
+    grep -qi 'decisions/'                   "${STEPS}/05-capture.md"
+    grep -qi 'memory_store'                 "${STEPS}/05-capture.md"
+    grep -qi 'memory_health'                "${STEPS}/05-capture.md"
+    grep -qi 'commit'                       "${STEPS}/05-capture.md"
+    # cross-project ADRs land in the neutral workspace by default
+    grep -qi 'neutral workspace\|_features/<feature>/decisions' "${STEPS}/05-capture.md"
 }
 
 @test "load-context is vault-first, OV-first, ACROSS every participant vault, and emits a digest" {
@@ -91,22 +104,24 @@ teardown() {
 }
 
 @test "status mode is a no-write cross-feature sweep" {
-    grep -qi 'sweep'                        "${STEPS}/06-status.md"
-    grep -qi 'no writes\|no write'          "${STEPS}/06-status.md"
-    grep -qi 'cross-feature\|every.*_features' "${STEPS}/06-status.md"
+    grep -qi 'sweep'                        "${STEPS}/07-status.md"
+    grep -qi 'no writes\|no write'          "${STEPS}/07-status.md"
+    grep -qi 'cross-feature\|every.*_features' "${STEPS}/07-status.md"
 }
 
-@test "reconcile drains to:pm threads and flags staleness" {
-    grep -qi 'to: pm\|→pm\|OPEN_→pm'        "${STEPS}/05-reconcile.md"
-    grep -qi 'stale'                        "${STEPS}/05-reconcile.md"
+@test "reconcile drains to:pm threads, flags staleness, and captures at the end" {
+    grep -qi 'to: pm\|→pm\|OPEN_→pm'        "${STEPS}/06-reconcile.md"
+    grep -qi 'stale'                        "${STEPS}/06-reconcile.md"
+    grep -qi '05-capture\|run.*CAPTURE\|Capture' "${STEPS}/06-reconcile.md"
 }
 
-@test "all five _features templates exist" {
+@test "all six _features templates exist (incl. planning-session)" {
     [ -f "${TPL}/header.md" ]
     [ -f "${TPL}/generic-plan.md" ]
     [ -f "${TPL}/contracts.md" ]
     [ -f "${TPL}/project-shard.md" ]
     [ -f "${TPL}/THREAD.md" ]
+    [ -f "${TPL}/planning-session.md" ]
 }
 
 @test "project-shard template is BMAD-self-contained with a consumed-contract section" {

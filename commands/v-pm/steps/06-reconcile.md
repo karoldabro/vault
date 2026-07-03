@@ -23,9 +23,15 @@ Any `OPEN` thread older than **N session-opens** (default 3, tracked in `header.
 picked up → surface it: "waiting on `<proj>`, not picked up in N opens." Degrade to asking the user
 rather than letting it stall silently.
 
+## R.5 Capture
+Record the reconciliation: Read `05-capture.md` and run it in **reconcile mode** — write a
+planning-session record (`mode: reconcile`) for what changed, extract any new cross-project ADR
+candidates, push the updated rationale to OpenViking, and commit the workspace.
+
 ## Required output
 ```
 Drained (to: pm): [threads → decisions applied]
 Contract/plan changes: [what moved in generic-plan / contracts]
 Stale: [threads waiting on <proj> for N+ opens]
+Captured: [planning-session record + ADRs + OV push + commit]
 ```

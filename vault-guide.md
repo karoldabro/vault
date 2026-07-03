@@ -399,8 +399,14 @@ owned by no single project, since a feature spans several. Each participant proj
   generic-plan.md    project-agnostic plan — ONLY /v-pm writes it
   contracts.md       structured cross-project interface (the api↔frontend seam)
   conversation/      threads (state encoded in the filename)
+  sessions/          planning-session records — v-pm CAPTURE writes the *why* behind the plan
+  decisions/         cross-project ADRs extracted at CAPTURE (promotable to a participant vault)
   projects/<proj>/plan.md   each project's self-contained shard (its own /v-team writes it)
 ```
+`/v-pm`'s **CAPTURE** step (plan mode step 5; also the tail of `reconcile`) is v-pm's own `/v-capture`:
+it writes the planning-session record + extracts cross-project ADR candidates, pushes the rationale to
+OpenViking (`memory_store`) so each project's LOAD CONTEXT can recall it, and commits the workspace.
+
 There is **no `ledger.md`** — the ledger is a *derived view* computed from thread filenames on read
 (`/v-pm status`, reconcile). Nothing writes it, so parallel sessions never race on it.
 
