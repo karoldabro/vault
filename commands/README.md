@@ -19,6 +19,7 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 | `v-link.md` | `/v-link` | Declare two projects as coupled. |
 | `v-backfill.md` | `/v-backfill` | Targeted ingest of past Claude Code sessions. |
 | `v-guide.md` | `/v-guide` | Generate a cross-project integration guide from an existing feature. |
+| `v-pm.md` | `/v-pm` | Cross-project feature planning: a critic pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file-based threads. |
 
 Multi-step commands (`v-work`, `v-team`, `v-cr`) keep their steps in a sibling subdirectory
 (`v-work/steps/`, `v-team/steps/`, `v-cr/steps/`) loaded on demand. `/v-team` reuses `/v-work`'s steps

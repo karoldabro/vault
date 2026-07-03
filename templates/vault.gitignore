@@ -7,6 +7,11 @@ memory/parent/
 memory/auto-recall/
 memory/cache/
 
+# Cross-project feature workspace symlinks (/v-pm) — point into the _features/ vault, never commit the
+# link. /v-pm seeds features/<feature> -> ~/vault/_features/<feature>; the seed step also appends the
+# exact path here. Regular feature dossiers are files (features/<slug>.md), so this dir-only glob is safe.
+features/*/
+
 # Graphify output — lives in the code repo, symlinked here.
 graphify/
 graphify-out/

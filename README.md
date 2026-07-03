@@ -46,6 +46,7 @@ These install into `~/.claude/commands/`. Type them in Claude Code.
 |---------|---------------|
 | `/v-work` | The main loop: load context, propose a plan, get your approval, do the work, save it. |
 | `/v-team` | The careful version of `/v-work` for big or risky changes. Runs critic personas over the plan and the diff. |
+| `/v-pm` | Plan a feature that spans several repos, once. Drafts a shared cross-project plan + contract so each repo's `/v-team` session coordinates through files instead of you copy-pasting between them. |
 | `/v-do` | A small, low-risk change with no approval gate. |
 | `/v-ask` | Ask a question about the project. Read-only, no changes. |
 | `/v-cr` | Review a pull request and post comments back. Optional `--sandbox` actually runs the PR to verify findings. |

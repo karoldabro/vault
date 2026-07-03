@@ -61,6 +61,10 @@ forward through the run, so steps 2–6 don't re-read the file:
 
 Unknown keys are ignored. No `VAULT.md` means all defaults and a global vault.
 
+**Cross-project feature workspaces** live outside any single project vault, in `~/vault/_features/` —
+its own committed vault, wired into `/v-sync`. `/v-pm` writes them; per-project `/v-team <feature>`
+sessions read them through a `features/<feature>` symlink. Full protocol: §13.
+
 ### Lifecycle hooks — phases, precedence & failure modes
 
 A hook attaches a prose instruction to a lifecycle phase. Both `/v-work` and `/v-team` honor them. The
@@ -355,6 +359,7 @@ assume the four tools in §10.
 | `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. | — |
 | `/v-backfill` | Targeted ingest of past Claude Code sessions for a project into OpenViking. | OV |
 | `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from an existing feature. | OV, graphify, MorphLLM |
+| `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | OV, Agent |
 
 ---
 
@@ -373,3 +378,58 @@ Two layers, checked in order:
 
 The framework never assumes any of these. Check `VAULT.md`, then the project's own conventions, before
 applying them.
+
+---
+
+## 13. Cross-project feature workspaces (`/v-pm`)
+
+`/v-pm` plans a feature **once**, project-agnostically, then lets each project's `/v-team <feature>`
+session read that plan and coordinate asynchronously through files — so you stop hand-carrying context
+between agent sessions. The substrate is a shared workspace plus a file-based conversation.
+
+### Home & ownership
+`~/vault/_features/` is its **own committed vault** (own git, ingested by `/v-sync`) — neutral ground
+owned by no single project, since a feature spans several. Each participant project gets a
+`features/<feature>` **symlink** into it (gitignored in the project repo; see `templates/vault.gitignore`).
+
+### Layout
+```
+~/vault/_features/<feature>/
+  header.md          participants · status · created · session_opens counter
+  generic-plan.md    project-agnostic plan — ONLY /v-pm writes it
+  contracts.md       structured cross-project interface (the api↔frontend seam)
+  conversation/      threads (state encoded in the filename)
+  projects/<proj>/plan.md   each project's self-contained shard (its own /v-team writes it)
+```
+There is **no `ledger.md`** — the ledger is a *derived view* computed from thread filenames on read
+(`/v-pm status`, reconcile). Nothing writes it, so parallel sessions never race on it.
+
+### Conversation protocol
+A thread is one Markdown file whose **filename carries its state**:
+
+| filename | meaning | who moves it |
+|----------|---------|--------------|
+| `THREAD_<n>_OPEN_→<proj>.md` | question waiting on project `<proj>` | the asker creates it |
+| `THREAD_<n>_OPEN_→pm.md` | decision that changes the generic plan / a contract | drained by `/v-pm reconcile` |
+| `THREAD_<n>_ANSWERED_<answerer>.md` | answered; waiting for the asker to consume | the answerer renames |
+| `THREAD_<n>_RESOLVED.md` | asker consumed the answer | the asker renames |
+
+Frontmatter carries `from` / `to` / `asks`. Template: `templates/_features/THREAD.md`.
+
+### How it reaches execution — auto-pickup
+When `/v-team` runs with a `<feature>` (or finds the `features/<feature>` symlink), its **Step 0**
+(`v-team/steps/00-feature-pickup.md`) runs before ANALYZE: it answers / acts threads addressed to this
+project, surfaces replies to questions this project asked, and runs a **deterministic** field-by-field
+drift check of the project's consumed contract against `contracts.md` (the LLM only phrases the
+rationale — it never decides *whether* drift exists). New cross-project doubts mid-session become new
+threads instead of a ping to you.
+
+### Latency contract (honest by design)
+There is **no live agent-to-agent channel**. A reply surfaces only at the **next open** of the asking
+project's session — or immediately via **`/v-pm status`**, the cross-feature inbox that lists every open
+thread (by target project and `→pm`) with staleness age. `reconcile` flags any thread left OPEN for more
+than N session-opens. Run `/v-pm status` when you want to know what's blocked without opening every repo.
+
+### When to use
+Only for a feature spanning **2+ repos worked in separate sessions**. A single-project feature makes
+`/v-pm` hand straight off to `/v-team` — the workspace is overhead below that bar.

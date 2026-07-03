@@ -55,7 +55,18 @@ after `/v-capture` has run.
 5. EXECUTE (review loop)
 6. COMMIT + CAPTURE
 
+**If invoked with a `<feature>` (from `/v-pm`), prepend a Step 0 — FEATURE PICKUP task** (below);
+otherwise skip it.
+
 ---
+
+## Step 0 — FEATURE PICKUP (only when invoked with a `<feature>`)
+When `/v-team` is invoked with a feature name — or the current project vault has a `features/<feature>`
+symlink into `_features/` — Read `~/.claude/commands/v-team/steps/00-feature-pickup.md` and execute it
+**before Step 1**: pick up conversation threads addressed to this project, surface replies to questions
+this project raised, and run the deterministic contracts-drift check against the shared `contracts.md`.
+This is how the cross-project planning substrate (`/v-pm`) reaches execution. No feature arg → skip
+Step 0 entirely (ordinary `/v-team` run).
 
 ## Step 1 — ANALYZE
 Read `~/.claude/commands/v-work/steps/01-analyze.md`, then execute.
@@ -106,3 +117,6 @@ Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
   research-backed plan. An unresearched design or an unsound assumption is a legitimate critic finding.
 - If no persona pack resolves, `/v-team` degrades gracefully to `/v-work`-with-a-panel (see
   `personas/_resolution.md` §1.4) — warn once, never halt.
+- **Feature mode** (`/v-team <feature>`): Step 0 connects the session to a `/v-pm` feature workspace
+  (`_features/<feature>/`) — auto-pickup of threads addressed to this project + a deterministic
+  contracts-drift check. See `v-team/steps/00-feature-pickup.md` and `vault-guide.md` §13.
