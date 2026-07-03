@@ -127,6 +127,9 @@ Precedence and failure modes (the framework never halts):
 ├── operations/              # Runbook, support, vendors (optional)
 ├── plans/                   # /v-team converged plans + critique trails (opt-in via add_folders)
 ├── processes/               # Repeatable workflows
+├── requirements/            # /v-pm business-logic specs — the knowledge center (single-repo). SPEC stage (optional)
+│   ├── _index.md
+│   └── <slug>.md ...
 ├── research/                # User research, qual data (optional)
 ├── serena/                  # Serena memories mountpoint (symlink; .gitignored)
 └── sessions/                # Time-bound work logs
@@ -143,10 +146,11 @@ folder.
 
 | File | Touched when |
 |------|--------------|
-| `_moc.md` | New feature, process, or architecture doc appears. New section is added. |
+| `_moc.md` | New feature, process, architecture, **or requirements** doc appears. New section is added. |
 | `_feature-index.md` | A feature row changes (new tables, new pages, new doc). |
 | `decisions/_inventory.md` | Every new ADR. Assigns sequential ID. |
 | `indications/_index.md` | Every new indication (working rule/pattern/standard). |
+| `requirements/_index.md` | Every new `/v-pm` requirements doc (single-repo knowledge center). |
 | `_tags.md` | New tag introduced. |
 
 If you skip the index update, the dedupe protocol (§7) won't find your work.
@@ -204,6 +208,7 @@ Ask what kind of artifact you have:
 |---------|---------|----------|
 | Reusable trade-off / chosen approach with rationale | `decisions/` | `ADR-NNN-<slug>.md` |
 | Subject-matter knowledge spanning multiple sessions | `features/` (or `architecture/` if system-level) | `<NN>-<slug>.md` or `<slug>.md` |
+| Plan-time business-logic **spec** (requirements, rules, glossary) — the knowledge center, written by `/v-pm` | `requirements/` (single-repo) or `_features/<f>/requirements.md` (2+ repos) | `<slug>.md` |
 | How to work on **this** project: pattern, coding standard, testing convention, instruction | `indications/` | `<slug>.md` |
 | Time-bound work log: what you did, what you learned, what's next | `sessions/` | `YYYY-MM-DD-HHMM-<slug>.md` |
 | Repeatable workflow (how-to) | `processes/` | `<slug>.md` |
@@ -213,7 +218,8 @@ Ask what kind of artifact you have:
 Stuck between session and feature? A session captures *this work*; a feature captures *the topic*. Often
 one piece of work produces both: a new or updated feature doc plus the session log.
 
-The trio that's easy to confuse — `indications/`, `guides/`, `features/` — each does a different job:
+The four categories that are easy to confuse — `indications/`, `guides/`, `features/`, `requirements/` —
+each does a different job:
 
 - **`indications/`** is intra-project: the patterns, standards, and instructions for working on this repo
   ("controllers stay thin", "tests use factories not fixtures", "migrations are reversible"). Read early
@@ -222,6 +228,11 @@ The trio that's easy to confuse — `indications/`, `guides/`, `features/` — e
   (API endpoints, enums, data flow). Written by `/v-guide`.
 - **`features/`** is subject-matter: what a domain does (scope, contracts, coupling, gotchas). The dossier
   for a feature, not the rules for working on the codebase.
+- **`requirements/`** is the plan-time **spec** (`/v-pm`): what the product *must* do + why (business
+  rules `REQ-NN`, acceptance, glossary) — **aspirational by design**, written before the code. It grounds
+  rich tests and AI product understanding. `features/` is its *established* counterpart: after the work
+  ships, `/v-team`+`/v-capture` write the built behaviour into the dossier, carrying each `REQ-NN` id.
+  Spec (requirements) → established (features) is the lifecycle; don't collapse them.
 
 ---
 
@@ -395,14 +406,35 @@ owned by no single project, since a feature spans several. Each participant proj
 ### Layout
 ```
 ~/vault/_features/<feature>/
+  requirements.md    business knowledge center — what & why (rules REQ-NN, glossary, variant/state tables) — ONLY /v-pm writes it
+  generic-plan.md    project-agnostic plan — how/sequencing; its "why" back-refs requirements.md — ONLY /v-pm writes it
+  contracts.md       structured cross-project interface (the api↔frontend seam); refs rules by REQ-NN
   header.md          participants · status · created · session_opens counter
-  generic-plan.md    project-agnostic plan — ONLY /v-pm writes it
-  contracts.md       structured cross-project interface (the api↔frontend seam)
   conversation/      threads (state encoded in the filename)
   sessions/          planning-session records — v-pm CAPTURE writes the *why* behind the plan
   decisions/         cross-project ADRs extracted at CAPTURE (promotable to a participant vault)
-  projects/<proj>/plan.md   each project's self-contained shard (its own /v-team writes it)
+  projects/<proj>/plan.md   each project's self-contained shard (its own /v-team writes it); its `## Business rules to satisfy` REQ-NN list is v-pm-seeded
 ```
+
+### Business knowledge center (`requirements.md`) — spec → established lifecycle
+`/v-pm` authors a **business-logic / requirements** layer so the necessity is captured once, richly —
+the user never repeats themselves, and both humans and AI can reason about the product. It is a **SPEC**
+(aspirational by design): business rules as test-shaped `precondition → expected [; edge]` each with a
+stable `REQ-NN` id, acceptance criteria, a domain glossary (ubiquitous language), and optional
+decision/state tables. This is what grounds **rich tests** (the id chain below) and **AI understanding**.
+
+- **Decoupled from the coordination machinery.** The knowledge center is authored for **any** feature
+  (1+ repos). The `_features/` workspace + `conversation/` + `contracts.md` are the **2+-repo** delta.
+  - **2+ repos:** `requirements.md` in the neutral `_features/<feature>/` (symlinked into each project).
+  - **1 repo:** `<project-vault>/requirements/<feature>.md` — the project's own vault (no cross-repo write).
+- **Id-traceability chain** (what makes it *ground* tests, not just describe them):
+  `requirements.md` rule `REQ-NN` → `/v-team` LOAD CONTEXT reads it (`00-feature-pickup` §0.2 /
+  `02-load-context` `requirements/` glob) → the `(f2)` test-design fan-out echoes `REQ-NN` into the
+  Proposed-test-backlog `source` → at capture, the **established** `features/<feature>` dossier
+  `## Behaviors & rules` carries the same `REQ-NN`. Spec id survives end-to-end to the built behaviour.
+- **Spec vs established.** `requirements/` (or `_features/…/requirements.md`) is aspirational; `features/`
+  is what shipped. `/v-team`+`/v-capture` promote only **built** rules into the dossier — the
+  `established, not aspirational` rule (`capture-behaviors-test-shaped`) still governs `features/`.
 `/v-pm`'s **CAPTURE** step (plan mode step 5; also the tail of `reconcile`) is v-pm's own `/v-capture`:
 it writes the planning-session record + extracts cross-project ADR candidates, pushes the rationale to
 OpenViking (`memory_store`) so each project's LOAD CONTEXT can recall it, and commits the workspace.

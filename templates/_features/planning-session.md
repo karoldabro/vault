@@ -23,4 +23,5 @@ tags: [planning-session, v-pm]
 <!-- Options considered and dropped, with the reason — the part the plan artifacts don't keep. -->
 
 ## Refs
-<!-- → generic-plan.md · contracts.md · any _features/<feature>/decisions/ADR-*. -->
+<!-- → requirements.md · generic-plan.md · contracts.md · any _features/<feature>/decisions/ADR-*.
+     (single-repo: → <project-vault>/requirements/<feature>.md) -->

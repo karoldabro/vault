@@ -4,12 +4,18 @@ Planning is where the cross-project decisions are made — record them, or they 
 own `/v-capture`, scoped to the feature workspace and cross-project. Runs after SEED WORKSPACE (plan
 mode) and at the end of `reconcile`.
 
+**Single-repo mode (1 participant):** capture against the **project vault**, not `_features/` — write the
+planning-session into `<project-vault>/sessions/`, push the requirements.md glossary + rules to OV, and
+commit the **project vault** (which now holds `requirements/<feature>.md`). Skip the ADR-into-neutral-
+workspace default (§5.2) — any ADR is this one project's, so it lands in `<project-vault>/decisions/`.
+Then tell the user to run `/v-team`/`/v-work` in that repo. The rest below is the multi-repo path.
+
 ## 5.1 Write the planning-session record
 Into `~/vault/_features/<feature>/sessions/YYYY-MM-DD-HHMM-<slug>.md` (from
 `$VAULT_FRAMEWORK_PATH/templates/_features/planning-session.md`): the necessity, participants, the panel's
 **critique trail** (what each critic raised; applied / rejected / deferred), the decisions and trade-offs,
-and links to `generic-plan.md` + `contracts.md`. This is the *why* behind the plan — the part the
-committed artifacts don't hold.
+and links to `requirements.md` + `generic-plan.md` + `contracts.md`. This is the *why* behind the plan —
+the part the committed artifacts don't hold.
 
 ## 5.2 Extract cross-project ADR candidates
 Scan the plan + panel decisions for decision-shaped statements (`chose X over Y`, `going with`, `rejected
@@ -25,15 +31,20 @@ Don't manufacture ADRs — only genuine decisions the planning actually made.
 ## 5.3 Push to OpenViking
 Probe `memory_health()` first (MCP — never `curl`). If healthy,
 `memory_store(role="assistant", text=<plan summary: necessity · participants · key decisions · contract
-seam · links>)` so the rationale is recallable — this is exactly what each project's `/v-team`
-cross-project LOAD CONTEXT (`02-load-context.md` §2.1) finds via `memory_recall`. If unreachable, note it
-and skip (never fail). claude-mem auto-captures on session end — no action.
+seam · **the requirements.md knowledge center: domain glossary + business rules (REQ-NN) + variant/state
+tables** · links>)` so the product knowledge — not just the rationale — is recallable. Include the
+variant/state tables, not only glossary+rules: they are the test-design fan-out's primary input, so the
+fallback recall path must carry them. This is exactly what each project's `/v-team` LOAD CONTEXT
+(`02-load-context.md` §2.1) finds via `memory_recall`. If unreachable, note it and skip (never fail).
+claude-mem auto-captures on session end — no action.
 
 ## 5.4 Commit
 Stage + commit the whole `~/vault/_features/<feature>/` (workspace + planning-session record + any ADRs)
 with **explicit paths** — `_features/` is its own committed vault; `/v-sync` ingests it.
 
 ## Required output
+
+**Multi-repo:**
 ```
 Planning session: _features/<feature>/sessions/<file>.md
 ADR candidates: <N found, M written>   (promoted to <proj>: [...] | none)
@@ -41,4 +52,15 @@ OV: <pushed via memory_store | memory_health unreachable — skipped>
 Committed: _features/<feature>/  (<shortsha>)
 ```
 Mark CAPTURE `completed`. Plan mode complete — tell the user the workspace is ready and to run
-`/v-team <feature>` in each project.
+`/v-team <feature>` in **each** project.
+
+**Single-repo:**
+```
+Requirements: <project-vault>/requirements/<feature>.md
+Planning session: <project-vault>/sessions/<file>.md
+ADR candidates: <N found, M written> (in <project-vault>/decisions/ | none)
+OV: <pushed via memory_store | memory_health unreachable — skipped>
+Committed: <project-vault>  (<shortsha>)
+```
+Mark CAPTURE `completed`. Plan mode complete — the knowledge center is written; tell the user to run
+`/v-team` (or `/v-work`) in **that** repo to build it.

@@ -14,8 +14,12 @@ before ANALYZE. No feature → skip this step entirely (ordinary `/v-team` run).
 Identify `<this>` — the current repo's vault slug.
 
 ## 0.2 Load the shared context
-Read `generic-plan.md`, `contracts.md`, this project's `projects/<this>/plan.md` shard, and scan
-`conversation/` filenames for open / answered threads.
+Read `requirements.md` (the business knowledge center — rules `REQ-NN`, glossary, variant/state tables),
+`generic-plan.md`, `contracts.md`, this project's `projects/<this>/plan.md` shard (incl. its
+`## Business rules to satisfy` id list), and scan `conversation/` filenames for open / answered threads.
+This is a **read** only — it carries requirements.md into the session so LOAD CONTEXT (Step 2) and the
+test-design fan-out can use it; the `REQ-NN` → dossier/backlog **writes** happen later (propose-loop +
+capture), not here.
 
 ## 0.3 Auto-pickup — threads addressed here
 For each `*_OPEN_→<this>.md`: read it, **answer or act** on it (it's grounded in this project's code, so

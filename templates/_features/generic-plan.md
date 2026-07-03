@@ -4,7 +4,9 @@ Project-agnostic. Only `/v-pm` (plan / reconcile) writes this. Each project read
 `projects/<proj>/plan.md` shard.
 
 ## Problem & outcome
-<!-- The business necessity and the user-facing outcome. -->
+<!-- The *why* lives in `requirements.md` (Business context & goals) — the single source. Do NOT restate
+     it here; link it: → [requirements.md](./requirements.md). This section is a one-line pointer only. -->
+→ see `requirements.md` — Business context & goals.
 
 ## Scope / non-goals
 

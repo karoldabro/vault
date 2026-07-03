@@ -50,8 +50,11 @@ work, not be rediscovered.
 
 Discover any remaining guidelines/conventions that constrain this task — they override generic defaults.
 
-1. With the Step-1 keywords: `grep -ril "<keyword>" <project-vault>/{indications,features,processes,architecture}/ 2>/dev/null`
+1. With the Step-1 keywords: `grep -ril "<keyword>" <project-vault>/{indications,features,requirements,processes,architecture}/ 2>/dev/null`
    (plus any `load_context_extra` folders from `VAULT.md`).
+   **`requirements/`** holds `/v-pm`-authored business-logic specs (single-repo knowledge center — rules
+   `REQ-NN`, glossary, variant/state tables); load it first-class — it's what grounds rich tests + product
+   understanding, and the established `features/` dossier carries its `REQ-NN` ids after the work ships.
 2. Read every match (conventions, patterns, gotchas).
 3. Expected docs by topic: api/endpoint→API conventions · queue/job→queue architecture ·
    model/migration→model/DB patterns · frontend/component→frontend patterns ·

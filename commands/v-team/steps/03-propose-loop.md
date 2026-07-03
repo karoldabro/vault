@@ -40,7 +40,9 @@ One message, **multiple `Agent` calls** — one per selected persona, spawned as
 
 - the **current plan** (round R, from the artifact);
 - the **task restatement + keywords** (ANALYZE);
-- the **LOAD-CONTEXT digest** — indications, ADRs, conventions (so critics respect project rules);
+- the **LOAD-CONTEXT digest** — indications, ADRs, conventions, **and (feature mode) the feature's
+  `requirements.md` — its business rules (`REQ-NN`) + `## Variant & state rules` tables + glossary** (so
+  critics and the test-design fan-out reason from the product's business logic, not just code);
 - its **persona block verbatim** (mandate · bound analyzer · rubric · checklist);
 - (R ≥ 1) the **prior round's merged findings**, so it sees what changed and whether its concern was
   addressed.
@@ -123,14 +125,19 @@ gate (the happy-path bias this counters must not gate its own activation).
    capped by `team_max_test_designers` (default 3): [[fault-relation-prospector]] (fault hypotheses +
    metamorphic relations), [[business-logic-cartographer]] (decision-table / state-transition / variant
    rules — the post-`type` case), [[boundary-property-explorer]] (BVA/EP + property invariants). Each
-   envelope: the converged design plan + LOAD-CONTEXT digest + the **advisory test hints** (the demoted
-   design-critic `PROPOSED_TESTS`, see §(e) item 5) + its persona block.
+   envelope: the converged design plan + LOAD-CONTEXT digest (**incl. the feature's `requirements.md` in
+   feature mode — the `## Variant & state rules` decision/state tables are `business-logic-cartographer`'s
+   primary input**) + the **advisory test hints** (the demoted design-critic `PROPOSED_TESTS`, see §(e)
+   item 5) + its persona block.
 2. **Merge dossiers with cross-generator dedup.** Collapse same-branch error/partition intents emitted by
    more than one generator into a single backlog row (horizontal decorrelation is by intent, not output).
 3. **Write the Test Design Dossier** into the plan artifact (decision tables, fault hypotheses,
    metamorphic relations, property invariants) and **populate the Proposed test backlog** from it.
    **Traceability (mandatory):** every dossier artifact maps to ≥1 backlog row; generator entries are
-   `advisory` until a bound critic confirms them in EXECUTE (routing table: `design/README.md`).
+   `advisory` until a bound critic confirms them in EXECUTE (routing table: `design/README.md`). **In
+   feature mode, a backlog row grounded in a `requirements.md` rule echoes its `REQ-NN` in the `source`
+   column** — this is the spec→backlog half of the id chain (the dossier half is written at capture,
+   `04-execute-loop.md` §5.4a).
 
 ## (g) Finalise
 

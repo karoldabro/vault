@@ -178,6 +178,15 @@ explicit mentions), pick exactly one:
   one section (Behaviors, not duplicated in Gotchas; cross-link if it is also a trap).
 - **SKIP** when the work carried no durable domain knowledge (pure bugfix, cosmetic, config bump).
 
+**Close the requirements id chain (feature mode — applies to BOTH `/v-work` and `/v-team`).** When a
+`requirements.md` exists for this work (a `/v-pm` knowledge center — in the feature workspace, or the
+project's `requirements/<feature>.md`), each `## Behaviors & rules` bullet that realises a requirement
+**carries its originating `REQ-NN` id inline** (e.g. `[REQ-07] precondition → expected`) and records only
+**established** (built) rules — spec rules that didn't ship stay in `requirements.md`, not promoted. This
+is the dossier end of `requirements.md (REQ-NN)` → test-backlog `source` → **established dossier Behavior**
+(so the id survives end-to-end regardless of which lifecycle ran). `/v-team`'s own `04-execute-loop.md`
+§5.4a defers to this shared step.
+
 Report the verdict per feature in the output (`created | updated | skipped: <reason>`). Then reconcile
 `_feature-index.md` in Step 6.
 

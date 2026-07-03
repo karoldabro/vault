@@ -75,6 +75,16 @@ Run v-work `04-execute.md` §4.8 self-review checklist (code quality, test quali
 diff-review loop generalises and **supersedes** `deploy-review-panel` here — do **not** additionally
 spawn it. (`deploy-review-panel` remains the fallback only when no persona pack resolved.)
 
+## 5.4a Close the requirements id chain (feature mode)
+When this feature was planned via `/v-pm` (a `requirements.md` exists, in the workspace or
+`<project-vault>/requirements/`), the id-traceability chain closes **at capture**. The **canonical
+mechanism is shared** — `/v-capture` **Step 5b** carries each realised requirement's `REQ-NN` id inline
+into the established `features/<feature>` dossier `## Behaviors & rules` (built rules only), so the chain
+closes identically for `/v-work` and `/v-team`. v-team's extra duty here: also update the shard's
+`## Business rules to satisfy` in place (append coverage evidence next to each id; **preserve** the
+v-pm-seeded ids, never overwrite). Chain: `requirements.md (REQ-NN)` → backlog `source`
+(`03-propose-loop.md` §f2) → **established dossier Behavior** (`/v-capture` §5b).
+
 ---
 
 ## Required output

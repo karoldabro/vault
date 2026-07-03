@@ -15,6 +15,8 @@ install (`$VAULT_FRAMEWORK_PATH`, default `~/workspace/vault`); it is **not** ve
 3. Creates the vault. Global vaults are their own git repo (main branch); an in-repo vault is tracked by
    the code repo (no nested git repo).
 4. Scaffolds folders: `sessions/`, `decisions/`, `features/`, `indications/`, `processes/`, `architecture/`.
+   (`requirements/` — the `/v-pm` business-logic spec category — is **optional / on-demand**: `/v-pm`
+   creates it + its `_index.md` on the first single-repo run, so existing vaults need no migration.)
 5. Instantiates `_moc.md`, `_feature-index.md`, `decisions/_inventory.md`, `indications/_index.md`.
 6. Copies `templates/vault.gitignore` to the vault's `.gitignore`.
 7. Writes `<code-repo>/VAULT.md` (from `templates/VAULT.md`) recording `vault_path` + `slug`, unless absent
