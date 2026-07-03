@@ -23,10 +23,13 @@ setup() {
     grep -qi 'plan-changing\|would change the design' "${PROPOSE}"
 }
 
-@test "clarify gate forbids papering over ambiguity by guessing" {
+@test "clarify gate hard-blocks on a fork with no safe default (always waits)" {
     grep -qi 'do not paper over\|don.t paper over\|paper over real ambiguity' "${PROPOSE}"
-    # unavailable user → proceed on defaults, flag at approval gate
-    grep -qi 'flag every assumption at the approval gate\|flag.*assumption.*approval' "${PROPOSE}"
+    # a plan-changing fork with no safe default HALTS until the user answers — never guessed
+    grep -qi 'always waits\|halts the lifecycle\|wait for the answer' "${PROPOSE}"
+    grep -qi 'unanswered fork\|never fall back to a guess' "${PROPOSE}"
+    # stated safe-default assumptions are still surfaced at the approval gate
+    grep -qi 'flag.*approval gate\|approval gate' "${PROPOSE}"
 }
 
 @test "shared PROPOSE has an external-research gate (§3a.0b) with the anti-hallucination framing" {

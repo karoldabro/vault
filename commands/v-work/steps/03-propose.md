@@ -22,15 +22,18 @@ expensive mistake in the lifecycle. Before §3a.1:
    compat — anything the ANALYZE restatement + LOAD CONTEXT did not settle.
 3. **Route each doubt:**
    - Answerable from vault / code / §3a.0b research → **answer it yourself**; don't ask.
-   - Would change the design **and** has no safe default → **ask the user** via `AskUserQuestion`
-     (batch all such questions into one call; lead each with a recommended option).
+   - Would change the design **and** has no safe default → **ask the user** via `AskUserQuestion` and
+     **wait for the answer** (batch all such questions into one call; lead each with a recommended
+     option). Do not design, draft, or proceed past an unanswered fork.
    - Has an obvious safe default → state the default explicitly and proceed.
 4. Do **not** paper over real ambiguity by guessing. When a direction or technology choice is genuinely
    open, ask — a question is cheaper than a wrong plan. Equally, don't manufacture questions whose
    answers are already in context or obvious; only genuine, plan-changing doubts warrant one.
 
-If the user is unavailable, proceed on your stated defaults and **flag every assumption at the approval
-gate** so they can be corrected there.
+**A plan-changing question with no safe default halts the lifecycle** — the clarify gate **always waits**
+for the user; never fall back to a guess on a fork that by definition has no safe default. (Doubts that
+*did* have a safe default never reach this gate — they were stated and passed in step 3.) Those stated
+safe defaults are still **flagged at the approval gate** so they can be corrected there.
 
 ### 3a.0b External research (ground the design; reduce hallucination)
 
