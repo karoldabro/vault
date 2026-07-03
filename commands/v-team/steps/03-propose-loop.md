@@ -16,6 +16,13 @@ Serena/graph orientation, impact scope, dependency-ordered implementation steps,
 §3a.3** (the panel replaces ad-hoc agent dispatch) and **defer §3b** (vault-write dedupe) until after
 convergence.
 
+**Run both front gates while drafting v0 — before the panel spawns:** §3a.0a **clarify** (surface the
+assumptions the draft rests on and ask any plan-changing questions via `AskUserQuestion` now — cheaper
+to resolve direction before three critics review a misunderstood task) and §3a.0b **external research**
+(cite how the wild solves this; reconcile any contradicting consensus). Record both in the plan artifact
+so critics can see them — an **unresearched design** or an **unsound assumption** is a legitimate
+finding for a critic to raise (grounded by the missing citation / the untested assumption).
+
 Instantiate `$VAULT_FRAMEWORK_PATH/templates/plan.md` into
 `<project-vault>/plans/YYYY-MM-DD-HHMM-<slug>.md` and write the draft as **Round 0**. If `plans/`
 doesn't exist, create it (warn once; add `add_folders: [plans]` to `VAULT.md` so it's recognised) —
@@ -135,6 +142,8 @@ Mark the plan `status: proposed`, set `rounds` + `convergence` in frontmatter. T
 ## Required output
 
 ```
+Assumptions / clarifications: [defaults + questions asked — from §3a.0a]
+Research: [key sources + takeaways | skipped (trivial) | unavailable — from §3a.0b]
 Personas: <pack> → [selected critics]
 Rounds: <n>  ·  Convergence: <clean | capped-with-open-blockers>
 Plan artifact: plans/YYYY-MM-DD-HHMM-<slug>.md

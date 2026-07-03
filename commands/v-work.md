@@ -79,6 +79,9 @@ Read `~/.claude/commands/v-work/steps/05-commit-capture.md`, then execute. Mark 
 ## Notes
 
 - Never write source code in Step 2. Vault-first means no premature source reads.
+- PROPOSE opens with two front gates (§3a.0a/§3a.0b): **clarify** the task (surface assumptions, ask
+  plan-changing questions via `AskUserQuestion`) and **research it online** (ground the approach against
+  how the wild solves it — reconcile any contradicting consensus). Don't jump straight to a plan.
 - If dedupe returns conflicting results (OV finds doc X, claude-mem finds doc Y), read both — the
   vault may hold parallel docs that need merging. Flag it to the user.
 - If `$VAULT_FRAMEWORK_PATH/vault-guide.md` can't be found, the framework install path is wrong —

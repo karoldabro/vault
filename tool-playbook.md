@@ -211,3 +211,23 @@ guidance: "Fetch the ticket's description + acceptance criteria before proposing
 The per-step *when* (fetch at LOAD CONTEXT, remind at post-commit) is expressed with `VAULT.md` `hooks`
 (§1.1) — e.g. `on_start`/`pre_load_context` to fetch, `post_commit` to remind. This file stays generic;
 the project fills in the specifics. (Layer-picking rules are §§1–5 above — not repeated here.)
+
+---
+
+## 7. Web research — grounding against hallucination
+
+Not token-*saving* — correctness-saving. Everything above answers **what this codebase does**; the web
+answers **how this class of problem is usually solved**. Reach for it in PROPOSE §3a.0b, before
+committing to a non-trivial approach, and any time you're about to assert a fact from memory rather than
+from a source.
+
+- `WebSearch` — find the problem, the common solutions, the pitfalls, and the community-default library
+  or tool for the job.
+- `WebFetch <url>` — pull a specific doc / RFC / issue / benchmark for detail.
+- Agents for depth: `deep-research` (multi-source cited report), `tool-evaluator` (framework/library
+  comparison), `trend-researcher` (what the ecosystem actually adopted).
+
+**Rule of thumb:** your first-instinct approach is a hypothesis, not a conclusion. One search that
+surfaces a widely-adopted alternative is far cheaper than a wrong build. Cite the sources in the plan
+artifact, and reconcile any contradicting consensus **explicitly** — adopt it, or write down the
+constraint that justifies keeping your approach. Never silently override the internet with your prior.

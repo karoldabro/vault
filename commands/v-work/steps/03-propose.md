@@ -11,6 +11,50 @@ Two parts, **engineering first**: design the change (3a), then list the vault wr
 
 ## 3a — Engineering design
 
+### 3a.0a Understand & clarify (before designing)
+
+Do not design until the task is unambiguous — jumping to a plan on a half-understood task is the most
+expensive mistake in the lifecycle. Before §3a.1:
+
+1. **State it back.** Write your understanding of the goal in your own words, plus the **assumptions**
+   you are relying on (data shape, scope boundaries, who the user is, explicit non-goals).
+2. **List open doubts.** Direction, technology/library choice, scope edges, data model, UX, backward-
+   compat — anything the ANALYZE restatement + LOAD CONTEXT did not settle.
+3. **Route each doubt:**
+   - Answerable from vault / code / §3a.0b research → **answer it yourself**; don't ask.
+   - Would change the design **and** has no safe default → **ask the user** via `AskUserQuestion`
+     (batch all such questions into one call; lead each with a recommended option).
+   - Has an obvious safe default → state the default explicitly and proceed.
+4. Do **not** paper over real ambiguity by guessing. When a direction or technology choice is genuinely
+   open, ask — a question is cheaper than a wrong plan. Equally, don't manufacture questions whose
+   answers are already in context or obvious; only genuine, plan-changing doubts warrant one.
+
+If the user is unavailable, proceed on your stated defaults and **flag every assumption at the approval
+gate** so they can be corrected there.
+
+### 3a.0b External research (ground the design; reduce hallucination)
+
+Before committing to an approach, research how this problem is solved in the wild. **Your prior is
+weaker than the accumulated experience of practitioners who already solved this** — treat your first
+instinct as a hypothesis to test against the internet, not a conclusion.
+
+**Gate — run for:** any non-trivial design, architecture, algorithm, data-model, or library/tool
+selection, and any unfamiliar problem. **Skip for:** pure refactors, docs, formatting, mechanical
+renames, or work fully constrained by existing vault patterns — note the skip in one line.
+
+1. **Search** (`WebSearch` / `WebFetch`; for big or open questions spawn `deep-research`,
+   `tool-evaluator`, or `trend-researcher`): the same/similar problem, common solutions and reference
+   implementations, known pitfalls and anti-patterns, and the community-default library or tool.
+2. **Take contradiction seriously.** If credible sources converge on a **different** tool or approach
+   than your draft, that outweighs your instinct. Either **adopt it**, or record a **written reason**
+   for keeping your approach (a constraint the sources don't know about). Silently ignoring a strong
+   contradicting consensus is not allowed — surface the reconciliation at the approval gate.
+3. **Cite.** Record the key sources (title + URL + one-line takeaway) so the design is auditable, not
+   asserted.
+4. **Fallback.** `WebSearch` unavailable → note it, proceed on vault + reasoning, and flag the design
+   `research: unavailable` at the approval gate (weaker, not blocked). Full rules:
+   `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §7.
+
 ### 3a.1 Activate Serena + locate code (if code changes)
 
 ```
@@ -92,6 +136,9 @@ here just name what will be written.
 ## Required output
 
 ```
+Assumptions: [stated defaults the design rests on — from §3a.0a]
+Clarifications: [questions asked via AskUserQuestion | none needed — task unambiguous]
+Research: [key sources + one-line takeaways | skipped (trivial) | unavailable — from §3a.0b]
 Serena rules: [memory files read — or "not available"]
 Impact: [files create/modify/delete · migrations · API changes · coupled projects]
 Implementation steps: [numbered — file + action + tool + pattern]

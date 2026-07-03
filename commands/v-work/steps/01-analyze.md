@@ -11,6 +11,10 @@ Write one sentence capturing exactly what was asked. This is the anchor for the 
 Pull **3–6 keywords** from the restatement — they drive context load (Step 2) and dedupe (Step 3).
 Examples: `api`, `auth`, `queue`, `migration`, `component`, `payment`, `notification`.
 
+**Note any doubts as they surface.** If the task is ambiguous about direction, technology, or scope,
+jot the open question now — don't resolve it by guessing. It gets loaded against context in Step 2 and
+either answered from the vault or asked of the user at the PROPOSE clarify gate (§3a.0a).
+
 ## 1.3 Detect project stack
 
 Check for marker files in the working directory so later steps know the test/build commands:

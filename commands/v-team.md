@@ -101,5 +101,8 @@ Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
 - The loop **never stops on unanimous approval alone** — only on the round cap or no-new-blocking-
   findings (false-convergence guard). Caps are hard; a cap hit with open blockers escalates to the user.
 - Never write source code in Step 2. Vault-first means no premature source reads.
+- The v0 draft runs both PROPOSE front gates (§3a.0a **clarify** + §3a.0b **online research**) **before**
+  the panel spawns — resolve direction and ground the approach first, so critics review a well-understood,
+  research-backed plan. An unresearched design or an unsound assumption is a legitimate critic finding.
 - If no persona pack resolves, `/v-team` degrades gracefully to `/v-work`-with-a-panel (see
   `personas/_resolution.md` §1.4) — warn once, never halt.
