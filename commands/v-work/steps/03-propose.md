@@ -40,9 +40,11 @@ Before committing to an approach, research how this problem is solved in the wil
 weaker than the accumulated experience of practitioners who already solved this** — treat your first
 instinct as a hypothesis to test against the internet, not a conclusion.
 
-**Gate — run for:** any non-trivial design, architecture, algorithm, data-model, or library/tool
-selection, and any unfamiliar problem. **Skip for:** pure refactors, docs, formatting, mechanical
-renames, or work fully constrained by existing vault patterns — note the skip in one line.
+**Gate — run for genuinely novel choices only:** a new library/tool/framework selection, a new
+architecture or schema design, an unfamiliar problem domain, or an external integration this repo
+hasn't done before. **Skip for:** work following established repo/vault patterns (most feature work
+on a familiar stack), refactors, docs, formatting, mechanical renames — note the skip in one line.
+If a novel choice surfaces mid-design after you skipped, run the gate then for that choice.
 
 1. **Search** (`WebSearch` / `WebFetch`; for big or open questions spawn `deep-research`,
    `tool-evaluator`, or `trend-researcher`): the same/similar problem, common solutions and reference
@@ -119,6 +121,24 @@ Two design moves keep this off the happy path (the heavyweight generative versio
 - **Name the fault for each happy path.** For every pass-case, name one fault that would break it (bad
   input, missing precondition, partial failure) and add the negative/error case it reveals.
 
+### 3a.6 Lite critic (single-pass, read-only — `/v-work` only)
+
+One adversarial pass on the draft plan, **without** `/v-team`'s panel loop. This is the middle rung:
+a second opinion should not require the full critic panel. (`/v-team` skips this section — its panel
+loop replaces it.)
+
+**Run when** the plan spans >2 files, carries open trade-offs or stated-default assumptions, or the
+user asked for a second opinion. **Skip** (one-line note) for single-file or mechanical changes.
+
+1. Spawn **exactly one read-only critic** (single `Agent` call): if a persona pack resolves
+   (`personas/_resolution.md` §2), pick the single most relevant lens for this change; else a generic
+   `Plan`/`Explore` agent with critic instructions. Envelope: draft plan + task restatement +
+   LOAD-CONTEXT digest. Findings use `/v-team`'s schema (severity + `confirmed`/`advisory` grounding).
+2. Apply `confirmed` BLOCKER/MAJOR recommendations to the plan; record everything else as open
+   trade-offs for the approval gate. **One pass — never re-loop here.**
+3. If the critique surfaces panel-worthy risk (architecture, schema, auth, billing, cross-repo
+   contract), don't loop — say so and suggest escalating to `/v-team`.
+
 ---
 
 ## 3b — Vault writes
@@ -142,6 +162,7 @@ Assumptions: [stated defaults the design rests on — from §3a.0a]
 Clarifications: [questions asked via AskUserQuestion | none needed — task unambiguous]
 Research: [key sources + one-line takeaways | skipped (trivial) | unavailable — from §3a.0b]
 Serena rules: [memory files read — or "not available"]
+Lite critic: [<persona/agent> — N findings, M applied | skipped (single-file/mechanical)]
 Impact: [files create/modify/delete · migrations · API changes · coupled projects]
 Implementation steps: [numbered — file + action + tool + pattern]
 Test plan: [per unit — type + scenarios + file location]

@@ -39,7 +39,7 @@ pay off. So the gate splits on that boundary, not on "author requirements or not
      into `<project-vault>/sessions/`, push the glossary + rules to OV, commit the project vault (not
      `_features/`).
   4. **Hand off execution**: tell the user to run `/v-team` (or `/v-work`) in that repo — it reads
-     `requirements/<feature>.md` (LOAD CONTEXT now globs `requirements/`) and, **at `/v-capture` Step 5b**
+     `requirements/<feature>.md` (LOAD CONTEXT now globs `requirements/`) and, **at `/v-capture` Step 4d**
      (shared by both lifecycles), writes the **established** `features/<feature>` dossier carrying each
      `REQ-NN` id. Same spec→established seam as multi-repo, just inside one vault. Then end the v-pm run.
 

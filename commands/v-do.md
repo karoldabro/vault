@@ -11,6 +11,9 @@ overkill: a one-file fix, a rename, a tweak, a tightly-scoped addition. Single f
 gate**. The guardrail below replaces them: it is the line that decides whether a job is actually
 small. Cross it and you escalate, you do not push through.
 
+(`/v-work` now auto-detects small jobs at ANALYZE §1.4c and takes this flow itself — you don't have to
+pre-classify. Invoking `/v-do` directly still works and skips the ANALYZE ceremony entirely.)
+
 ---
 
 ## Guardrail — when to STOP and escalate (this replaces the approval gate)

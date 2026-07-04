@@ -14,9 +14,13 @@ Thin dispatcher — each step is loaded on demand. Reuses `/v-work` steps 01/02/
 PROPOSE and EXECUTE get looped variants. `/v-team` therefore **depends on `/v-work` being installed**
 (both ship in the same framework repo).
 
-Use `/v-work` for routine work. `/v-team` spends more (up to ~3 critics × 2 rounds × 2 loops, plus up to
-`team_max_test_designers` generators in the PROPOSE test-design fan-out) to buy design + review rigor —
-reach for it on architecture, schema, auth, billing, or cross-repo contracts.
+**`/v-team` is the escalation, not the default.** Use `/v-work` for routine work — it has a single-pass
+**lite critic** (`03-propose.md` §3a.6) when you want a second opinion, at a fraction of the cost. A
+`/v-team` run costs roughly **2× a `/v-work` session** (~20k of scaffolding + 30–60k of agent fan-out
+across 6–12 spawns: up to ~3 critics × 2 rounds × 2 loops + `team_max_test_designers` generators), and
+measured across June–July 2026 it delivered the **same ~79% completion rate** as `/v-work`. Reach for it
+only when a wrong design decision is **expensive to reverse** — architecture, schema, auth, billing,
+cross-repo contracts — not because you want *a* second opinion.
 
 ---
 

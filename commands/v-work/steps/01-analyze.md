@@ -56,6 +56,16 @@ repo tracks work in Jira; if the task names a ticket, fetch it via the Jira MCP 
 conflicts with `CLAUDE.md`/`indications` is overridden (surface the conflict); a hook needing a down MCP
 falls back and is surfaced — never halt. See `vault-guide.md` §1.1.
 
+## 1.4c Size check — fast-path detection (`/v-work` only)
+
+Apply the `/v-do` guardrail (see `commands/v-do.md`) to the restated task: **small** = ≤~5 files,
+predictable blast radius, no architecture/schema/migration/auth/billing/cross-repo surface, nothing
+destructive. Unsure → **not small**. `/v-team` reuses this step verbatim but **ignores this section**
+(it never fast-paths — the user chose the panel deliberately).
+
+If small: the dispatcher takes the fast path (see `v-work.md`) — announce it in the output line below
+so the user can override with "full lifecycle".
+
 ## 1.5 Suggest session rename
 
 After the restatement (§1.1), unless carried `behaviour.suggest_rename` is `false` (default: suggest),
@@ -80,6 +90,7 @@ Vault: <resolved vault path> (config: <VAULT.md applied | defaults>)
 Hooks: <phases defined in VAULT.md — or "none">
 Rename: /rename <slug>  (suggested — paste to apply)  | "skipped (suggest_rename: false)"
 Scope: <code-only | vault-only | both>
+Size: <small → fast path (v-do flow; say "full lifecycle" to override) | normal>   # /v-work only
 ```
 
 Before marking complete, honor any carried `post_analyze` hook (surface + apply). Mark ANALYZE

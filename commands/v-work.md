@@ -42,6 +42,12 @@ after `/v-capture` has run.
 ## Step 1 — ANALYZE
 Read `~/.claude/commands/v-work/steps/01-analyze.md`, then execute. Mark ANALYZE `completed`.
 
+**Fast path (auto-detected).** If the §1.4c size check says **small**, don't make the user pre-classify:
+announce `Size: small → fast path`, mark the remaining lifecycle tasks `deleted`, Read
+`~/.claude/commands/v-do.md` and continue as `/v-do` (orient-lite → execute → self-review; capture
+offered, off by default; no approval gate). The user can say **"full lifecycle"** to override — then
+continue with Step 2 as normal. Any doubt about size → no fast path.
+
 ## Step 2 — LOAD CONTEXT
 Read `~/.claude/commands/v-work/steps/02-load-context.md`, then execute. Mark LOAD CONTEXT `completed`.
 
