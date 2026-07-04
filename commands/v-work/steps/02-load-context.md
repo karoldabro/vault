@@ -17,9 +17,11 @@ an isolated task with known files. Agents return conclusions; you keep the conte
 
 ### 2.1 — OpenViking (vault memory — always first)
 
-Call `memory_recall(query=<keywords>)`. Covers the vault: decisions, ADRs, past sessions, feature
-dossiers, pitfalls, lessons. Look for: prior decisions in this area, known gotchas, related features
-already built, coupled projects (`~/vault/_global/coupled-groups.md`). Cost: ~100–2000 tok.
+Run `ov find "<keywords>"` (Bash; semantic over the synced vault resources — decisions, ADRs, past
+sessions, feature dossiers, pitfalls). `memory_recall(query=...)` is secondary — it only searches the
+extraction-populated memories namespace (empty without a cloud `vlm`; playbook §1). Look for: prior
+decisions in this area, known gotchas, related features already built, coupled projects
+(`~/vault/_global/coupled-groups.md`). Cost: ~100–2000 tok.
 
 ### 2.2 — claude-mem (project history — progressive disclosure)
 

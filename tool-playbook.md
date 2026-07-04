@@ -52,13 +52,22 @@ Present → use it; down → health-check to confirm, warn once, fall back, **ne
 
 ## 1. OpenViking (OV) — semantic vault memory
 
-MCP plugin (no `curl`, no HTTP). Tools: `memory_recall`, `memory_store`, `memory_health`,
-`memory_forget`.
+Two access paths with different coverage — **use the CLI for recall**:
+
+- **`ov find "<query>"` (CLI, primary)** — semantic retrieval over `viking://resources/`, where
+  `/v-sync` ingests the actual vault content (ADRs, sessions, features, cross-project). This is the
+  index that actually holds the knowledge.
+- **MCP plugin** (`memory_recall`, `memory_store`, `memory_health`, `memory_forget`) — searches the
+  `viking://user|agent/.../memories` namespace, which is populated only by the server's LLM
+  *extraction* step. Without a cloud `vlm` configured in `~/.openviking/ov.conf`, extraction is a
+  no-op and `memory_recall` returns empty-directory stubs — treat it as **secondary**. `memory_store`
+  is still the write path (embeds fine; the "extraction returned 0 memories" reply is expected and
+  harmless without a `vlm`). No `curl` — the server API is not for the model; use the CLI or MCP.
 
 **When:** first thing, every task. Prior decisions, ADRs, past sessions, known pitfalls.
 **When NOT:** structural code questions (use graphify) or current line-level behavior (read source).
-**On failure:** call `memory_health()` to confirm it's down. Only then fall back to `Grep` over
-`~/vault/`. Never silently skip it.
+**On failure:** `ov health` / `memory_health()` to confirm it's down. Only then fall back to `Grep`
+over `~/vault/`. Never silently skip it.
 
 ```
 memory_recall(query="bouncer tenancy permission cache")

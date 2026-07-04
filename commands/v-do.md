@@ -47,9 +47,10 @@ reconsider the guardrail.
 
 - Restate the change in one line. Detect the test command (project `CLAUDE.md` / Step-1 cues; Docker
   projects use their Docker test aliases).
-- **Cheap vault check, not the full Step-2 sweep:** `memory_recall(query=<keywords>)` for prior
-  decisions/gotchas in this area, and read any `indications/` rows matching the files you'll touch —
-  those are **binding constraints**, not suggestions. Skip the rest unless the answer needs it.
+- **Cheap vault check, not the full Step-2 sweep:** `ov find "<keywords>"` for prior
+  decisions/gotchas in this area (playbook §1; `memory_recall` is secondary), and read any
+  `indications/` rows matching the files you'll touch — those are **binding constraints**, not
+  suggestions. Skip the rest unless the answer needs it.
 - Structural question (what calls X, where defined) → `graphify query` / Serena `find_symbol` before
   grepping. Otherwise go straight to the edit.
 
