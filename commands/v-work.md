@@ -14,19 +14,9 @@ context (keeps the run lean; the whole body never loads at once).
 
 OpenViking, claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-saving backbone.
 
-- **When a tool is present, use it** — do not hand-roll grep / full-file reads / `sed` in its place.
-- **When one is genuinely unavailable**, confirm via its health check, warn once, then proceed with
-  the documented fallback. **Never halt the lifecycle for a missing tool.**
-
-| Tool | Health check | Fallback if down |
-|------|-------------|------------------|
-| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
-| claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
-| Serena | `check_onboarding_performed()` | graphify → Glob/Grep/LSP |
-| MorphLLM | (MCP — no runtime check) | `Edit` / `MultiEdit` |
-| graphify | `graphify-out/graph.json` present | offer `graphify hook install`, then grep |
-
-Full rules + worked examples: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` (default `~/workspace/vault/`).
+Present → use it (don't hand-roll grep/full-file reads/`sed` in its place); genuinely down →
+health-check to confirm, warn once, fall back, **never halt the lifecycle**. Canonical health-check +
+fallback table and full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` (default `~/workspace/vault/`).
 
 **Per-project hooks + tools.** A repo's `VAULT.md` can attach `hooks` (per-phase instructions, e.g.
 "fetch the Jira ticket on start") and `tools` (task-tracker MCP guidance), read once at step 1 and

@@ -23,17 +23,9 @@ reach for it on architecture, schema, auth, billing, or cross-repo contracts.
 ## Tools — preferred, force when present (never gating)
 
 Identical to `/v-work` — OpenViking, claude-mem, Serena, MorphLLM, graphify are the token-saving
-backbone. Plus the **Agent** tool for the critic panel (parallel spawn).
-
-| Tool | Health check | Fallback if down |
-|------|-------------|------------------|
-| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
-| claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
-| Serena | `check_onboarding_performed()` | graphify → Glob/Grep/LSP |
-| MorphLLM | (MCP — no runtime check) | `Edit` / `MultiEdit` |
-| graphify | `graphify-out/graph.json` present | offer `graphify hook install`, then grep |
-
-Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Persona resolution: `$VAULT_FRAMEWORK_PATH/personas/_resolution.md`.
+backbone; plus the **Agent** tool for the critic panel (parallel spawn). Canonical health-check +
+fallback table and full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Persona resolution:
+`$VAULT_FRAMEWORK_PATH/personas/_resolution.md`.
 
 **Per-project hooks + tools.** A repo's `VAULT.md` can attach `hooks` (per-phase instructions) and
 `tools` (task-tracker MCP guidance), read once at step 1 and carried through the run — `pre_/post_propose`

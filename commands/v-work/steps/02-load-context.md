@@ -4,15 +4,11 @@ Load all relevant context **before touching source code**. Query cheapest-first;
 you have enough. Each layer costs 10–100× less than reading source. **Graph before grep, symbol
 before full-file read.** Full per-tool rules + examples: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
-**Tools are preferred, not gating.** When a token-saving tool is present, use it — do not hand-roll
-grep / full-file reads in its place. When one is genuinely unavailable, confirm via its health check,
-warn once, then proceed with the documented fallback (OV→Grep over `~/vault`, graphify→grep,
-Serena→Glob/Grep/LSP). Never halt the lifecycle for a missing tool.
+**Tools are preferred, not gating** — present → use it; down → health-check, warn once, fall back
+(canonical table: tool-playbook), never halt.
 
-**Hooks.** Hooks are loaded once at step 1 (§1.4) and persisted in context — no need to re-read
-`VAULT.md`. Honor any carried `pre_load_context` hook before loading and `post_load_context` after — treat
-each as binding, override on conflict with `CLAUDE.md`/`indications`, fall back + surface if an MCP it
-needs is down. See `vault-guide.md` §1.1.
+**Hooks:** honor carried `pre_load_context` before / `post_load_context` after — loaded once at step 1
+§1.4, never re-read `VAULT.md` (contract: vault-guide §1.1).
 
 **Fan out with agents.** When scope is uncertain or spans multiple areas, launch up to 3 **Explore**
 subagents in parallel (single message, multiple `Agent` calls) instead of serial reads — give each a

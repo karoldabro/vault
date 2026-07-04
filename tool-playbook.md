@@ -35,6 +35,21 @@ across source to answer "what calls X" or "where is Y" — stop, that's a graphi
 
 ---
 
+## Health checks & fallbacks — canonical table
+
+The single source of truth for every vault command (dispatchers link here instead of carrying copies).
+Present → use it; down → health-check to confirm, warn once, fall back, **never halt**.
+
+| Tool | Health check | Fallback if down |
+|------|-------------|------------------|
+| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
+| claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
+| Serena | `check_onboarding_performed()` | graphify → Glob/Grep/LSP |
+| MorphLLM | (MCP — no runtime check) | `Edit` / `MultiEdit` |
+| graphify | `graphify-out/graph.json` present | offer `graphify hook install`, then grep |
+
+---
+
 ## 1. OpenViking (OV) — semantic vault memory
 
 MCP plugin (no `curl`, no HTTP). Tools: `memory_recall`, `memory_store`, `memory_health`,

@@ -50,14 +50,12 @@ Usage:
 ## Tools — preferred, force when present (never gating)
 
 Same backbone as `/v-team` (OpenViking, claude-mem, Serena, MorphLLM, graphify) plus the **Agent** tool
-for the critic panel and the forge CLIs (`gh`, Bitbucket via REST). Health checks + fallbacks per
-`$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
+for the critic panel and the forge CLIs (`gh`, Bitbucket via REST). Backbone health checks + fallbacks:
+canonical table in `$VAULT_FRAMEWORK_PATH/tool-playbook.md` — one `/v-cr` delta: graphify's grep
+fallback is valid **only if local HEAD == the PR's repo/branch**. `/v-cr`-specific additions:
 
 | Tool | Health check | Fallback if down |
 |------|-------------|------------------|
-| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
-| Serena | `check_onboarding_performed()` | graphify → Glob/Grep/LSP |
-| graphify | `graphify-out/graph.json` present | grep (only if local HEAD == the PR's repo/branch) |
 | `gh` CLI | `gh auth status` | REST via `gh api` / `curl` with a scoped token |
 | Asana MCP | tool list contains `…Asana__get_task` | skip Asana task context; note it |
 
