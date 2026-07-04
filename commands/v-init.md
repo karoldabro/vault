@@ -65,4 +65,5 @@ To detach: remove the vault dir (`~/vault/<slug>/` or `<code-repo>/vault/`), del
 ## Already on a submodule vault?
 
 If this repo's vault was created the old way (framework as a `_process/` submodule), convert it with
-`/v-migrate` (`bin/vault-migrate.sh`) instead of re-running `/v-init`.
+`bin/vault-migrate.sh` instead of re-running `/v-init` (the `/v-migrate` command is archived —
+`commands/attic/` — but the script remains).

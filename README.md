@@ -52,12 +52,13 @@ These install into `~/.claude/commands/`. Type them in Claude Code.
 | `/v-cr` | Review a pull request and post comments back. Optional `--sandbox` actually runs the PR to verify findings. |
 | `/v-capture` | Save the current session into the vault. |
 | `/v-init` | Set up a vault for the current repo. |
-| `/v-migrate` | Convert an old submodule vault to the current model. |
-| `/v-resume` | Pull fresh context back from the vault. |
 | `/v-sync` | Re-index a vault's knowledge for search. |
 | `/v-link` | Link two projects so they share recall. |
 | `/v-backfill` | Pull past Claude Code sessions into search. |
 | `/v-guide` | Generate a cross-project integration guide from a feature. |
+
+Archived (see `commands/attic/`): `/v-migrate` (migration finished; `bin/vault-migrate.sh` remains),
+`/v-resume` (superseded by the OpenViking auto-recall SessionStart hook).
 
 ## Learn more
 

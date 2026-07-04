@@ -359,18 +359,19 @@ assume the four tools in §10.
 | Command | Purpose | Key tools |
 |---------|---------|-----------|
 | `/v-init` | Bootstrap a project vault for the current code repo. Creates the vault (global `~/vault/<slug>/` or in-repo with `--in-repo`), writes a repo `VAULT.md`, scaffolds folders + indexes, wires CLAUDE.md. | git |
-| `/v-migrate` | Convert an old submodule-based vault to the global model: de-init the `_process/` submodule, write `VAULT.md`, repoint the MOC. | git |
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | OV, claude-mem, Serena, MorphLLM |
 | `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (resolved from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review the plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, OV, claude-mem, Serena, MorphLLM |
 | `/v-ask` | Light sibling — read-only, vault-aware Q&A. Loads context cheapest-first and answers; no edits, no approval gate, no capture. Hands off to `/v-do` or `/v-work` when the answer implies a change. | OV, claude-mem, graphify, Serena |
 | `/v-do` | Light sibling — small low-risk change, no approval gate. Orient (vault-lite) → execute → self-review; capture offered, off by default. Escalates to `/v-work` (scope > ~5 files) or `/v-team` (architecture/schema/auth/billing/cross-repo). | OV, claude-mem, Serena, MorphLLM |
 | `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs, pushes to OV. (claude-mem auto-captures via its SessionEnd hook — no explicit write.) | OV `memory_store`; claude-mem auto-capture (SessionEnd hook) |
-| `/v-resume` | Force fresh context recall from vault + OpenViking + claude-mem. Arg: topic, project slug, or `all`. | OV `memory_recall`, claude-mem `search` |
 | `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. | OV |
 | `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. | — |
 | `/v-backfill` | Targeted ingest of past Claude Code sessions for a project into OpenViking. | OV |
 | `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from an existing feature. | OV, graphify, MorphLLM |
 | `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | OV, Agent |
+
+Archived commands (`commands/attic/`): `/v-migrate` (one-shot migration finished; `bin/vault-migrate.sh`
+remains usable), `/v-resume` (superseded by the OV auto-recall SessionStart hook).
 
 ---
 

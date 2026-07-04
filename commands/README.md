@@ -7,14 +7,12 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 | File | Slash command | What it does |
 |------|---------------|--------------|
 | `v-init.md` | `/v-init` | Bootstrap a project vault for the current code repo. |
-| `v-migrate.md` | `/v-migrate` | Convert a submodule-based vault to the global framework model. |
 | `v-work.md` | `/v-work` | Vault-aware development lifecycle. |
 | `v-team.md` | `/v-team` | Persona-critique lifecycle: parallel project-specific critics loop over plan + diff. |
 | `v-cr.md` | `/v-cr` | Automated code review on a remote PR: auto-detect forge (GitHub/Bitbucket) + task (Jira/Asana), critic swarm, post inline+summary comments. |
 | `v-ask.md` | `/v-ask` | Read-only, vault-aware Q&A. Loads context, answers, no edits/approval/capture. |
 | `v-do.md` | `/v-do` | Small low-risk change — no approval gate; orient → execute → self-review, capture optional. |
 | `v-capture.md` | `/v-capture` | Enhanced session capture. |
-| `v-resume.md` | `/v-resume` | Force fresh context recall (vault + OpenViking). |
 | `v-sync.md` | `/v-sync` | Re-ingest curated knowledge into OpenViking. |
 | `v-link.md` | `/v-link` | Declare two projects as coupled. |
 | `v-backfill.md` | `/v-backfill` | Targeted ingest of past Claude Code sessions. |

@@ -22,8 +22,8 @@ approval, feature verdicts, honest content. Script output is advisory input, not
    `~/vault/_global/coupled-groups.md` if present.
 2. Resolve the vault path per `vault-guide.md` §1.1: `<repo-root>/VAULT.md` → `vault_path`, else
    `~/vault/_global/config.md`, else `~/vault/<slug>/`. Note any `behaviour.capture_indications` toggle.
-3. If the vault dir doesn't exist, stop and tell the user to run `/v-init` (or `/v-migrate` for an old
-   submodule vault) first.
+3. If the vault dir doesn't exist, stop and tell the user to run `/v-init` first (old submodule
+   vault: `bin/vault-migrate.sh`).
 
 Below, `<vault>` = the resolved path (may be in-repo, e.g. `<code-repo>/vault`).
 

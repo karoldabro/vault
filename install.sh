@@ -46,6 +46,10 @@ for src in "${COMMANDS_DIR}"/*/; do
     src="${src%/}"
     [ -d "${src}" ] || continue
     name="$(basename "${src}")"
+
+    # Skip the attic: archived commands are kept for reference, never installed.
+    [ "${name}" = "attic" ] && continue
+
     target="${TARGET_DIR}/${name}"
 
     if [ -L "${target}" ]; then

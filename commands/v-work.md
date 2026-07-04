@@ -82,4 +82,4 @@ Read `~/.claude/commands/v-work/steps/05-commit-capture.md`, then execute. Mark 
   vault may hold parallel docs that need merging. Flag it to the user.
 - If `$VAULT_FRAMEWORK_PATH/vault-guide.md` can't be found, the framework install path is wrong —
   check `~/vault/_global/config.md` (`framework_path`) or re-run `setup.sh`. If the resolved vault
-  dir is missing, the repo isn't wired: run `/v-init` (or `/v-migrate` for an old submodule vault).
+  dir is missing, the repo isn't wired: run `/v-init` (old submodule vault: `bin/vault-migrate.sh`).
