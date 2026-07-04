@@ -14,7 +14,7 @@ teardown() {
 @test "install.sh creates symlinks for each command in commands/" {
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
-    for cmd in v-init v-work v-capture v-resume v-sync v-link v-backfill; do
+    for cmd in v-init v-work v-capture v-sync v-link v-backfill; do
         assert_symlink_to "${HOME}/.claude/commands/${cmd}.md" "${VAULT_ROOT}/commands/${cmd}.md"
     done
 }
@@ -29,7 +29,7 @@ teardown() {
     "${VAULT_ROOT}/install.sh" >/dev/null
     # Count command sources (md files excluding README) plus command subdirectories — both are linked.
     files="$(find "${VAULT_ROOT}/commands" -maxdepth 1 -name '*.md' ! -name 'README.md' | wc -l | tr -d ' ')"
-    dirs="$(find "${VAULT_ROOT}/commands" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')"
+    dirs="$(find "${VAULT_ROOT}/commands" -mindepth 1 -maxdepth 1 -type d ! -name attic | wc -l | tr -d ' ')"
     expected=$((files + dirs))
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
@@ -81,4 +81,12 @@ teardown() {
     ln -s "${HOME}/other/unrelated.md" "${HOME}/.claude/commands/unrelated.md"
     "${VAULT_ROOT}/install.sh" >/dev/null
     [ -L "${HOME}/.claude/commands/unrelated.md" ]
+}
+
+@test "install.sh never installs the attic (archived commands)" {
+    run "${VAULT_ROOT}/install.sh"
+    [ "$status" -eq 0 ]
+    [ ! -e "${HOME}/.claude/commands/attic" ]
+    [ ! -e "${HOME}/.claude/commands/v-resume.md" ]
+    [ ! -e "${HOME}/.claude/commands/v-migrate.md" ]
 }
