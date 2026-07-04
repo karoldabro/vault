@@ -107,7 +107,7 @@ case "$cmd" in
     inv="$VAULT/decisions/_inventory.md"
     last=$( { [[ -f "$inv" ]] && grep -oE 'ADR-[0-9]+' "$inv"; ls "$VAULT"/decisions/ADR-*.md 2>/dev/null | grep -oE 'ADR-[0-9]+'; } \
       | grep -oE '[0-9]+' | sort -n | tail -1)
-    printf 'ADR-%03d\n' "$(( ${last:-0} + 1 ))"
+    printf 'ADR-%03d\n' "$(( 10#${last:-0} + 1 ))"   # 10# guards octal misread of e.g. "014"
     ;;
 
   # ── Step 6: idempotent MOC prepend, keep last 5 ───────────────────────────────
