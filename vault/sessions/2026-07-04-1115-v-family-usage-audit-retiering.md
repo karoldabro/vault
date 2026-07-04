@@ -55,8 +55,20 @@ online-researcher), then execute the approved 4-phase overhaul.
 - install.sh: `commands/attic/` is never symlinked; stale symlinks pointing into commands/ are pruned.
 - v-capture pushes: OV/claude-mem down → surface + skip that push, never halt, never skip silently.
 
+## Continuation 2026-07-04-1230 — OV extraction resolved
+
+- **Local extraction: failed and reverted.** qwen2.5:7b + qwen3:8b (litellm→ollama) never produced a
+  valid extraction operation (schema misses / prose instead of tool calls) and pinned the GPU at 100%,
+  blocking other sessions. `vlm` section removed from `ov.conf`; embedding-only is the supported state;
+  models deleted from ollama. Cloud (e.g. Haiku) is the only viable `vlm` route if ever wanted.
+- **Key discovery:** MCP `memory_recall` searches only the extraction-populated
+  `viking://user|agent/.../memories` namespace → on this install it only ever returned empty-directory
+  stubs. Real vault knowledge lives in `viking://resources/`, reachable via **`ov find` (CLI)**.
+  Commands repointed (`68d6463`): tool-playbook §1, load-context §2.1, v-do orient, v-ask precedence.
+- Hooks restored in full (user preference: dashboard granularity > latency); events.db pruned to 60
+  days; retention script staged at `~/.claude/observability/maintenance/prune-events.sh` (not scheduled).
+
 ## Next
-- **Open**: OV `vlm` fix decision (local qwen2.5:7b on GTX 1070 vs Anthropic Haiku vs leave embedding-only).
 - Deferred: effort/model tiers per command; route GitHub PRs to built-in /code-review (keep /v-cr for
   Bitbucket+Jira/Asana); MCP/skill security vetting cadence; Stop hook `--add-chat` transcript embedding.
 - Watch: v-team share of lifecycle runs — target <20% by Aug 2026 (ADR-015 consequence).
