@@ -116,7 +116,7 @@ Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
   the panel spawns — resolve direction and ground the approach first, so critics review a well-understood,
   research-backed plan. An unresearched design or an unsound assumption is a legitimate critic finding.
 - If no persona pack resolves, `/v-team` degrades gracefully to `/v-work`-with-a-panel (see
-  `personas/_resolution.md` §1.4) — warn once, never halt.
+  `personas/_resolution.md` §1, fallback item 4) — warn once, never halt.
 - **Feature mode** (`/v-team <feature>`): Step 0 connects the session to a `/v-pm` feature workspace
   (`_features/<feature>/`) — auto-pickup of threads addressed to this project + a deterministic
   contracts-drift check. See `v-team/steps/00-feature-pickup.md` and `vault-guide.md` §13.

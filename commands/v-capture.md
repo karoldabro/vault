@@ -13,7 +13,7 @@ Force-write this session into the project vault. This command:
 5. **Runs the feature dossier gate** — create / update / skip a `features/` doc per the work done.
 6. **Cross-links** `Refs` by scanning content for `[[wikilinks]]`, `ADR-NNN`, and `features/NN-` patterns.
 
-Requires OpenViking and claude-mem. Both push steps are mandatory — do not skip silently.
+Prefers OpenViking and claude-mem. If either is down, surface it and skip that push (Step 7) — degrade gracefully, never halt, never skip *silently*.
 
 ---
 

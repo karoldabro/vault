@@ -130,12 +130,16 @@ Integration Guide: [[../guides/<feature-slug>]]
 ```
 
 ### 5.3 Push to OpenViking
+Probe `memory_health()` first; if unreachable, surface and skip (never halt). Then:
+
 ```
 memory_store(
-  content="Integration guide for <feature-slug> in <source>: covers endpoints, request/response shapes, enums, data flow. Path: ~/vault/<source>/guides/<feature-slug>.md",
-  tags=["integration-guide", "<source>", "<feature-slug>"]
+  text="Integration guide for <feature-slug> in <source>: covers endpoints, request/response shapes, enums, data flow. Path: ~/vault/<source>/guides/<feature-slug>.md",
+  role="assistant"
 )
 ```
+
+(OV exposes only `memory_store(text, role)` / `memory_recall` / `memory_health` / `memory_forget` — there is no `content=`/`tags=` signature.)
 
 ---
 

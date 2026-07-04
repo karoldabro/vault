@@ -390,6 +390,18 @@ Two layers, checked in order:
 The framework never assumes any of these. Check `VAULT.md`, then the project's own conventions, before
 applying them.
 
+### 12.1 `/v-team` panel knobs (settable in `VAULT.md`)
+
+| Knob | Default | Bounds | Governs |
+|------|---------|--------|---------|
+| `team_max_parallel_critics` | 3 | hard max 5 | Critics per panel round (`personas/_resolution.md` §2) |
+| `team_max_rounds` | 2 | hard ceiling | PROPOSE design-loop rounds (`v-team/steps/03-propose-loop.md`) |
+| `team_max_review_rounds` | 2 | hard ceiling | EXECUTE diff-review-loop rounds (`v-team/steps/04-execute-loop.md`) |
+| `team_max_test_designers` | 3 | — | Test-design generators in PROPOSE sub-phase (f2) |
+
+Unset knobs use the defaults above; a cap hit with open blockers always escalates to the user rather
+than silently converging.
+
 ---
 
 ## 13. Cross-project feature workspaces (`/v-pm`)
