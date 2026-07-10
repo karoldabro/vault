@@ -18,6 +18,9 @@ Assume the plan is flawed and try to prove it. Specifically:
   backward compatibility, empty/huge/concurrent input, third-party outage).
 - Challenge consensus: if every other critic approved, ask *what they all missed* — do not rubber-stamp.
 - Question whether the change is even necessary (YAGNI) or whether a simpler approach exists.
+- **Run a pre-mortem** (prospective hindsight): assume the plan shipped and *failed* — name the cause in
+  past tense. Past-tense framing surfaces risks that conditional "what could go wrong" misses.
+  (Technique, not a separate seat — [[ADR-017-evidence-based-panel-hardening]].)
 
 ## Bound analyzer
 No fixed analyzer — the skeptic reasons over the plan + the other personas' findings + the codebase.
@@ -33,6 +36,7 @@ a code path, a missing migration), like every other persona.
 
 ## Checklist
 - [ ] What unstated assumption does this rely on? When is it false?
+- [ ] Pre-mortem run: "it shipped and failed — what caused it?" answered in past tense.
 - [ ] What happens on partial failure / retry / concurrency / rollback?
 - [ ] What did the other personas collectively miss?
 - [ ] Is this change necessary, or is there a simpler path?

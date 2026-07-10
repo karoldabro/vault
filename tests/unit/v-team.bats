@@ -77,3 +77,26 @@ teardown() {
     grep -q 'team_max_rounds:'          "${f}"
     grep -q 'team_max_parallel_critics:' "${f}"
 }
+
+@test "skeptic persona carries the pre-mortem technique (ADR-017)" {
+    local f="${VAULT_ROOT}/personas/_shared/skeptic.md"
+    grep -qi 'pre-mortem'            "${f}"
+    grep -qi 'prospective hindsight' "${f}"
+}
+
+@test "propose-loop synthesizer carries dissent + grounding-ownership hardening (ADR-017)" {
+    local f="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -qi 'minority flag' "${f}"
+    grep -qi 'sycophancy'    "${f}"
+    grep -qi 'critic-owned'  "${f}"
+}
+
+@test "every ADR file is registered in decisions/_inventory.md" {
+    local dir="${VAULT_ROOT}/vault/decisions"
+    for f in "${dir}"/ADR-*.md; do
+        local id
+        id="$(basename "${f}" | grep -oE '^ADR-[0-9]+')"
+        [ -n "${id}" ] || { echo "malformed ADR filename: ${f}"; return 1; }
+        grep -q "${id}-" "${dir}/_inventory.md" || { echo "unregistered ADR: ${id}"; return 1; }
+    done
+}
