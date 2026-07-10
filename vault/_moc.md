@@ -24,6 +24,7 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-07-10-1620-business-persona-family]] — Business persona family: 5 packs + shared data-evidence critic + multi-pack seating (ADR-016)
 - [[sessions/2026-07-04-1115-v-family-usage-audit-retiering]] — usage audit → re-tiering, capture extraction, memory/hook fixes
 <!-- Last N session entries appended by /save or OV auto-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center (rules REQ-NN + axis tags, glossary, decision/state tables) for 1+ repos; single-repo `requirements/` category; id chain → established `features/` dossier at shared /v-capture §5b (ADR-014)

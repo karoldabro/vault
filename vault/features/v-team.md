@@ -23,6 +23,15 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
   composed by stack packs `personas/{api-laravel,nuxt,flutter}.md` via `use_shared` + overlays + local
   architects. Selection + resolution: `personas/_resolution.md`. Authoring specs: `_persona-template.md`,
   `_pack-template.md`.
+- **Business persona family** (ADR-016): non-dev packs `personas/{marketing,sales,seo,support,business,
+  startup-eval}.md` (opt-in only — `VAULT.md` `project_type`/`personas.use`, no repo marker) + shared
+  numeric critic `personas/_shared/business/data-evidence.md` (group-qualified `use_shared` id; single
+  owner of arithmetic recompute + metric method audit, one-cluster waiver). Multi-pack seating:
+  `personas.use` list (first entry = primary → the one architect seat), union overlay dedup, `§2.2`
+  selection (guaranteed trigger-chosen lens across all seated packs, business cap 4, one-trigger-one-
+  lens, cross-pack suppression); dev+business never mix in one list. Analyzer wiring health checks:
+  `tool-playbook.md` (PostHog/Bright Data/BOE rows). Rule: [[../indications/business-persona-family]].
+  Tests: `tests/unit/business-personas.bats`.
 - **Testing critic group**: `personas/_shared/testing/` — 6 stack-agnostic testing lenses
   (test-behaviorist, assertion-auditor, edge-case-hunter, test-double-critic, flakiness-sentinel,
   test-harness-critic), one AI-test-failure cluster + one bound analyzer each. Selected on test-touching
@@ -68,4 +77,5 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-06-16-1135-v-team-nuxt-flutter-packs]]
 - [[../sessions/2026-06-19-0954-testing-persona-group]]
 - [[../sessions/2026-06-29-0818-split-test-planning-step]]
+- [[../sessions/2026-07-10-1620-business-persona-family]]
 - [[../sessions/2026-07-03-1205-propose-clarify-research-gates]]
