@@ -31,7 +31,8 @@ don't halt.
 ## (b) Load + select critics
 
 Use the pack + selected critics resolved in the ANALYZE addendum (`personas/_resolution.md`). Read each
-selected persona file once (shared base + pack overlay composed). Default ~3 critics, hard max 5.
+selected persona file once (shared base + pack overlay composed). Default ~3 critics (business packs
+default 4, per `_resolution.md` §2.2), hard max 5.
 
 ## (c) Parallel critic spawn
 

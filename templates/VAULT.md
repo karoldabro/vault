@@ -48,12 +48,14 @@ capture_indications: true              # run the indication-candidate scan at ca
 
 <!-- /v-team multi-agent persona config (all optional). Selects which critic personas review the
      plan + diff. Auto-detected from the stack if omitted. See personas/_resolution.md. -->
-# project_type: api-laravel            # api-laravel | nuxt | flutter — selects the default persona pack
+# project_type: api-laravel            # api-laravel | nuxt | flutter | marketing | sales | seo | support | business | startup-eval
 # personas:
-#   use: api-laravel                   # explicit pack (defaults to project_type)
+#   use: api-laravel                   # explicit pack (defaults to project_type); a LIST seats multiple
+#                                      # packs — use: [sales, marketing] — first entry = primary pack
+#                                      # (dev + business packs must not mix; _resolution.md §1)
 #   add: [./vault/personas/billing-domain.md]   # custom persona files (repo-relative)
 #   skip: [skeptic]                    # drop a persona by id
 # team_max_rounds: 2                   # plan-critique loop cap
+# team_max_parallel_critics: 3         # critics selected per change (hard max 5; business packs default 4, §2.2)
 # team_max_review_rounds: 2            # diff-review loop cap
-# team_max_parallel_critics: 3         # critics selected per change (hard max 5)
 # team_max_test_designers: 3           # generators in the PROPOSE (f2) test-design fan-out
