@@ -60,6 +60,15 @@ These install into `~/.claude/commands/`. Type them in Claude Code.
 Archived (see `commands/attic/`): `/v-migrate` (migration finished; `bin/vault-migrate.sh` remains),
 `/v-resume` (superseded by the OpenViking auto-recall SessionStart hook).
 
+## Persona packs
+
+`/v-team` critics come from packs in [personas/](personas/): dev stacks (`api-laravel`, `nuxt`,
+`flutter`) plus the business family (`marketing`, `sales`, `seo`, `support`, `business`,
+`startup-eval`). Shared critics live once in `personas/_shared/` — including the `_shared/testing`
+group (AI-written-test critique) and the `_shared/business` group (numeric-evidence critique).
+Business packs are opt-in via a repo's `VAULT.md` (`project_type` or `personas.use`, which also
+accepts a list to seat several packs). Selection rules: `personas/_resolution.md`.
+
 ## Learn more
 
 - [vault-guide.md](vault-guide.md) — how the vault is laid out and how the lifecycle works. The doc to

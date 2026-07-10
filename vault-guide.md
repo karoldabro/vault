@@ -395,7 +395,7 @@ applying them.
 
 | Knob | Default | Bounds | Governs |
 |------|---------|--------|---------|
-| `team_max_parallel_critics` | 3 | hard max 5 | Critics per panel round (`personas/_resolution.md` §2) |
+| `team_max_parallel_critics` | 3 (business packs 4) | hard max 5 | Critics per panel round (`personas/_resolution.md` §2, business selection §2.2) |
 | `team_max_rounds` | 2 | hard ceiling | PROPOSE design-loop rounds (`v-team/steps/03-propose-loop.md`) |
 | `team_max_review_rounds` | 2 | hard ceiling | EXECUTE diff-review-loop rounds (`v-team/steps/04-execute-loop.md`) |
 | `team_max_test_designers` | 3 | — | Test-design generators in PROPOSE sub-phase (f2) |

@@ -26,7 +26,7 @@ teardown() {
     grep -q 'post_commit' "${f}"
     grep -q 'pre_capture' "${f}"
     # precedence / failure-mode wording
-    grep -qi 'never executed as a shell command' "${f}"
+    grep -qi 'never run as a shell command' "${f}"
     grep -qi 'never halt' "${f}"
 }
 

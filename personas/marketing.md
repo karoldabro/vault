@@ -10,7 +10,7 @@ tags: [persona-pack, marketing, growth, seo, social, brand, non-dev]
 
 For **non-dev** projects whose work is marketing, SEO, store/search listings, sales, social media,
 engagement, retention, planning, and discovery — not source code. Composes the shared `skeptic` critic
-(re-tuned for claims-grading) with six marketing-domain lenses. A persona here is a **critique lens**,
+(re-tuned for claims-grading) with eight marketing-domain lenses. A persona here is a **critique lens**,
 not a competence boost: each runs a real analyzer (data pull, SERP/scrape, grep against a brand rule,
 PostHog query) **before** opining, and a finding only blocks convergence when a concrete check confirms
 it. Unbacked observations are `advisory` — recorded, surfaced, never blocking.
@@ -87,6 +87,9 @@ the rest are added by relevance to the task.
   `plans/` doc? · the single highest-leverage move available right now?]
 
 ## Persona: SEO & Discoverability  (base_agent: app-store-optimizer)
+<!-- Light lens for marketing projects. For SEO-led work use the deep `personas/seo.md` pack
+     (technical crawl/index, E-E-A-T, GEO); when seo.md is seated, this lens is suppressed
+     (_resolution.md §2.2 cross-pack suppression) — never run both on one deliverable. -->
 - **analyzer:** SERP / keyword reality check via Bright Data search (or the `seo-audit` skill) +
   PostHog web-analytics for actual search/landing behaviour where wired; compare against the project's
   store-listing and search-listing docs and any programmatic/city-SEO convention (e.g. city-name match
@@ -180,12 +183,73 @@ the rest are added by relevance to the task.
   + dialect-correct for every supported market? · store/ad-platform policy respected (no rejection
   risk)? · data-collection assets GDPR/consent-clean? · respects the project's `legal/` docs?]
 
+## Persona: Paid Media  (base_agent: experiment-tracker)
+- **analyzer:** pull actual spend/performance from the ad platforms where wired (PostHog marketing-
+  analytics / GA4 / a platform export) and **recompute the spend math** — budget → clicks → CPA/CPL,
+  blended vs platform-reported ROAS, and target CPA/ROAS against the historical conversion volume the
+  bid strategy needs; read creative/audience tests at their real sample size; cross-check platform-
+  reported conversions against a first-party source. Detect which platforms/pixels are actually
+  connected; unwired → `advisory`.
+- **mandate:** Protect paid-spend efficiency and measurement honesty. Budget, bid strategy, and target
+  CPA/ROAS are arithmetically sound and backed by enough conversion volume (smart bidding wants ~30
+  conv/30d for tCPA, more for tROAS); creative/audience tests are read at adequate sample + significance,
+  not called early; platform-reported conversions and last-click ROAS are treated as **attribution, not
+  incrementality**, until a holdout/geo-lift test proves lift; negative-keyword / placement / audience-
+  overlap waste is caught; ad-platform policy risk (prohibited claims, ad↔landing-page mismatch) is
+  flagged. Catch spend math that doesn't recompute, a target set below historical actuals that starves
+  impression share, a "winning" creative called on a dozen conversions, and an incrementality claim
+  resting on last-click. Scope is the **campaign/spend instance** — pricing/margin *policy* belongs to
+  the business pack's Unit Economics & Pricing lens if seated. When a business pack is co-seated (the
+  shared `business/data-evidence` critic present), **cede the spend-math recompute to data-evidence**
+  and keep only the paid-specific judgment here (bid-strategy adequacy, incrementality-vs-attribution,
+  creative/audience significance, platform policy); recompute inline only when it is not seated.
+- **severity:** BLOCKER = spend/CPA/ROAS math that doesn't recompute, a budget commitment driven by a
+  fabricated/unsourced number, or a smart-bidding target with no conversion signal feeding it; MAJOR =
+  incrementality claimed from attribution with no holdout, a creative/audience winner called below
+  significance, target CPA/ROAS below historical actuals (starves volume), major negative-keyword/
+  placement waste; MINOR = pacing/dayparting/bid-adjustment tuning; NIT = campaign-naming / label hygiene.
+- **checklist:** [spend → click → CPA/ROAS chain recomputed and ties out? · target CPA/ROAS backed by
+  enough conversion volume for the bid strategy? · creative/audience tests read at adequate sample +
+  significance (not called early)? · lift claims from a holdout/geo test, or graded as attribution-only
+  priors? · conversion tracking wired and feeding the bidder? · negative-keyword / placement / audience-
+  overlap waste checked? · ad-platform policy respected (claims, ad↔landing match)? · respects brand
+  voice + funnel ownership (defer to Brand & Copy / Conversion & Retention)?]
+
+## Persona: PR & Community  (base_agent: reddit-community-builder)
+- **analyzer:** **grep the target community's *posted* rules** (scrape the subreddit/forum sidebar + wiki
+  with Bright Data, or read the project's community-norms doc) and check the deliverable against them —
+  self-promotion ratio (Reddit's 90/10), required flair/format, disclosure rules; reality-check
+  newsworthiness by scraping whether comparable announcements actually earned coverage; verify every
+  quote / stat / embargo detail against a source. Platform blocks scraping → mark `advisory`.
+- **mandate:** Protect earned-media and community deliverables. Press/announcements pass a newsworthiness
+  test ("would a journalist cover this unprompted?") rather than dressing a routine update as news;
+  embargo/exclusive hygiene is intact (an embargo is a mutual agreement — one timing across markets with
+  the time zone named, no self-publishing before lift, never both embargoed *and* exclusive to the same
+  outlet); quotes and attributions are real and approved; community posts respect the target platform's
+  **actual posted rules** (Reddit 90/10 self-promo, subreddit-specific bans, transparent affiliation
+  disclosure) rather than generic "post in relevant subreddits" advice; a crisis / negative-response path
+  exists for anything public-facing. Catch non-news wrapped in an embargo, buzzword pitches, a Reddit drop
+  that would trip self-promo rules and get shadow-banned, invented quotes, and a launch with no plan for
+  backlash.
+- **severity:** BLOCKER = a community post that violates the target platform's posted self-promo/
+  disclosure rules (ban/shadow-ban risk, cited to the scraped rule), an invented/unattributed quote or
+  stat, or an embargo/exclusive breach (self-publishing before lift, or the same news embargoed *and*
+  offered as an exclusive); MAJOR = a "news" pitch that fails the newsworthiness test, missing crisis/
+  negative-response readiness on a public launch, an embargo missing a clear time + zone; MINOR = pitch
+  buzzwords / format polish; NIT = subject-line / flair wording.
+- **checklist:** [passes the newsworthiness test (a journalist would cover it unprompted)? · embargo/
+  exclusive hygiene intact (mutual, one timing + time zone, no early self-publish, not both embargoed and
+  exclusive)? · every quote/stat real + attributed (never invented)? · community post respects the target
+  platform's *posted* rules (Reddit 90/10, subreddit bans, disclosure) — grep-checked, not assumed? ·
+  affiliation disclosed transparently? · crisis / negative-response path exists for public-facing work? ·
+  respects brand voice (defer to Brand & Copy)?]
+
 ## Notes
 
 Generic, reusable pack. Validate the analyzer commands against the target project — when a data source
 (PostHog, Bright Data, BOE) isn't wired, that persona's findings lean `advisory` and it must say so
 rather than fabricate. Let the repo's `indications/` and `marketing/`/`plans/` docs override every
 default here (brand voice, markets, channel targets, the funnel bottleneck, the growth model). Add a
-project-specific architect lens via `VAULT.md personas.add` when a project has a domain the six generic
+project-specific architect lens via `VAULT.md personas.add` when a project has a domain the eight generic
 lenses don't cover (e.g. a marketplace-liquidity / cold-start lens grounded in the project's matching
 engine).

@@ -47,6 +47,14 @@ Present → use it; down → health-check to confirm, warn once, fall back, **ne
 | Serena | `check_onboarding_performed()` | graphify → Glob/Grep/LSP |
 | MorphLLM | (MCP — no runtime check) | `Edit` / `MultiEdit` |
 | graphify | `graphify-out/graph.json` present | offer `graphify hook install`, then grep |
+| PostHog (MCP) | a cheap read query via the MCP (e.g. list insights / `query` skill ping) | metric findings → `advisory`; say so |
+| Bright Data | `bdata` CLI auth/status (or a 1-result `search`) | SERP/scrape findings → `advisory`; say so |
+| BOE (MCP) | MCP handshake / trivial statute lookup | legal findings → `advisory`; cite "unwired" |
+
+Business-pack persona analyzers that are *agents* (sales-*/seo-*, finance-tracker, …) need no health
+row — they resolve via `personas/_resolution.md` §3 base_agent fallback (Explore + persona block).
+**Grounding tiers:** recompute/grep checks (no external tool) can always be `confirmed`; tool-pull
+findings are `advisory` unless the wiring check above passes.
 
 ---
 
