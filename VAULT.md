@@ -20,6 +20,7 @@ slug: vault
 ## structure
 <!-- Declarative tweaks to the standard folder set. All optional. -->
 add_folders: [plans]                   # /v-team plan artifacts
+optional: [research]                   # standard-optional folder in use: LLM-collaboration pattern catalog
 # add_folders: [runbooks]              # extra folders to scaffold + treat as vault dirs
 # rename: {indications: conventions}   # local aliases for standard folders
 # optional: [research, legal]          # folders that may be absent without a warning

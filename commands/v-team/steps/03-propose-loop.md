@@ -83,7 +83,8 @@ targeting its highest-severity findings.
 The synthesizer is itself an LLM-judge, so neutralise its known biases:
 
 1. **De-bias:** rank findings **blind to which persona raised them**; randomize finding order (position
-   bias); penalize verbose-but-empty findings.
+   bias); penalize verbose-but-empty findings. `grounding` is **critic-owned**: the synthesizer may not
+   re-grade a finding's grounding downward to alter its blocking status.
 2. **Dedupe / cluster** across personas (same step flagged twice → one cluster).
 3. **Resolve conflicts** by surfacing the trade-off **explicitly** in the plan (e.g. perf cache vs
    security freshness). Irreconcilable → escalate to the user at the approval gate; **never silently
@@ -97,7 +98,9 @@ The synthesizer is itself an LLM-judge, so neutralise its known biases:
    `PROPOSED_TESTS`; only their consumption changes.)
 6. **Append** round R to the **Critique trail** with each finding's disposition (applied / deferred /
    rejected + reason) and **metrics**: new confirmed blockers, findings-delta, per-persona overlap,
-   confirmed-vs-advisory counts, token cost.
+   confirmed-vs-advisory counts, previously-confirmed findings dropped this round (sycophancy flag),
+   token cost. A critic-assigned `grounding: confirmed` BLOCKER/MAJOR dispositioned anything other
+   than **applied** surfaces at the approval gate as a **minority flag** — regardless of relabeling.
 
 ## (f) Convergence — stop on ANY
 

@@ -49,6 +49,12 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
   critique trail + proposed-test backlog).
 - **Finding schema**: severity (BLOCKER/MAJOR/MINOR/NIT) + `grounding` (confirmed|advisory) +
   PROPOSED_TESTS; only `confirmed` findings may block.
+- **Panel hardening** (ADR-017): `grounding` is critic-owned (synthesizer may not re-grade it downward);
+  a confirmed BLOCKER/MAJOR dispositioned ≠ applied surfaces at the gate as a **minority flag**; round
+  metrics carry a previously-confirmed-dropped (sycophancy) count; confirming checks obey **verifier
+  asymmetry** ([[../indications/confirmed-vs-advisory-findings]] corollary); pre-mortem is a skeptic
+  TECHNIQUE, never a seat. Evidence reference: [[../research/llm-collaboration-patterns]] (living
+  catalog). Guards: `tests/unit/v-team.bats` (token greps + every-ADR-registered invariant).
 - **PROPOSE front gates** (ADR-012, shared `§3a`): `§3a.0a` clarify (assumptions + `AskUserQuestion`
   for plan-changing doubts) and `§3a.0b` external research (ground vs the wild; reconcile contradicting
   consensus in writing). Run in the v0 draft **before the panel spawns**; an unresearched design /
@@ -79,3 +85,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-06-29-0818-split-test-planning-step]]
 - [[../sessions/2026-07-10-1620-business-persona-family]]
 - [[../sessions/2026-07-03-1205-propose-clarify-research-gates]]
+- [[../sessions/2026-07-10-1740-llm-collaboration-patterns]]

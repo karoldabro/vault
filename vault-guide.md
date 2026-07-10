@@ -130,7 +130,7 @@ Precedence and failure modes (the framework never halts):
 ├── requirements/            # /v-pm business-logic specs — the knowledge center (single-repo). SPEC stage (optional)
 │   ├── _index.md
 │   └── <slug>.md ...
-├── research/                # User research, qual data (optional)
+├── research/                # User research, qual data, secondary/literature research (optional)
 ├── serena/                  # Serena memories mountpoint (symlink; .gitignored)
 └── sessions/                # Time-bound work logs
     ├── _exploration-plan.md (optional)

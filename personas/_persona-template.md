@@ -9,9 +9,11 @@ tags: [persona]
 
 A persona is a **critique lens**, not a competence boost. Evidence: personas help *focus, rubric, and
 output format* — they do **not** make a model better at *finding* bugs, and can slightly hurt coding
-accuracy. So every persona is **tool-grounded**: it runs its bound analyzer first and reports findings
-the analyzer (or a concrete check) can confirm. The persona *interprets* tool output; it does not
-replace it.
+accuracy. A lens is a **method-enforcer**: it applies its named discipline to every item, consistently,
+not as case-by-case opinion. So every persona is **tool-grounded**: it runs its bound analyzer first and
+reports findings the analyzer (or a concrete check) can confirm. The persona *interprets* tool output;
+it does not replace it. Prefer **verifier asymmetry**: exercise a verification affordance the drafter
+didn't — run the check, execute the query, replay the flow ([[ADR-017-evidence-based-panel-hardening]]).
 
 ## base_agent
 The Claude Code agent this persona is spawned as (from the v-work roster in
