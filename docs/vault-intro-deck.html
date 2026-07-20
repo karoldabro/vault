@@ -1,0 +1,376 @@
+<title>Give your AI a memory</title>
+<style>
+  :root {
+    --paper: #F5F6F3;
+    --card: #FCFDFB;
+    --ink: #20241F;
+    --muted: #67706A;
+    --accent: #2E7D5B;
+    --accent-ink: #FFFFFF;
+    --amber: #B98637;
+    --line: #DCE1DA;
+    --term-bg: #1A201C;
+    --term-ink: #D8E2DA;
+    --term-green: #7FCFA5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #151A17;
+      --card: #1C231F;
+      --ink: #E7EBE6;
+      --muted: #9AA69E;
+      --accent: #6CC29A;
+      --accent-ink: #0F1512;
+      --amber: #D9A65A;
+      --line: #2C352F;
+      --term-bg: #10140F;
+      --term-ink: #D8E2DA;
+      --term-green: #7FCFA5;
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #F5F6F3; --card: #FCFDFB; --ink: #20241F; --muted: #67706A;
+    --accent: #2E7D5B; --accent-ink: #FFFFFF; --amber: #B98637; --line: #DCE1DA;
+    --term-bg: #1A201C; --term-ink: #D8E2DA; --term-green: #7FCFA5;
+  }
+  :root[data-theme="dark"] {
+    --paper: #151A17; --card: #1C231F; --ink: #E7EBE6; --muted: #9AA69E;
+    --accent: #6CC29A; --accent-ink: #0F1512; --amber: #D9A65A; --line: #2C352F;
+    --term-bg: #10140F; --term-ink: #D8E2DA; --term-green: #7FCFA5;
+  }
+
+  html { scroll-snap-type: y proximity; }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4rem 1.5rem;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--line);
+  }
+  .inner { width: 100%; max-width: 46rem; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 1.4rem;
+  }
+  .eyebrow .n { color: var(--muted); }
+
+  h1, h2 {
+    font-weight: 700;
+    line-height: 1.12;
+    text-wrap: balance;
+    margin: 0 0 1.2rem;
+  }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); }
+  h2 { font-size: clamp(2rem, 5vw, 3rem); }
+  p { font-size: 1.15rem; margin: 0 0 1rem; max-width: 38rem; }
+  .muted { color: var(--muted); }
+
+  .tease {
+    display: inline-block;
+    margin-top: 1.2rem;
+    padding: 0.55rem 0.9rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 1.05rem;
+    border-radius: 3px;
+  }
+
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 1rem 1.2rem;
+    margin-top: 1.6rem;
+    border-radius: 0 3px 3px 0;
+  }
+  .callout p { margin: 0; font-size: 1.05rem; }
+  .callout strong { color: var(--accent); }
+
+  .tree {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1rem 1.2rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-top: 1.6rem;
+    overflow-x: auto;
+  }
+  .tree b { color: var(--ink); font-weight: 400; }
+
+  .term {
+    background: var(--term-bg);
+    color: var(--term-ink);
+    border-radius: 5px;
+    padding: 1.2rem 1.4rem;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin: 1.6rem 0 1.2rem;
+    overflow-x: auto;
+  }
+  .term .prompt { color: var(--term-green); }
+  .term .reply { opacity: 0.85; }
+
+  .qa { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 1.8rem; }
+  .q {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1.1rem 1.3rem;
+  }
+  .q h3 { margin: 0 0 0.7rem; font-size: 1.25rem; }
+  .row { display: flex; gap: 0.9rem; align-items: baseline; padding: 0.45rem 0; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .chip {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex: 0 0 4.6rem;
+  }
+  .cmd {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    color: var(--accent);
+    font-size: 0.95rem;
+    flex: 0 0 5.4rem;
+  }
+  .row p { font-size: 0.98rem; margin: 0; }
+  .row .aside { color: var(--muted); font-size: 0.88rem; }
+
+  .days { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; margin: 1.8rem 0 1.2rem; }
+  .day {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1.1rem 1.2rem;
+  }
+  .day .tag {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+  .day p { font-size: 0.98rem; margin: 0; }
+  @media (max-width: 34rem) { .days { grid-template-columns: 1fr; } }
+
+  .benefits { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 1.8rem; }
+  .benefit { border-top: 1px solid var(--line); padding-top: 1rem; }
+  .benefit h3 { margin: 0 0 0.35rem; font-size: 1.2rem; }
+  .benefit p { margin: 0; font-size: 1rem; color: var(--muted); }
+
+  .habit {
+    background: var(--card);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 1.3rem 1.5rem;
+    margin-top: 1.8rem;
+    font-size: 1.05rem;
+  }
+  .habit .cmd-big {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    color: var(--accent);
+    font-size: 1.3rem;
+    display: block;
+    margin-top: 0.5rem;
+  }
+
+  .counter {
+    position: fixed;
+    right: 1.1rem;
+    bottom: 1rem;
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.25rem 0.55rem;
+  }
+  .hint {
+    position: fixed;
+    left: 1.1rem;
+    bottom: 1rem;
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  @media (max-width: 34rem) { .hint { display: none; } }
+</style>
+
+<section class="slide" id="s1">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">1 / 7 ·</span> the problem</p>
+    <h1>Your AI forgets everything.</h1>
+    <p>Every new chat starts from zero. You re-explain the project, the decisions, the gotchas — again. Whatever it figured out yesterday? Gone.</p>
+    <span class="tease">We gave ours a memory. Here's how.</span>
+  </div>
+</section>
+
+<section class="slide" id="s2">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">2 / 7 ·</span> the vault</p>
+    <h2>A folder of notes the AI keeps.</h2>
+    <p>Plain-text notes that live right in the project: what we decided and why, what's been done, how things fit together. The AI reads them before it works — and updates them after.</p>
+    <div class="tree" aria-label="what's inside the vault">
+      vault/<br>
+      ├── <b>decisions/</b> &nbsp;why we chose things<br>
+      ├── <b>sessions/</b> &nbsp;&nbsp;what's been done, day by day<br>
+      └── <b>features/</b> &nbsp;&nbsp;how each part works
+    </div>
+    <div class="callout">
+      <p><strong>You never maintain these notes — the AI does.</strong> And they're in the repo, so the whole team's AI shares one memory.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s3">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">3 / 7 ·</span> see it once</p>
+    <h2>Ask, and it already knows.</h2>
+    <div class="term mono" role="img" aria-label="example of asking a question with v-ask">
+      <span class="prompt">&gt; /v-ask</span> why do we soft-delete orders?<br>
+      <span class="reply">Decided in March: legal needs 90 days of order history.<br>
+      Full reasoning in decision note #12.</span>
+    </div>
+    <p>One command. It answers from the team's notes — and changes nothing.</p>
+  </div>
+</section>
+
+<section class="slide" id="s4">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">4 / 7 ·</span> the commands</p>
+    <h2>Four commands. Two questions.</h2>
+    <div class="qa">
+      <div class="q">
+        <h3>Just asking?</h3>
+        <div class="row">
+          <span class="cmd">/v-ask</span>
+          <p>Answers from the notes. Only looks — never changes anything.</p>
+        </div>
+      </div>
+      <div class="q">
+        <h3>Making a change?</h3>
+        <div class="row">
+          <span class="chip">small</span><span class="cmd">/v-do</span>
+          <p>No fuss, straight to it. <span class="aside">Doesn't write notes unless you ask.</span></p>
+        </div>
+        <div class="row">
+          <span class="chip">normal</span><span class="cmd">/v-work</span>
+          <p>Asks you before doing anything; writes down what it learned after. <span class="aside">Not sure it's small? Pick this — it spots small jobs and skips the ceremony by itself.</span></p>
+        </div>
+        <div class="row">
+          <span class="chip">big / risky</span><span class="cmd">/v-team</span>
+          <p>A panel of AI critics argues about the plan first — and drafts the test plan. <span class="aside">About twice the cost. For decisions that are expensive to undo.</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s5">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">5 / 7 ·</span> the point</p>
+    <h2>Tuesday decides. Thursday remembers.</h2>
+    <div class="days">
+      <div class="day">
+        <span class="tag">Tuesday</span>
+        <p>You run <span class="mono">/v-work</span> on exports; along the way the team settles on CSV over Excel. The why gets written down — automatically.</p>
+      </div>
+      <div class="day">
+        <span class="tag">Thursday · new chat</span>
+        <p>A colleague asks <span class="mono">/v-ask why CSV?</span> Instant answer. No re-explaining. Their session builds on yours.</p>
+      </div>
+    </div>
+    <p>That's the whole trick: what one session learns, every later session knows.</p>
+  </div>
+</section>
+
+<section class="slide" id="s6">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">6 / 7 ·</span> why bother</p>
+    <h2>What you get back.</h2>
+    <div class="benefits">
+      <div class="benefit">
+        <h3>Less re-explaining.</h3>
+        <p>Finding a past decision in the notes takes a fraction of the reading that digging through the code does — measured ~96% less on this repo.</p>
+      </div>
+      <div class="benefit">
+        <h3>Decisions survive.</h3>
+        <p>The "why" behind choices stops living in one person's head.</p>
+      </div>
+      <div class="benefit">
+        <h3>New teammates start smart.</h3>
+        <p>Their AI already knows the project on day one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s7">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">7 / 7 ·</span> start today</p>
+    <h2>Nothing to install.</h2>
+    <p>It's already set up on our repos. One habit swap to start:</p>
+    <div class="habit">
+      Next time you'd ask Claude something about the repo —
+      <span class="cmd-big">type /v-ask instead</span>
+    </div>
+    <p class="muted" style="margin-top:1.6rem;">Questions? Grab Karol.</p>
+  </div>
+</section>
+
+<div class="counter mono" id="counter" aria-hidden="true">1 / 7</div>
+<div class="hint" aria-hidden="true">↑ ↓ or scroll</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  let current = 0;
+
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        current = slides.indexOf(e.target);
+        counter.textContent = (current + 1) + ' / 7';
+      }
+    }
+  }, { threshold: 0.6 });
+  slides.forEach(s => io.observe(s));
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(e.key)) {
+      if (current < slides.length - 1) { e.preventDefault(); slides[current + 1].scrollIntoView(); }
+    } else if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key)) {
+      if (current > 0) { e.preventDefault(); slides[current - 1].scrollIntoView(); }
+    }
+  });
+</script>
