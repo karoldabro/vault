@@ -85,4 +85,5 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-06-29-0818-split-test-planning-step]]
 - [[../sessions/2026-07-10-1620-business-persona-family]]
 - [[../sessions/2026-07-03-1205-propose-clarify-research-gates]]
+- [[../sessions/2026-07-20-1027-team-presentation-vault-commands]] — no-pack fallback panel validated on a non-code deliverable
 - [[../sessions/2026-07-10-1740-llm-collaboration-patterns]]

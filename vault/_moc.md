@@ -25,6 +25,7 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-07-20-1027-team-presentation-vault-commands]] — Coworker intro deck for the vault + v-commands (7-slide artifact, /v-team fallback panel)
 - [[sessions/2026-07-10-1740-llm-collaboration-patterns]] — Research LLM-collaboration patterns (5 domains) and adopt evidence-backed panel hardening (ADR-017 + living catalog)
 - [[sessions/2026-07-10-1620-business-persona-family]] — Business persona family: 5 packs + shared data-evidence critic + multi-pack seating (ADR-016)
 - [[sessions/2026-07-04-1115-v-family-usage-audit-retiering]] — usage audit → re-tiering, capture extraction, memory/hook fixes
