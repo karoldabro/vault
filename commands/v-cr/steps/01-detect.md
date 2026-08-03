@@ -1,5 +1,7 @@
 # Step 1 — DETECT
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Resolve **which forge**, **which repo**, and **which PR/MR** to review — and decide whether the host is
 trusted enough to send credentials to. No code reads, no model context yet.
 

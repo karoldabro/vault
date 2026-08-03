@@ -1,5 +1,7 @@
 # Step 2 — LOAD CONTEXT (vault-first)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Load all relevant context **before touching source code**. Query cheapest-first; stop as soon as
 you have enough. Each layer costs 10–100× less than reading source. **Graph before grep, symbol
 before full-file read.** Full per-tool rules + examples: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.

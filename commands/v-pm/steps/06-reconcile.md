@@ -1,5 +1,7 @@
 # reconcile mode — `/v-pm reconcile <feature>`
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Fold what execution learned back into the source of truth, and drain the PM's inbox. Run this when a
 project raised a `to: pm` thread, or after a project session changed the seam.
 

@@ -1,5 +1,7 @@
 # Step 0 — FEATURE PICKUP (only when `/v-team` is invoked with a `<feature>`)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Fires **only** when `/v-team` gets a feature argument (or the cwd's project vault has a
 `features/<feature>` symlink into `_features/`). It connects this project session to the shared feature
 workspace: pick up threads addressed here, surface replies, and check the contract hasn't drifted —

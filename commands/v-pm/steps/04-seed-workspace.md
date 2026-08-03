@@ -1,5 +1,7 @@
 # Step 3 — SEED WORKSPACE (plan mode)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 **Multi-repo mode only.** In **single-repo mode** (1 participant) this step is **skipped** — `01-intake.md`
 §1.3 already wrote `requirements.md` into the project's own `<project-vault>/requirements/<feature>.md`
 (no `_features/` workspace, no symlink, no shard). Proceed straight to CAPTURE (Step 5, project-vault

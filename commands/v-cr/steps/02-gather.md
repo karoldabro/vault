@@ -1,5 +1,7 @@
 # Step 2 — GATHER CONTEXT
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Assemble everything the panel reviews against: the diff (secret-scanned), the linked task, the project's
 vault knowledge, and the set of comments already posted. This is the "context-aware" requirement.
 

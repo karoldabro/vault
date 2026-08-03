@@ -1,5 +1,7 @@
 # status mode — `/v-pm status`
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 The cross-feature inbox. One sweep so nothing orphans. **No writes.**
 
 ## S.1 Sweep

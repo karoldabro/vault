@@ -3,6 +3,8 @@ description: Multi-agent persona-critique dev lifecycle. Drafts a plan, runs par
 argument-hint: [task description]
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-team — persona-critique development lifecycle
 
 Heavier sibling of `/v-work` for **BIG / high-stakes work**. Same vault-first lifecycle, but PROPOSE
@@ -80,9 +82,23 @@ design/`) to author the Test Design Dossier + Proposed test backlog (test design
 design). Mark PROPOSE `completed`.
 
 ## Step 4 — APPROVAL GATE
-**STOP. Present the converged plan + critique trail + proposed-test backlog. Do not proceed until the
-user explicitly approves.** Surface any `CONVERGENCE: capped with N open blockers` and any unresolved
-trade-offs the synthesizer escalated. Approval covers the whole lifecycle **through capture** (Step 6).
+**STOP. Present the decision. Do not proceed until the user explicitly approves.** Approval covers
+the whole lifecycle **through capture** (Step 6).
+
+**Present the decision, not the plan.** The converged plan, critique trail and test backlog live in
+the artifact. What the user reads is the **≤15-line** block from `03-propose-loop.md` §"Required
+output — Layer 1": `Recommendation · Impact · Options · Assumed · Open · Ask`. Name the artifact path
+in one line; never require opening it to decide.
+
+**Always surface, in plain words** (these are exceptions, not status — they survive every cut):
+- a capped convergence with open blockers — say "the reviewers ran out of rounds with N things still
+  open", not `CONVERGENCE: capped`;
+- any minority flag and any trade-off the synthesizer could not reconcile;
+- the `(f2)` skip note when test design was skipped;
+- any stated safe-default assumption, so it can still be corrected here.
+
+**Never present an option without its consequence, and never ask for approval without the `Impact`
+line** — approving authorizes everything it touches.
 
 - Approval ("looks good", "go", "yes", "approved") → Step 5
 - Feedback → revise the plan (re-loop if needed), present again

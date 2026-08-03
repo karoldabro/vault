@@ -1,5 +1,7 @@
 # Step 1 — INTAKE (plan mode)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Capture the business necessity, make sure it's understood, and decide who's in.
 
 ## 1.1 Restate + clarify (hard-block)

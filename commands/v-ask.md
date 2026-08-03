@@ -2,6 +2,8 @@
 description: Read-only, vault-aware Q&A. Loads context cheapest-first (OV → claude-mem → graph → source) and answers. No edits, no approval, no capture.
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-ask — context-aware answer (read-only)
 
 Light sibling of `/v-work`. **Answers a question with vault context loaded — nothing else.**
@@ -52,7 +54,7 @@ context stays lean.
 
 ## Answer format
 
-- Lead with the answer. Keep it tight.
+- Shape and length are governed by the communication contract bound at the top of this file.
 - **Cite sources** so the user can verify: `file_path:line`, ADR ids, session/dossier names, graph
   paths. An uncited claim about "what the codebase does" is a guess — mark it as one or go verify.
 - If the vault and source disagree (stale doc), surface the conflict rather than picking silently.

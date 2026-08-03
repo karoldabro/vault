@@ -3,6 +3,8 @@ description: Extract past Claude Code sessions for a project and ingest them int
 argument-hint: "<project-slug> [--days N | --search 'term']"
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Extract Claude Code chat transcripts for a project and ingest into OpenViking as resources. **Targeted use only** — wholesale backfill on 3000+ sessions is noisy and expensive. Use this when you remember a specific past episode worth indexing.
 
 ## Parse $ARGUMENTS

@@ -1,0 +1,46 @@
+# Golden: the field set a user is allowed to see at a PROPOSE approval gate.
+#
+# WHAT THIS IS: a drift detector for the layer-1 output contract. It pins the FIELD SET, not the
+# behaviour. Nothing here proves a real run is short — no test in this repo can, because neither
+# test image ships a `claude` CLI and the repo mounts read-only.
+#
+# Re-recording: this file is hand-maintained. If you intentionally change the layer-1 contract in
+#   commands/v-work/steps/03-propose.md      ("Required output — two layers")
+#   commands/v-team/steps/03-propose-loop.md ("Required output — two layers")
+# update the two lists below in the same commit. tests/unit/propose-golden.bats enforces the match.
+
+## ALLOWED — the only fields that may be printed to the user at the gate
+Recommendation
+Impact
+Options
+Assumed
+Open
+Ask
+
+## FORBIDDEN — moved to the plan artifact; printing these to the user is the regression
+Implementation steps
+Test plan
+Serena rules
+Lite critic
+Converged plan
+Proposed test backlog
+Vault writes
+Index updates
+
+## FORBIDDEN — panel vocabulary; translate to plain words before it reaches the user
+BLOCKER
+MAJOR
+advisory
+grounding
+persona
+convergence
+dedupe
+fan-out
+disposition
+
+## ALWAYS-EMITTED — exceptions that survive the omit-when-empty rule
+research: unavailable
+safe-default
+open blocker
+capped with N open blockers
+minority flag

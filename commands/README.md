@@ -31,6 +31,19 @@ resolution, and forge/task adapters under `v-cr/adapters/` + `v-cr/tasks/`. Pure
 Use them when the gated lifecycle is overkill: `/v-ask` for a grounded read-only answer, `/v-do` for a
 small low-risk change. Both escalate to `/v-work` (or `/v-team`) the moment scope grows.
 
+## Shared modules (`_shared/`)
+
+- **`critic-panel.md`** — the single-pass critic panel (ground → select → generate → verify →
+  synthesize), reused as-is by `/v-cr` and wrapped in a fix-and-reloop by `/v-team`.
+- **`communication.md`** — how every command writes **to the user**. Bound at the top of each
+  `v-*.md` and each step file that owns a `## Required output` block. Governs user-facing prose only;
+  machine-read schemas, vault documents and commit messages are out of scope, and forge comments
+  defer to `/v-cr`'s own brevity rule (different reader). Guarded by
+  `../tests/unit/communication-contract.bats`. See `../vault/decisions/ADR-018-*`.
+
+A matching Claude Code output style ships at `../output-styles/director.md` for sessions outside a
+v-* command; the installer links it into `~/.claude/output-styles/` and it is opt-in via `/config`.
+
 See `../vault-guide.md` §11 for the command reference (and §1.1 for vault path/config resolution).
 
 ## Why symlinks instead of copies
