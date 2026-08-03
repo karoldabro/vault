@@ -2,6 +2,8 @@
 description: Bootstrap a project vault for the current code repo. Creates the vault (global or in-repo), writes VAULT.md, scaffolds folders + indexes, wires CLAUDE.md. No submodule — the framework is read globally.
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-init — Initialize a project vault
 
 Run this from inside a code repo to wire it into the vault framework. The framework is a single global

@@ -2,6 +2,8 @@
 description: Capture this session as a vault sessions/*.md doc. Runs dedupe vs recent sessions, auto-updates indexes, extracts ADR candidates, cross-links Refs.
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-capture — Enhanced session capture
 
 Force-write this session into the project vault: dedupe vs recent sessions, session doc, ADR +

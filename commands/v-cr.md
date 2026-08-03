@@ -2,6 +2,8 @@
 description: Automated code review on a remote PR/MR. Auto-detects the forge (GitHub/Bitbucket) + linked task (Jira/Asana/issue), deploys a tool-grounded critic swarm, and posts grounded inline + summary comments back — vault- and task-aware, precision-first, dry-run by default.
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-cr — automated code review for a remote PR
 
 Reviewer sibling of `/v-work` and `/v-team`. Where those **author** code, `/v-cr` **reviews** code that

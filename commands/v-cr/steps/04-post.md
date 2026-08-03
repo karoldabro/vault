@@ -1,5 +1,7 @@
 # Step 4 — POST (dry-run gate)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Write the comment set back to the forge — behind a non-bypassable preview gate, idempotently, leak-safe.
 
 **INVARIANT: `/v-cr` never commits, pushes, or applies code.** It posts and resolves *comments* only.

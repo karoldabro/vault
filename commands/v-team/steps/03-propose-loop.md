@@ -1,5 +1,7 @@
 # Step 3 — PROPOSE (panel loop)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Draft a plan, then run a **panel → synthesize → re-loop** until it converges. Critics work in parallel,
 each through its own tool-grounded lens, and share state **only via the revised plan** (no agent-to-
 agent messaging — independence is what makes the panel worth its cost). Do not write source code here.
@@ -51,6 +53,11 @@ One message, **multiple `Agent` calls** — one per selected persona, spawned as
 Instruct each critic to **run its bound analyzer first** and cite real signals — the persona interprets
 tool output, it does not replace it.
 
+Also put `_shared/communication.md` in every critic envelope, scoped to the **free-text** fields
+(`issue`, `recommendation`): one sentence, plain words, no restated context. The schema itself is
+machine-read and unaffected — but these strings are what §(e).7 may surface to the user, and a
+subagent inherits neither the output style nor the dispatcher's binding line.
+
 ## (d) Finding schema (each critic returns)
 
 ```
@@ -101,6 +108,15 @@ The synthesizer is itself an LLM-judge, so neutralise its known biases:
    confirmed-vs-advisory counts, previously-confirmed findings dropped this round (sycophancy flag),
    token cost. A critic-assigned `grounding: confirmed` BLOCKER/MAJOR dispositioned anything other
    than **applied** surfaces at the approval gate as a **minority flag** — regardless of relabeling.
+7. **Cap what reaches the user.** The critique trail is written **to the artifact**; the panel's own
+   output is the single largest block of text this command can put in front of the user, and the
+   Claude Code output style does **not** reach spawned subagents — so this step is the only place it
+   is controlled. To the user, surface **only**: confirmed findings that changed the plan, one plain
+   line each; plus every item §(e).3, §(e).6 and §(f) mark as escalation, minority flag, or capped
+   convergence. Everything else — approvals, nits, advisory findings, per-round metrics, token
+   costs — goes to the artifact and is never printed. Critics' free-text `issue` and `recommendation`
+   fields are **user-facing prose** when surfaced: rewrite them per `_shared/communication.md` rather
+   than pasting the schema.
 
 ## (f) Convergence — stop on ANY
 
@@ -150,18 +166,35 @@ Mark the plan `status: proposed`, set `rounds` + `convergence` in frontmatter. T
 
 ---
 
-## Required output
+## Required output — two layers
 
-```
-Assumptions / clarifications: [defaults + questions asked — from §3a.0a]
-Research: [key sources + takeaways | skipped (trivial) | unavailable — from §3a.0b]
-Personas: <pack> → [selected critics]
-Rounds: <n>  ·  Convergence: <clean | capped-with-open-blockers>
-Plan artifact: plans/YYYY-MM-DD-HHMM-<slug>.md
-Converged plan: [numbered steps — file + action + tool + pattern]
-Proposed test backlog: [N tests across M personas]
-Open trade-offs / escalations: [...]
-Vault writes: [CREATE/UPDATE per §3b dedupe]
-```
+The converged plan, the critique trail and the test backlog are written **to the plan artifact**.
+Only the decision is written **to the user**. Do not print the artifact to the terminal.
+
+### Layer 1 — to the user (≤15 lines, governed by `_shared/communication.md`)
+
+Same shape as v-work `03-propose.md` — `Recommendation · Impact · Options · Assumed · Open · Ask` —
+with the same omit-when-empty rule and the same **cuts good news, never warnings** carve-out.
+
+Panel-specific rules for this layer:
+
+- **Translate, never transcribe.** The user gets outcomes in plain words, not the panel's vocabulary.
+  Never print `BLOCKER`, `MAJOR`, `advisory`, `grounding`, `persona`, `convergence`, `rounds`,
+  `dedupe`, `fan-out` or `disposition` to the user. Say "must fix before this ships", "worth fixing",
+  "verified", "a judgement call", "reviewer" — or describe the outcome and drop the term.
+- **These always surface** (they are exceptions, not status): `CONVERGENCE: capped with N open
+  blockers` — stated plainly, e.g. "the reviewers ran out of rounds with N things still open"; any
+  **minority flag** (§(e) item 6); any irreconcilable trade-off the synthesizer escalated (§(e) item
+  3); and the `(f2)` skip note (§f2 gating) when test design was skipped.
+- **Say the reviewing happened; do not narrate it.** One line at most — how many reviewers, whether
+  anything is still open. Never a round-by-round account.
+
+### Layer 2 — to the plan artifact (not printed)
+
+`plans/YYYY-MM-DD-HHMM-<slug>.md` — converged plan (file · action · tool · pattern) · the full
+critique trail with per-round metrics · Test Design Dossier · proposed test backlog · research
+sources · vault writes per §3b dedupe.
+
+Name the artifact path to the user in one line. Never require them to open it to decide.
 
 Mark PROPOSE `completed`, then proceed to the APPROVAL GATE.

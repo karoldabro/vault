@@ -353,8 +353,24 @@ cost. The full rules and copy-paste examples for every tool are in [`tool-playbo
 
 ## 11. Commands reference
 
-Installed by `$VAULT_FRAMEWORK_PATH/install.sh` (symlinks into `~/.claude/commands/`). All commands
-assume the four tools in §10.
+Installed by `$VAULT_FRAMEWORK_PATH/install.sh`, which symlinks two trees: `commands/` into
+`~/.claude/commands/` and `output-styles/` into `~/.claude/output-styles/`. All commands assume the
+four tools in §10.
+
+**How every command writes to you.** `commands/_shared/communication.md` is a shared module bound at
+the top of each command and each step file that owns a `## Required output` block. It governs
+user-facing prose only — answer first, no jargon, options carry their consequences, report exceptions
+rather than normality, and what you read at an approval gate is capped at ~15 lines with the design
+detail kept in the artifact. Machine-read schemas, vault documents, commit messages and your
+reasoning are out of scope; forge comments defer to `/v-cr`'s own rule (different reader). See
+[[ADR-018-decision-communication-contract]].
+
+**Optional global style.** `output-styles/director.md` applies the same rules to *every* Claude Code
+session, including work that never runs a v-* command. Turn it on with `/config` → Output style →
+*director*, or set `"outputStyle": "director"` in `~/.claude/settings.json`; it takes effect after
+`/clear` or in a new session. It is deliberately self-contained, because an output style cannot read
+repo files — and it reaches the main conversation only, never spawned subagents. Subagent-authored
+text is capped instead at `v-team/steps/03-propose-loop.md` §(e).7.
 
 | Command | Purpose | Key tools |
 |---------|---------|-----------|

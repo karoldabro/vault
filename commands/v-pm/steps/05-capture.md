@@ -1,5 +1,7 @@
 # Step 5 — CAPTURE (plan mode; also the tail of reconcile)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Planning is where the cross-project decisions are made — record them, or they evaporate. This is v-pm's
 own `/v-capture`, scoped to the feature workspace and cross-project. Runs after SEED WORKSPACE (plan
 mode) and at the end of `reconcile`.

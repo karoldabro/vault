@@ -3,6 +3,8 @@ description: Re-ingest a project's curated knowledge (shared/, .serena/memories,
 argument-hint: "[project-slug | 'all']"
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Refresh OpenViking's index for a project after content changes. Drop-and-re-add by source, idempotent. Cheap (Ollama embeddings, local).
 
 ## Resolve scope

@@ -1,5 +1,7 @@
 # Step 2 — PLAN PANEL (plan mode)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Turn the necessity into a **project-agnostic** plan through a sequential critic pipeline, then split the
 cross-project contract out as a first-class artifact. This is generative planning, not code — do not
 read or write source here.

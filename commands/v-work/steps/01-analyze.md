@@ -1,5 +1,7 @@
 # Step 1 — ANALYZE
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Restate the task and detect the project stack before any other work. No source reads, no code.
 
 ## 1.1 Restate the task

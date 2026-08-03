@@ -1,5 +1,7 @@
 # Step 3 — REVIEW (panel)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Run the critic panel **once** over the gathered changeset and produce the comment set. Single pass — no
 fixing (we don't own the code), no re-rounds (the PR is static). This step is a thin wrapper around the
 shared module.
@@ -45,7 +47,12 @@ produced more confirmed findings, keep the highest-severity N and note the count
 
 ## 3.5 Build the comment set
 Assemble what step 4 will preview/post. **Be short, concise, precise** — brevity is a hard rule, not a
-preference:
+preference.
+
+> This rule is **deliberately local and is not superseded** by `_shared/communication.md`. These
+> comments are posted to the forge and read by the PR author and reviewers — a different audience
+> with a different reader model. The shared contract's "outward-facing text" section defers here.
+> Do not delete this as a duplicate.
 - **1 summary comment**, terse, in this order:
   - `verdict`;
   - **coverage line (mandatory)** — `Reviewed <N> files · inline on <M> · <N−M> silent (no confirmed

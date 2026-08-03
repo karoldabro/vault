@@ -2,6 +2,8 @@
 description: Small, low-risk change — no approval gate, no propose loop. Orient (vault-lite) → execute → self-review. Capture is offered, off by default. Escalates to /v-work when scope grows.
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-do — small job (no approval gate)
 
 Light sibling of `/v-work`. For **small, low-risk changes** where the full gated lifecycle is

@@ -1,5 +1,7 @@
 # Step 5 — EXECUTE (review loop)
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Implement the approved plan, triage the proposed tests, then run a **diff-review panel loop** — the same
 personas in review posture, tool-first, fixing between rounds until convergence.
 

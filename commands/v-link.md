@@ -3,6 +3,8 @@ description: Declare two projects as coupled (cross-recall enabled). Updates ~/v
 argument-hint: "<project-a> <project-b> [reason]"
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Declare a coupled-project relationship. After this, OV auto-recall will pull context from peer when a session opens in either member.
 
 ## Parse $ARGUMENTS

@@ -48,10 +48,44 @@ setup() {
     grep -qi 'cite'                           "${PROPOSE}"
 }
 
-@test "PROPOSE output contract surfaces Assumptions, Clarifications, and Research" {
-    grep -qi 'Assumptions:'    "${PROPOSE}"
-    grep -qi 'Clarifications:' "${PROPOSE}"
-    grep -qi 'Research:'       "${PROPOSE}"
+@test "PROPOSE output contract is two-layer: decision to the user, design to the artifact" {
+    # Layer 1 — what the user reads.
+    grep -qi 'Recommendation:' "${PROPOSE}"
+    grep -qi 'Assumed:'        "${PROPOSE}"
+    grep -qi 'Open:'           "${PROPOSE}"
+    # Layer 2 — research and the design live in the artifact, not the terminal.
+    grep -qi 'to the plan artifact'          "${PROPOSE}"
+    grep -qi 'Research sources'              "${PROPOSE}"
+    # The gate's own front-matter is still reachable from the clarify gate.
+    grep -q  '3a.0a'                         "${PROPOSE}"
+}
+
+@test "PROPOSE user layer always carries Impact — no approving an unstated blast radius" {
+    grep -qi 'Impact:' "${PROPOSE}"
+    grep -qi 'migrations' "${PROPOSE}"
+    grep -qi 'coupled projects' "${PROPOSE}"
+    grep -qi 'never ask for approval without' "${PROPOSE}"
+}
+
+@test "PROPOSE omit-when-empty rule cuts green but never amber" {
+    grep -qi 'omit any line with nothing to say\|omit when' "${PROPOSE}"
+    grep -qi 'cuts good news, never warnings'    "${PROPOSE}"
+    # the four exception notes must survive the omit rule
+    grep -qi 'research: unavailable'      "${PROPOSE}"
+    grep -qi 'safe-default'               "${PROPOSE}"
+    grep -qi 'open blocker'               "${PROPOSE}"
+}
+
+@test "clarify gate has an ask-gate that decides WHETHER to ask, not just how" {
+    grep -qi 'ask gate\|whether to ask'                  "${PROPOSE}"
+    grep -qi 'changes what actually gets built'          "${PROPOSE}"
+    # naming each option's consequence is the precondition for asking at all
+    grep -qi 'cannot name the consequence'               "${PROPOSE}"
+    # question shape
+    grep -qi 'two to four options'                       "${PROPOSE}"
+    grep -qi 'recommended option first'                  "${PROPOSE}"
+    # tolerant of line wrapping in the prose
+    tr '\n' ' ' < "${PROPOSE}" | grep -qi 'confident wrong *answer'
 }
 
 @test "ANALYZE seeds doubts early and routes them to the clarify gate" {
@@ -68,9 +102,24 @@ setup() {
     grep -qi 'unsound assumption'          "${PROPOSE_LOOP}"
 }
 
-@test "v-team PROPOSE output contract surfaces clarifications + research" {
-    grep -qi 'Assumptions / clarifications:' "${PROPOSE_LOOP}"
-    grep -qi 'Research:'                      "${PROPOSE_LOOP}"
+@test "v-team PROPOSE output contract is two-layer and translates panel vocabulary" {
+    grep -qi 'two layers'                    "${PROPOSE_LOOP}"
+    grep -qi 'to the plan artifact'          "${PROPOSE_LOOP}"
+    tr '\n' ' ' < "${PROPOSE_LOOP}" | grep -qi 'research *sources'
+    # the panel's internal vocabulary must never reach the user verbatim
+    grep -qi 'translate, never transcribe'   "${PROPOSE_LOOP}"
+    # capped convergence + minority flags are exceptions and always surface
+    grep -qi 'capped with N open blockers'   "${PROPOSE_LOOP}"
+    grep -qi 'minority flag'                 "${PROPOSE_LOOP}"
+}
+
+@test "v-team synthesizer caps what reaches the user (the only subagent-text control)" {
+    grep -qi 'Cap what reaches the user'     "${PROPOSE_LOOP}"
+    # the documented reason this control has to live here
+    grep -qi 'does .*not.* reach spawned subagents\|not.*reach spawned subagents' "${PROPOSE_LOOP}"
+    # critic free-text is user-facing prose when surfaced
+    grep -qi 'free-text'                     "${PROPOSE_LOOP}"
+    grep -q  '_shared/communication.md'      "${PROPOSE_LOOP}"
 }
 
 @test "tool-playbook documents web research as §7 (correctness, not token-saving)" {

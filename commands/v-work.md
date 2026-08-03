@@ -2,6 +2,8 @@
 description: Vault-aware development lifecycle. Loads context → proposes solution + vault writes (with dedupe) → approval → execute → commit + capture.
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-work — Vault-aware development lifecycle
 
 Vault-first mirror of `/dev`: every step considers what knowledge to load and what to write back.
@@ -55,9 +57,17 @@ Read `~/.claude/commands/v-work/steps/02-load-context.md`, then execute. Mark LO
 Read `~/.claude/commands/v-work/steps/03-propose.md`, then execute. Mark PROPOSE `completed`.
 
 ## Step 4 — APPROVAL GATE
-**STOP. Present the proposal. Do not proceed until the user explicitly approves.** Approval covers the
+**STOP. Present the decision. Do not proceed until the user explicitly approves.** Approval covers the
 whole lifecycle **through capture** (Step 6, including `/v-capture`) — don't re-ask to commit or
 capture later.
+
+**Present the decision, not the design.** What the user reads is the **≤15-line** block from
+`03-propose.md` §"Required output — Layer 1": `Recommendation · Impact · Options · Assumed · Open ·
+Ask`. The implementation steps, test plan and research live in layer 2 — say where, never require
+opening it to decide. Omit any line with nothing to say, but **always** surface a skipped gate, a
+tool that fell back, `research: unavailable`, a stated safe default, or an open blocker.
+
+**Never ask for approval without the `Impact` line** — approving authorizes everything it touches.
 
 - Approval ("looks good", "go", "yes", "approved") → Step 5
 - Feedback → revise the proposal, present again

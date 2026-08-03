@@ -435,6 +435,15 @@ default.
 
 ---
 
+**Scope boundary (added 2026-08-03).** This catalog is about **agent↔agent** structure — who
+critiques, how panels are wired, how work is orchestrated. It has no finding on **agent↔human**
+output: how the framework should write to the person running it. That axis lives in the sibling
+catalog [[decision-communication]] (BLUF/Minto/Amazon/SBAR doctrine plus the cognitive-load, jargon,
+question-design and human-AI decision-support evidence), which drives
+`commands/_shared/communication.md` ([[ADR-018-decision-communication-contract]]). Two findings here
+do bear on it and are re-used there: **F-11** (rubrics and structured output beat holistic prose) and
+**F-16** (human gates should be risk-targeted, not uniform).
+
 ## §7 Cross-cutting takeaways
 
 **The persona × mode matrix.** Patterns factor into WHO critiques (expert thinker, competitor,
@@ -524,4 +533,6 @@ forbes.com Air Canada case + pymnts.com courts-chatbot liability · solresol.sub
 
 [[ADR-017-evidence-based-panel-hardening]] · [[ADR-001-panel-loop-over-peer-debate]] ·
 [[ADR-003-tool-grounded-findings]] · [[ADR-016-business-persona-family]] ·
-[[2026-07-10-1740-llm-collaboration-patterns]] (plan) · [[v-team]] (feature dossier)
+[[2026-07-10-1740-llm-collaboration-patterns]] (plan) · [[v-team]] (feature dossier) ·
+[[decision-communication]] (sibling catalog — agent↔human output) ·
+[[ADR-018-decision-communication-contract]]

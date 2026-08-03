@@ -1,5 +1,7 @@
 # Step 5 — COMMIT + CAPTURE
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Finalise: stage, commit, push to OpenViking, capture the session. This task stays `in_progress`
 until `/v-capture` has actually run — never close out `/v-work` without it.
 
@@ -56,15 +58,29 @@ lifecycle already approved at the gate; it needs no fresh prompt.
 
 ## 5.6 Completion report
 
+The last thing the user reads. Governed by `_shared/communication.md` — report **what changed and
+what still needs them**, not that the normal things were normal.
+
+**Always print:**
+
 ```
 Summary: [what was implemented — 1–2 sentences]
 Files: [N created, N modified — list]
-Tests: [N added — all passing / N failing]
-Review: [PASS / PASS WITH WARNINGS — list warnings]
-Vault: [docs written/updated, session file path]
 Branch: [name] @ [short commit hash]
-Follow-up: [deferred items, open threads]
+Vault: [docs written/updated, session file path]
 ```
+
+**Print only when there is something to say** — omit the line entirely otherwise:
+
+```
+Tests: [only when something FAILED or was skipped — never "all passing"]
+Review: [only when there are warnings — never "PASS"]
+Follow-up: [deferred items, open threads — omit when there are none]
+```
+
+A green test run and a clean review are the expected outcome; saying so costs the user attention and
+buys nothing. A **failure, a skip, a warning, or a deferred item is an exception and is always
+reported**, however brief. If the whole run was clean, the report is four lines.
 
 After `/v-capture` completes, honor any carried `post_capture` hook, then the `on_end` hook (also fired
 on early termination — gate rejection or abort). Mark COMMIT + CAPTURE `completed` — only after

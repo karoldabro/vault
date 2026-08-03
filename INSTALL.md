@@ -86,8 +86,23 @@ After `git pull`, relink the commands:
 ./install.sh
 ```
 
-It's safe to run repeatedly. It won't overwrite anything in `~/.claude/commands/` that isn't already a
-symlink, and it prunes links that point at deleted commands.
+It's safe to run repeatedly. It won't overwrite anything in `~/.claude/commands/` or
+`~/.claude/output-styles/` that isn't already a symlink, and it prunes links that point at deleted
+sources.
+
+### Optional: the `director` output style
+
+The installer also links `output-styles/director.md` into `~/.claude/output-styles/`. It applies the
+framework's writing rules — answer first, no jargon, options with their consequences, decisions
+capped at ~15 lines — to **every** Claude Code session, not just v-* commands. It is off until you
+turn it on:
+
+```
+/config  ->  Output style  ->  director
+```
+
+or set `"outputStyle": "director"` in `~/.claude/settings.json`. Takes effect after `/clear` or in a
+new session; switch back with the same menu.
 
 ## Uninstall
 

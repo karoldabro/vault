@@ -3,6 +3,8 @@ description: Cross-project feature planning. A business→product→architect→
 argument-hint: [business necessity] | reconcile <feature> | status
 ---
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 # /v-pm — cross-project feature planning & coordination
 
 The planning brain that sits **above** execution. You describe a business necessity once; a panel of

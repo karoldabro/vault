@@ -11,7 +11,7 @@ tags: [moc]
 
 ## Decisions
 <!-- Auto: link to [[decisions/]] folder. Notable ADRs: -->
-- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]] · [[decisions/ADR-006-testing-critic-group]] · [[decisions/ADR-008-v-cr-remote-pr-review]] · [[decisions/ADR-016-business-persona-family]] · [[decisions/ADR-017-evidence-based-panel-hardening]]
+- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]] · [[decisions/ADR-006-testing-critic-group]] · [[decisions/ADR-008-v-cr-remote-pr-review]] · [[decisions/ADR-016-business-persona-family]] · [[decisions/ADR-017-evidence-based-panel-hardening]] · [[decisions/ADR-018-decision-communication-contract]]
 
 ## Indications
 - See [[indications/_index]] — v-team authoring rules (persona factoring, loop stops, grounded findings)
@@ -20,11 +20,13 @@ tags: [moc]
 <!-- Link to [[features/]] folder. Active features: -->
 - [[features/v-team]] — persona-critique dev lifecycle command
 - [[features/v-pm]] — cross-project planning + business-logic requirements knowledge center; see [[decisions/ADR-013-v-pm-cross-project-planning]] + [[decisions/ADR-014-vpm-business-knowledge-center]]
-- [[research/llm-collaboration-patterns]] — living, source-cited catalog of LLM collaboration patterns (dev/marketing/sales/planning/support + foundations); evidence reference for panel-mechanism changes (ADR-017)
+- [[research/llm-collaboration-patterns]] — living, source-cited catalog of LLM collaboration patterns (dev/marketing/sales/planning/support + foundations); evidence reference for panel-mechanism changes (ADR-017). Covers **agent↔agent**.
+- [[research/decision-communication]] — living, source-cited evidence base for how commands write **to the user** (BLUF/Minto/Amazon/SBAR doctrine + cognitive-load, jargon, question-design and human-AI decision research); drives `commands/_shared/communication.md` + `output-styles/director.md` (ADR-018). Covers **agent↔human**.
 - `/v-cr` — automated code review on a remote PR (forge+task auto-detect, critic swarm, posts comments); see [[decisions/ADR-008-v-cr-remote-pr-review]] + [[plans/2026-06-19-1106-v-cr-command]]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-08-03-1045-decision-communication-contract]] — User-facing communication contract: one shared module governs all v-* output (answer first, no jargon, options with consequences, exceptions not normality) + opt-in global director output style (ADR-018)
 - [[sessions/2026-07-20-1027-team-presentation-vault-commands]] — Coworker intro deck for the vault + v-commands (7-slide artifact, /v-team fallback panel)
 - [[sessions/2026-07-10-1740-llm-collaboration-patterns]] — Research LLM-collaboration patterns (5 domains) and adopt evidence-backed panel hardening (ADR-017 + living catalog)
 - [[sessions/2026-07-10-1620-business-persona-family]] — Business persona family: 5 packs + shared data-evidence critic + multi-pack seating (ADR-016)

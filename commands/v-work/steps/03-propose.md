@@ -1,5 +1,7 @@
 # Step 3 — PROPOSE
 
+> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+
 Two parts, **engineering first**: design the change (3a), then list the vault writes it produces
 (3b). Design before implementing — do not write code in this step.
 
@@ -28,6 +30,29 @@ expensive mistake in the lifecycle. Before §3a.1:
 4. Do **not** paper over real ambiguity by guessing. When a direction or technology choice is genuinely
    open, ask — a question is cheaper than a wrong plan. Equally, don't manufacture questions whose
    answers are already in context or obvious; only genuine, plan-changing doubts warrant one.
+
+#### The ask gate — decide *whether* to ask before deciding *how*
+
+Ask only when **both** hold:
+1. the answer changes what actually gets built, **and**
+2. you cannot settle it yourself from the vault, the code, or §3a.0b research.
+
+Otherwise state your default and move on. **If you cannot name the consequence of each option, you
+do not understand the choice well enough to ask about it** — go find out, then ask or decide.
+
+#### How to shape the question (full rules: `_shared/communication.md`)
+
+- **One decision per question. Two to four options.** Never an open-ended prompt.
+- **Every option states what the user gains and what they give up.** An option without its
+  consequence is unanswerable — this is the single most common defect.
+- **Recommended option first**, labelled as the recommendation.
+- **Stem: two sentences maximum, no jargon, no section coordinates.** Long stems measurably degrade
+  the answer. Never assume the user has read a file, a plan, or an earlier gate — gloss anything you
+  reference, in the question itself.
+- Options must be **mutually exclusive** and comparable on the same terms.
+
+A badly framed question does not come back as "I don't know" — it comes back as a confident wrong
+answer that is indistinguishable from a real decision. That is worse than not asking.
 
 **A plan-changing question with no safe default halts the lifecycle** — the clarify gate **always waits**
 for the user; never fall back to a guess on a fork that by definition has no safe default. (Doubts that
@@ -155,25 +180,43 @@ here just name what will be written.
 
 ---
 
-## Required output
+## Required output — two layers
+
+The design is written **to the plan artifact**. Only the decision is written **to the user**. These
+are different documents; do not print the artifact to the terminal.
+
+### Layer 1 — to the user (≤15 lines, governed by `_shared/communication.md`)
 
 ```
-Assumptions: [stated defaults the design rests on — from §3a.0a]
-Clarifications: [questions asked via AskUserQuestion | none needed — task unambiguous]
-Research: [key sources + one-line takeaways | skipped (trivial) | unavailable — from §3a.0b]
-Serena rules: [memory files read — or "not available"]
-Lite critic: [<persona/agent> — N findings, M applied | skipped (single-file/mechanical)]
-Impact: [files create/modify/delete · migrations · API changes · coupled projects]
-Implementation steps: [numbered — file + action + tool + pattern]
-Test plan: [per unit — type + scenarios + file location]
-
-Vault writes:
-  - CREATE features/<slug>.md (dedupe: N matches)
-  - UPDATE decisions/ADR-NNN-<slug>.md (dedupe: 80% overlap)
-  - CREATE sessions/YYYY-MM-DD-HHMM-<slug>.md (always new)
-Index updates:
-  - _moc.md / _feature-index.md / decisions/_inventory.md as needed
+Recommendation: [what you will do and why — ≤3 lines]
+Impact: [N files created/modified · migrations · API changes · coupled projects affected]
+Options: [small table on shared columns — each row states what it gains and what it costs.
+          Drop any option that loses on every column. Recommended option first.]
+Assumed: [the defaults the recommendation rests on — from §3a.0a]
+Open: [unresolved trade-offs · anything you could not verify]
+Ask: [one line]
 ```
+
+**Omit any line with nothing to say** — no "skipped", no "not available", no "none", no "0 findings".
+
+**The omit rule cuts good news, never warnings.** These are exceptions and are **always** surfaced, however
+brief, even when everything else is dropped:
+- `research: unavailable` (§3a.0b.4 — the design is weaker and the user must know);
+- a stated safe-default assumption (§3a.0a — it is a guess the user can still correct);
+- a skipped gate or step, and any tool that was down and fell back;
+- any open blocker or unreconciled contradicting consensus (§3a.0b.2).
+
+**Never ask for approval without the `Impact` line.** Approving a change means authorizing that blast
+radius; a summary that hides it converts the gate into a rubber stamp.
+
+### Layer 2 — to the plan artifact (not printed)
+
+Research sources + takeaways · Serena memories read · lite-critic findings and dispositions ·
+implementation steps (file + action + tool + pattern) · test plan (type + scenarios + location) ·
+vault writes (CREATE/UPDATE per §3b dedupe, with match counts) · index updates
+(`_moc.md` / `_feature-index.md` / `decisions/_inventory.md`).
+
+The user is told this layer exists and where. They are never required to open it to decide.
 
 Before marking complete, honor any carried `post_propose` hook (surface + apply). Mark PROPOSE
 `completed`.
