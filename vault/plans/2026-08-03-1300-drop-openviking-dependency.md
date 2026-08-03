@@ -3,9 +3,9 @@ type: plan
 project: vault
 date: 2026-08-03-1300
 topic: drop-openviking-dependency
-status: proposed
-rounds: 1
-convergence: no-new-blocking-findings (2 of 3 reviewers reported; correctness never returned)
+status: executed
+rounds: 1 design + 1 diff review
+convergence: clean (3 design reviewers, 24 findings; 1 diff reviewer, 8 findings — 31 applied, 1 rejected on evidence)
 tags: [plan, meta, dependencies, memory-stack, removal]
 ---
 
