@@ -257,7 +257,7 @@ if [ "${any_tool}" -gt 0 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 5 — Serena (--with-serena)
+# Step 4 — Serena (--with-serena)
 #------------------------------------------------------------------------------
 if [ "${with_serena}" -eq 1 ]; then
     section "Serena"
@@ -272,7 +272,7 @@ if [ "${with_serena}" -eq 1 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 6 — claude-mem (--with-claude-mem)
+# Step 5 — claude-mem (--with-claude-mem)
 #------------------------------------------------------------------------------
 if [ "${with_claude_mem}" -eq 1 ]; then
     section "claude-mem / mcp-search"
@@ -294,7 +294,7 @@ if [ "${with_claude_mem}" -eq 1 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 7 — Graphify (--with-graphify)
+# Step 6 — Graphify (--with-graphify)
 #------------------------------------------------------------------------------
 if [ "${with_graphify}" -eq 1 ]; then
     section "Graphify"
@@ -309,7 +309,7 @@ if [ "${with_graphify}" -eq 1 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 8 — Per-repo onboarding instructions
+# Step 7 — Per-repo onboarding instructions
 #------------------------------------------------------------------------------
 # The installer no longer writes a snippet into the user-owned ~/.claude/CLAUDE.md.
 # The framework path lives in $VAULT_FRAMEWORK_PATH (recorded below in config.md);
@@ -324,7 +324,7 @@ info "Optional (stable per-user): add to your shell profile —"
 info "  export VAULT_FRAMEWORK_PATH=\"${VAULT_ROOT}\""
 
 #------------------------------------------------------------------------------
-# Step 9 — install.sh (symlink slash commands)  (pure-local — never via run())
+# Step 8 — install.sh (symlink slash commands)  (pure-local — never via run())
 #------------------------------------------------------------------------------
 if [ "${SETUP_SKIP_INSTALL_SH}" -eq 1 ]; then
     section "install.sh (skipped via SETUP_SKIP_INSTALL_SH)"
@@ -334,7 +334,7 @@ else
 fi
 
 #------------------------------------------------------------------------------
-# Step 10 — Doctor (verify what landed; owns the exit code on auto-install)
+# Step 9 — Doctor (verify what landed; owns the exit code on auto-install)
 #------------------------------------------------------------------------------
 doctor_status=0
 if [ "${auto}" -eq 1 ]; then

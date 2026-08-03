@@ -251,3 +251,27 @@ improve; `tests/e2e/` has no OV assertions; `bash -n` passes on all 11 shell fil
 
 **Stopped after round 1** — every confirmed finding was applied, so a second round has nothing
 unresolved to react to.
+
+## Diff review (post-implementation)
+
+One reviewer over the shipped commit `b32b93c`. **8 findings, all confirmed, all applied.** It
+verified clean the things most likely to be wrong — `safe_rm_under_home` against glob-metachar and
+trailing-slash `HOME`, `set -euo pipefail` interactions, the `CONSENT_MODE` contract in both callers,
+and a full 33-function census of `lib/installers.sh` for orphans (none new).
+
+| id | Sev | Applied as |
+|---|---|---|
+| dr-1 | MAJOR | `bin/vault-uninstall.sh` `purge_vault_data` still did a raw `rm -rf "${VAULT_HOME}/_global"` — with an empty `HOME` that resolves to `/vault/_global`, the very bug the new guard was written for, left live in the sibling script. Now refuses empty/`/`/relative `VAULT_HOME`; two regression tests added. |
+| dr-2 | MINOR | `_moc.md` still linked the deleted `commands/v-resume` |
+| dr-3 | MINOR | `vault-guide.md` cited capture as §5.5 after it became §5.4; closed the 5.6 gap too |
+| dr-4 | MINOR | The "no jq" test left jq on `PATH` at `/usr/bin/jq` (alpine ships it), so the warn branch never ran — now shadowed with a non-executable stub |
+| dr-5 | NIT | `setup.sh` in-body `# Step N` markers were skewed one off the header list |
+| dr-7 | NIT | The grep guard exempted `lib/installers.sh` — the file OV was removed from — and its companion assertion passed on any word containing "remov" |
+| dr-8 | NIT | `remove_plugin` claimed success even when the uninstall failed |
+
+**dr-6 rejected on evidence.** It proposed closing the §2.2 gap in `02-load-context.md`, asserting
+nothing cites those numbers. Applying it broke `tests/unit/test-hooks-tools-rename.bats:87`, which
+greps for `2.3c`; `04-execute.md:77` and `03-propose.md:95` cite §2.3a and §2.3b as well. Reverted —
+the gap stays and is now documented in the file, consistent with the `tool-playbook.md` §1 policy.
+
+Final: **277 tests pass.**

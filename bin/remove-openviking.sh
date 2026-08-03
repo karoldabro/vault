@@ -155,8 +155,11 @@ remove_plugin() {
         info "claude CLI unavailable — uninstall claude-code-memory-plugin by hand"
         return 0
     fi
-    run claude plugin uninstall claude-code-memory-plugin@openviking-plugin 2>/dev/null || true
-    ok "removed the OpenViking plugin (marketplace left intact)"
+    if run claude plugin uninstall claude-code-memory-plugin@openviking-plugin 2>/dev/null; then
+        ok "removed the OpenViking plugin (marketplace left intact)"
+    else
+        warn "plugin uninstall did not succeed — remove claude-code-memory-plugin by hand"
+    fi
 }
 
 remove_package() {

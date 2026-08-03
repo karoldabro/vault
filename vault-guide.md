@@ -81,7 +81,7 @@ There are **14 phases** — two global bookends plus a `pre_`/`post_` pair aroun
 | `pre_propose` / `post_propose` | Around PROPOSE (step 3). `post_propose` fires before the approval gate. |
 | `pre_execute` / `post_execute` | Around EXECUTE (step 5). `pre_execute` fires after the gate is approved. |
 | `pre_commit` / `post_commit` | Around `git commit` (step 6 §5.1). `post_commit` runs after the commit, before `/v-capture`. |
-| `pre_capture` / `post_capture` | Around `/v-capture` (step 6 §5.5). |
+| `pre_capture` / `post_capture` | Around `/v-capture` (step 6 §5.4). |
 | `on_end` | Lifecycle ends by any path: success, gate rejection, or abort. |
 
 The APPROVAL GATE (step 4) is not hookable — it's your decision, not a machine phase. In `/v-team`, the

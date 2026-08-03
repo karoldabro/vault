@@ -50,7 +50,7 @@ lifecycle already approved at the gate; it needs no fresh prompt.
 - **Indication scan** — if a reusable working rule / pattern / standard surfaced, capture offers to
   promote it to `indications/` (gated by `behaviour.capture_indications`). Confirm the candidates.
 
-## 5.6 Completion report
+## 5.5 Completion report
 
 The last thing the user reads. Governed by `_shared/communication.md` — report **what changed and
 what still needs them**, not that the normal things were normal.

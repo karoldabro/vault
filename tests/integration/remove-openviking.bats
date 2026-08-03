@@ -93,13 +93,16 @@ remove_ov() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/remove-openvi
 
 # t2 — idempotency + degradation when the host has none of the optional deps.
 @test "--all --yes is idempotent and survives missing jq/systemctl/pipx" {
-    # A PATH with only the coreutils the script needs — no jq, systemctl or pipx.
-    minimal_path="${FAKEBIN}"
-    run env PATH="${minimal_path}:/usr/bin:/bin" \
+    # systemctl and pipx are genuinely absent on the alpine test image; jq is not
+    # (/usr/bin/jq), so shadow it with a non-executable stub to reach the warn branch.
+    printf 'not-an-executable\n' > "${FAKEBIN}/jq"   # present but not runnable
+    chmod -x "${FAKEBIN}/jq"
+
+    run env PATH="${FAKEBIN}:/usr/bin:/bin" \
         "${VAULT_ROOT}/bin/remove-openviking.sh" --all --yes
     [ "$status" -eq 0 ]
 
-    run env PATH="${minimal_path}:/usr/bin:/bin" \
+    run env PATH="${FAKEBIN}:/usr/bin:/bin" \
         "${VAULT_ROOT}/bin/remove-openviking.sh" --all --yes
     [ "$status" -eq 0 ]
     [[ "$output" == *"already absent"* ]]

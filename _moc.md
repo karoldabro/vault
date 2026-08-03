@@ -16,7 +16,6 @@ The entry point for the vault framework (`~/workspace/vault/`). Generic process 
 - [[commands/v-ask]] — Read-only, vault-aware Q&A
 - [[commands/v-cr]] — Review a remote PR and post comments back
 - [[commands/v-capture]] — Session capture + dedupe
-- [[commands/v-resume]] — Force fresh context recall
 - [[commands/v-link]] — Declare coupled projects
 - [[commands/v-guide]] — Generate cross-project integration guides
 

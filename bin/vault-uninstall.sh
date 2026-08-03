@@ -121,6 +121,17 @@ remove_tools() {
 purge_vault_data() {
     section "Purge data (DESTRUCTIVE)"
     warn "deleting the machine config — this cannot be undone"
+    # VAULT_HOME defaults to ${HOME}/vault but may be overridden anywhere, so the
+    # under-HOME guard doesn't apply. Assert the path is absolute and has a real
+    # parent — with an empty HOME the default expands to the bare "/vault/_global".
+    case "${VAULT_HOME}" in
+        /|""|/_global) warn "VAULT_HOME is '${VAULT_HOME}' — refusing to delete"; return 0 ;;
+        /*) ;;
+        *) warn "VAULT_HOME '${VAULT_HOME}' is not an absolute path — refusing to delete"; return 0 ;;
+    esac
+    if [ -z "${HOME:-}" ] && [ "${VAULT_HOME}" = "/vault" ]; then
+        warn "HOME is empty, so VAULT_HOME resolved to '/vault' — refusing to delete"; return 0
+    fi
     run rm -rf "${VAULT_HOME}/_global"
     ok "purged ${VAULT_HOME}/_global"
     info "project vaults (~/vault/<slug>/, in-repo vault/) were NOT touched"

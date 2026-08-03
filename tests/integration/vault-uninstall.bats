@@ -96,3 +96,20 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
     grep -q 'plugin uninstall claude-mem@thedotmack' "${TEST_HOME}/pluginlog"
     ! grep -q 'claude-mem@claude-mem' "${TEST_HOME}/pluginlog"
 }
+
+# The purge target is ${VAULT_HOME}/_global, and VAULT_HOME defaults to
+# ${HOME}/vault — so an empty HOME made it expand to the bare "/vault/_global".
+@test "--purge-data refuses when VAULT_HOME resolved from an empty HOME" {
+    run env -i PATH="${FAKEBIN}:/usr/bin:/bin" HOME="" \
+        "${VAULT_ROOT}/bin/vault-uninstall.sh" --purge-data --yes
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"refusing to delete"* ]]
+    [[ "$output" != *"rm -rf /vault/_global"* ]]
+}
+
+@test "--purge-data refuses a relative VAULT_HOME" {
+    run env PATH="${FAKEBIN}:${PATH}" VAULT_HOME="relative/path" \
+        "${VAULT_ROOT}/bin/vault-uninstall.sh" --purge-data --yes
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"refusing to delete"* ]]
+}
