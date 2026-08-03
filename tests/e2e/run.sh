@@ -8,10 +8,9 @@
 # container-local /root.
 #
 # COVERAGE NOTE: this suite exercises the lightweight real installers (uv via
-# curl|sh, graphify via pipx). The ollama daemon path (ensure_ollama_running +
-# model pull) and the `claude` plugin/marketplace paths are deliberately NOT
-# e2e-covered here — they are heavy/network-bound and the image ships no `claude`
-# CLI. Those paths are covered at the command-construction level by the offline
+# curl|sh, graphify via pipx). The `claude` plugin/marketplace paths are
+# deliberately NOT e2e-covered here — they are network-bound and the image ships
+# no `claude` CLI. Those paths are covered at the command-construction level by the offline
 # dry-run suite (tests/unit/setup-autoinstall.bats), not proven end-to-end.
 set -euo pipefail
 

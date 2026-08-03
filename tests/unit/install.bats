@@ -14,7 +14,7 @@ teardown() {
 @test "install.sh creates symlinks for each command in commands/" {
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
-    for cmd in v-init v-work v-capture v-sync v-link v-backfill; do
+    for cmd in v-init v-work v-capture v-link v-do v-ask; do
         assert_symlink_to "${HOME}/.claude/commands/${cmd}.md" "${VAULT_ROOT}/commands/${cmd}.md"
     done
 }

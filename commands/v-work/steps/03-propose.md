@@ -171,7 +171,7 @@ user asked for a second opinion. **Skip** (one-line note) for single-file or mec
 Run dedupe for each candidate vault file **before** listing it:
 
 1. Extract slug + keywords.
-2. `search()` via claude-mem + `memory_recall()` via OV.
+2. `search()` via claude-mem, plus grep over the vault.
 3. Grep `decisions/`, `features/`, `sessions/`, `processes/`, `architecture/` for the slug.
 4. Overlap with an existing doc `>60%` → mark `UPDATE existing` instead of `CREATE`.
 

@@ -189,66 +189,6 @@ install_bun() {
 }
 
 #------------------------------------------------------------------------------
-# Ollama — embedding backend for OpenViking
-#------------------------------------------------------------------------------
-check_ollama() { ensure_session_path; have ollama; }
-# Start the daemon if it isn't reachable. Prefer systemd; fall back to a
-# backgrounded `ollama serve` (containers have no init) and poll for readiness.
-# Returns 0 only when `ollama list` actually succeeds (daemon reachable).
-ensure_ollama_running() {
-    if ollama list >/dev/null 2>&1; then return 0; fi
-    if have systemctl && systemctl list-unit-files 2>/dev/null | grep -q '^ollama\.service'; then
-        run $(_priv) systemctl enable --now ollama || true
-        ollama list >/dev/null 2>&1 && return 0
-    fi
-    # No systemd (e.g. container): start a detached daemon and poll for readiness.
-    ollama serve >/dev/null 2>&1 &
-    disown 2>/dev/null || true
-    local i
-    for i in 1 2 3 4 5 6 7 8 9 10; do
-        ollama list >/dev/null 2>&1 && return 0
-        sleep 1
-    done
-    warn "ollama daemon did not become ready within 10s"
-    return 1
-}
-# ollama's install.sh extracts a zstd-compressed tarball, so the `zstd` binary must
-# exist before it runs (newer releases hard-fail without it). apt hosts only — elsewhere
-# we warn and let the installer's own error guide the user, never fatal.
-ensure_zstd() {
-    have zstd && return 0
-    if _dry; then info "would install zstd (ollama tarball needs it)"; return 0; fi
-    have apt-get || { warn "zstd missing and no apt-get — ollama may fail to extract its tarball"; return 0; }
-    apt_install zstd || warn "could not install zstd — ollama install may fail"
-}
-install_ollama() {
-    if check_ollama; then
-        ok "ollama present"
-    elif _dry; then
-        ensure_zstd
-        run_shell "https://ollama.com/install.sh" "curl -fsSL https://ollama.com/install.sh | sh"
-    else
-        ensure_zstd
-        run_shell "https://ollama.com/install.sh" "curl -fsSL https://ollama.com/install.sh | sh" || return 1
-        ensure_session_path
-        have ollama || { warn "ollama not on PATH after install"; return 1; }
-        ok "ollama installed"
-    fi
-    # Pull the embedding model, guarded so a re-run is a no-op. A dead daemon is a
-    # recorded failure, not a silent skip — don't pull against an unreachable server.
-    if [ "${VAULT_SETUP_DRY_RUN:-0}" = "1" ]; then
-        printf '  [dry-run] ollama list | grep -q nomic-embed-text || ollama pull nomic-embed-text\n'
-    elif ! ensure_ollama_running; then
-        warn "ollama installed but daemon unreachable — skipping model pull"
-        return 1
-    elif ollama list 2>/dev/null | grep -q '^nomic-embed-text'; then
-        ok "nomic-embed-text already pulled"
-    else
-        run ollama pull nomic-embed-text || return 1
-    fi
-}
-
-#------------------------------------------------------------------------------
 # pipx + graphify (PyPI graphifyy, binary `graphify`)
 #------------------------------------------------------------------------------
 check_graphify() { ensure_session_path; have graphify; }
@@ -280,58 +220,6 @@ install_serena() {
 }
 
 #------------------------------------------------------------------------------
-# OpenViking server (PyPI `openviking` → `openviking-server` + `ov` CLI) + the
-# systemd --user service that keeps it running on :1933. The Claude Code MCP
-# plugin (installed separately below) connects to this server in local mode.
-#------------------------------------------------------------------------------
-check_openviking_server() { ensure_session_path; have openviking-server || have ov; }
-# Write + enable the user service (setup.sh has already written the unit file). Best
-# effort: degrade cleanly where there is no user systemd (containers/CI) by starting
-# a detached server instead. Never fatal.
-ov_enable_service() {
-    if [ "${VAULT_SETUP_DRY_RUN:-0}" = "1" ]; then
-        printf '  [dry-run] systemctl --user enable --now openviking.service\n'
-        return 0
-    fi
-    if have systemctl && systemctl --user show-environment >/dev/null 2>&1; then
-        run systemctl --user daemon-reload || true
-        if run systemctl --user enable --now openviking.service; then
-            ok "openviking.service enabled (:1933)"
-            # Survive logout; needs privilege, so best-effort + a hint when it can't.
-            loginctl enable-linger "$(id -un)" >/dev/null 2>&1 \
-                || info "for boot persistence: sudo loginctl enable-linger $(id -un)"
-        else
-            warn "could not enable openviking.service — start it with: systemctl --user start openviking.service"
-            return 1
-        fi
-    else
-        warn "no user systemd — starting openviking-server detached (no auto-restart)"
-        ( openviking-server --config "${HOME}/.openviking/ov.conf" >/dev/null 2>&1 & disown 2>/dev/null ) || true
-    fi
-}
-install_openviking_server() {
-    if check_openviking_server; then
-        ok "openviking-server present"
-    elif _dry; then
-        pipx_install openviking
-        ok "openviking (dry-run)"
-        ov_enable_service
-        return 0
-    else
-        if ! have pipx; then
-            apt_install pipx || return 1
-            run pipx ensurepath || true
-            ensure_session_path
-        fi
-        pipx_install openviking || return 1
-        ensure_session_path
-        have openviking-server || { warn "openviking-server not on PATH after install"; return 1; }
-        ok "openviking installed"
-    fi
-    ov_enable_service
-}
-
-#------------------------------------------------------------------------------
 # Claude Code plugins / marketplaces (scriptable `claude` CLI)
 #------------------------------------------------------------------------------
 # Minimum claude CLI version exposing `plugin`/`mcp` subcommands.
@@ -357,11 +245,6 @@ _plugin_install() {  # <qualified-id> <grep-key>
         run claude plugin install "$id" --scope user || return 1
     fi
 }
-install_openviking_plugin() {
-    _marketplace_add "Castor6/openviking-plugins" "openviking" || return 1
-    _plugin_install "claude-code-memory-plugin@openviking-plugin" "claude-code-memory-plugin" || return 1
-    ok "OpenViking plugin wired"
-}
 install_claude_mem_plugin() {
     _marketplace_add "thedotmack/claude-mem" "claude-mem" || return 1
     # marketplace.json declares name "thedotmack" (plugin "claude-mem"), so the
@@ -372,29 +255,54 @@ install_claude_mem_plugin() {
 }
 
 #------------------------------------------------------------------------------
-# Claude settings.json env — make the OV plugin's stock .mcp.json placeholders
-# (${OPENVIKING_CC_CONFIG_FILE} / ${OPENVIKING_CONFIG_FILE}) resolve. Without these
-# Claude injects the literal "${VAR}" as a path and the MCP exits ("Connection closed").
+# Consent gate — shared by every removal script (bin/vault-uninstall.sh,
+# bin/remove-openviking.sh). One implementation of "ask before destroying".
 #------------------------------------------------------------------------------
-# ov_set_env_key <settings.json> <key> <value> — non-clobbering + self-healing:
-# add when absent; keep a present value that points at a real file (deliberate
-# override); rewrite only a value whose file is missing (stale). Other keys untouched.
-ov_set_env_key() {
-    local f="$1" k="$2" v="$3" cur tmp
-    if ! have jq; then warn "jq missing — add ${k} to ${f} manually (= ${v})"; return 1; fi
-    mkdir -p "$(dirname "$f")"
-    [ -s "$f" ] || printf '{}\n' > "$f"
-    cur="$(jq -r --arg k "$k" '.env[$k] // empty' "$f" 2>/dev/null || true)"
-    if [ -n "$cur" ] && [ -e "$cur" ]; then
-        if [ "$cur" = "$v" ]; then ok "settings.json: ${k} already set"; else info "settings.json: kept your ${k} (${cur})"; fi
-        return 0
+# consent_gate <what-will-be-removed> <dry_run> <assume_yes>
+#
+# Sets two things IN THE CALLER'S SHELL:
+#   VAULT_SETUP_DRY_RUN — so run() either executes or echoes
+#   CONSENT_MODE        — "apply" or "plan-only", for the closing message
+#
+#   --dry-run           → plan-only, no prompt.
+#   --yes               → apply.
+#   neither, TTY        → prompt; anything but y/Y is plan-only.
+#   neither, no TTY     → plan-only (never destroy unattended).
+#
+# MUST be called directly, never as "$(consent_gate ...)" — a command
+# substitution runs in a subshell, where both assignments would be discarded.
+consent_gate() {
+    local what="$1" dry_run="${2:-0}" assume_yes="${3:-0}" reply=""
+    if [ "${dry_run}" -eq 1 ]; then
+        export VAULT_SETUP_DRY_RUN=1; CONSENT_MODE="plan-only"; return 0
     fi
-    tmp="$(mktemp)"
-    if jq --arg k "$k" --arg v "$v" '.env = (.env // {}) | .env[$k] = $v' "$f" > "$tmp" 2>/dev/null; then
-        mv "$tmp" "$f"; ok "settings.json: ${k} → ${v}"
+    if [ "${assume_yes}" -eq 1 ]; then
+        export VAULT_SETUP_DRY_RUN=0; CONSENT_MODE="apply"; return 0
+    fi
+    printf '\n%s\nProceed? [y/N] ' "${what}"
+    if read -r reply </dev/tty 2>/dev/null && { [ "${reply}" = "y" ] || [ "${reply}" = "Y" ]; }; then
+        export VAULT_SETUP_DRY_RUN=0; CONSENT_MODE="apply"
     else
-        rm -f "$tmp"; warn "could not merge ${k} into ${f} (invalid JSON?) — add it manually"; return 1
+        export VAULT_SETUP_DRY_RUN=1; CONSENT_MODE="plan-only"
     fi
+}
+
+# safe_rm_under_home <path>... — refuse to delete anything that is not a real
+# path *under* a sane $HOME. Guards the classic expansion bug: with HOME unset or
+# empty, "${HOME}/.foo" becomes "/.foo" and set -u does NOT catch it.
+safe_rm_under_home() {
+    local p
+    if [ -z "${HOME:-}" ] || [ "${HOME}" = "/" ]; then
+        warn "HOME is empty or '/' — refusing to delete anything"; return 1
+    fi
+    for p in "$@"; do
+        case "$p" in
+            "${HOME}"/?*) ;;
+            *) warn "refusing to delete '${p}' — not under ${HOME}"; return 1 ;;
+        esac
+        [ -e "$p" ] || { info "already absent: ${p}"; continue; }
+        run rm -rf "$p"
+    done
 }
 
 #------------------------------------------------------------------------------
@@ -416,11 +324,6 @@ doctor() {
     section "Doctor — tool health"
     local failed_required=0
 
-    _doctor_row "ollama"               have ollama || true
-    _doctor_row "  nomic-embed-text"   bash -c 'ollama list 2>/dev/null | grep -q "^nomic-embed-text"' || true
-    _doctor_row "openviking-server"    have openviking-server || true
-    _doctor_row "  OV server (:1933)"  bash -c 'curl -fsS -m 2 http://127.0.0.1:1933/health 2>/dev/null | grep -q healthy' || true
-    _doctor_row "  client config.json" test -f "${HOME}/.openviking/claude-code-memory-plugin/config.json" || true
     _doctor_row "uv"                   have uv || true
     _doctor_row "bun"                  have bun || true
     _doctor_row "python >=3.10 (pipx)" pick_python || true
@@ -428,7 +331,6 @@ doctor() {
     _doctor_row "serena"               check_serena || true
     if claude_cli_ok; then
         _doctor_row "claude CLI"                       true
-        _doctor_row "  OpenViking plugin"  bash -c 'claude plugin list 2>/dev/null | grep -qi claude-code-memory-plugin' || true
         _doctor_row "  claude-mem plugin"  bash -c 'claude plugin list 2>/dev/null | grep -qi claude-mem' || true
     else
         _doctor_row "claude CLI" false || true

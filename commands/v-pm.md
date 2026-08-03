@@ -50,12 +50,11 @@ The token-saving backbone from `/v-team`, plus the **Agent** tool for the planni
 
 | Tool | Health check | Fallback if down |
 |------|-------------|------------------|
-| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
 | claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
 | graphify | `<repo>/graphify-out/graph.json` present | grep the repo |
 | Serena | `check_onboarding_performed()` | graphify → Glob/Grep |
 
-Search precedence (`CLAUDE.md`): vault + OV → graph → source. Full rules:
+Search precedence (`CLAUDE.md`): vault → graph → source. Full rules:
 `$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Web research (soft — the AI decides, or force with `--research`
 / disable with `--no-research`) per `tool-playbook.md` §7.
 
@@ -79,7 +78,7 @@ into the project's own `requirements/` vault, skips the `_features/` workspace, 
 
 ### Step 2 — LOAD CONTEXT
 Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/02-load-context.md`, then execute. Vault-first, **across
-every participant's vault** + `_global` + `_features/` (OV → claude-mem → graph → grep). Produces the
+every participant's vault** + `_global` + `_features/` (claude-mem → graph → grep). Produces the
 context digest the panel plans from — so the PM grounds in accumulated project knowledge, not blindly.
 
 ### Step 3 — PLAN PANEL
@@ -95,7 +94,7 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/04-seed-workspace.md`, then exec
 
 ### Step 5 — CAPTURE
 Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/05-capture.md`, then execute. Writes the planning-session
-record + cross-project ADR candidates into the workspace, pushes the rationale to OpenViking, and commits
+record + cross-project ADR candidates into the workspace, and commits
 the whole workspace. Then STOP: tell the user the workspace is ready and to run `/v-team <feature>` in
 each project.
 
@@ -109,7 +108,7 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/07-status.md`, then execute. (Re
 ---
 
 ## Notes
-- **`_features/` is its own committed vault**, wired into `/v-sync` — neutral ground owned by no single
+- **`_features/` is its own committed vault** — neutral ground owned by no single
   project. Path resolution + the full protocol: `vault-guide.md` §1.1 + §13.
 - v-pm **plans**, it does not execute. Only v-pm writes `requirements.md` (the knowledge center) +
   `generic-plan.md` (`plan` + `reconcile`); projects write their own `projects/<proj>/plan.md` shard and,

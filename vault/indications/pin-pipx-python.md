@@ -18,14 +18,14 @@ command to install one — don't let pip's cryptic error stand.
 pipx builds each tool's venv with whatever `python3` it finds. A package that requires a newer Python
 than that interpreter resolves to **zero** candidate versions, and (older) pip reports it as
 `No matching distribution found / from versions: none` — which reads as "the package doesn't exist"
-even though it's on PyPI. This bit a WSL/Ubuntu-20.04 box (Python 3.8) where `openviking`/`graphifyy`
+even though it's on PyPI. This bit a WSL/Ubuntu-20.04 box (Python 3.8) where `graphifyy`
 (both `>=3.10`) failed while `uv`/`bun` succeeded. The "only the pipx tools fail" pattern is the tell.
 
 ## Examples
 - Do: `pick_python` selects `python3.13..3.10`; `pipx_install` passes it via `--python`
   (`lib/installers.sh`).
 - Do: when none is found → `warn` with `apt-get install -y python3.12 python3.12-venv` and return 1.
-- Don't: `pipx install openviking` (inherits the default `python3`, may be 3.8 → fails opaquely).
+- Don't: `pipx install graphifyy` (inherits the default `python3`, may be 3.8 → fails opaquely).
 - Doctor surfaces a `python >=3.10 (pipx)` row.
 
 ## Applies-to

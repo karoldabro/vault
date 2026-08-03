@@ -3,17 +3,16 @@
 #
 # By default removes only the FRAMEWORK WIRING (reversible, no data loss):
 #   * command symlinks in ~/.claude/commands/ that point into this repo
-#   * the OpenViking --user service (stop + disable + remove the unit)
-#   * ov.conf + the plugin client config.json   (NOT ~/.openviking/data)
-#   * the two OPENVIKING_*_CONFIG_FILE keys in ~/.claude/settings.json
-#   * the OpenViking + claude-mem Claude Code plugins
+#   * the claude-mem Claude Code plugin
 #
 # Opt-in extras:
-#   --tools        also uninstall the vault-specific tools (openviking, graphifyy,
-#                  serena-agent). NEVER touches shared toolchains (ollama/uv/bun/node).
-#   --purge-data   also delete ~/.openviking (incl. indexed memory) and
-#                  $VAULT_HOME/_global — DESTRUCTIVE.
+#   --tools        also uninstall the vault-specific tools (graphifyy, serena-agent).
+#                  NEVER touches shared toolchains (uv/bun/node).
+#   --purge-data   also delete $VAULT_HOME/_global — DESTRUCTIVE.
 #   --all          --tools + --purge-data.
+#
+# OpenViking is no longer part of this framework. To remove an install that
+# predates that change, use bin/remove-openviking.sh (see docs/removing-openviking.md).
 #
 # Safety: destructive actions need consent. Without --yes (and without a TTY to
 # confirm on) this only PRINTS the plan and changes nothing. Project vaults
@@ -38,7 +37,25 @@ assume_yes=0
 dry_run=0
 
 usage() {
-    sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    cat <<'EOF'
+vault-uninstall.sh — reverse what setup.sh / install.sh wired up, in layers.
+
+By default removes only the framework wiring (reversible, no data loss):
+the command symlinks in ~/.claude/commands/ that point into this repo, and
+the claude-mem Claude Code plugin.
+
+  --tools        also uninstall graphifyy + serena-agent (never uv/bun/node)
+  --purge-data   also delete $VAULT_HOME/_global — DESTRUCTIVE
+  --all          --tools + --purge-data
+  --dry-run      echo every action instead of running it
+  --yes, -y      consent non-interactively
+  -h, --help     this text
+
+OpenViking is no longer part of this framework. To remove an install that
+predates that change, use bin/remove-openviking.sh.
+
+Project vaults (~/vault/<slug>/, in-repo vault/) and your repos are never touched.
+EOF
 }
 
 while [ $# -gt 0 ]; do
@@ -57,23 +74,13 @@ done
 #------------------------------------------------------------------------------
 # Consent → decide whether we actually apply or just echo the plan.
 #------------------------------------------------------------------------------
-not_consented=0
-if [ "${dry_run}" -eq 1 ]; then
-    export VAULT_SETUP_DRY_RUN=1
-elif [ "${assume_yes}" -eq 1 ]; then
-    export VAULT_SETUP_DRY_RUN=0
-else
-    printf '\nThis removes the vault framework wiring'
-    [ "${with_tools}" -eq 1 ] && printf ' + tools'
-    [ "${purge_data}" -eq 1 ] && printf ' + ALL OpenViking data'
-    printf '.\nProceed? [y/N] '
-    reply=""
-    if read -r reply </dev/tty 2>/dev/null && { [ "${reply}" = "y" ] || [ "${reply}" = "Y" ]; }; then
-        export VAULT_SETUP_DRY_RUN=0
-    else
-        export VAULT_SETUP_DRY_RUN=1; not_consented=1
-    fi
-fi
+what="This removes the vault framework wiring"
+[ "${with_tools}" -eq 1 ] && what="${what} + tools"
+[ "${purge_data}" -eq 1 ] && what="${what} + the _global machine config"
+what="${what}."
+
+CONSENT_MODE=""
+consent_gate "${what}" "${dry_run}" "${assume_yes}"
 
 #------------------------------------------------------------------------------
 # Steps
@@ -92,68 +99,30 @@ remove_command_symlinks() {
     ok "removed ${n} command symlink(s) → ${VAULT_ROOT}/commands"
 }
 
-remove_ov_service() {
-    section "OpenViking service"
-    local unit="${HOME}/.config/systemd/user/openviking.service"
-    if have systemctl && systemctl --user show-environment >/dev/null 2>&1; then
-        run systemctl --user disable --now openviking.service 2>/dev/null || true
-    fi
-    if [ -f "${unit}" ]; then
-        run rm -f "${unit}"
-        run systemctl --user daemon-reload 2>/dev/null || true
-        ok "removed openviking.service unit"
-    else
-        info "no openviking.service unit"
-    fi
-}
-
-remove_ov_configs() {
-    section "OpenViking config"
-    run rm -f "${HOME}/.openviking/ov.conf" "${HOME}/.openviking/claude-code-memory-plugin/config.json"
-    ok "removed ov.conf + plugin client config (kept ${HOME}/.openviking/data)"
-}
-
-clean_settings_env() {
-    section "Claude settings.json env"
-    local f="${HOME}/.claude/settings.json"
-    [ -f "${f}" ] || { info "no settings.json"; return 0; }
-    if ! have jq; then warn "jq missing — remove OPENVIKING_*_CONFIG_FILE from ${f} manually"; return 0; fi
-    if [ "${VAULT_SETUP_DRY_RUN:-0}" = "1" ]; then
-        printf '  [dry-run] jq del .env.OPENVIKING_CC_CONFIG_FILE/.OPENVIKING_CONFIG_FILE in %s\n' "${f}"
-        return 0
-    fi
-    local tmp; tmp="$(mktemp)"
-    if jq 'if .env then .env |= del(.OPENVIKING_CC_CONFIG_FILE, .OPENVIKING_CONFIG_FILE) else . end
-           | if (.env) == {} then del(.env) else . end' "${f}" > "${tmp}" 2>/dev/null; then
-        mv "${tmp}" "${f}"; ok "removed OPENVIKING_*_CONFIG_FILE from settings.json"
-    else
-        rm -f "${tmp}"; warn "could not edit ${f} — remove the keys manually"
-    fi
-}
 
 remove_plugins() {
     section "Claude Code plugins"
     if ! claude_cli_ok; then info "claude CLI unavailable — uninstall plugins manually"; return 0; fi
-    run claude plugin uninstall claude-code-memory-plugin@openviking-plugin 2>/dev/null || true
-    run claude plugin uninstall claude-mem@claude-mem 2>/dev/null || true
-    ok "removed OV + claude-mem plugins (marketplaces left intact)"
+    # The qualified id is claude-mem@thedotmack (marketplace.json declares the
+    # marketplace name "thedotmack") — claude-mem@claude-mem silently no-ops.
+    run claude plugin uninstall claude-mem@thedotmack 2>/dev/null || true
+    ok "removed the claude-mem plugin (marketplace left intact)"
 }
 
 remove_tools() {
     section "Vault tools"
     if have pipx; then
-        run pipx uninstall openviking 2>/dev/null || true
         run pipx uninstall graphifyy 2>/dev/null || true
     fi
     have uv && { run uv tool uninstall serena-agent 2>/dev/null || true; }
-    ok "removed openviking, graphifyy, serena-agent — left ollama/uv/bun/node intact"
+    ok "removed graphifyy, serena-agent — left uv/bun/node intact"
 }
 
 purge_vault_data() {
     section "Purge data (DESTRUCTIVE)"
-    warn "deleting indexed memory + machine config — this cannot be undone"
-    run rm -rf "${HOME}/.openviking" "${VAULT_HOME}/_global"
-    ok "purged ${HOME}/.openviking and ${VAULT_HOME}/_global"
+    warn "deleting the machine config — this cannot be undone"
+    run rm -rf "${VAULT_HOME}/_global"
+    ok "purged ${VAULT_HOME}/_global"
     info "project vaults (~/vault/<slug>/, in-repo vault/) were NOT touched"
 }
 
@@ -161,18 +130,17 @@ purge_vault_data() {
 # Run
 #------------------------------------------------------------------------------
 remove_command_symlinks
-remove_ov_service
-remove_ov_configs
-clean_settings_env
 remove_plugins
-[ "${with_tools}" -eq 1 ] && remove_tools
-[ "${purge_data}" -eq 1 ] && purge_vault_data
+if [ "${with_tools}" -eq 1 ]; then remove_tools; fi
+if [ "${purge_data}" -eq 1 ]; then purge_vault_data; fi
 
 section "Done"
-if [ "${not_consented}" -eq 1 ]; then
+if [ "${CONSENT_MODE}" = "plan-only" ]; then
     warn "Nothing was changed (no consent). Re-run with --yes to apply, or --dry-run to preview."
 else
     info "Restart Claude Code so the removed plugins/MCP unload."
-    [ "${purge_data}" -eq 0 ] && info "Data kept. Re-run with --purge-data to also delete ~/.openviking + _global."
+    if [ "${purge_data}" -eq 0 ]; then
+        info "Data kept. Re-run with --purge-data to also delete _global."
+    fi
 fi
 exit 0

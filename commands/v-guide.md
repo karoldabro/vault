@@ -19,7 +19,6 @@ Run this once after building a feature. Share the guide path with every consumin
 
 | Tool | Health check | Fallback |
 |------|-------------|----------|
-| OpenViking | `memory_health()` (MCP — never `curl`) | `grep -ril` over `~/vault/<source>/` |
 | graphify | `graphify-out/graph.json` present in source repo | grep source repo for routes/models |
 | MorphLLM | (MCP — no runtime check) | `Write` / `Edit` |
 
@@ -46,10 +45,10 @@ Parse `$ARGUMENTS`:
 
 Query cheapest-first. Stop when you have enough to fill the guide template.
 
-### 2.1 OpenViking
+### 2.1 Vault history
 ```
-memory_health()            # confirm reachable
-memory_recall(query="<feature-slug> api endpoints data structures")
+search("<feature-slug> api endpoints data structures")     # claude-mem, if installed
+grep -ril "<feature-slug>" ~/vault/<source>/{sessions,decisions,features}/
 ```
 Look for: prior sessions describing the feature, ADRs, pitfalls, API shapes already documented.
 
@@ -130,18 +129,6 @@ If `~/vault/<source>/features/<feature-slug>.md` exists, add (or update) a line 
 ```markdown
 Integration Guide: [[../guides/<feature-slug>]]
 ```
-
-### 5.3 Push to OpenViking
-Probe `memory_health()` first; if unreachable, surface and skip (never halt). Then:
-
-```
-memory_store(
-  text="Integration guide for <feature-slug> in <source>: covers endpoints, request/response shapes, enums, data flow. Path: ~/vault/<source>/guides/<feature-slug>.md",
-  role="assistant"
-)
-```
-
-(OV exposes only `memory_store(text, role)` / `memory_recall` / `memory_health` / `memory_forget` — there is no `content=`/`tags=` signature.)
 
 ---
 

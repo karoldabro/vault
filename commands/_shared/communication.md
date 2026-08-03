@@ -5,7 +5,7 @@ status, summaries, and the free-text parts of critic findings that reach the use
 on: machine-read schemas, vault document contents, commit messages, reasoning, or tool output.
 Length limits apply to prose the user reads — **never to how much thinking happens underneath**.
 Terse reasoning costs accuracy; terse prose does not. Fixed output templates inside a command file
-(`v-link`, `v-sync`, `v-backfill`) are that command's own contract — do not reword them.
+(`v-link`, `v-init`) are that command's own contract — do not reword them.
 
 ## Posture
 

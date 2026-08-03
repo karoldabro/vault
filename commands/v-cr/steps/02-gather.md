@@ -38,7 +38,7 @@ do what the ticket asked?").
 ## 2.4 Load the reviewed repo's vault — by base-repo slug (skeptic-6)
 Resolve the vault for the **base repo** (`<owner>/<repo>` from step 1), not by assuming cwd is the repo.
 Reuse the v-work context loader's **vault-only layer**:
-- OpenViking `memory_recall` + `~/vault/<slug>/` decisions (ADRs), indications, the feature dossier for
+- claude-mem `search` + `~/vault/<slug>/` decisions (ADRs), indications, the feature dossier for
   the touched area. These give the panel the project's rules and conventions to check the diff against.
 
 **Local-only layers run only if `Local match: yes` from step 1** (local HEAD == the PR's repo/branch):

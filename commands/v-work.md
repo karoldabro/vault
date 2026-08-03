@@ -14,7 +14,7 @@ context (keeps the run lean; the whole body never loads at once).
 
 ## Tools — preferred, force when present (never gating)
 
-OpenViking, claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-saving backbone.
+claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-saving backbone.
 
 Present → use it (don't hand-roll grep/full-file reads/`sed` in its place); genuinely down →
 health-check to confirm, warn once, fall back, **never halt the lifecycle**. Canonical health-check +
@@ -88,7 +88,7 @@ Read `~/.claude/commands/v-work/steps/05-commit-capture.md`, then execute. Mark 
 - PROPOSE opens with two front gates (§3a.0a/§3a.0b): **clarify** the task (surface assumptions, ask
   plan-changing questions via `AskUserQuestion`) and **research it online** (ground the approach against
   how the wild solves it — reconcile any contradicting consensus). Don't jump straight to a plan.
-- If dedupe returns conflicting results (OV finds doc X, claude-mem finds doc Y), read both — the
+- If dedupe returns conflicting results (claude-mem finds doc X, grep finds doc Y), read both — the
   vault may hold parallel docs that need merging. Flag it to the user.
 - If `$VAULT_FRAMEWORK_PATH/vault-guide.md` can't be found, the framework install path is wrong —
   check `~/vault/_global/config.md` (`framework_path`) or re-run `setup.sh`. If the resolved vault

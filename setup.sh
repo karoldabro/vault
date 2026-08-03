@@ -9,18 +9,17 @@
 #   1. Verify / auto-install base prereqs (git, curl, jq, ca-certificates, unzip).
 #   2. Create the machine-layer dir (~/vault/_global/), config.md, coupled-groups.md.
 #   3. Detect Obsidian (hint only).
-#   4. OpenViking (--with-ov): ollama + nomic-embed-text + ov.conf + OV plugin.
-#   5. Serena (--with-serena): uv + serena-agent.
-#   6. claude-mem (--with-claude-mem): bun + claude-mem plugin.
-#   7. Graphify (--with-graphify): pipx + graphifyy.
-#   8. Print per-repo onboarding instructions (vault-init).
-#   9. Run install.sh to symlink slash commands.
-#  10. Doctor pass — verify what landed; non-zero exit only if a required tool failed.
+#   4. Serena (--with-serena): uv + serena-agent.
+#   5. claude-mem (--with-claude-mem): bun + claude-mem plugin.
+#   6. Graphify (--with-graphify): pipx + graphifyy.
+#   7. Print per-repo onboarding instructions (vault-init).
+#   8. Run install.sh to symlink slash commands.
+#   9. Doctor pass — verify what landed; non-zero exit only if a required tool failed.
 #
 # Use --full to wire every tool in one pass. On a real Ubuntu workstation that is
 # the one-command install. Pass --yes to consent non-interactively (CI/automation).
 #
-# Auto-install runs remote installers (ollama/uv/bun via the vendors' official
+# Auto-install runs remote installers (uv/bun via the vendors' official
 # curl|sh scripts) and adds third-party Claude marketplaces — every source URL is
 # printed before it runs. See vault/decisions/ADR-005-installer-auto-exec.md.
 #
@@ -40,7 +39,6 @@ export VAULT_SETUP_DRY_RUN="${VAULT_SETUP_DRY_RUN:-0}"
 # shellcheck source=lib/installers.sh
 . "${VAULT_ROOT}/lib/installers.sh"
 
-with_ov=0
 with_serena=0
 with_claude_mem=0
 with_graphify=0
@@ -53,7 +51,6 @@ usage() {
 Usage: $0 [flags]
 
 Tool flags (wire all with --full):
-  --with-ov           OpenViking: ollama + nomic-embed-text + ov.conf + OV plugin.
   --with-serena       Serena language server (uv + serena-agent).
   --with-claude-mem   claude-mem mcp-search plugin (bun + claude-mem).
   --with-graphify     Graphify (pipx + graphifyy).
@@ -79,11 +76,10 @@ EOF
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --with-ov)         with_ov=1 ;;
         --with-serena)     with_serena=1 ;;
         --with-claude-mem) with_claude_mem=1 ;;
         --with-graphify)   with_graphify=1 ;;
-        --full)            with_ov=1; with_serena=1; with_claude_mem=1; with_graphify=1 ;;
+        --full)            with_serena=1; with_claude_mem=1; with_graphify=1 ;;
         --minimal)         minimal=1 ;;
         --yes|-y)          assume_yes=1 ;;
         --dry-run)         export VAULT_SETUP_DRY_RUN=1; assume_yes=1 ;;
@@ -94,15 +90,15 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-# Footgun guard: setup.sh installs PER-USER (uv/bun/plugins/ov.conf all land in $HOME).
+# Footgun guard: setup.sh installs PER-USER (uv/bun/plugins all land in $HOME).
 # Running it under sudo flips $HOME to /root, hides the user's `claude` from PATH, and
 # strands every per-user artifact in root's home. $SUDO_USER is set only when a non-root
 # user invokes sudo — genuine root (containers / CI, e.g. the e2e harness) has it unset,
-# so this never trips there. We escalate for apt/ollama ourselves; you don't pre-sudo.
+# so this never trips there. We escalate for apt ourselves; you don't pre-sudo.
 if [ -n "${SUDO_USER:-}" ] && [ "${VAULT_ALLOW_SUDO:-0}" != "1" ]; then
     warn "Do not run setup.sh with sudo — it installs per-user and writes to \$HOME."
     warn "Run it as your normal user:  ./setup.sh --full --yes"
-    warn "(it prompts for your sudo password when it reaches apt / ollama)."
+    warn "(it prompts for your sudo password when it reaches apt)."
     warn "Override only if you truly mean it: VAULT_ALLOW_SUDO=1 sudo -E ./setup.sh ..."
     exit 1
 fi
@@ -113,13 +109,12 @@ if [ "${doctor_only}" -eq 1 ]; then
 fi
 
 if [ "${minimal}" -eq 1 ]; then
-    with_ov=0
     with_serena=0
     with_claude_mem=0
     with_graphify=0
 fi
 
-any_tool=$(( with_ov + with_serena + with_claude_mem + with_graphify ))
+any_tool=$(( with_serena + with_claude_mem + with_graphify ))
 
 #------------------------------------------------------------------------------
 # Decide the install mode: AUTO (real install) vs HINT (print commands).
@@ -140,7 +135,7 @@ if [ "${any_tool}" -gt 0 ]; then
         auto=1; auto_reason="consented via --yes"
     else
         # Interactive consent.
-        printf '\nAuto-install will run vendor install scripts (ollama/uv/bun) and add\n'
+        printf '\nAuto-install will run vendor install scripts (uv/bun) and add\n'
         printf 'third-party Claude marketplaces. Sources are printed as they run.\n'
         printf 'Proceed with auto-install? [y/N] '
         reply=""
@@ -152,7 +147,7 @@ if [ "${any_tool}" -gt 0 ]; then
     fi
 fi
 
-# Pre-warm sudo so the apt/ollama steps prompt for the password ONCE up front rather
+# Pre-warm sudo so the apt steps prompt for the password ONCE up front rather
 # than at each escalation point. Best-effort: only when we'll auto-install, aren't root,
 # have sudo, and it actually needs a password. A failed prime warns and continues — the
 # sudo-free tools (uv/bun/serena/plugins) still install regardless.
@@ -262,126 +257,6 @@ if [ "${any_tool}" -gt 0 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 4 — OpenViking (--with-ov)
-#------------------------------------------------------------------------------
-if [ "${with_ov}" -eq 1 ]; then
-    section "OpenViking"
-
-    # OpenViking has THREE parts, all needed for the memory MCP to connect:
-    #   1. server  — `openviking` pipx pkg (`openviking-server` + `ov` CLI), runs on :1933.
-    #   2. ov.conf — the server's JSON config (host/port/storage/embedding).
-    #   3. plugin client config — ~/.openviking/claude-code-memory-plugin/config.json,
-    #      which the MCP server REQUIRES ({ "mode": "local" }); without it the plugin
-    #      exits and Claude Code shows "Connection closed".
-    # Config files + the systemd unit are pure-local scaffold — written directly here;
-    # the network/privileged installs (pipx, systemctl) go through install_* / run().
-    ov_dir="${HOME}/.openviking"
-    ov_conf="${ov_dir}/ov.conf"
-    # A valid config has the JSON "server" block; the old 3-line "workspace =" format is
-    # rewritten (the server can't parse it, and the plugin reads port/key from here).
-    if [ -f "${ov_conf}" ] && grep -q '"server"' "${ov_conf}" 2>/dev/null; then
-        ok "ov.conf present"
-    else
-        ( umask 077; mkdir -p "${ov_dir}/data" "${ov_dir}/logs" )
-        chmod 700 "${ov_dir}" 2>/dev/null || true
-        ( umask 077; cat > "${ov_conf}" <<EOF
-{
-  "server": { "host": "127.0.0.1", "port": 1933 },
-  "storage": {
-    "workspace": "${ov_dir}/data",
-    "vectordb": { "backend": "local" },
-    "agfs": { "backend": "local", "port": 1833 }
-  },
-  "embedding": {
-    "dense": {
-      "provider": "litellm",
-      "model": "ollama/nomic-embed-text",
-      "api_base": "http://127.0.0.1:11434",
-      "dimension": 768
-    }
-  }
-}
-EOF
-        )
-        ok "wrote ${ov_conf} (0600)"
-    fi
-
-    # Plugin client config — the file the MCP server requires to start.
-    cc_conf="${ov_dir}/claude-code-memory-plugin/config.json"
-    if [ -f "${cc_conf}" ]; then
-        ok "client config.json present"
-    else
-        mkdir -p "$(dirname "${cc_conf}")"
-        cat > "${cc_conf}" <<'EOF'
-{
-  "mode": "local",
-  "agentId": "claude-code",
-  "recallLimit": 6,
-  "captureMode": "semantic",
-  "captureTimeoutMs": 30000,
-  "captureAssistantTurns": false
-}
-EOF
-        ok "wrote ${cc_conf}"
-    fi
-
-    # Point Claude at those configs via ~/.claude/settings.json env, so the plugin's
-    # stock .mcp.json placeholders resolve (else the MCP exits: "Connection closed").
-    ov_set_env_key "${HOME}/.claude/settings.json" OPENVIKING_CC_CONFIG_FILE "${cc_conf}" || true
-    ov_set_env_key "${HOME}/.claude/settings.json" OPENVIKING_CONFIG_FILE   "${ov_conf}" || true
-
-    # systemd --user unit that keeps openviking-server running on :1933 (%h = $HOME).
-    ov_unit="${HOME}/.config/systemd/user/openviking.service"
-    if [ -f "${ov_unit}" ]; then
-        ok "openviking.service unit present"
-    else
-        mkdir -p "$(dirname "${ov_unit}")"
-        cat > "${ov_unit}" <<'EOF'
-[Unit]
-Description=OpenViking memory server (vault + Claude Code)
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-ExecStart=%h/.local/bin/openviking-server --config %h/.openviking/ov.conf
-Restart=on-failure
-RestartSec=5
-Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
-StandardOutput=append:%h/.openviking/logs/openviking.log
-StandardError=append:%h/.openviking/logs/openviking.err
-
-[Install]
-WantedBy=default.target
-EOF
-        ok "wrote ${ov_unit}"
-    fi
-
-    if [ "${auto}" -eq 1 ]; then
-        tool_try ollama install_ollama
-        tool_try openviking-server install_openviking_server
-        if claude_cli_ok; then
-            tool_try openviking-plugin install_openviking_plugin
-        else
-            todo "claude CLI missing/old — install the OpenViking plugin manually:"
-            info "  claude plugin marketplace add Castor6/openviking-plugins"
-            info "  claude plugin install claude-code-memory-plugin@openviking-plugin"
-        fi
-    else
-        todo "Install Ollama + embedding model:"
-        info "  curl -fsSL https://ollama.com/install.sh | sh"
-        info "  ollama pull nomic-embed-text"
-        todo "Install the OpenViking server + ov CLI:"
-        info "  pipx install openviking --python python3.12   # needs Python >=3.10"
-        todo "Enable the memory server (user service on :1933):"
-        info "  systemctl --user enable --now openviking.service"
-        todo "Install the OpenViking Claude Code plugin:"
-        info "  claude plugin marketplace add Castor6/openviking-plugins"
-        info "  claude plugin install claude-code-memory-plugin@openviking-plugin"
-    fi
-fi
-
-#------------------------------------------------------------------------------
 # Step 5 — Serena (--with-serena)
 #------------------------------------------------------------------------------
 if [ "${with_serena}" -eq 1 ]; then
@@ -408,13 +283,13 @@ if [ "${with_claude_mem}" -eq 1 ]; then
         else
             todo "claude CLI missing/old — install claude-mem manually:"
             info "  claude plugin marketplace add thedotmack/claude-mem"
-            info "  claude plugin install claude-mem"
+            info "  claude plugin install claude-mem@thedotmack"   # qualified id — bare 'claude-mem' no-ops
         fi
     else
         todo "Install bun + the claude-mem plugin:"
         info "  curl -fsSL https://bun.com/install | bash"
         info "  claude plugin marketplace add thedotmack/claude-mem"
-        info "  claude plugin install claude-mem"
+        info "  claude plugin install claude-mem@thedotmack"   # qualified id — bare 'claude-mem' no-ops
     fi
 fi
 
@@ -471,8 +346,6 @@ info "Re-run setup.sh anytime; it is idempotent."
 if [ "${auto}" -eq 1 ]; then
     info "Open a fresh shell (exec \$SHELL -l) so new PATH entries (uv/bun/pipx) take effect"
     info "before running graphify/serena from the terminal."
-    info "OpenViking has no standalone 'ov' command — it is the MCP plugin (+ ollama backend);"
-    info "'ov: command not found' is expected. Health = the plugin rows above / in --doctor."
 fi
 if [ "${#TOOLS_FAILED[@]}" -gt 0 ]; then
     warn "Some tools failed to install: ${TOOLS_FAILED[*]} — re-run or see hints above."

@@ -10,7 +10,7 @@ Capture **only finding metadata + posted comment ids**:
 
 **Never write**: bearer tokens, request/response headers, raw diff hunks, or any secret-scanner-flagged
 string. Run the redaction pass over the capture artifact **before** the session write **and** before the
-mandatory OpenViking push — `vault/sessions/*.md` are git-tracked and OV-indexed, a durable shared sink.
+mandatory memory push — `vault/sessions/*.md` are git-tracked, a durable shared sink.
 
 **Under `--sandbox`**, also record (metadata only, never raw logs): the recipe **source** used
 (indication/vault/repo/stack-default), the isolation envelope applied, the test-gate verdict, the

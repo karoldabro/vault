@@ -1,5 +1,5 @@
 ---
-description: Read-only, vault-aware Q&A. Loads context cheapest-first (OV → claude-mem → graph → source) and answers. No edits, no approval, no capture.
+description: Read-only, vault-aware Q&A. Loads context cheapest-first (claude-mem → graph → source) and answers. No edits, no approval, no capture.
 ---
 
 > **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
@@ -32,7 +32,8 @@ a file, stop and hand off — see *Hard rules* below.
 Query cheapest-first. A vault hit costs ~100–2000 tok; reading 40 source files costs ~20k. Stop the
 moment you have enough to answer — do **not** walk every layer out of habit.
 
-1. **OpenViking** — `ov find "<keywords>"` (CLI; `memory_recall` is secondary — playbook §1).
+1. **claude-mem** — `search("<keywords>")`, then climb only as far as needed (playbook §2). Not
+   installed → grep the vault directly.
    Decisions, ADRs, past sessions, dossiers, pitfalls, coupled projects. Fallback if down: `Grep`
    over the project vault.
 2. **claude-mem** — `search(query=<keywords>, limit=20)` → compact ID index; climb to

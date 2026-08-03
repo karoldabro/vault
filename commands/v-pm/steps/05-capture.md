@@ -30,19 +30,15 @@ each the user confirms:
   really that one project's call rather than a shared one.
 Don't manufacture ADRs — only genuine decisions the planning actually made.
 
-## 5.3 Push to OpenViking
-Probe `memory_health()` first (MCP — never `curl`). If healthy,
-`memory_store(role="assistant", text=<plan summary: necessity · participants · key decisions · contract
-seam · **the requirements.md knowledge center: domain glossary + business rules (REQ-NN) + variant/state
-tables** · links>)` so the product knowledge — not just the rationale — is recallable. Include the
-variant/state tables, not only glossary+rules: they are the test-design fan-out's primary input, so the
-fallback recall path must carry them. This is exactly what each project's `/v-team` LOAD CONTEXT
-(`02-load-context.md` §2.1) finds via `memory_recall`. If unreachable, note it and skip (never fail).
-claude-mem auto-captures on session end — no action.
+## 5.3 Make the knowledge findable
+The committed `requirements.md` **is** the durable record — domain glossary, business rules (REQ-NN)
+and the variant/state tables. Keep those tables in the file, not only the glossary and rules: they are
+the test-design fan-out's primary input, and grep over the vault is how each project's `/v-team` LOAD
+CONTEXT (`02-load-context.md` §2.1) finds them. claude-mem auto-captures on session end — no action.
 
 ## 5.4 Commit
 Stage + commit the whole `~/vault/_features/<feature>/` (workspace + planning-session record + any ADRs)
-with **explicit paths** — `_features/` is its own committed vault; `/v-sync` ingests it.
+with **explicit paths** — `_features/` is its own committed vault.
 
 ## Required output
 
@@ -50,7 +46,6 @@ with **explicit paths** — `_features/` is its own committed vault; `/v-sync` i
 ```
 Planning session: _features/<feature>/sessions/<file>.md
 ADR candidates: <N found, M written>   (promoted to <proj>: [...] | none)
-OV: <pushed via memory_store | memory_health unreachable — skipped>
 Committed: _features/<feature>/  (<shortsha>)
 ```
 Mark CAPTURE `completed`. Plan mode complete — tell the user the workspace is ready and to run
@@ -61,7 +56,6 @@ Mark CAPTURE `completed`. Plan mode complete — tell the user the workspace is 
 Requirements: <project-vault>/requirements/<feature>.md
 Planning session: <project-vault>/sessions/<file>.md
 ADR candidates: <N found, M written> (in <project-vault>/decisions/ | none)
-OV: <pushed via memory_store | memory_health unreachable — skipped>
 Committed: <project-vault>  (<shortsha>)
 ```
 Mark CAPTURE `completed`. Plan mode complete — the knowledge center is written; tell the user to run

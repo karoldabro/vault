@@ -34,7 +34,7 @@ Escalating means: state in one line why it's bigger than `/v-do`, and suggest `/
 
 ## Tools — preferred, never gating
 
-OpenViking, claude-mem, Serena, MorphLLM, graphify — present → use it (don't hand-roll grep/full-file
+claude-mem, Serena, MorphLLM, graphify — present → use it (don't hand-roll grep/full-file
 reads/`sed`); genuinely down → health-check, warn once, fall back, never halt. Full rules:
 `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
@@ -49,8 +49,8 @@ reconsider the guardrail.
 
 - Restate the change in one line. Detect the test command (project `CLAUDE.md` / Step-1 cues; Docker
   projects use their Docker test aliases).
-- **Cheap vault check, not the full Step-2 sweep:** `ov find "<keywords>"` for prior
-  decisions/gotchas in this area (playbook §1; `memory_recall` is secondary), and read any
+- **Cheap vault check, not the full Step-2 sweep:** claude-mem `search("<keywords>")` for prior
+  decisions/gotchas in this area (playbook §2; grep the vault if it isn't installed), and read any
   `indications/` rows matching the files you'll touch — those are **binding constraints**, not
   suggestions. Skip the rest unless the answer needs it.
 - Structural question (what calls X, where defined) → `graphify query` / Serena `find_symbol` before

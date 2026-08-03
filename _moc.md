@@ -17,9 +17,7 @@ The entry point for the vault framework (`~/workspace/vault/`). Generic process 
 - [[commands/v-cr]] — Review a remote PR and post comments back
 - [[commands/v-capture]] — Session capture + dedupe
 - [[commands/v-resume]] — Force fresh context recall
-- [[commands/v-sync]] — Re-ingest curated knowledge into OV
 - [[commands/v-link]] — Declare coupled projects
-- [[commands/v-backfill]] — Targeted past-session ingest
 - [[commands/v-guide]] — Generate cross-project integration guides
 
 ## Templates

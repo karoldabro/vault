@@ -43,16 +43,10 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     stub_claude_empty
     run_setup --full --dry-run
     [ "$status" -eq 0 ]
-    [[ "$output" == *"curl -fsSL https://ollama.com/install.sh | sh"* ]]
-    [[ "$output" == *"ollama pull nomic-embed-text"* ]]
     [[ "$output" == *"curl -LsSf https://astral.sh/uv/install.sh | sh"* ]]
     [[ "$output" == *"uv tool install -p 3.13 serena-agent"* ]]
     [[ "$output" == *"curl -fsSL https://bun.com/install | bash"* ]]
     [[ "$output" == *"pipx install graphifyy"* ]]
-    [[ "$output" == *"pipx install openviking"* ]]
-    [[ "$output" == *"systemctl --user enable --now openviking.service"* ]]
-    [[ "$output" == *"claude plugin marketplace add Castor6/openviking-plugins"* ]]
-    [[ "$output" == *"claude plugin install claude-code-memory-plugin@openviking-plugin"* ]]
     [[ "$output" == *"claude plugin marketplace add thedotmack/claude-mem"* ]]
     # The marketplace name is "thedotmack" (from marketplace.json), not "claude-mem":
     # the qualified id MUST be claude-mem@thedotmack or fresh installs fail.
@@ -63,7 +57,6 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     stub_claude_empty
     run_setup --full --dry-run
     [ "$status" -eq 0 ]
-    [[ "$output" == *"pipx install openviking --python"* ]]
     [[ "$output" == *"pipx install graphifyy --python"* ]]
 }
 
@@ -95,9 +88,11 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     # Morph was dropped entirely.
     [[ "$output" != *"morph"* ]]
     [[ "$output" != *"razorback16"* ]]
-    # Old wrong serena flag / plugin name must be gone.
+    # Old wrong serena flag must be gone.
     [[ "$output" != *"serena-agent@latest"* ]]
-    [[ "$output" != *"plugin install openviking"* ]]
+    # OpenViking was dropped entirely (see docs/removing-openviking.md).
+    [[ "${output,,}" != *"openviking"* ]]
+    [[ "${output,,}" != *"ollama"* ]]
 }
 
 #------------------------------------------------------------------------------
@@ -115,64 +110,34 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     ! grep -q 'supersecret' "${TEST_HOME}/out"
 }
 
-@test "sudo is scoped to apt only — never prefixes curl/uv/bun/ollama/claude/pipx" {
+@test "sudo is scoped to apt only — never prefixes curl/uv/bun/claude/pipx" {
     stub_claude_empty
     run_setup --full --dry-run
     [ "$status" -eq 0 ]
     [[ "$output" != *"sudo curl"* ]]
     [[ "$output" != *"sudo uv"* ]]
     [[ "$output" != *"sudo bun"* ]]
-    [[ "$output" != *"sudo ollama"* ]]
     [[ "$output" != *"sudo claude"* ]]
     [[ "$output" != *"sudo pipx"* ]]
 }
 
 @test "remote installer source URLs are printed for an audit trail" {
     stub_claude_empty
-    run_setup --with-ov --with-serena --dry-run
+    run_setup --with-serena --dry-run
     [ "$status" -eq 0 ]
-    [[ "$output" == *"source: https://ollama.com/install.sh"* ]]
     [[ "$output" == *"source: https://astral.sh/uv/install.sh"* ]]
 }
 
-@test "ensure_zstd installs zstd via apt when absent (ollama tarball needs it)" {
-    # zstd absent, apt-get present → ensure_zstd must run `apt-get install -y zstd`.
-    # The test image may ship zstd, so force `have zstd` false; drop the sudo prefix
-    # so the apt call lands on our stub directly.
-    stub apt-get 'echo "apt-get $*"; exit 0'
-    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
-      . "${VAULT_ROOT}/lib/installers.sh"
-      have() { [ "$1" = zstd ] && return 1; command -v "$1" >/dev/null 2>&1; }
-      _priv() { :; }
-      ensure_zstd ) > "${TEST_HOME}/out" 2>&1
-    grep -q 'apt-get install -y zstd' "${TEST_HOME}/out"
-}
-
-@test "ensure_zstd is a no-op when zstd is already present" {
-    stub zstd 'exit 0'
-    stub apt-get 'echo "SHOULD-NOT-RUN apt-get $*"; exit 0'
-    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
-      . "${VAULT_ROOT}/lib/installers.sh"
-      ensure_zstd ) > "${TEST_HOME}/out" 2>&1
-    ! grep -q 'SHOULD-NOT-RUN' "${TEST_HOME}/out"
-}
-
-#------------------------------------------------------------------------------
-# Idempotency: already-present tools are skipped
-#------------------------------------------------------------------------------
 @test "tools already on PATH are reported present and not reinstalled" {
-    stub ollama 'echo "nomic-embed-text"; exit 0'   # `ollama list` shows the model
     stub uv 'exit 0'
     stub bun 'exit 0'
     stub graphify 'exit 0'
     stub_claude_empty
-    run_setup --with-ov --with-serena --with-graphify --with-claude-mem --dry-run
+    run_setup --with-serena --with-graphify --with-claude-mem --dry-run
     [ "$status" -eq 0 ]
-    [[ "$output" == *"ollama present"* ]]
     [[ "$output" == *"uv present"* ]]
     [[ "$output" == *"graphify present"* ]]
     # No install command should have been emitted for the present tools.
-    [[ "$output" != *"https://ollama.com/install.sh"* ]]
     [[ "$output" != *"pipx install graphifyy"* ]]
 }
 
@@ -180,14 +145,14 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     stub claude '
 case "$1 $2" in
   "plugin --help") exit 0 ;;
-  "plugin list") echo "claude-code-memory-plugin@openviking-plugin"; echo "claude-mem@thedotmack"; exit 0 ;;
-  "plugin marketplace") echo "openviking-plugin"; echo "thedotmack"; exit 0 ;;
+  "plugin list") echo "claude-mem@thedotmack"; exit 0 ;;
+  "plugin marketplace") echo "thedotmack"; exit 0 ;;
 esac
 exit 0'
-    run_setup --with-ov --with-claude-mem --dry-run
+    run_setup --with-claude-mem --dry-run
     [ "$status" -eq 0 ]
     [[ "$output" == *"already installed"* ]]
-    [[ "$output" != *"plugin install claude-code-memory-plugin"* ]]
+    [[ "$output" != *"plugin install claude-mem"* ]]
 }
 
 #------------------------------------------------------------------------------
@@ -195,12 +160,10 @@ exit 0'
 #------------------------------------------------------------------------------
 @test "claude CLI absent → plugin steps degrade to manual hints, exit 0" {
     # No claude stub: the bare test image has no claude on PATH.
-    run_setup --with-ov --dry-run
+    run_setup --with-claude-mem --dry-run
     [ "$status" -eq 0 ]
     [[ "$output" == *"claude CLI missing"* ]]
-    [[ "$output" == *"claude plugin install claude-code-memory-plugin@openviking-plugin"* ]]
-    # ollama is still attempted (not gated on claude).
-    [[ "$output" == *"ollama.com/install.sh"* ]]
+    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
 }
 
 @test "non-apt host without dry-run degrades to install hints, exit 0" {
@@ -208,15 +171,7 @@ exit 0'
     run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --full --yes
     [ "$status" -eq 0 ]
     [[ "$output" == *"install hints"* ]]
-    [[ "$output" == *"curl -fsSL https://ollama.com/install.sh | sh"* ]]
-}
-
-@test "ov.conf is written even when the tool install degrades (and is 0600)" {
-    run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --with-ov --yes
-    [ "$status" -eq 0 ]
-    [ -f "${HOME}/.openviking/ov.conf" ]
-    perms="$(stat -c '%a' "${HOME}/.openviking/ov.conf")"
-    [ "${perms}" = "600" ]
+    [[ "$output" == *"curl -LsSf https://astral.sh/uv/install.sh | sh"* ]]
 }
 
 #------------------------------------------------------------------------------
@@ -247,7 +202,7 @@ exit 0'
       drc=0; doctor || drc=$?; echo "exit=${drc}" ) > "${TEST_HOME}/out" 2>&1
     [[ "$(cat "${TEST_HOME}/out")" == *"Doctor — tool health"* ]]
     grep -q '✓] uv' "${TEST_HOME}/out"        # present tool → check
-    grep -q '✗] ollama' "${TEST_HOME}/out"    # absent tool → cross
+    grep -q '✗] serena' "${TEST_HOME}/out"    # absent tool → cross
     grep -q 'exit=0' "${TEST_HOME}/out"       # no recorded install failures
 }
 

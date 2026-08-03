@@ -53,7 +53,7 @@ through file-based conversation threads instead of the human relaying context. N
 ## Coupling
 - Inherits the PROPOSE clarify + research front gates from `/v-work` §3a (ADR-012).
 - Planning panel borrows finding-schema + synthesize from `/v-team` `03-propose-loop` (not
-  `_shared/critic-panel.md`). Execution runs through `/v-team` Step 0. `_features/` wired into `/v-sync`.
+  `_shared/critic-panel.md`). Execution runs through `/v-team` Step 0.
 
 ## Gotchas
 - `_features/` is a separate committed vault, not under any project — it holds the source-of-truth plan +

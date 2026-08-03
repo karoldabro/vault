@@ -41,7 +41,7 @@ workspace symlinks covers it; confirm it's present in each project vault's `.git
 
 ## 3.3 Stage the workspace (commit happens in CAPTURE)
 Leave the new `<feature>/` **staged, not committed** — the CAPTURE step (05) commits it together with the
-planning-session record and any ADRs, in one commit. (`_features/` is its own committed vault; `/v-sync`
+planning-session record and any ADRs, in one commit. (`_features/` is its own committed vault
 ingests it.)
 
 ## Required output

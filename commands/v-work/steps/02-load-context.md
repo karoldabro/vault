@@ -17,19 +17,17 @@ subagents in parallel (single message, multiple `Agent` calls) instead of serial
 distinct focus (vault decisions/guidelines · code structure · tests). One Explore agent is enough for
 an isolated task with known files. Agents return conclusions; you keep the context lean.
 
-### 2.1 — OpenViking (vault memory — always first)
-
-Run `ov find "<keywords>"` (Bash; semantic over the synced vault resources — decisions, ADRs, past
-sessions, feature dossiers, pitfalls). `memory_recall(query=...)` is secondary — it only searches the
-extraction-populated memories namespace (empty without a cloud `vlm`; playbook §1). Look for: prior
-decisions in this area, known gotchas, related features already built, coupled projects
-(`~/vault/_global/coupled-groups.md`). Cost: ~100–2000 tok.
-
-### 2.2 — claude-mem (project history — progressive disclosure)
+### 2.1 — claude-mem (project history — always first)
 
 `search(query=<keywords>, limit=20)` → compact ID index (~100 tok). Climb to `timeline(anchor=<id>)`
 (~300 tok) then `get_observations(ids=[...])` (~1000 tok) only for promising hits. Filter by `type`
 (decision, bugfix, feature, refactor, discovery) and date when it narrows fast.
+
+**When claude-mem is absent** (it installs only with `setup.sh --full` / `--with-claude-mem`), say so
+once and go straight to grep over the vault:
+`grep -ril "<keyword>" <project-vault>/{decisions,sessions,indications,features}/`. Look for the same
+things either way: prior decisions in this area, known gotchas, related features already built,
+coupled projects (`~/vault/_global/coupled-groups.md`).
 
 ### 2.3 — Vault MOC + process guide
 
@@ -108,8 +106,7 @@ costs ~20k tokens; a vault hit costs ~100–2000. Wrong default wastes 100×.
 ### Required output
 
 ```
-OV: [results — decisions, sessions, pitfalls — or "nothing relevant" / "unavailable, fell back to grep"]
-claude-mem: [layers used — key findings — or "nothing relevant"]
+claude-mem: [layers used — key findings — or "nothing relevant" / "not installed, grepped the vault"]
 MOC: [skimmed]
 Indications: [working rules loaded from indications/ — or "none matched"]
 Guidelines: [docs read from features/·processes/·architecture/ — or "none matched"]

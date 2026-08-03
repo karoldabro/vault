@@ -4,22 +4,22 @@
 
 Ground the plan in what the vault already knows — **before** the panel drafts anything. A cross-project
 planner must load context from **every participant's vault**, not one. Query **cheapest-first** (the
-`CLAUDE.md` precedence: vault + OV → graph → source); stop as soon as you have enough. Do **not** read
+`CLAUDE.md` precedence: vault → graph → source); stop as soon as you have enough. Do **not** read
 source code here.
 
 ## Tools — health check + fallback (probe once; warn + fall back, never halt)
 
 | Tool | Check | Fallback |
 |------|-------|----------|
-| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
 | claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
 | graphify | `<repo>/graphify-out/graph.json` present | grep the repo |
 
-## 2.1 OpenViking — always first, across every participant
-For each participant `<proj>` (plus `_global` and the `_features/` vault), call
-`memory_recall(query=<necessity keywords + proj>)`. Surface: related **ADRs / decisions**, **existing
-feature dossiers** that overlap this necessity, prior **cross-project plans**, past **sessions**, and
-**coupling** notes. This is the cheapest layer and covers the whole vault — do it before anything else.
+## 2.1 Vault sweep — always first, across every participant
+For each participant `<proj>` (plus `_global` and the `_features/` vault), grep the vault:
+`grep -ril "<necessity keywords>" ~/vault/<proj>/{decisions,features,sessions,indications}/`. Surface:
+related **ADRs / decisions**, **existing feature dossiers** that overlap this necessity, prior
+**cross-project plans**, past **sessions**, and **coupling** notes. This is the cheapest layer and
+covers the whole vault — do it before anything else.
 
 ## 2.2 claude-mem — project history
 Per participant, `search()` → `timeline()` → `get_observations()` to see how the relevant area evolved
@@ -41,7 +41,7 @@ code.
 
 ## Required output — the LOAD CONTEXT digest
 ```
-Vaults loaded: [<proj>… + _global + _features]   (OV: <ok|fallback> · claude-mem: <ok|skip>)
+Vaults loaded: [<proj>… + _global + _features]   (claude-mem: <ok|skip>)
 Related ADRs / decisions: [...]
 Existing features / dossiers: [overlap → reuse, don't reinvent]
 Prior cross-project plans: [...]

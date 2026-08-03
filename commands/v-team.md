@@ -28,7 +28,7 @@ cross-repo contracts — not because you want *a* second opinion.
 
 ## Tools — preferred, force when present (never gating)
 
-Identical to `/v-work` — OpenViking, claude-mem, Serena, MorphLLM, graphify are the token-saving
+Identical to `/v-work` — claude-mem, Serena, MorphLLM, graphify are the token-saving
 backbone; plus the **Agent** tool for the critic panel (parallel spawn). Canonical health-check +
 fallback table and full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Persona resolution:
 `$VAULT_FRAMEWORK_PATH/personas/_resolution.md`.

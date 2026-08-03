@@ -33,7 +33,6 @@ teardown() {
 }
 
 @test "v-pm dispatcher has a tool health-check + fallback table and the search precedence" {
-    grep -qi 'memory_health'                "${PM}"
     grep -qi 'fallback'                     "${PM}"
     grep -qi 'claude-mem'                   "${PM}"
     grep -qi 'graphify'                     "${PM}"
@@ -50,17 +49,15 @@ teardown() {
     [ -f "${STEPS}/07-status.md" ]
 }
 
-@test "capture writes a planning-session record, extracts cross-project ADRs, and pushes to OV" {
+@test "capture writes a planning-session record and extracts cross-project ADRs" {
     grep -qi 'planning-session'             "${STEPS}/05-capture.md"
     grep -qi 'sessions/'                    "${STEPS}/05-capture.md"
     grep -qi 'ADR'                          "${STEPS}/05-capture.md"
     grep -qi 'decisions/'                   "${STEPS}/05-capture.md"
-    grep -qi 'memory_store'                 "${STEPS}/05-capture.md"
-    grep -qi 'memory_health'                "${STEPS}/05-capture.md"
     grep -qi 'commit'                       "${STEPS}/05-capture.md"
     # cross-project ADRs land in the neutral workspace by default
     grep -qi 'neutral workspace\|_features/<feature>/decisions' "${STEPS}/05-capture.md"
-    # the knowledge center is referenced + its glossary/rules pushed to OV
+    # the knowledge center is referenced + its glossary/rules recorded
     grep -qi 'requirements.md'              "${STEPS}/05-capture.md"
     grep -qi 'glossary'                     "${STEPS}/05-capture.md"
     # single-repo captures against the project vault
@@ -118,8 +115,8 @@ teardown() {
     grep -qi '2+ repos'                     "${PM}"
 }
 
-@test "load-context is vault-first, OV-first, ACROSS every participant vault, and emits a digest" {
-    grep -qi 'memory_recall\|OpenViking'    "${STEPS}/02-load-context.md"
+@test "load-context is vault-first, ACROSS every participant vault, and emits a digest" {
+    grep -qi 'claude-mem\|grep'             "${STEPS}/02-load-context.md"
     grep -qi 'every participant\|each participant\|participant' "${STEPS}/02-load-context.md"
     grep -qi '_global'                      "${STEPS}/02-load-context.md"
     grep -qi '_features'                    "${STEPS}/02-load-context.md"

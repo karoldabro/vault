@@ -9,19 +9,10 @@ setup() {
     FAKEBIN="${TEST_HOME}/fakebin"
     mkdir -p "${FAKEBIN}"
     # Stand up a representative "installed" state to tear down.
-    mkdir -p "${HOME}/.claude/commands" \
-             "${HOME}/.openviking/data" \
-             "${HOME}/.openviking/claude-code-memory-plugin" \
-             "${HOME}/.config/systemd/user" \
-             "${VAULT_HOME}/_global"
+    mkdir -p "${HOME}/.claude/commands" "${VAULT_HOME}/_global"
     ln -s "${VAULT_ROOT}/commands/v-work.md" "${HOME}/.claude/commands/v-work.md"
     ln -s "/some/other/tool.md"              "${HOME}/.claude/commands/foreign.md"
-    printf '{"server":{"port":1933}}\n' > "${HOME}/.openviking/ov.conf"
-    printf '{"mode":"local"}\n'          > "${HOME}/.openviking/claude-code-memory-plugin/config.json"
-    printf 'seeded\n'                    > "${HOME}/.openviking/data/index.bin"
-    printf 'unit\n'                      > "${HOME}/.config/systemd/user/openviking.service"
-    printf '{ "model": "opus", "env": { "FOO": "bar", "OPENVIKING_CONFIG_FILE": "%s/.openviking/ov.conf", "OPENVIKING_CC_CONFIG_FILE": "%s/.openviking/claude-code-memory-plugin/config.json" } }\n' \
-        "${HOME}" "${HOME}" > "${HOME}/.claude/settings.json"
+    printf '{ "model": "opus", "env": { "FOO": "bar" } }\n' > "${HOME}/.claude/settings.json"
 }
 
 teardown() { cleanup_test_home; }
@@ -35,7 +26,7 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
 @test "--help exits 0 and prints usage" {
     uninstall --help
     [ "$status" -eq 0 ]
-    [[ "$output" == *"Reverse what setup.sh"* ]]
+    [[ "$output" == *"reverse what setup.sh"* ]]
 }
 
 @test "unknown flag exits non-zero" {
@@ -51,36 +42,15 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
     [ -L "${HOME}/.claude/commands/foreign.md" ]
 }
 
-@test "default --yes removes ov.conf + client config but KEEPS data" {
-    uninstall --yes
-    [ "$status" -eq 0 ]
-    [ ! -f "${HOME}/.openviking/ov.conf" ]
-    [ ! -f "${HOME}/.openviking/claude-code-memory-plugin/config.json" ]
-    [ -f "${HOME}/.openviking/data/index.bin" ]      # data preserved
-}
 
-@test "default --yes removes the systemd unit" {
-    uninstall --yes
-    [ "$status" -eq 0 ]
-    [ ! -f "${HOME}/.config/systemd/user/openviking.service" ]
-}
 
-@test "default --yes strips OPENVIKING_* env keys, keeps other settings" {
-    uninstall --yes
-    [ "$status" -eq 0 ]
-    [ "$(jq -r '.model' "${HOME}/.claude/settings.json")" = "opus" ]
-    [ "$(jq -r '.env.FOO' "${HOME}/.claude/settings.json")" = "bar" ]
-    [ "$(jq -r '.env.OPENVIKING_CONFIG_FILE // "gone"' "${HOME}/.claude/settings.json")" = "gone" ]
-    [ "$(jq -r '.env.OPENVIKING_CC_CONFIG_FILE // "gone"' "${HOME}/.claude/settings.json")" = "gone" ]
-}
 
 @test "--dry-run changes nothing" {
     uninstall --dry-run
     [ "$status" -eq 0 ]
     [ -L "${HOME}/.claude/commands/v-work.md" ]
-    [ -f "${HOME}/.openviking/ov.conf" ]
-    [ -f "${HOME}/.config/systemd/user/openviking.service" ]
-    [ "$(jq -r '.env.OPENVIKING_CONFIG_FILE' "${HOME}/.claude/settings.json")" = "${HOME}/.openviking/ov.conf" ]
+    [ -d "${VAULT_HOME}/_global" ]
+    [ "$(jq -r '.env.FOO' "${HOME}/.claude/settings.json")" = "bar" ]
 }
 
 @test "no --yes and no TTY → prints plan, changes nothing" {
@@ -88,20 +58,20 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
     [ "$status" -eq 0 ]
     [[ "$output" == *"Nothing was changed"* ]]
     [ -L "${HOME}/.claude/commands/v-work.md" ]
-    [ -f "${HOME}/.openviking/ov.conf" ]
+    [ -d "${VAULT_HOME}/_global" ]
 }
 
-@test "--purge-data deletes ~/.openviking and _global" {
+# Regression guard: _global and ~/.openviking used to share one `rm -rf`. Dropping
+# the OpenViking argument must not take the _global cleanup with it.
+@test "--purge-data still deletes _global" {
     uninstall --purge-data --yes
     [ "$status" -eq 0 ]
-    [ ! -d "${HOME}/.openviking" ]
     [ ! -d "${VAULT_HOME}/_global" ]
 }
 
 @test "default run leaves data dirs and does not purge" {
     uninstall --yes
     [ "$status" -eq 0 ]
-    [ -d "${HOME}/.openviking/data" ]
     [ -d "${VAULT_HOME}/_global" ]
 }
 
@@ -113,7 +83,16 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
     [ ! -f "${TEST_HOME}/toollog" ]       # tools untouched
 
     uninstall --tools --yes
-    grep -q 'pipx uninstall openviking' "${TEST_HOME}/toollog"
     grep -q 'pipx uninstall graphifyy'  "${TEST_HOME}/toollog"
     grep -q 'uv tool uninstall serena-agent' "${TEST_HOME}/toollog"
+    ! grep -q 'openviking' "${TEST_HOME}/toollog"
+}
+
+# claude-mem@claude-mem was never a real id, so the uninstall silently no-opped
+# and left the plugin installed. The marketplace declares "thedotmack".
+@test "claude-mem is uninstalled under its real qualified id" {
+    stub claude 'echo "claude $*" >> '"${TEST_HOME}"'/pluginlog; exit 0'
+    uninstall --yes
+    grep -q 'plugin uninstall claude-mem@thedotmack' "${TEST_HOME}/pluginlog"
+    ! grep -q 'claude-mem@claude-mem' "${TEST_HOME}/pluginlog"
 }

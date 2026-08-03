@@ -2,8 +2,8 @@
 
 > **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
-Finalise: stage, commit, push to OpenViking, capture the session. This task stays `in_progress`
-until `/v-capture` has actually run — never close out `/v-work` without it.
+Finalise: stage, commit, capture the session. This task stays `in_progress` until `/v-capture` has
+actually run — never close out `/v-work` without it.
 
 ## 5.1 Code commit
 
@@ -32,17 +32,11 @@ git add <touched files>
 git commit -m "docs(vault): <what changed>"
 ```
 
-## 5.3 Push to OpenViking
-
-Probe `memory_health()` first. If unreachable, surface and skip — don't fail silently. Otherwise call
-`memory_store(text=<summary + link to session file>, role="assistant")`. OV exposes only
-`memory_store`, `memory_recall`, `memory_health`, `memory_forget` — there is no `add_episode`.
-
-## 5.4 claude-mem
+## 5.3 claude-mem
 
 No action — claude-mem auto-captures via its SessionEnd hook. `mcp-search` is read-only.
 
-## 5.5 Capture session (mandatory)
+## 5.4 Capture session (mandatory)
 
 Honor any carried `pre_capture` hook, then invoke `/v-capture` to write the session log — it dedupes vs
 recent sessions, updates indexes, extracts ADR candidates, cross-links Refs. This is part of the

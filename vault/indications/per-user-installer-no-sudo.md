@@ -10,12 +10,12 @@ tags: [indication]
 
 ## Rule
 The installer runs **as the normal user** and escalates internally only for the steps that need it
-(apt, ollama's systemd). Never run the whole installer under `sudo`. Accept interactive sudo (prompt
+(apt). Never run the whole installer under `sudo`. Accept interactive sudo (prompt
 for the password at the escalation point); require passwordless sudo only for non-interactive runs.
 
 ## Rationale
 Wrapping a per-user installer in `sudo` flips `$HOME` to `/root`: user-scoped artifacts
-(uv/bun/pipx bins, `~/.openviking/ov.conf`, `claude` plugins) land in root's home, invisible to the
+(uv/bun/pipx bins, `claude` plugins) land in root's home, invisible to the
 user, and the user's `claude` CLI drops off PATH so programmatic plugin install silently degrades.
 Gating the auto path on *passwordless* sudo instead strands the common workstation user with
 hint-only output. Distinguish a human `sudo` invocation (`$SUDO_USER` set → refuse) from genuine

@@ -52,13 +52,10 @@ These install into `~/.claude/commands/`. Type them in Claude Code.
 | `/v-cr` | Review a pull request and post comments back. Optional `--sandbox` actually runs the PR to verify findings. |
 | `/v-capture` | Save the current session into the vault. |
 | `/v-init` | Set up a vault for the current repo. |
-| `/v-sync` | Re-index a vault's knowledge for search. |
-| `/v-link` | Link two projects so they share recall. |
-| `/v-backfill` | Pull past Claude Code sessions into search. |
+| `/v-link` | Link two projects so context loading sweeps both. |
 | `/v-guide` | Generate a cross-project integration guide from a feature. |
 
-Archived (see `commands/attic/`): `/v-migrate` (migration finished; `bin/vault-migrate.sh` remains),
-`/v-resume` (superseded by the OpenViking auto-recall SessionStart hook).
+Archived (see `commands/attic/`): `/v-migrate` (migration finished; `bin/vault-migrate.sh` remains).
 
 ## Persona packs
 
@@ -73,6 +70,8 @@ accepts a list to seat several packs). Selection rules: `personas/_resolution.md
 
 - [vault-guide.md](vault-guide.md) — how the vault is laid out and how the lifecycle works. The doc to
   read if you want to understand the framework.
-- [tool-playbook.md](tool-playbook.md) — the helper tools (OpenViking, Serena, Graphify, claude-mem) and
-  when to use each.
+- [tool-playbook.md](tool-playbook.md) — the helper tools (claude-mem, Serena, Graphify) and when to
+  use each.
+- [docs/removing-openviking.md](docs/removing-openviking.md) — OpenViking was dropped; this takes an
+  older install off your machine.
 - [INSTALL.md](INSTALL.md) — install options, uninstall, and tests.

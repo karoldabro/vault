@@ -21,7 +21,7 @@ satisfies a grep-key idempotency check, so the bug stays invisible until a real 
 
 ## Examples
 - Do: `thedotmack/claude-mem` → `marketplace.json` `name: thedotmack`, plugin `claude-mem` → install `claude-mem@thedotmack`.
-- Do: `Castor6/openviking-plugins` → name `openviking-plugin` → install `claude-code-memory-plugin@openviking-plugin`.
+- Do: `thedotmack/claude-mem` → marketplace name `thedotmack` → install `claude-mem@thedotmack`.
 - Don't: derive the qualifier from the owner or repo slug (`claude-mem@claude-mem`).
 
 ## Applies-to

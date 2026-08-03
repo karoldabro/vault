@@ -23,7 +23,7 @@ There are three layers. Each owns different content, and you shouldn't mix them.
 |------|------|------|------|
 | **Framework** | Process docs, templates, commands. Generic. | `git@github.com:karoldabro/vault.git` | Installed once per machine at `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault/`). Read globally, never copied into a project. |
 | **Project** | Features, decisions, sessions, MOC, architecture for one product. Specific. | Per-project vault (global `~/vault/<project>/` or in-repo `<code-repo>/vault/`) | Resolved per command — see §1.1 |
-| **Machine** | Local state: coupled-groups, auto-memory dirs, OV index, install config. Not committed. | Local-only | `~/vault/_global/` (incl. `config.md`), `~/vault/<project>/memory/parent`, OV index |
+| **Machine** | Local state: coupled-groups, auto-memory dirs, install config. Not committed. | Local-only | `~/vault/_global/` (incl. `config.md`), `~/vault/<project>/memory/parent` |
 
 A quick test: if someone cloning your project repo wouldn't need it, it belongs in the machine layer, not
 the project.
@@ -62,7 +62,7 @@ forward through the run, so steps 2–6 don't re-read the file:
 Unknown keys are ignored. No `VAULT.md` means all defaults and a global vault.
 
 **Cross-project feature workspaces** live outside any single project vault, in `~/vault/_features/` —
-its own committed vault, wired into `/v-sync`. `/v-pm` writes them; per-project `/v-team <feature>`
+its own committed vault. `/v-pm` writes them; per-project `/v-team <feature>`
 sessions read them through a `features/<feature>` symlink. Full protocol: §13.
 
 ### Lifecycle hooks — phases, precedence & failure modes
@@ -241,7 +241,7 @@ each does a different job:
 Before you write any new doc, run dedupe. Both `/v-work` and `/v-capture` do this for you; do it by hand
 for one-off writes.
 
-The steps (OV is the first dedupe layer; grep only after a confirmed `memory_health()` failure):
+The steps (grep over the vault is the floor; claude-mem adds semantic reach when it is installed):
 
 1. **Extract keywords**: 3–6 short keywords from the intended title or topic.
 2. **Grep the vault**:
@@ -252,9 +252,8 @@ The steps (OV is the first dedupe layer; grep only after a confirmed `memory_hea
    ```
 3. **Check indexes**: open `_feature-index.md`, `decisions/_inventory.md`, `_moc.md`. Look for a slug or
    topic match.
-4. **OV semantic search (required)**: probe `memory_health()`; if it's healthy, call `memory_recall` with
-   the topic and read the top 5 results. (OV is a Claude Code MCP plugin — check it through MCP, not
-   `curl`.) Grep is the floor, not a substitute: OV catches semantic matches grep misses.
+4. **claude-mem search (when installed)**: `search(<topic>)` and read the top 5 hits. It catches
+   semantic matches grep misses. Not installed → say so once; the grep in step 2 stands on its own.
 5. **Apply the rule**: if an existing doc covers more than 60% of the topic, update it instead of creating
    a new file.
 6. **Naming guards**:
@@ -319,15 +318,15 @@ Every so often (weekly, or per milestone):
 
 ## 10. Required tools
 
-Vault commands assume these four tools are installed and reachable. Set them up once with `setup.sh` (see
-[INSTALL.md](INSTALL.md)).
+Vault commands prefer these tools and fall back cleanly when one is missing. Set them up once with
+`setup.sh` (see [INSTALL.md](INSTALL.md)). The floor under all of them is grep over the vault markdown,
+which needs nothing installed.
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| **OpenViking** | Long-term semantic memory — vault, ADRs, sessions, pitfalls. MCP: `memory_recall`, `memory_store`, `memory_health`. | `setup.sh --with-ov` |
 | **Serena** | Symbol-aware code navigation and refactoring. MCP: `activate_project`, `find_symbol`, `rename`, `replace_symbol_body`. | `setup.sh --with-serena` |
 | **MorphLLM Fast Apply** | Bulk multi-file edits at 10k+ tok/sec. MCP: `morph_edit(target_filepath, instructions, code_edit)`. | not auto-installed (paid key): `claude mcp add` — see ADR-005 |
-| **claude-mem** | Project history — progressive disclosure search. MCP: `search`, `timeline`, `get_observations`, `memory_store`. | `setup.sh --with-claude-mem` |
+| **claude-mem** | Project history — progressive disclosure search. MCP: `search`, `timeline`, `get_observations`. Read-only; it auto-captures via its SessionEnd hook. | `setup.sh --with-claude-mem` |
 
 ### Token-cost hierarchy (cheapest → most expensive)
 
@@ -336,11 +335,11 @@ next.
 
 | Priority | Source | Cost | Use for |
 |----------|--------|------|---------|
-| 1 | OV `memory_recall` | ~100–2000 tok | Vault decisions, ADRs, past sessions, pitfalls |
-| 2 | claude-mem `search` → `timeline` → `get_observations` | ~100→300→1000 tok | Project history, progressive disclosure |
-| 3 | Graphify `query` / `path` | ~hundreds tok | **Structural questions** — what calls X, where is Y defined, which modules touch Z. `graph.json` is auto-rebuilt by the post-commit hook (free, no LLM); query it, never grep |
-| 4 | Serena `find_symbol`, `get_symbols_overview` | real-time | Semantic code navigation — read a symbol, not the whole file |
-| 5 | Grep / Read | ~1000–20k tok | Last resort — only after layers 1–4 come up empty |
+| 1 | claude-mem `search` → `timeline` → `get_observations` | ~100→300→1000 tok | Project history, progressive disclosure |
+| 2 | Graphify `query` / `path` | ~hundreds tok | **Structural questions** — what calls X, where is Y defined, which modules touch Z. `graph.json` is auto-rebuilt by the post-commit hook (free, no LLM); query it, never grep |
+| 3 | Serena `find_symbol`, `get_symbols_overview` | real-time | Semantic code navigation — read a symbol, not the whole file |
+| 4 | Grep over `~/vault/` | ~100–2000 tok | Vault decisions, ADRs, past sessions, pitfalls. Also the standing substitute for layer 1 when claude-mem is absent |
+| 5 | Grep / Read over source | ~1000–20k tok | Last resort — only after layers 1–4 come up empty |
 
 Reading 40 source files costs about 20k tokens; a vault hit costs about 100–2000. The wrong default wastes
 100×.
@@ -375,19 +374,21 @@ text is capped instead at `v-team/steps/03-propose-loop.md` §(e).7.
 | Command | Purpose | Key tools |
 |---------|---------|-----------|
 | `/v-init` | Bootstrap a project vault for the current code repo. Creates the vault (global `~/vault/<slug>/` or in-repo with `--in-repo`), writes a repo `VAULT.md`, scaffolds folders + indexes, wires CLAUDE.md. | git |
-| `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | OV, claude-mem, Serena, MorphLLM |
-| `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (resolved from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review the plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, OV, claude-mem, Serena, MorphLLM |
-| `/v-ask` | Light sibling — read-only, vault-aware Q&A. Loads context cheapest-first and answers; no edits, no approval gate, no capture. Hands off to `/v-do` or `/v-work` when the answer implies a change. | OV, claude-mem, graphify, Serena |
-| `/v-do` | Light sibling — small low-risk change, no approval gate. Orient (vault-lite) → execute → self-review; capture offered, off by default. Escalates to `/v-work` (scope > ~5 files) or `/v-team` (architecture/schema/auth/billing/cross-repo). | OV, claude-mem, Serena, MorphLLM |
-| `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs, pushes to OV. (claude-mem auto-captures via its SessionEnd hook — no explicit write.) | OV `memory_store`; claude-mem auto-capture (SessionEnd hook) |
-| `/v-sync` | Re-ingest a project's curated knowledge into OpenViking after content changes. | OV |
-| `/v-link` | Declare two projects as coupled (shared memory recall). Updates `~/vault/_global/coupled-groups.md`. | — |
-| `/v-backfill` | Targeted ingest of past Claude Code sessions for a project into OpenViking. | OV |
-| `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from an existing feature. | OV, graphify, MorphLLM |
-| `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | OV, Agent |
+| `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | claude-mem, Serena, MorphLLM |
+| `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (resolved from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review the plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, claude-mem, Serena, MorphLLM |
+| `/v-ask` | Light sibling — read-only, vault-aware Q&A. Loads context cheapest-first and answers; no edits, no approval gate, no capture. Hands off to `/v-do` or `/v-work` when the answer implies a change. | claude-mem, graphify, Serena |
+| `/v-do` | Light sibling — small low-risk change, no approval gate. Orient (vault-lite) → execute → self-review; capture offered, off by default. Escalates to `/v-work` (scope > ~5 files) or `/v-team` (architecture/schema/auth/billing/cross-repo). | claude-mem, Serena, MorphLLM |
+| `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs. (claude-mem auto-captures via its SessionEnd hook — no explicit write.) | claude-mem auto-capture (SessionEnd hook) |
+| `/v-link` | Declare two projects as coupled, so context loading sweeps both. Updates `~/vault/_global/coupled-groups.md`. | — |
+| `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from an existing feature. | claude-mem, graphify, MorphLLM |
+| `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | Agent |
 
 Archived commands (`commands/attic/`): `/v-migrate` (one-shot migration finished; `bin/vault-migrate.sh`
-remains usable), `/v-resume` (superseded by the OV auto-recall SessionStart hook).
+remains usable).
+
+**OpenViking was removed as a dependency** (2026-08-03): reads were ~4% of its traffic against a
+four-part install. `/v-sync` and `/v-backfill` existed only to feed it and are gone with it. To take an
+older install off a machine, see [docs/removing-openviking.md](docs/removing-openviking.md).
 
 ---
 
@@ -428,7 +429,7 @@ session read that plan and coordinate asynchronously through files — so you st
 between agent sessions. The substrate is a shared workspace plus a file-based conversation.
 
 ### Home & ownership
-`~/vault/_features/` is its **own committed vault** (own git, ingested by `/v-sync`) — neutral ground
+`~/vault/_features/` is its **own committed vault** (own git) — neutral ground
 owned by no single project, since a feature spans several. Each participant project gets a
 `features/<feature>` **symlink** into it (gitignored in the project repo; see `templates/vault.gitignore`).
 
@@ -465,8 +466,8 @@ decision/state tables. This is what grounds **rich tests** (the id chain below) 
   is what shipped. `/v-team`+`/v-capture` promote only **built** rules into the dossier — the
   `established, not aspirational` rule (`capture-behaviors-test-shaped`) still governs `features/`.
 `/v-pm`'s **CAPTURE** step (plan mode step 5; also the tail of `reconcile`) is v-pm's own `/v-capture`:
-it writes the planning-session record + extracts cross-project ADR candidates, pushes the rationale to
-OpenViking (`memory_store`) so each project's LOAD CONTEXT can recall it, and commits the workspace.
+it writes the planning-session record + extracts cross-project ADR candidates and commits the
+workspace — the committed markdown is what each project's LOAD CONTEXT then finds.
 
 There is **no `ledger.md`** — the ledger is a *derived view* computed from thread filenames on read
 (`/v-pm status`, reconcile). Nothing writes it, so parallel sessions never race on it.

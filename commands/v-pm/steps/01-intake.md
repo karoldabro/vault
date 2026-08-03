@@ -38,7 +38,7 @@ pay off. So the gate splits on that boundary, not on "author requirements or not
      `requirements/` doesn't exist yet, create it + a `requirements/_index.md` (one-line note; no forced
      migration of existing vaults).
   3. Run **CAPTURE** (`05-capture.md`, single-repo branch) against the **project vault**: planning-session
-     into `<project-vault>/sessions/`, push the glossary + rules to OV, commit the project vault (not
+     into `<project-vault>/sessions/`, commit the project vault (not
      `_features/`).
   4. **Hand off execution**: tell the user to run `/v-team` (or `/v-work`) in that repo — it reads
      `requirements/<feature>.md` (LOAD CONTEXT now globs `requirements/`) and, **at `/v-capture` Step 4d**

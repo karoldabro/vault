@@ -11,20 +11,17 @@ git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspac
 
 `setup.sh` is the installer. On Ubuntu, `--full` sets up the whole tool stack for you:
 
-- ollama plus the `nomic-embed-text` model
-- the OpenViking server (installed with pipx, a tool that puts Python apps in their own isolated
-  environment), its `~/.openviking/` config, and a per-user service on port 1933
 - uv and Serena
 - bun and claude-mem
 - pipx and Graphify
-- the OpenViking and claude-mem Claude Code plugins
+- the claude-mem Claude Code plugin
 
 It then scaffolds `~/vault/_global/`, runs a health check, and links the slash commands into
 `~/.claude/commands/`. Restart Claude Code afterwards so the new plugins load.
 
-Run it as your normal user, not with `sudo`. Everything is per-user: uv, bun, the plugins, and
-`~/.openviking/ov.conf` all land in your `$HOME`. When the installer reaches the apt and ollama steps it
-asks for your sudo password once and escalates for you. `sudo ./setup.sh` would point `$HOME` at `/root`
+Run it as your normal user, not with `sudo`. Everything is per-user: uv, bun and the plugins all land
+in your `$HOME`. When the installer reaches the apt steps it asks for your sudo password once and
+escalates for you. `sudo ./setup.sh` would point `$HOME` at `/root`
 and strand everything there, so it's refused. (If you really mean it, set `VAULT_ALLOW_SUDO=1`.)
 
 When it finishes, open a fresh shell so the new PATH entries show up:
@@ -33,8 +30,10 @@ When it finishes, open a fresh shell so the new PATH entries show up:
 exec $SHELL -l
 ```
 
-There is no `ov` command. OpenViking runs as the plugin plus the ollama backend. Check on it any time
-with `./setup.sh --doctor`.
+Check what actually landed any time with `./setup.sh --doctor`.
+
+**OpenViking was removed from this stack.** It is no longer installed or used. If you have an install
+from before that change, see [removing-openviking.md](docs/removing-openviking.md).
 
 ## Consent and safety
 
@@ -43,7 +42,7 @@ so you have an audit trail, and is safe to run twice. On a Mac (no apt), or non-
 passwordless sudo, it prints the exact commands instead of running them, so it never half-installs or
 hangs.
 
-It does run vendor `curl | sh` scripts (ollama, uv, bun) and adds two third-party Claude marketplaces.
+It does run vendor `curl | sh` scripts (uv, bun) and adds a third-party Claude marketplace.
 Every source is printed before it runs. See `vault/decisions/ADR-005-installer-auto-exec.md` for the
 reasoning. MorphLLM Fast Apply is not installed for you — it needs a paid API key.
 
@@ -51,23 +50,17 @@ reasoning. MorphLLM Fast Apply is not installed for you — it needs a paid API 
 
 | Flag | What it does |
 |------|--------------|
-| `--full` | Install the whole stack: OpenViking, Serena, claude-mem, Graphify. Recommended. |
+| `--full` | Install the whole stack: Serena, claude-mem, Graphify. Recommended. |
 | `--minimal` | Framework only, no tools. Commands degrade without the tools. |
-| `--with-ov` | Just OpenViking: ollama + `nomic-embed-text`, the server (pipx) + `ov.conf` + client config + the port-1933 service + the plugin. |
 | `--with-serena` / `--with-claude-mem` | Install one tool (uv + Serena, or bun + claude-mem). |
 | `--with-graphify` | Install pipx + Graphify. (The per-project commit hook is added by `/v-init`.) |
 | `--yes`, `-y` | Say yes without prompting. For CI and automation. |
 | `--dry-run` | Print every command that would run, without running it. |
 | `--doctor` | Run the health check and exit. |
 
-`--with-ov` also points Claude at the OpenViking config by writing `OPENVIKING_CC_CONFIG_FILE` and
-`OPENVIKING_CONFIG_FILE` into the `env` block of `~/.claude/settings.json`. The plugin needs these, or
-its MCP exits with "Connection closed". The merge keeps any value of yours that points at a real file
-and only fills in the ones that are missing or stale.
-
 ## Python 3.10 or newer
 
-The pipx tools (`openviking`, `graphifyy`) need Python 3.10+. The installer picks a `python3.12`,
+The pipx tool (`graphifyy`) needs Python 3.10+. The installer picks a `python3.12`,
 `3.11`, or `3.10` it finds on your PATH. On an old box (for example WSL or Ubuntu 20.04, which ship
 Python 3.8) pipx fails with a misleading "No matching distribution found". Install a newer Python and
 re-run:
@@ -111,14 +104,15 @@ new session; switch back with the same menu.
 ./bin/vault-uninstall.sh --dry-run    # preview first
 ```
 
-By default this removes only the wiring: the command symlinks, the OpenViking service, `ov.conf` and the
-plugin client config, the two `settings.json` env keys, and the OV and claude-mem plugins. To go
+By default this removes only the wiring: the command symlinks and the claude-mem plugin. To go
 further:
 
-- `--tools` also uninstalls `openviking`, `graphifyy`, and `serena-agent` (never the shared
-  ollama/uv/bun/node).
-- `--purge-data` deletes `~/.openviking` and `~/vault/_global`. This is destructive.
+- `--tools` also uninstalls `graphifyy` and `serena-agent` (never the shared uv/bun/node).
+- `--purge-data` deletes `~/vault/_global`. This is destructive.
 - `--all` does both.
+
+To remove an OpenViking install from before it was dropped, use `./bin/remove-openviking.sh` — see
+[removing-openviking.md](docs/removing-openviking.md).
 
 Without `--yes` and with no terminal attached, it just prints the plan. Your project vaults and your
 code repos are never touched.
@@ -150,5 +144,4 @@ VAULT_E2E=1 make test-e2e
 
 It errors out unless `VAULT_E2E=1` is set, so it stays off the default path. It's built from
 `tests/e2e/Dockerfile.ubuntu` and covers the lightweight installers (uv via `curl|sh`, Graphify via
-pipx). The ollama daemon and the `claude` plugin paths are covered at the dry-run level (see
-`tests/e2e/run.sh`).
+pipx). The `claude` plugin paths are covered at the dry-run level (see `tests/e2e/run.sh`).

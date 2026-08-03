@@ -6,7 +6,7 @@ tags: [process, tools, tokens]
 # Tool playbook — token-saving tools
 
 Rules and worked examples for the tools every vault command depends on. The commands (`/v-work`,
-`/v-resume`, and the rest) carry a short inline example at the point of use and link back here for the
+`/v-team`, and the rest) carry a short inline example at the point of use and link back here for the
 full ruleset. This file is the source of truth.
 
 The reason is token cost. A vault hit costs about 100–2000 tokens. A graph slice or a symbol query costs
@@ -24,14 +24,13 @@ up empty.
 
 | Priority | Tool | Cost | Use for |
 |----------|------|------|---------|
-| 1 | OpenViking `memory_recall` | ~100–2000 tok | Vault decisions, ADRs, past sessions, pitfalls |
-| 2 | claude-mem `search`→`timeline`→`get_observations` | ~100→300→1000 tok | Project history, progressive disclosure |
-| 3 | Graphify `query` / `path` | ~hundreds tok | **Structural questions**: what calls X, where is Y defined, which modules touch Z |
-| 4 | Serena `get_symbols_overview` / `find_symbol` | small, real-time | Reading/navigating a specific file or symbol without dumping the whole file |
-| 5 | Grep / Read | ~1000–20k tok | **Last resort** — only after layers 1–4 come up empty, or to verify an exact current line |
+| 1 | claude-mem `search`→`timeline`→`get_observations` | ~100→300→1000 tok | Project history, progressive disclosure |
+| 2 | Graphify `query` / `path` | ~hundreds tok | **Structural questions**: what calls X, where is Y defined, which modules touch Z |
+| 3 | Serena `get_symbols_overview` / `find_symbol` | small, real-time | Reading/navigating a specific file or symbol without dumping the whole file |
+| 4 | Grep / Read over `~/vault/` and source | ~1000–20k tok | **Last resort** — only after layers 1–3 come up empty, or to verify an exact current line. Grep over the vault is also the standing fallback when claude-mem is not installed. |
 
 Rule of thumb: **graph before grep, symbol before full-file read.** If you're about to `Grep`
-across source to answer "what calls X" or "where is Y" — stop, that's a graphify query (layer 3).
+across source to answer "what calls X" or "where is Y" — stop, that's a graphify query (layer 2).
 
 ---
 
@@ -42,8 +41,7 @@ Present → use it; down → health-check to confirm, warn once, fall back, **ne
 
 | Tool | Health check | Fallback if down |
 |------|-------------|------------------|
-| OpenViking | `memory_health()` (MCP plugin — never `curl`) | `Grep` over `~/vault/` |
-| claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
+| claude-mem | `search("test", limit=1)` via mcp-search | `Grep` over `~/vault/`; say so once |
 | Serena | `check_onboarding_performed()` | graphify → Glob/Grep/LSP |
 | MorphLLM | (MCP — no runtime check) | `Edit` / `MultiEdit` |
 | graphify | `graphify-out/graph.json` present | offer `graphify hook install`, then grep |
@@ -58,43 +56,19 @@ findings are `advisory` unless the wiring check above passes.
 
 ---
 
-## 1. OpenViking (OV) — semantic vault memory
-
-Two access paths with different coverage — **use the CLI for recall**:
-
-- **`ov find "<query>"` (CLI, primary)** — semantic retrieval over `viking://resources/`, where
-  `/v-sync` ingests the actual vault content (ADRs, sessions, features, cross-project). This is the
-  index that actually holds the knowledge.
-- **MCP plugin** (`memory_recall`, `memory_store`, `memory_health`, `memory_forget`) — searches the
-  `viking://user|agent/.../memories` namespace, which is populated only by the server's LLM
-  *extraction* step. Without a cloud `vlm` configured in `~/.openviking/ov.conf`, extraction is a
-  no-op and `memory_recall` returns empty-directory stubs — treat it as **secondary**. `memory_store`
-  is still the write path (embeds fine; the "extraction returned 0 memories" reply is expected and
-  harmless without a `vlm`). No `curl` — the server API is not for the model; use the CLI or MCP.
-
-**When:** first thing, every task. Prior decisions, ADRs, past sessions, known pitfalls.
-**When NOT:** structural code questions (use graphify) or current line-level behavior (read source).
-**On failure:** `ov health` / `memory_health()` to confirm it's down. Only then fall back to `Grep`
-over `~/vault/`. Never silently skip it.
-
-```
-memory_recall(query="bouncer tenancy permission cache")
-→ top hits: ADR-042 (permission cache invalidation), session 2026-03-11 (tenancy gotcha), …
-```
-
-```
-# after work is done — persist a summary (role: "assistant")
-memory_store(text="Refactored permission cache to per-tenant keys; see session 2026-05-29-...", role="assistant")
-```
-
----
-
 ## 2. claude-mem — project history (progressive disclosure)
 
-Read-only `mcp-search` server. Three layers — climb only as far as you need.
+> Section 1 was OpenViking. It was removed from the framework — reads were 4% of its traffic against a
+> four-part install (`docs/removing-openviking.md`). **The numbering below is deliberately unchanged**:
+> a dozen files across `commands/` and `vault/` cite these sections by number.
+
+Read-only `mcp-search` server. Three layers — climb only as far as you need. **Not installed**
+(it ships with `setup.sh --full` / `--with-claude-mem`) → say so once and grep the vault instead:
+`grep -ril "<keyword>" <project-vault>/{decisions,sessions,indications,features}/`.
 
 **When:** "did we already solve this?", "how did we do X last time?", what-changed-when.
 **When NOT:** as a write target — it auto-captures via its SessionEnd hook; there is no write tool.
+The durable record is the vault's own `sessions/*.md`, which is git-tracked and greppable.
 
 ```
 # Layer 1 — compact index of IDs (~100 tok). Stop here if nothing relevant.
@@ -216,7 +190,8 @@ For project-wide symbol renames / extract-method, prefer Serena (it tracks refer
 - Rewriting an entire file to change 10 lines → `morph_edit` with markers (§5).
 - `sed`/`awk`/`python`/heredocs to edit file content → use Edit / MultiEdit / Morph / Serena.
 - Silently falling back to grep when a tool is "unavailable" → confirm it's down first, then say so.
-  Don't degrade quietly.
+  Don't degrade quietly. (Grep over the vault is a legitimate destination — an *unannounced* fallback
+  is the defect.)
 
 ---
 

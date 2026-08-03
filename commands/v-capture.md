@@ -7,10 +7,11 @@ description: Capture this session as a vault sessions/*.md doc. Runs dedupe vs r
 # /v-capture — Enhanced session capture
 
 Force-write this session into the project vault: dedupe vs recent sessions, session doc, ADR +
-indication candidates, feature dossier gate, Refs cross-linking, index updates, OV push.
+indication candidates, feature dossier gate, Refs cross-linking, index updates.
 
-Prefers OpenViking and claude-mem. If either is down, surface it and skip that push (Step 5) —
-degrade gracefully, never halt, never skip *silently*.
+The session doc in the vault is the durable record — it is git-tracked and greppable. claude-mem
+auto-captures alongside it; if it is absent, say so once and carry on. Degrade gracefully, never
+halt, never skip *silently*.
 
 **Mechanics live in `$VAULT_FRAMEWORK_PATH/bin/vault-capture.sh`** (default
 `~/workspace/vault/bin/vault-capture.sh`; below: `$VC`). You supply judgment: metadata, candidate
@@ -93,9 +94,6 @@ Report per feature: `created | updated | skipped: <reason>`.
 - **`_moc.md`:** `$VC index-moc --vault <vault> --session <filename> --goal "<goal>"` (idempotent,
   keeps last 5).
 - **`_feature-index.md`:** created → add row; updated → set "Last touched" = today; skipped → no-op.
-- **OpenViking:** probe `memory_health()` — if unreachable, tell the user and skip. Else
-  `memory_store(text=<summary: goal, decisions, files, gotchas, session link>, role="assistant")`.
-  OV is an MCP plugin (`mcp__plugin_openviking-memory_*`) — never `curl` it.
 - **claude-mem:** no action — its SessionEnd hook auto-captures; `mcp-search` is read-only.
 
 ## Output
@@ -106,7 +104,6 @@ Captured: <vault>/sessions/<filename>.md
   Indexes updated: <_moc.md, _feature-index.md, decisions/_inventory.md, indications/_index.md>
   ADR candidates: <N found, M promoted>     Indications: <N found, M promoted | skipped (toggle off)>
   Features: <created: a · updated: b · skipped: c>     Refs: <K links>
-  OV: <pushed | memory_health unreachable — user notified>     claude-mem: auto-capture on session end
 ```
 
 One line per item; no further commentary unless asked. Re-runs are safe: same-minute slug overwrites

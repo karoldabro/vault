@@ -28,7 +28,7 @@ Read `~/workspace/vault/vault-guide.md` §6 and §7b first — they define what 
 ## Procedure
 
 You are consolidating scattered guidelines/patterns in the **{{SLUG}}** vault (`{{VAULT}}`) into
-`indications/`. Use the framework's token-saving tools (OpenViking `memory_recall`, Serena, grep
+`indications/`. Use the framework's token-saving tools (claude-mem `search`, Serena, grep
 fallback). Work in phases and **stop at the approval gate — do not write or move anything before it.**
 
 ### Phase 0 — Safety (do this first)
@@ -103,7 +103,6 @@ Never propose deleting a file outright in this pass — superseding stubs only, 
   K stubbed, P skipped`.
 - Check no wikilink was orphaned (every `[[…]]` you wrote resolves).
 - `git -C {{VAULT}} add -A && git commit -m "docs(vault): consolidate guidelines into indications/"`.
-- Optionally `/v-sync {{SLUG}}` to re-index OpenViking so the new `indications/` are recallable.
 
 Output a final summary and the commit hash. Remind the user the change is one revertible commit.
 

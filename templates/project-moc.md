@@ -16,7 +16,7 @@ tags: [moc]
 <!-- Link to [[features/]] folder. Active features: -->
 
 ## Sessions (recent)
-<!-- Last N session entries appended by /save or OV auto-capture. -->
+<!-- Last N session entries appended by /v-capture. -->
 
 ## Code
 - Graph: `graphify/<repo>/graph.json` per sub-repo.

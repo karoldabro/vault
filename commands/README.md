@@ -13,9 +13,7 @@ Each file is a Claude Code slash command definition. The `description:` frontmat
 | `v-ask.md` | `/v-ask` | Read-only, vault-aware Q&A. Loads context, answers, no edits/approval/capture. |
 | `v-do.md` | `/v-do` | Small low-risk change — no approval gate; orient → execute → self-review, capture optional. |
 | `v-capture.md` | `/v-capture` | Enhanced session capture. |
-| `v-sync.md` | `/v-sync` | Re-ingest curated knowledge into OpenViking. |
 | `v-link.md` | `/v-link` | Declare two projects as coupled. |
-| `v-backfill.md` | `/v-backfill` | Targeted ingest of past Claude Code sessions. |
 | `v-guide.md` | `/v-guide` | Generate a cross-project integration guide from an existing feature. |
 | `v-pm.md` | `/v-pm` | Cross-project feature planning: a critic pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file-based threads. |
 
