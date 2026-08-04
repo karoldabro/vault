@@ -28,6 +28,10 @@ slug: {{slug}}
 # load_context_extra: [runbooks]       # folders Step 2 loads beyond the defaults
 capture_indications: true              # run the indication-candidate scan at capture time
 # suggest_rename: true                 # step 1 surfaces a `/rename <slug>` for you to paste (default: on)
+# vault_autosync: true                 # pull the vault before reading it, commit + push after writing
+                                       # (default: on). Only bites when the vault is a git repo OUTSIDE
+                                       # this code repo — an in-repo vault rides the code commit.
+                                       # Set false to keep committing the vault by hand.
 
 ## hooks
 <!-- Per-project, per-step instruction (prose only; never run as a shell command, there is no `run:`

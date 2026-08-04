@@ -24,15 +24,21 @@ After the commit lands (before `/v-capture`), honor any carried `post_commit` ho
 move the Jira ticket to In Review" (it never transitions anything itself; instruction-only). See
 `vault-guide.md` §1.1.
 
-## 5.2 Vault commit (if applicable)
+## 5.2 Vault sync (if applicable)
 
-If `<project-vault>/` is a separate git repo:
+Unless carried `behaviour.vault_autosync` is `false`, commit and push the vault through the script —
+never hand-rolled `git` (contract: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`):
 
 ```bash
-cd <project-vault>
-git add <touched files>
-git commit -m "docs(vault): <what changed>"
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh push <project-vault> -m "<what changed>" <touched vault paths>
 ```
+
+Pass the paths this run actually touched. Exit 4 means the vault lives inside the code repo, so §5.1
+already committed it — skip silently. Exit 3 (not a git repo) and 5 (no upstream, so the commit stayed
+on this machine) each get one line in the completion report. A failure here never blocks §5.4.
+
+`/v-capture` pushes again after it writes the session file, which is what carries the capture itself
+to the remote; this step covers the vault docs written during EXECUTE.
 
 ## 5.3 claude-mem
 

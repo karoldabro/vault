@@ -53,6 +53,10 @@ reconsider the guardrail.
 
 - Restate the change in one line. Detect the test command (project `CLAUDE.md` / Step-1 cues; Docker
   projects use their Docker test aliases).
+- **Sync the vault first** (unless `behaviour.vault_autosync` is `false`):
+  `$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh pull <project-vault>`. Exit 0 and 4 are silent; anything
+  else is one line and you carry on. Contract: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`.
+  The matching push happens only if the optional capture at the end actually runs — `/v-capture` owns it.
 - **Cheap vault check, not the full Step-2 sweep:** claude-mem `search("<keywords>")` for prior
   decisions/gotchas in this area (playbook §2; grep the vault if it isn't installed), and read any
   `indications/` rows matching the files you'll touch — those are **binding constraints**, not

@@ -14,6 +14,20 @@ before full-file read.** Full per-tool rules + examples: `$VAULT_FRAMEWORK_PATH/
 **Hooks:** honor carried `pre_load_context` before / `post_load_context` after — loaded once at step 1
 §1.4, never re-read `VAULT.md` (contract: vault-guide §1.1).
 
+### 2.0 — Sync the vault before reading it
+
+Unless carried `behaviour.vault_autosync` is `false`, pull the vault first, so the context below is
+the current one rather than this machine's stale copy:
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh pull <project-vault>
+```
+
+Branch on the exit code per `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md` — 0 silent, 4
+(in-repo vault) silent, 3 / 5 a one-line note, 1 a one-line warning. **Never halt on a failed pull:**
+stale context is worse than fresh, but no context at all is worse than both. Never run raw `git`
+against a vault, and never `git init` one.
+
 **Fan out with agents.** When scope is uncertain or spans multiple areas, launch up to 3 **Explore**
 subagents in parallel (single message, multiple `Agent` calls) instead of serial reads — give each a
 distinct focus (vault decisions/guidelines · code structure · tests). One Explore agent is enough for

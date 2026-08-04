@@ -29,6 +29,15 @@ approval, feature verdicts, honest content. Script output is advisory input, not
    `~/vault/_global/config.md`, else `~/vault/<slug>/`. Note any `behaviour.capture_indications` toggle.
 3. If the vault dir doesn't exist, stop and tell the user to run `/v-init` first (old submodule
    vault: `bin/vault-migrate.sh`).
+4. Unless `behaviour.vault_autosync` is `false`, pull before dedupe — deduping against a stale copy
+   invents duplicates. Skip if this session already pulled (e.g. `/v-work` step 2 did).
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh pull <vault>
+```
+
+Exit codes and what to do with each: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`. A failed
+pull never blocks the capture — write the session anyway.
 
 Below, `<vault>` = the resolved path (may be in-repo, e.g. `<code-repo>/vault`).
 
@@ -97,6 +106,15 @@ Report per feature: `created | updated | skipped: <reason>`.
   keeps last 5).
 - **`_feature-index.md`:** created → add row; updated → set "Last touched" = today; skipped → no-op.
 - **claude-mem:** no action — its SessionEnd hook auto-captures; `mcp-search` is read-only.
+- **Push:** unless `behaviour.vault_autosync` is `false`, commit and push everything this capture
+  wrote. This is the step that gets the session out of this machine — do it last, after the indexes:
+
+  ```bash
+  $VAULT_FRAMEWORK_PATH/bin/vault-sync.sh push <vault> -m "capture <slug>" <session file> <indexes> <new ADRs/indications/dossiers>
+  ```
+
+  Never raw `git`, never `git add -A`. Exit 4 (vault lives inside the code repo) is silent — the code
+  repo's own commit covers it. Contract: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`.
 
 ## Output
 
@@ -106,8 +124,10 @@ Captured: <vault>/sessions/<filename>.md
   Indexes updated: <_moc.md, _feature-index.md, decisions/_inventory.md, indications/_index.md>
   ADR candidates: <N found, M promoted>     Indications: <N found, M promoted | skipped (toggle off)>
   Features: <created: a · updated: b · skipped: c>     Refs: <K links>
+  Sync: <only when it did NOT push — not a git repo / no upstream / push failed>
 ```
 
-One line per item; no further commentary unless asked. Re-runs are safe: same-minute slug overwrites
+Omit the `Sync` line entirely on a clean push; a vault that reached its remote is the expected
+outcome. One line per item; no further commentary unless asked. Re-runs are safe: same-minute slug overwrites
 in place, the script's index/dedupe steps are idempotent, already-promoted candidates are not re-offered,
 and an already-updated dossier with no new changes resolves to SKIP.

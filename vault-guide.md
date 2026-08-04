@@ -67,7 +67,7 @@ forward through the run, so steps 2–6 don't re-read the file:
 |---------|------|--------|
 | `config` | `vault_path`, `framework_path`, `slug` | Path + identity resolution (above). |
 | `structure` | `add_folders: [...]`, `rename: {std: alias}`, `optional: [...]` | Scaffold extra folders, alias standard ones locally, silence "missing folder" for optional ones. |
-| `behaviour` | `load_context_extra: [...]`, `capture_indications: true\|false`, `suggest_rename: true\|false` | Folders Step 2 loads beyond defaults; whether capture runs the indication scan; whether step 1 suggests a session rename (below). |
+| `behaviour` | `load_context_extra: [...]`, `capture_indications: true\|false`, `suggest_rename: true\|false`, `vault_autosync: true\|false` | Folders Step 2 loads beyond defaults; whether capture runs the indication scan; whether step 1 suggests a session rename (below); whether an out-of-repo vault is pulled and pushed automatically (below). |
 | `hooks` | `<phase>: <prose>` | Per-project instruction injected at a lifecycle phase (below). Prose only, never run as a shell command. |
 | `tools` | `task_tracker`, `task_tracker_mcp`, `task_tracker_key`, `guidance` | Per-project tool guidance, e.g. which task-tracker MCP this repo uses (Jira, Asana, …) so the lifecycle can fetch ticket context. A suggestion, not a gate. |
 
@@ -76,6 +76,28 @@ Unknown keys are ignored. No `VAULT.md` means all defaults and a global vault.
 **Cross-project feature workspaces** live outside any single project vault, in `~/vault/_features/` —
 its own committed vault. `/v-pm` writes them; per-project `/v-team <feature>`
 sessions read them through a `features/<feature>` symlink. Full protocol: §13.
+
+### Vault git sync — out-of-repo vaults
+
+A vault under `~/vault/<slug>/` is not covered by the code repo's commits. Left alone it is committed
+only when someone remembers and pushed only by hand, so every v-* command that reads or writes a vault
+routes git through `$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh` — **never raw `git`**:
+
+```bash
+vault-sync.sh pull <vault>                        # before reading vault context
+vault-sync.sh push <vault> -m "<subject>" [paths] # after the vault writes land
+```
+
+Exit codes, all non-fatal: `0` synced · `1` a git operation failed (a conflicting rebase is aborted and
+the worktree left clean) · `3` not a git repo — noted once, `git init` is never run for the user ·
+`4` the vault lives inside the code repo, so the code commit covers it — skipped silently ·
+`5` no upstream, so `push` committed locally and said so.
+
+**A sync failure never halts a lifecycle and never blocks a capture.** Knowledge written but unpushed is
+recoverable; knowledge never written is not. `/v-ask` is excluded from sync entirely — it promises no
+git write, and a pull rewrites the worktree. Governed by `behaviour.vault_autosync` (default on),
+falling back to `vault_autosync` in `~/vault/_global/config.md`. Full contract:
+`$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`.
 
 ### Lifecycle hooks — phases, precedence & failure modes
 

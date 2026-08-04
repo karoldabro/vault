@@ -16,6 +16,18 @@ source code here.
 | claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
 | graphify | `<repo>/graphify-out/graph.json` present | grep the repo |
 
+## 2.0 Sync every participant's vault first
+A cross-project planner reads vaults other people write to, so a stale copy here is likelier than
+anywhere else. Unless `behaviour.vault_autosync` is `false`, pull each participant vault **and**
+`~/vault/_features` before the sweep below:
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh pull ~/vault/<proj>
+```
+
+Exit 0 and 4 are silent; 1, 3 and 5 get one line each, grouped into a single note rather than one per
+project. Nothing here halts the sweep. Contract: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`.
+
 ## 2.1 Vault sweep — always first, across every participant
 For each participant `<proj>` (plus `_global` and the `_features/` vault), grep the vault:
 `grep -ril "<necessity keywords>" ~/vault/<proj>/{decisions,features,sessions,indications}/`. Surface:

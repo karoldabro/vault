@@ -38,9 +38,19 @@ and the variant/state tables. Keep those tables in the file, not only the glossa
 the test-design fan-out's primary input, and grep over the vault is how each project's `/v-team` LOAD
 CONTEXT (`02-load-context.md` §2.1) finds them. claude-mem auto-captures on session end — no action.
 
-## 5.4 Commit
-Stage + commit the whole `~/vault/_features/<feature>/` (workspace + planning-session record + any ADRs)
-with **explicit paths** — `_features/` is its own committed vault.
+## 5.4 Commit + push
+Commit the whole `~/vault/_features/<feature>/` (workspace + planning-session record + any ADRs) with
+**explicit paths** — `_features/` is its own committed vault, and a cross-project plan that never
+leaves this machine is useless to the other participants:
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh push ~/vault/_features -m "plan <feature>" ~/vault/_features/<feature>
+```
+
+Single-repo mode pushes the **project vault** instead, same call. Never raw `git`, never `git add -A`.
+Exit codes and what each means: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`. Exit 5 (no
+upstream) matters more here than anywhere else — say plainly that the other projects cannot see the
+plan yet.
 
 ## Required output
 
