@@ -33,8 +33,17 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
 
 - `install.sh` — links `commands/` → `~/.claude/commands/`, `output-styles/` →
   `~/.claude/output-styles/`; prunes stale links; refuses to overwrite non-symlinks.
-- `setup.sh` — base prerequisites, `~/vault/_global/` scaffold, optional tool stack, doctor pass, then
-  `install.sh`. Flags: `--full`, `--minimal`, `--with-*`, `--yes`, `--dry-run`, `--doctor`.
+- `setup.sh` — base prerequisites, `~/vault/_global/` scaffold, tool stack per profile, doctor pass,
+  then `install.sh`. Flags: `--light`, `--full`, `--minimal`, `--with-*`, `--yes`, `--dry-run`,
+  `--doctor`.
+
+**Install profiles** — [[../decisions/ADR-021-install-profiles]]
+
+- `--light` (default) = claude-mem · `--full` = + Serena (uv) + Graphify (pipx) · `--minimal` = no tools.
+- Recorded as `install_mode: light|full|minimal` under `## config` in `~/vault/_global/config.md`.
+- Serena and Graphify are **developer tools**. Anything that reads their absence — `doctor()`,
+  `scripts/detect-stack.sh`, `tool-playbook.md` §3/§4, `v-work` §2.4/§2.5, `v-do.md`, `v-work.md` —
+  checks `install_mode` first and stays silent on a light machine.
 
 **Shared**
 
@@ -69,6 +78,13 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
   (`make validate-plugin`).
 - `setup.sh` is invoked under `sudo` → it refuses, because `$HOME` would become `/root` and strand the
   whole per-user install there; edge: `VAULT_ALLOW_SUDO=1` overrides.
+- No profile flag is passed → stdin is a terminal means prompt (empty answer → light), `--yes` means
+  light, and neither means minimal with nothing installed; edge: an explicit `--with-*` set is never
+  widened by the light default, and `--minimal` beats everything.
+- A tool is absent → it is reported as a gap only when `install_mode` says it should have been there;
+  a light machine missing Serena or Graphify is the expected state, not a fault.
+- The installer re-runs with a different profile → `install_mode` is rewritten in place, so the file
+  always holds exactly one such line.
 
 ## Coupling
 
@@ -92,5 +108,6 @@ path and are meaningless under a plugin install.
 
 ## Sessions
 
+- [[../sessions/2026-08-04-1339-install-profiles-light-full]]
 - [[../sessions/2026-08-04-1225-claude-code-plugin-install]]
 - [[../sessions/2026-08-03-1300-drop-openviking-dependency]]
