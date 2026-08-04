@@ -228,18 +228,18 @@
 
 <section class="slide" id="s1">
   <div class="inner">
-    <p class="eyebrow"><span class="n">1 / 7 ·</span> the problem</p>
+    <p class="eyebrow"><span class="n">1 / 8 ·</span> the problem</p>
     <h1>Your AI forgets everything.</h1>
-    <p>Every new chat starts from zero. You re-explain the project, the decisions, the gotchas — again. Whatever it figured out yesterday? Gone.</p>
+    <p>Every new chat starts from zero. You explain the project again, the decisions again, the gotchas again. And whatever it figured out yesterday is gone.</p>
     <span class="tease">We gave ours a memory. Here's how.</span>
   </div>
 </section>
 
 <section class="slide" id="s2">
   <div class="inner">
-    <p class="eyebrow"><span class="n">2 / 7 ·</span> the vault</p>
+    <p class="eyebrow"><span class="n">2 / 8 ·</span> the vault</p>
     <h2>A folder of notes the AI keeps.</h2>
-    <p>Plain-text notes that live right in the project: what we decided and why, what's been done, how things fit together. The AI reads them before it works — and updates them after.</p>
+    <p>Plain-text notes that live right in the project: what we decided and why, what's been done, how things fit together. The AI reads them before it starts and updates them when it's done.</p>
     <div class="tree" aria-label="what's inside the vault">
       vault/<br>
       ├── <b>decisions/</b> &nbsp;why we chose things<br>
@@ -247,49 +247,49 @@
       └── <b>features/</b> &nbsp;&nbsp;how each part works
     </div>
     <div class="callout">
-      <p><strong>You never maintain these notes — the AI does.</strong> And they're in the repo, so the whole team's AI shares one memory.</p>
+      <p><strong>You never maintain these notes. The AI does.</strong> And since they sit in the repo, the whole team's AI shares one memory.</p>
     </div>
   </div>
 </section>
 
 <section class="slide" id="s3">
   <div class="inner">
-    <p class="eyebrow"><span class="n">3 / 7 ·</span> see it once</p>
+    <p class="eyebrow"><span class="n">3 / 8 ·</span> see it once</p>
     <h2>Ask, and it already knows.</h2>
     <div class="term mono" role="img" aria-label="example of asking a question with v-ask">
       <span class="prompt">&gt; /v-ask</span> why do we soft-delete orders?<br>
       <span class="reply">Decided in March: legal needs 90 days of order history.<br>
       Full reasoning in decision note #12.</span>
     </div>
-    <p>One command. It answers from the team's notes — and changes nothing.</p>
+    <p>One command. It pulled that from the team's notes and didn't change a thing.</p>
   </div>
 </section>
 
 <section class="slide" id="s4">
   <div class="inner">
-    <p class="eyebrow"><span class="n">4 / 7 ·</span> the commands</p>
+    <p class="eyebrow"><span class="n">4 / 8 ·</span> the commands</p>
     <h2>Four commands. Two questions.</h2>
     <div class="qa">
       <div class="q">
         <h3>Just asking?</h3>
         <div class="row">
           <span class="cmd">/v-ask</span>
-          <p>Answers from the notes. Only looks — never changes anything.</p>
+          <p>It looks things up in the notes and never edits anything.</p>
         </div>
       </div>
       <div class="q">
         <h3>Making a change?</h3>
         <div class="row">
           <span class="chip">small</span><span class="cmd">/v-do</span>
-          <p>No fuss, straight to it. <span class="aside">Doesn't write notes unless you ask.</span></p>
+          <p>It skips the questions and gets straight to work. <span class="aside">It writes notes only if you ask.</span></p>
         </div>
         <div class="row">
           <span class="chip">normal</span><span class="cmd">/v-work</span>
-          <p>Asks you before doing anything; writes down what it learned after. <span class="aside">Not sure it's small? Pick this — it spots small jobs and skips the ceremony by itself.</span></p>
+          <p>It asks you before doing anything, then writes down what it learned. <span class="aside">Not sure the job is small? Pick this one. It spots small jobs and skips the ceremony on its own.</span></p>
         </div>
         <div class="row">
           <span class="chip">big / risky</span><span class="cmd">/v-team</span>
-          <p>A panel of AI critics argues about the plan first — and drafts the test plan. <span class="aside">About twice the cost. For decisions that are expensive to undo.</span></p>
+          <p>A panel of AI critics argues about the plan before any work starts, and drafts the test plan too. <span class="aside">It costs about twice as much, so save it for decisions that would hurt to undo.</span></p>
         </div>
       </div>
     </div>
@@ -298,30 +298,50 @@
 
 <section class="slide" id="s5">
   <div class="inner">
-    <p class="eyebrow"><span class="n">5 / 7 ·</span> the point</p>
+    <p class="eyebrow"><span class="n">5 / 8 ·</span> work or team?</p>
+    <h2>Same flow, extra critics.</h2>
+    <div class="days">
+      <div class="day">
+        <span class="tag mono">/v-work</span>
+        <p>The everyday choice. One AI makes a plan, you say go, it does the job and takes notes. Fine for almost everything.</p>
+      </div>
+      <div class="day">
+        <span class="tag mono">/v-team</span>
+        <p>The same flow, plus a panel of AI critics. They pick the plan apart from different angles until they agree, and after the work they review the changes too.</p>
+      </div>
+    </div>
+    <div class="callout">
+      <p><strong>Rule of thumb:</strong> if undoing the decision would cost an afternoon, use <span class="mono">/v-work</span>. If it would cost a month, use <span class="mono">/v-team</span>: database layouts, login and permissions, billing, anything other systems depend on. It costs about twice as much, so don't pay double for a typo.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s6">
+  <div class="inner">
+    <p class="eyebrow"><span class="n">6 / 8 ·</span> the point</p>
     <h2>Tuesday decides. Thursday remembers.</h2>
     <div class="days">
       <div class="day">
         <span class="tag">Tuesday</span>
-        <p>You run <span class="mono">/v-work</span> on exports; along the way the team settles on CSV over Excel. The why gets written down — automatically.</p>
+        <p>You run <span class="mono">/v-work</span> on exports, and along the way the team settles on CSV over Excel. The AI writes down why, on its own.</p>
       </div>
       <div class="day">
         <span class="tag">Thursday · new chat</span>
-        <p>A colleague asks <span class="mono">/v-ask why CSV?</span> Instant answer. No re-explaining. Their session builds on yours.</p>
+        <p>A colleague asks <span class="mono">/v-ask why CSV?</span> and has the answer in seconds. You didn't have to explain a thing, and their session builds on yours.</p>
       </div>
     </div>
     <p>That's the whole trick: what one session learns, every later session knows.</p>
   </div>
 </section>
 
-<section class="slide" id="s6">
+<section class="slide" id="s7">
   <div class="inner">
-    <p class="eyebrow"><span class="n">6 / 7 ·</span> why bother</p>
+    <p class="eyebrow"><span class="n">7 / 8 ·</span> why bother</p>
     <h2>What you get back.</h2>
     <div class="benefits">
       <div class="benefit">
         <h3>Less re-explaining.</h3>
-        <p>Finding a past decision in the notes takes a fraction of the reading that digging through the code does — measured ~96% less on this repo.</p>
+        <p>The AI finds past decisions in the notes instead of digging through the code. On this repo that came out to about 96% less reading.</p>
       </div>
       <div class="benefit">
         <h3>Decisions survive.</h3>
@@ -335,20 +355,20 @@
   </div>
 </section>
 
-<section class="slide" id="s7">
+<section class="slide" id="s8">
   <div class="inner">
-    <p class="eyebrow"><span class="n">7 / 7 ·</span> start today</p>
+    <p class="eyebrow"><span class="n">8 / 8 ·</span> start today</p>
     <h2>Nothing to install.</h2>
     <p>It's already set up on our repos. One habit swap to start:</p>
     <div class="habit">
-      Next time you'd ask Claude something about the repo —
+      Next time you'd ask Claude something about the repo,
       <span class="cmd-big">type /v-ask instead</span>
     </div>
     <p class="muted" style="margin-top:1.6rem;">Questions? Grab Karol.</p>
   </div>
 </section>
 
-<div class="counter mono" id="counter" aria-hidden="true">1 / 7</div>
+<div class="counter mono" id="counter" aria-hidden="true">1 / 8</div>
 <div class="hint" aria-hidden="true">↑ ↓ or scroll</div>
 
 <script>
@@ -360,7 +380,7 @@
     for (const e of entries) {
       if (e.isIntersecting) {
         current = slides.indexOf(e.target);
-        counter.textContent = (current + 1) + ' / 7';
+        counter.textContent = (current + 1) + ' / ' + slides.length;
       }
     }
   }, { threshold: 0.6 });
