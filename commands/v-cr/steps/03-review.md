@@ -1,13 +1,15 @@
 # Step 3 — REVIEW (panel)
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> Path note: `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` when that reads as an absolute path (plugin install), otherwise resolved per `vault-guide.md` §1.1.
+
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 Run the critic panel **once** over the gathered changeset and produce the comment set. Single pass — no
 fixing (we don't own the code), no re-rounds (the PR is static). This step is a thin wrapper around the
 shared module.
 
 ## 3.1 Run the shared panel
-Read `~/.claude/commands/_shared/critic-panel.md` and execute it with these inputs:
+Read `$VAULT_FRAMEWORK_PATH/commands/_shared/critic-panel.md` and execute it with these inputs:
 - **changeset**: the secret-redacted diff + changed-file list (step 2.1–2.2);
 - **analyzer output**: whatever the pack's analyzers produced (the module re-runs ground-first too);
 - **acceptance criteria**: the fetched task (step 2.3) — critics check *does the diff satisfy the ticket*;

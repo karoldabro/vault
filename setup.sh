@@ -13,7 +13,8 @@
 #   5. claude-mem (--with-claude-mem): bun + claude-mem plugin.
 #   6. Graphify (--with-graphify): pipx + graphifyy.
 #   7. Print per-repo onboarding instructions (vault-init).
-#   8. Run install.sh to symlink slash commands.
+#   8. Run install.sh to symlink slash commands — SKIPPED under a plugin install,
+#      where Claude Code already supplies them (see lib/plugin-detect.sh).
 #   9. Doctor pass — verify what landed; non-zero exit only if a required tool failed.
 #
 # Use --full to wire every tool in one pass. On a real Ubuntu workstation that is
@@ -38,6 +39,8 @@ export VAULT_SETUP_DRY_RUN="${VAULT_SETUP_DRY_RUN:-0}"
 
 # shellcheck source=lib/installers.sh
 . "${VAULT_ROOT}/lib/installers.sh"
+# shellcheck source=lib/plugin-detect.sh
+. "${VAULT_ROOT}/lib/plugin-detect.sh"
 
 with_serena=0
 with_claude_mem=0
@@ -328,6 +331,11 @@ info "  export VAULT_FRAMEWORK_PATH=\"${VAULT_ROOT}\""
 #------------------------------------------------------------------------------
 if [ "${SETUP_SKIP_INSTALL_SH}" -eq 1 ]; then
     section "install.sh (skipped via SETUP_SKIP_INSTALL_SH)"
+elif vault_running_from_plugin_cache "${VAULT_ROOT}" || vault_plugin_installed; then
+    # Plugin install: Claude Code already loads the commands. Symlinking them as
+    # well would install every command twice. install.sh refuses on its own; skip
+    # it here so a normal --full run doesn't end on a scary REFUSED block.
+    section "install.sh (skipped — commands come from the Claude Code plugin)"
 else
     section "install.sh"
     "${VAULT_ROOT}/install.sh"

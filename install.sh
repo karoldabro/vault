@@ -5,6 +5,32 @@
 set -euo pipefail
 
 VAULT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/plugin-detect.sh
+. "${VAULT_ROOT}/lib/plugin-detect.sh"
+
+# The plugin install and this symlink install are mutually exclusive: with both
+# active every command exists twice (/v-work and /vault:v-work) and the two copies
+# drift apart on the next plugin update. Refuse rather than create that state.
+if [ "${VAULT_ALLOW_DOUBLE_INSTALL:-0}" -ne 1 ]; then
+    if vault_running_from_plugin_cache "${VAULT_ROOT}"; then
+        echo "REFUSED: this copy of the framework is Claude Code's plugin cache." >&2
+        echo "  The plugin already provides the commands — install.sh would duplicate them," >&2
+        echo "  and its symlinks would dangle at the next plugin update." >&2
+        echo "  Nothing to do. Run /v-setup instead to install the tool stack." >&2
+        exit 1
+    fi
+    if vault_plugin_installed; then
+        echo "REFUSED: the vault plugin is already installed in Claude Code." >&2
+        echo "  Running install.sh too would install every command twice." >&2
+        echo "  Pick one:" >&2
+        echo "    - keep the plugin (recommended): nothing to do here." >&2
+        echo "    - switch to symlinks: /plugin uninstall vault@kdabro-vault, then re-run this." >&2
+        echo "  Override with VAULT_ALLOW_DOUBLE_INSTALL=1 if you really mean it." >&2
+        exit 1
+    fi
+fi
+
 TARGET_DIR="${HOME}/.claude/commands"
 COMMANDS_DIR="${VAULT_ROOT}/commands"
 STYLES_TARGET_DIR="${HOME}/.claude/output-styles"

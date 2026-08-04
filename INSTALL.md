@@ -1,9 +1,55 @@
 # Installing the vault framework
 
-This is the full install reference. If you just want to get going, the one-line install in the
+This is the full install reference. If you just want to get going, the install in the
 [README](README.md) is enough. Come here for the flags, the uninstall, and the tests.
 
-## One machine, once
+There are **two install modes and you pick one**:
+
+| | Plugin (recommended) | Symlinks |
+|---|---|---|
+| How commands arrive | Claude Code's plugin loader | `install.sh` symlinks into `~/.claude/commands/` |
+| Updating | `/plugin update vault@kdabro-vault` | `git pull && ./install.sh` |
+| Editing the framework itself | Awkward — you edit a cache copy that gets replaced | Direct: your clone *is* the install |
+| Command names | `/v-work` and `/vault:v-work` | `/v-work` |
+
+Running both installs every command twice, under two names, resolving to two different copies of the
+files. `install.sh` refuses to run when it detects the plugin, and `setup.sh` skips its symlink step.
+Override with `VAULT_ALLOW_DOUBLE_INSTALL=1` if you have a reason.
+
+Take the symlink mode if you develop the framework itself. Otherwise take the plugin.
+
+## Plugin install
+
+Inside Claude Code:
+
+```
+/plugin marketplace add karoldabro/vault
+/plugin install vault@kdabro-vault
+```
+
+The first line registers this repository as a marketplace; the second installs the plugin it lists.
+The `/plugin` menu does the same thing with a browser if you prefer clicking. Restart Claude Code so
+the commands load.
+
+Then run **`/v-setup`** once. Installing a plugin never runs an installer on your machine — by design —
+so the helper tools and the `~/vault/_global/` config are a separate, explicit step. `/v-setup` wraps
+`setup.sh`: it shows you what is missing, tells you what it will run, and asks before running it.
+`/v-setup --doctor` checks without changing anything.
+
+The plugin also registers a session-start check that stays silent unless something is missing. It only
+looks; it never installs.
+
+To update: `/plugin update vault@kdabro-vault`.
+
+**Publishing a change requires bumping `version` in `.claude-plugin/plugin.json`.** Claude Code keys
+its cache on that string, so pushing commits without bumping it does nothing — `/plugin update` will
+report users are already on the latest. The pin is deliberate: it means a half-finished `main` never
+reaches anyone who installed the plugin. Bump it as the last step of a release, not per commit.
+
+To remove: `/plugin uninstall vault@kdabro-vault`. That takes away the commands and leaves your vaults
+and the helper tools alone — see [Uninstall](#uninstall) for the rest.
+
+## Symlink install — one machine, once
 
 ```bash
 git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh --full --yes
@@ -17,7 +63,8 @@ git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspac
 - the claude-mem Claude Code plugin
 
 It then scaffolds `~/vault/_global/`, runs a health check, and links the slash commands into
-`~/.claude/commands/`. Restart Claude Code afterwards so the new plugins load.
+`~/.claude/commands/`. Restart Claude Code afterwards so the new plugins load. (If the vault plugin is
+already installed, it skips the linking step and leaves the plugin's commands as the only copy.)
 
 Run it as your normal user, not with `sudo`. Everything is per-user: uv, bun and the plugins all land
 in your `$HOME`. When the installer reaches the apt steps it asks for your sudo password once and
@@ -73,7 +120,10 @@ sudo apt install -y python3.12 python3.12-venv   # or the deadsnakes PPA
 
 ## Refresh after a pull
 
-After `git pull`, relink the commands:
+On a plugin install there is nothing to relink — `/plugin update vault@kdabro-vault` fetches and
+swaps the whole thing.
+
+On a symlink install, after `git pull`, relink the commands:
 
 ```bash
 ./install.sh
@@ -85,7 +135,8 @@ sources.
 
 ### Optional: the `director` output style
 
-The installer also links `output-styles/director.md` into `~/.claude/output-styles/`. It applies the
+`output-styles/director.md` ships with both install modes — the plugin loads it directly, and
+`install.sh` links it into `~/.claude/output-styles/`. It applies the
 framework's writing rules — answer first, no jargon, options with their consequences, decisions
 capped at ~15 lines — to **every** Claude Code session, not just v-* commands. It is off until you
 turn it on:
@@ -98,6 +149,9 @@ or set `"outputStyle": "director"` in `~/.claude/settings.json`. Takes effect af
 new session; switch back with the same menu.
 
 ## Uninstall
+
+On a plugin install, `/plugin uninstall vault@kdabro-vault` removes the commands. The helper tools,
+`~/vault/_global/`, and your project vaults survive it — use the script below for those.
 
 ```bash
 ./bin/vault-uninstall.sh --yes        # remove the framework wiring (reversible, no data loss)
@@ -120,6 +174,15 @@ code repos are never touched.
 ## Tests
 
 Two tiers, both run in Docker. Docker is the only thing you need installed.
+
+The plugin manifests have their own checks. `tests/unit/plugin-install.bats` covers the manifests, the
+repo layout the plugin loader assumes, the session-start hook, and the double-install guard. Claude
+Code's own validator is worth running before you publish a change to either manifest:
+
+```bash
+claude plugin validate . --strict
+```
+
 
 The offline suite is the default and gates pull requests. It runs the unit and integration tests on
 alpine with no network and no sudo:

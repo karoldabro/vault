@@ -21,7 +21,7 @@ There are three layers. Each owns different content, and you shouldn't mix them.
 
 | Layer | Owns | Source of truth | Storage |
 |------|------|------|------|
-| **Framework** | Process docs, templates, commands. Generic. | `git@github.com:karoldabro/vault.git` | Installed once per machine at `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault/`). Read globally, never copied into a project. |
+| **Framework** | Process docs, templates, commands. Generic. | `git@github.com:karoldabro/vault.git` | Installed once per machine at `$VAULT_FRAMEWORK_PATH` — a Claude Code plugin cache dir, or a git clone (default `~/workspace/vault/`). Read globally, never copied into a project. |
 | **Project** | Features, decisions, sessions, MOC, architecture for one product. Specific. | Per-project vault (global `~/vault/<project>/` or in-repo `<code-repo>/vault/`) | Resolved per command — see §1.1 |
 | **Machine** | Local state: coupled-groups, auto-memory dirs, install config. Not committed. | Local-only | `~/vault/_global/` (incl. `config.md`), `~/vault/<project>/memory/parent` |
 
@@ -34,9 +34,21 @@ the project.
 
 The framework is one global install, not a submodule. Every command resolves two paths when a run starts.
 
-**Framework path** — `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault`, captured at install time in
-`~/vault/_global/config.md`). It holds `vault-guide.md`, `templates/`, `tool-playbook.md`, and the
-commands. Any reference to a template or guide resolves under it.
+**Framework path** — `$VAULT_FRAMEWORK_PATH`. It holds `vault-guide.md`, `templates/`,
+`tool-playbook.md`, `personas/`, `lib/`, `bin/`, and the commands. Any reference to a template or guide
+resolves under it. Resolved in order, first hit wins:
+
+1. **`${CLAUDE_PLUGIN_ROOT}`**, when a command file's text shows it as an absolute path. That means the
+   framework is installed as a Claude Code plugin and Claude Code substituted the placeholder at load
+   time. This wins because it is the only value guaranteed to match the files currently running.
+2. **`<code-repo>/VAULT.md`** → the `framework_path` key.
+3. **`~/vault/_global/config.md`** → `framework_path`, captured at install time by `setup.sh`.
+4. **Built-in default** `~/workspace/vault`.
+
+Under a plugin install the path is a versioned cache directory that changes on every plugin update, so
+it is never written to `config.md` or to any `VAULT.md`. Under a symlink install (`install.sh`) it is a
+stable clone path and `config.md` is authoritative. The two install modes are mutually exclusive — see
+`INSTALL.md`.
 
 **Vault path** — resolved in order, first hit wins:
 
@@ -352,9 +364,10 @@ cost. The full rules and copy-paste examples for every tool are in [`tool-playbo
 
 ## 11. Commands reference
 
-Installed by `$VAULT_FRAMEWORK_PATH/install.sh`, which symlinks two trees: `commands/` into
-`~/.claude/commands/` and `output-styles/` into `~/.claude/output-styles/`. All commands assume the
-four tools in §10.
+Installed either as a Claude Code plugin (`/plugin marketplace add karoldabro/vault`, then
+`/plugin install vault@kdabro-vault`) or by `$VAULT_FRAMEWORK_PATH/install.sh`, which symlinks two
+trees: `commands/` into `~/.claude/commands/` and `output-styles/` into `~/.claude/output-styles/`.
+Pick one — running both installs every command twice. All commands assume the four tools in §10.
 
 **How every command writes to you.** `commands/_shared/communication.md` is a shared module bound at
 the top of each command and each step file that owns a `## Required output` block. It governs
@@ -373,6 +386,7 @@ text is capped instead at `v-team/steps/03-propose-loop.md` §(e).7.
 
 | Command | Purpose | Key tools |
 |---------|---------|-----------|
+| `/v-setup` | Install or repair the machine-level stack — base prerequisites, `~/vault/_global/`, and the optional tools. Wraps `setup.sh`, shows what it will run, and asks first. Run once per machine; `--doctor` checks without changing anything. | — |
 | `/v-init` | Bootstrap a project vault for the current code repo. Creates the vault (global `~/vault/<slug>/` or in-repo with `--in-repo`), writes a repo `VAULT.md`, scaffolds folders + indexes, wires CLAUDE.md. | git |
 | `/v-work` | Vault-aware dev lifecycle: load context → propose (with dedupe) → approval → execute → commit + capture. | claude-mem, Serena, MorphLLM |
 | `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (resolved from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review the plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, claude-mem, Serena, MorphLLM |
@@ -383,7 +397,7 @@ text is capped instead at `v-team/steps/03-propose-loop.md` §(e).7.
 | `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from an existing feature. | claude-mem, graphify, MorphLLM |
 | `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | Agent |
 
-Archived commands (`commands/attic/`): `/v-migrate` (one-shot migration finished; `bin/vault-migrate.sh`
+Archived commands (`attic/`): `/v-migrate` (one-shot migration finished; `bin/vault-migrate.sh`
 remains usable).
 
 **OpenViking was removed as a dependency** (2026-08-03): reads were ~4% of its traffic against a
