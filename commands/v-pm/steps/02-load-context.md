@@ -1,6 +1,8 @@
 # Step 2 — LOAD CONTEXT (plan mode)
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> Path note: `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` when that reads as an absolute path (plugin install), otherwise resolved per `vault-guide.md` §1.1.
+
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 Ground the plan in what the vault already knows — **before** the panel drafts anything. A cross-project
 planner must load context from **every participant's vault**, not one. Query **cheapest-first** (the

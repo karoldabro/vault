@@ -3,7 +3,9 @@ description: Multi-agent persona-critique dev lifecycle. Drafts a plan, runs par
 argument-hint: [task description]
 ---
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> **Framework root:** `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` whenever that reads as an absolute path (plugin install). Otherwise take it from the repo's `VAULT.md` `framework_path` key, then `~/vault/_global/config.md`, then the default `~/workspace/vault`. Every `$VAULT_FRAMEWORK_PATH/...` path below resolves under it.
+
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 # /v-team — persona-critique development lifecycle
 
@@ -60,23 +62,23 @@ otherwise skip it.
 
 ## Step 0 — FEATURE PICKUP (only when invoked with a `<feature>`)
 When `/v-team` is invoked with a feature name — or the current project vault has a `features/<feature>`
-symlink into `_features/` — Read `~/.claude/commands/v-team/steps/00-feature-pickup.md` and execute it
+symlink into `_features/` — Read `$VAULT_FRAMEWORK_PATH/commands/v-team/steps/00-feature-pickup.md` and execute it
 **before Step 1**: pick up conversation threads addressed to this project, surface replies to questions
 this project raised, and run the deterministic contracts-drift check against the shared `contracts.md`.
 This is how the cross-project planning substrate (`/v-pm`) reaches execution. No feature arg → skip
 Step 0 entirely (ordinary `/v-team` run).
 
 ## Step 1 — ANALYZE
-Read `~/.claude/commands/v-work/steps/01-analyze.md`, then execute.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/01-analyze.md`, then execute.
 **v-team addendum:** also Read `$VAULT_FRAMEWORK_PATH/personas/_resolution.md`, resolve the persona
 pack, and **select the critics for this change** (§2 there). Append one line to the ANALYZE output:
 `Personas: <pack> → [selected names]   (skipped: ...)`. Mark ANALYZE `completed`.
 
 ## Step 2 — LOAD CONTEXT
-Read `~/.claude/commands/v-work/steps/02-load-context.md`, then execute. Mark LOAD CONTEXT `completed`.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/02-load-context.md`, then execute. Mark LOAD CONTEXT `completed`.
 
 ## Step 3 — PROPOSE (panel loop)
-Read `~/.claude/commands/v-team/steps/03-propose-loop.md`, then execute. The design panel converges
+Read `$VAULT_FRAMEWORK_PATH/commands/v-team/steps/03-propose-loop.md`, then execute. The design panel converges
 first, then sub-phase **(f2)** fans out the generative test-design group (`personas/_shared/testing/
 design/`) to author the Test Design Dossier + Proposed test backlog (test design is split out of solution
 design). Mark PROPOSE `completed`.
@@ -105,10 +107,10 @@ line** — approving authorizes everything it touches.
 - Rejection ("no", "cancel") → end; mark remaining tasks `deleted`
 
 ## Step 5 — EXECUTE (review loop)
-Read `~/.claude/commands/v-team/steps/04-execute-loop.md`, then execute. Mark EXECUTE `completed`.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-team/steps/04-execute-loop.md`, then execute. Mark EXECUTE `completed`.
 
 ## Step 6 — COMMIT + CAPTURE
-Read `~/.claude/commands/v-work/steps/05-commit-capture.md`, then execute.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/05-commit-capture.md`, then execute.
 **v-team addendum:** also stage/commit the `plans/<...>.md` artifact (converged plan + critique trail).
 Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
 
@@ -116,9 +118,9 @@ Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
 
 ## Notes
 
-- **Depends on `/v-work`.** Steps 01/02/05 resolve at `~/.claude/commands/v-work/steps/...`; if that
-  path is missing, fall back to `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/...`. If neither exists,
-  re-run `install.sh`.
+- **Depends on `/v-work`.** Steps 01/02/05 resolve at `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/...`.
+  If that path is missing, the framework root resolved wrong — re-check it (header above) and re-install
+  the plugin, or re-run `install.sh` for a symlink install.
 - Critics are **read-only** and **tool-grounded**: a finding blocks convergence only when a concrete
   check confirms it; unconfirmed observations are `advisory` (recorded, never blocking).
 - The loop **never stops on unanimous approval alone** — only on the round cap or no-new-blocking-

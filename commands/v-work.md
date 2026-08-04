@@ -2,7 +2,9 @@
 description: Vault-aware development lifecycle. Loads context → proposes solution + vault writes (with dedupe) → approval → execute → commit + capture.
 ---
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> **Framework root:** `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` whenever that reads as an absolute path (plugin install). Otherwise take it from the repo's `VAULT.md` `framework_path` key, then `~/vault/_global/config.md`, then the default `~/workspace/vault`. Every `$VAULT_FRAMEWORK_PATH/...` path below resolves under it.
+
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 # /v-work — Vault-aware development lifecycle
 
@@ -42,19 +44,19 @@ after `/v-capture` has run.
 ---
 
 ## Step 1 — ANALYZE
-Read `~/.claude/commands/v-work/steps/01-analyze.md`, then execute. Mark ANALYZE `completed`.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/01-analyze.md`, then execute. Mark ANALYZE `completed`.
 
 **Fast path (auto-detected).** If the §1.4c size check says **small**, don't make the user pre-classify:
 announce `Size: small → fast path`, mark the remaining lifecycle tasks `deleted`, Read
-`~/.claude/commands/v-do.md` and continue as `/v-do` (orient-lite → execute → self-review; capture
+`$VAULT_FRAMEWORK_PATH/commands/v-do.md` and continue as `/v-do` (orient-lite → execute → self-review; capture
 offered, off by default; no approval gate). The user can say **"full lifecycle"** to override — then
 continue with Step 2 as normal. Any doubt about size → no fast path.
 
 ## Step 2 — LOAD CONTEXT
-Read `~/.claude/commands/v-work/steps/02-load-context.md`, then execute. Mark LOAD CONTEXT `completed`.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/02-load-context.md`, then execute. Mark LOAD CONTEXT `completed`.
 
 ## Step 3 — PROPOSE
-Read `~/.claude/commands/v-work/steps/03-propose.md`, then execute. Mark PROPOSE `completed`.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/03-propose.md`, then execute. Mark PROPOSE `completed`.
 
 ## Step 4 — APPROVAL GATE
 **STOP. Present the decision. Do not proceed until the user explicitly approves.** Approval covers the
@@ -74,10 +76,10 @@ tool that fell back, `research: unavailable`, a stated safe default, or an open 
 - Rejection ("no", "cancel") → end; mark remaining tasks `deleted`
 
 ## Step 5 — EXECUTE
-Read `~/.claude/commands/v-work/steps/04-execute.md`, then execute. Mark EXECUTE `completed`.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/04-execute.md`, then execute. Mark EXECUTE `completed`.
 
 ## Step 6 — COMMIT + CAPTURE
-Read `~/.claude/commands/v-work/steps/05-commit-capture.md`, then execute. Mark COMMIT + CAPTURE
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/05-commit-capture.md`, then execute. Mark COMMIT + CAPTURE
 `completed` — only after `/v-capture` has run.
 
 ---

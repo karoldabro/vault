@@ -1,6 +1,6 @@
 # Step 1 — ANALYZE
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 Restate the task and detect the project stack before any other work. No source reads, no code.
 
@@ -39,9 +39,12 @@ CLAUDE.md (read in Step 2) overrides all of these.
 The whole lifecycle runs against a resolved vault — do this before Step 2 loads anything. Per
 `vault-guide.md` §1.1:
 
-1. **Framework path** — `$VAULT_FRAMEWORK_PATH` (default `~/workspace/vault`; override in
-   `~/vault/_global/config.md` → `framework_path`). Templates, `vault-guide.md`, and
-   `tool-playbook.md` resolve under it.
+1. **Framework path** — `$VAULT_FRAMEWORK_PATH`, first hit wins: `${CLAUDE_PLUGIN_ROOT}` when that
+   reads as an absolute path (the framework is installed as a Claude Code plugin, and the harness
+   substituted it here) → `VAULT.md` → `framework_path` → `~/vault/_global/config.md` →
+   `framework_path` → the default `~/workspace/vault`. Templates, `vault-guide.md`, and
+   `tool-playbook.md` resolve under it. Never cache the plugin path anywhere on disk: it is a
+   versioned cache directory and changes on every plugin update.
 2. **Vault path** — first hit wins: `<repo-root>/VAULT.md` → `vault_path` (relative resolves against
    the repo root, so `./vault` is in-repo) → `~/vault/_global/config.md` → `~/vault/<slug>/`.
 3. **Read `VAULT.md`** if present and load **all five sections** into a config you **carry through the

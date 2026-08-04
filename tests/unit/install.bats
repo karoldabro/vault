@@ -19,10 +19,13 @@ teardown() {
     done
 }
 
-@test "install.sh skips commands/README.md" {
+@test "install.sh installs no README and no attic" {
+    # Both now live outside commands/ so the plugin's default scan can't pick them
+    # up either; the skip_file/skip_dir arguments stay as belt and braces.
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
     [ ! -e "${HOME}/.claude/commands/README.md" ]
+    [ ! -e "${HOME}/.claude/commands/attic" ]
 }
 
 @test "install.sh is idempotent (second run links 0, skips all)" {

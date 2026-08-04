@@ -26,11 +26,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-08-04-1225-claude-code-plugin-install]] — Ship the framework as a Claude Code plugin: two manifests, plugin-root-first path resolution, /v-setup consent gate, detect-only SessionStart hook, double-install guard (ADR-020)
 - [[sessions/2026-08-03-1300-drop-openviking-dependency]] — Drop OpenViking as a framework dependency (17 reads vs 194 writes in 60 days); remove it from the installer, commands and docs; ship bin/remove-openviking.sh + instructions; purge it from this machine (ADR-019)
 - [[sessions/2026-08-03-1045-decision-communication-contract]] — User-facing communication contract: one shared module governs all v-* output (answer first, no jargon, options with consequences, exceptions not normality) + opt-in global director output style (ADR-018)
 - [[sessions/2026-07-20-1027-team-presentation-vault-commands]] — Coworker intro deck for the vault + v-commands (7-slide artifact, /v-team fallback panel)
 - [[sessions/2026-07-10-1740-llm-collaboration-patterns]] — Research LLM-collaboration patterns (5 domains) and adopt evidence-backed panel hardening (ADR-017 + living catalog)
-- [[sessions/2026-07-10-1620-business-persona-family]] — Business persona family: 5 packs + shared data-evidence critic + multi-pack seating (ADR-016)
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center (rules REQ-NN + axis tags, glossary, decision/state tables) for 1+ repos; single-repo `requirements/` category; id chain → established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)

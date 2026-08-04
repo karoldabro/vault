@@ -1,11 +1,22 @@
 # Commands
 
-Slash commands provided by the vault framework. Installed into `~/.claude/commands/` by `../install.sh` (run once per machine after cloning the framework).
+Slash commands provided by the vault framework. The sources live in `../commands/`, and reach Claude
+Code either through the plugin install (Claude Code scans `commands/` itself) or through
+`../install.sh`, which symlinks the same tree into `~/.claude/commands/`. See `../INSTALL.md`.
 
 Each file is a Claude Code slash command definition. The `description:` frontmatter field is what shows when users invoke the command help.
 
+**Nothing else may live in `../commands/`.** Every `.md` under it becomes an invocable command in a
+plugin install, so this file sits in `docs/` and retired commands sit in `../attic/`. Guarded by
+`../tests/unit/plugin-install.bats`.
+
+Each command resolves `$VAULT_FRAMEWORK_PATH` in its own header before using it, preferring
+`${CLAUDE_PLUGIN_ROOT}` when Claude Code substituted one. That is what lets the same file work from a
+plugin cache directory and from a git clone. Resolution order: `../vault-guide.md` §1.1.
+
 | File | Slash command | What it does |
 |------|---------------|--------------|
+| `v-setup.md` | `/v-setup` | Install or repair the tool stack + machine-layer scaffold. Wraps `../setup.sh`. |
 | `v-init.md` | `/v-init` | Bootstrap a project vault for the current code repo. |
 | `v-work.md` | `/v-work` | Vault-aware development lifecycle. |
 | `v-team.md` | `/v-team` | Persona-critique lifecycle: parallel project-specific critics loop over plan + diff. |
@@ -40,10 +51,14 @@ small low-risk change. Both escalate to `/v-work` (or `/v-team`) the moment scop
   `../tests/unit/communication-contract.bats`. See `../vault/decisions/ADR-018-*`.
 
 A matching Claude Code output style ships at `../output-styles/director.md` for sessions outside a
-v-* command; the installer links it into `~/.claude/output-styles/` and it is opt-in via `/config`.
+v-* command; the plugin loads it directly, `install.sh` links it into `~/.claude/output-styles/`, and
+either way it is opt-in via `/config`.
 
 See `../vault-guide.md` §11 for the command reference (and §1.1 for vault path/config resolution).
 
 ## Why symlinks instead of copies
 
-Pulling the framework repo updates the symlinked commands instantly — no per-machine reinstall. If you'd rather have copies, edit `install.sh`.
+This applies to the `install.sh` path only. Pulling the framework repo updates the symlinked commands
+instantly — no per-machine reinstall. If you'd rather have copies, edit `install.sh`. The plugin
+install has the opposite trade: it copies into a versioned cache, so an update is a deliberate
+`/plugin update` rather than a side effect of `git pull`.

@@ -246,7 +246,7 @@ teardown() {
     grep -qi 'derived view'                  "${VAULT_ROOT}/vault-guide.md"
     grep -qi 'latency contract'              "${VAULT_ROOT}/vault-guide.md"
     grep -q  '/v-pm'                         "${VAULT_ROOT}/README.md"
-    grep -q  'v-pm.md'                       "${VAULT_ROOT}/commands/README.md"
+    grep -q  'v-pm.md'                       "${VAULT_ROOT}/docs/commands.md"
 }
 
 @test "vault.gitignore ignores the feature workspace symlinks" {

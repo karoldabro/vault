@@ -2,7 +2,9 @@
 description: Bootstrap a project vault for the current code repo. Creates the vault (global or in-repo), writes VAULT.md, scaffolds folders + indexes, wires CLAUDE.md. No submodule — the framework is read globally.
 ---
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> **Framework root:** `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` whenever that reads as an absolute path (plugin install). Otherwise take it from the repo's `VAULT.md` `framework_path` key, then `~/vault/_global/config.md`, then the default `~/workspace/vault`. Every `$VAULT_FRAMEWORK_PATH/...` path below resolves under it.
+
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 # /v-init — Initialize a project vault
 
@@ -68,4 +70,4 @@ To detach: remove the vault dir (`~/vault/<slug>/` or `<code-repo>/vault/`), del
 
 If this repo's vault was created the old way (framework as a `_process/` submodule), convert it with
 `bin/vault-migrate.sh` instead of re-running `/v-init` (the `/v-migrate` command is archived —
-`commands/attic/` — but the script remains).
+`attic/` — but the script remains).

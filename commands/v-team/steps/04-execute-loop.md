@@ -1,6 +1,8 @@
 # Step 5 — EXECUTE (review loop)
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> Path note: `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` when that reads as an absolute path (plugin install), otherwise resolved per `vault-guide.md` §1.1.
+
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 Implement the approved plan, triage the proposed tests, then run a **diff-review panel loop** — the same
 personas in review posture, tool-first, fixing between rounds until convergence.
@@ -12,7 +14,7 @@ the review loop converges — the internal review **rounds are non-hookable**. S
 
 ## 5.1 Implement
 
-Read `~/.claude/commands/v-work/steps/04-execute.md` and follow it verbatim: branch rule (§4.1), file-
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/04-execute.md` and follow it verbatim: branch rule (§4.1), file-
 editing tool table (§4.2), supporting tools (§4.3), domain mindset (§4.4), per-unit loop (§4.5), and
 tests-after-each-phase (§4.6). The **converged plan** drives implementation order; implementers are the
 architect personas' `base_agent`s (e.g. `system-architect`/`backend-architect` for api-laravel).

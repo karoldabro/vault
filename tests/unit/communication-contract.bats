@@ -126,7 +126,7 @@ flat() { tr '\n' ' ' < "$1"; }
 # --- binding: every command and every output-producing step file -------------------------
 
 @test "every v-* command and every Required-output step file binds the contract" {
-    local bind='~/.claude/commands/_shared/communication.md'
+    local bind='$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md'
     local missing=0 f
 
     for f in "${VAULT_ROOT}"/commands/v-*.md; do

@@ -1,6 +1,8 @@
 # Step 3 — PROPOSE (panel loop)
 
-> **Writing to the user:** Read `~/.claude/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
+> Path note: `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` when that reads as an absolute path (plugin install), otherwise resolved per `vault-guide.md` §1.1.
+
+> **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 Draft a plan, then run a **panel → synthesize → re-loop** until it converges. Critics work in parallel,
 each through its own tool-grounded lens, and share state **only via the revised plan** (no agent-to-
@@ -13,7 +15,7 @@ agent messaging — independence is what makes the panel worth its cost). Do not
 
 ## (a) Draft plan v0
 
-Read `~/.claude/commands/v-work/steps/03-propose.md` and run **§3a (engineering design) only** —
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/03-propose.md` and run **§3a (engineering design) only** —
 Serena/graph orientation, impact scope, dependency-ordered implementation steps, test plan. **Skip
 §3a.3** (the panel replaces ad-hoc agent dispatch) and **§3a.6** (the panel replaces the lite critic),
 and **defer §3b** (vault-write dedupe) until after convergence.

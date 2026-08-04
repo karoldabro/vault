@@ -10,18 +10,33 @@ vault, either alongside your code or inside the repo. Nothing gets copied into y
 ## Install
 
 You'll need Linux (Ubuntu is the tested path), git, Python 3.10+, and Claude Code already installed. On a
-Mac the installer prints the commands to run by hand instead. Full details are in [INSTALL.md](INSTALL.md).
+Mac the tool installer prints the commands to run by hand instead. Full details are in
+[INSTALL.md](INSTALL.md).
+
+Inside Claude Code:
+
+```
+/plugin marketplace add karoldabro/vault
+/plugin install vault@kdabro-vault
+```
+
+Restart Claude Code, then run `/v-setup` once. That second step installs the helper tools and creates
+the machine-level config; Claude Code never runs an installer for you when a plugin lands, so it has to
+be asked for. `/v-setup` shows you what it will run before it runs anything.
+
+Prefer not to use plugins? Clone the repo and symlink the commands instead:
 
 ```bash
 git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh --full --yes
 ```
 
-Run it as your normal user (not `sudo`). It sets up the framework plus a few helper tools, then asks for
-your sudo password once when it needs it. When it finishes, open a fresh shell with `exec $SHELL -l` and
+Run it as your normal user (not `sudo`). When it finishes, open a fresh shell with `exec $SHELL -l` and
 restart Claude Code.
 
-That's the happy path. For the full list of options, the uninstall, and the tests, see
-[INSTALL.md](INSTALL.md).
+**Pick one or the other.** With both active every command exists twice, under two names, reading two
+different copies of the files. `install.sh` refuses to run when it finds the plugin installed.
+
+For the full list of options, the uninstall, and the tests, see [INSTALL.md](INSTALL.md).
 
 ## Add it to a project
 
@@ -40,10 +55,12 @@ Already have an old vault with a `_process/` submodule? Convert it in place with
 
 ## Commands
 
-These install into `~/.claude/commands/`. Type them in Claude Code.
+Type them in Claude Code. With the plugin they are also reachable as `/vault:v-work` and so on, which
+is how you disambiguate if another plugin ships a command with the same name.
 
 | Command | What it's for |
 |---------|---------------|
+| `/v-setup` | Install or repair the helper tools and the machine-level config. Run once per machine. |
 | `/v-work` | The main loop: load context, propose a plan, get your approval, do the work, save it. |
 | `/v-team` | The careful version of `/v-work` for big or risky changes. Runs critic personas over the plan and the diff. |
 | `/v-pm` | Plan a feature that spans several repos, once. Drafts a shared cross-project plan + contract so each repo's `/v-team` session coordinates through files instead of you copy-pasting between them. |
@@ -55,7 +72,7 @@ These install into `~/.claude/commands/`. Type them in Claude Code.
 | `/v-link` | Link two projects so context loading sweeps both. |
 | `/v-guide` | Generate a cross-project integration guide from a feature. |
 
-Archived (see `commands/attic/`): `/v-migrate` (migration finished; `bin/vault-migrate.sh` remains).
+Archived (see [attic/](attic/)): `/v-migrate` (migration finished; `bin/vault-migrate.sh` remains).
 
 ## Persona packs
 
