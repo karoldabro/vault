@@ -33,6 +33,18 @@ OpenViking installed four separate pieces, which is most of why it was awkward t
 4. **The Claude Code plugin** — `claude-code-memory-plugin`, plus two environment keys in
    `~/.claude/settings.json` pointing at the config files above.
 
+Point 4 repeats per Claude config dir. A second Claude home — `CLAUDE_CONFIG_DIR` pointing at
+something like `~/workspace/.claude-work/` — keeps its own `settings.json` and its own plugin
+registry. Clean only `~/.claude` and that other home still loads the plugin, whose
+`UserPromptSubmit` hook then fails on the config file point 3 just deleted:
+
+```
+[openviking-memory] Claude Code client config not found: ~/.openviking/claude-code-memory-plugin/config.json
+```
+
+The script cleans `$CLAUDE_CONFIG_DIR`, `~/.claude`, and every `--config-dir` you pass, then reports
+any other config dir under `$HOME` still mentioning OpenViking so you can re-run against it.
+
 There is also `~/.openviking/data`, the indexed content itself. That is kept unless you ask for it to
 go.
 
@@ -50,6 +62,7 @@ this page would only let the two drift apart.
 | Flag | Effect |
 |---|---|
 | *(none)* | Service, config files, settings keys, plugin. Keeps the indexed data and the package. |
+| `--config-dir D` | Also clean Claude config dir `D`. Repeatable. |
 | `--tools` | Also `pipx uninstall openviking`. |
 | `--purge-data` | Also deletes `~/.openviking` entirely, **including the index**. Irreversible. |
 | `--all` | Both of the above. |

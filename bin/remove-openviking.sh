@@ -9,9 +9,15 @@
 # It removes, in layers, skipping whatever is already gone:
 #   1. the openviking.service --user unit (stop, disable, delete, daemon-reload)
 #   2. ~/.openviking/ov.conf + the plugin client config.json
-#   3. the OPENVIKING_CC_CONFIG_FILE / OPENVIKING_CONFIG_FILE keys in
-#      ~/.claude/settings.json
-#   4. the claude-code-memory-plugin Claude Code plugin
+#   3. the OPENVIKING_CC_CONFIG_FILE / OPENVIKING_CONFIG_FILE keys, the enabled
+#      plugin entry, and the marketplace entry in every Claude config dir
+#   4. the claude-code-memory-plugin plugin + marketplace, per config dir
+#
+# "Every config dir" matters: a second Claude home (CLAUDE_CONFIG_DIR pointing
+# somewhere like ~/workspace/.claude-work) keeps its own settings.json and its
+# own plugin registry. Cleaning only ~/.claude leaves that one loading the
+# plugin, whose UserPromptSubmit hook then errors on the config file layer 2
+# just deleted. Layer 7 sweeps for config dirs this run did not visit.
 #   5. (--tools) the `openviking` pipx package
 #   6. (--purge-data) ~/.openviking in full, INCLUDING the indexed memory
 #
@@ -20,6 +26,7 @@
 # follow-up, but plenty of people use ollama for other things.
 #
 # Flags:
+#   --config-dir D  also clean Claude config dir D (repeatable)
 #   --tools        also `pipx uninstall openviking`
 #   --purge-data   also delete ~/.openviking including indexed data — DESTRUCTIVE
 #   --all          --tools + --purge-data
@@ -42,15 +49,21 @@ with_tools=0
 purge_data=0
 assume_yes=0
 dry_run=0
+extra_config_dirs=()
 
 usage() {
     cat <<'EOF'
 remove-openviking.sh — take OpenViking off this machine.
 
-Removes the --user service, ~/.openviking configs, the two OPENVIKING_* keys in
-~/.claude/settings.json, and the claude-code-memory-plugin. Leaves the vault
-framework, your vaults, your repos, and ollama alone.
+Removes the --user service, ~/.openviking configs, the OPENVIKING_* keys and the
+plugin + marketplace entries from every Claude config dir it can see, and the
+claude-code-memory-plugin itself. Leaves the vault framework, your vaults, your
+repos, and ollama alone.
 
+Config dirs cleaned: $CLAUDE_CONFIG_DIR (if set), ~/.claude, and any --config-dir
+you pass. Anything else still referencing OpenViking is reported at the end.
+
+  --config-dir D also clean Claude config dir D (repeatable)
   --tools        also `pipx uninstall openviking`
   --purge-data   also delete ~/.openviking including indexed data — DESTRUCTIVE
   --all          --tools + --purge-data
@@ -65,6 +78,9 @@ EOF
 
 while [ $# -gt 0 ]; do
     case "$1" in
+        --config-dir)
+            [ $# -ge 2 ] || { echo "--config-dir needs a path" >&2; exit 2; }
+            extra_config_dirs+=("$2"); shift ;;
         --tools)      with_tools=1 ;;
         --purge-data) purge_data=1 ;;
         --all)        with_tools=1; purge_data=1 ;;
@@ -86,6 +102,23 @@ what="${what}."
 
 CONSENT_MODE=""
 consent_gate "${what}" "${dry_run}" "${assume_yes}"
+
+#------------------------------------------------------------------------------
+# Config dirs — a machine can have several Claude homes, each with its own
+# settings.json and plugin registry. Deduplicated, existing dirs only.
+#------------------------------------------------------------------------------
+CONFIG_DIRS=()
+collect_config_dirs() {
+    local candidate seen
+    for candidate in "${CLAUDE_CONFIG_DIR:-}" "${HOME}/.claude" "${extra_config_dirs[@]+"${extra_config_dirs[@]}"}"; do
+        [ -n "${candidate}" ] || continue
+        [ -d "${candidate}" ] || continue
+        for seen in "${CONFIG_DIRS[@]+"${CONFIG_DIRS[@]}"}"; do
+            [ "${seen}" = "${candidate}" ] && continue 2
+        done
+        CONFIG_DIRS+=("${candidate}")
+    done
+}
 
 #------------------------------------------------------------------------------
 # Layers — each one skip-on-absent and non-fatal
@@ -123,30 +156,45 @@ remove_configs() {
 
 # The jq/mv pair writes through a redirection, which run() cannot intercept —
 # so this step branches on the dry-run flag by hand.
-clean_settings_env() {
-    section "Claude settings.json env"
-    local f="${HOME}/.claude/settings.json"
-    [ -f "${f}" ] || { info "already absent: settings.json"; return 0; }
+clean_one_settings() {
+    local f="$1/settings.json"
+    [ -f "${f}" ] || { info "already absent: ${f}"; return 0; }
     if ! have jq; then
-        warn "jq missing — remove OPENVIKING_CC_CONFIG_FILE / OPENVIKING_CONFIG_FILE from ${f} by hand"
+        warn "jq missing — remove the OPENVIKING_* keys, the enabledPlugins entry and the marketplace entry from ${f} by hand"
         return 0
     fi
-    if ! jq -e '.env | has("OPENVIKING_CC_CONFIG_FILE") or has("OPENVIKING_CONFIG_FILE")' \
+    if ! jq -e '(.env // {} | has("OPENVIKING_CC_CONFIG_FILE") or has("OPENVIKING_CONFIG_FILE"))
+                or ((.enabledPlugins // {}) | keys | any(test("openviking")))
+                or ((.extraKnownMarketplaces // {}) | has("openviking-plugin"))' \
          "${f}" >/dev/null 2>&1; then
-        info "already absent: OPENVIKING_* keys in settings.json"
+        info "already clean: ${f}"
         return 0
     fi
     if [ "${VAULT_SETUP_DRY_RUN:-0}" = "1" ]; then
-        printf '  [dry-run] jq del .env.OPENVIKING_CC_CONFIG_FILE/.OPENVIKING_CONFIG_FILE in %s\n' "${f}"
+        printf '  [dry-run] jq del OPENVIKING_* env keys + openviking plugin/marketplace entries in %s\n' "${f}"
         return 0
     fi
     local tmp; tmp="$(mktemp)"
     if jq 'if .env then .env |= del(.OPENVIKING_CC_CONFIG_FILE, .OPENVIKING_CONFIG_FILE) else . end
-           | if (.env) == {} then del(.env) else . end' "${f}" > "${tmp}" 2>/dev/null; then
-        mv "${tmp}" "${f}"; ok "removed OPENVIKING_* keys from settings.json"
+           | if (.env) == {} then del(.env) else . end
+           | if .enabledPlugins then
+                 .enabledPlugins |= with_entries(select(.key | test("openviking") | not))
+             else . end
+           | if .extraKnownMarketplaces then
+                 .extraKnownMarketplaces |= del(."openviking-plugin")
+             else . end' "${f}" > "${tmp}" 2>/dev/null; then
+        mv "${tmp}" "${f}"; ok "cleaned ${f}"
     else
-        rm -f "${tmp}"; warn "could not edit ${f} — remove the keys by hand"
+        rm -f "${tmp}"; warn "could not edit ${f} — remove the entries by hand"
     fi
+}
+
+clean_settings_env() {
+    section "Claude settings.json"
+    local dir
+    for dir in "${CONFIG_DIRS[@]+"${CONFIG_DIRS[@]}"}"; do
+        clean_one_settings "${dir}"
+    done
 }
 
 remove_plugin() {
@@ -155,11 +203,42 @@ remove_plugin() {
         info "claude CLI unavailable — uninstall claude-code-memory-plugin by hand"
         return 0
     fi
-    if run claude plugin uninstall claude-code-memory-plugin@openviking-plugin 2>/dev/null; then
-        ok "removed the OpenViking plugin (marketplace left intact)"
-    else
-        warn "plugin uninstall did not succeed — remove claude-code-memory-plugin by hand"
-    fi
+    # The CLI edits whichever registry CLAUDE_CONFIG_DIR names, so it has to be
+    # driven once per config dir. Both calls are no-ops when already removed.
+    local dir
+    for dir in "${CONFIG_DIRS[@]+"${CONFIG_DIRS[@]}"}"; do
+        if run env CLAUDE_CONFIG_DIR="${dir}" claude plugin uninstall \
+               claude-code-memory-plugin@openviking-plugin 2>/dev/null; then
+            ok "removed the OpenViking plugin from ${dir}"
+        else
+            info "no OpenViking plugin to remove in ${dir}"
+        fi
+        if run env CLAUDE_CONFIG_DIR="${dir}" claude plugin marketplace remove \
+               openviking-plugin 2>/dev/null; then
+            ok "removed the OpenViking marketplace from ${dir}"
+        else
+            info "no OpenViking marketplace to remove in ${dir}"
+        fi
+    done
+}
+
+# Anything this run did not visit — a second Claude home under another path —
+# is reported, not touched: the script cannot know it is safe to edit.
+scan_stray_configs() {
+    section "Stray config dirs"
+    local visited=" ${CONFIG_DIRS[*]+${CONFIG_DIRS[*]}} "
+    local found=0 f dir
+    while IFS= read -r f; do
+        dir="$(dirname "${f}")"
+        case "${visited}" in *" ${dir} "*) continue ;; esac
+        grep -qi openviking "${f}" 2>/dev/null || continue
+        warn "still references OpenViking: ${f}"
+        info "  re-run with --config-dir ${dir}"
+        found=1
+    done < <(find "${HOME}" -maxdepth 4 -name settings.json -path '*claude*' \
+                  -not -path '*/plugins/*' -not -path '*/node_modules/*' 2>/dev/null)
+    [ "${found}" -eq 0 ] && ok "no other config dir references OpenViking"
+    return 0
 }
 
 remove_package() {
@@ -180,12 +259,14 @@ purge_ov_data() {
 #------------------------------------------------------------------------------
 # Run
 #------------------------------------------------------------------------------
+collect_config_dirs
 remove_service
 remove_configs
 clean_settings_env
 remove_plugin
 if [ "${with_tools}" -eq 1 ]; then remove_package; fi
 if [ "${purge_data}" -eq 1 ]; then purge_ov_data; fi
+scan_stray_configs
 
 section "Done"
 if [ "${CONSENT_MODE}" = "plan-only" ]; then

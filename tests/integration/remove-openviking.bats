@@ -142,6 +142,71 @@ remove_ov() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/remove-openvi
     grep -q 'pipx uninstall openviking' "${TEST_HOME}/log"
 }
 
+#------------------------------------------------------------------------------
+# Second Claude home. A machine can run CLAUDE_CONFIG_DIR against another config
+# dir, which carries its own settings.json and plugin registry. Cleaning only
+# ~/.claude leaves that one loading the plugin, whose UserPromptSubmit hook then
+# errors on the client config this script has just deleted — the exact failure
+# that shipped on 2026-08-04.
+#------------------------------------------------------------------------------
+seed_alt_config_dir() {
+    local dir="$1"
+    mkdir -p "${dir}"
+    printf '{ "env": { "OPENVIKING_CONFIG_FILE": "%s/.openviking/ov.conf" }, "enabledPlugins": { "claude-code-memory-plugin@openviking-plugin": true, "claude-mem@thedotmack": true }, "extraKnownMarketplaces": { "openviking-plugin": { "source": {} } } }\n' \
+        "${HOME}" > "${dir}/settings.json"
+}
+
+@test "cleans the config dir named by CLAUDE_CONFIG_DIR, not just ~/.claude" {
+    local alt="${TEST_HOME}/.claude-work"
+    seed_alt_config_dir "${alt}"
+    run env PATH="${FAKEBIN}:${PATH}" CLAUDE_CONFIG_DIR="${alt}" \
+        "${VAULT_ROOT}/bin/remove-openviking.sh" --yes
+    [ "$status" -eq 0 ]
+    run grep -i openviking "${alt}/settings.json"
+    [ "$status" -ne 0 ]
+    # Unrelated plugins in that dir survive.
+    [ "$(jq -r '.enabledPlugins["claude-mem@thedotmack"]' "${alt}/settings.json")" = "true" ]
+    # ~/.claude is still cleaned in the same run.
+    run grep -i openviking "${HOME}/.claude/settings.json"
+    [ "$status" -ne 0 ]
+}
+
+@test "--config-dir cleans an extra config dir and is repeatable" {
+    local a="${TEST_HOME}/.claude-a" b="${TEST_HOME}/.claude-b"
+    seed_alt_config_dir "${a}"; seed_alt_config_dir "${b}"
+    remove_ov --config-dir "${a}" --config-dir "${b}" --yes
+    [ "$status" -eq 0 ]
+    run grep -i openviking "${a}/settings.json"; [ "$status" -ne 0 ]
+    run grep -i openviking "${b}/settings.json"; [ "$status" -ne 0 ]
+}
+
+@test "--config-dir with no argument exits non-zero" {
+    remove_ov --config-dir
+    [ "$status" -ne 0 ]
+}
+
+@test "drives the plugin + marketplace uninstall once per config dir" {
+    local alt="${TEST_HOME}/.claude-work"
+    seed_alt_config_dir "${alt}"
+    stub claude 'echo "cfg=${CLAUDE_CONFIG_DIR} claude $*" >> '"${TEST_HOME}"'/log; exit 0'
+    run env PATH="${FAKEBIN}:${PATH}" CLAUDE_CONFIG_DIR="${alt}" \
+        "${VAULT_ROOT}/bin/remove-openviking.sh" --yes
+    [ "$status" -eq 0 ]
+    grep -q "cfg=${alt} claude plugin uninstall claude-code-memory-plugin@openviking-plugin" "${TEST_HOME}/log"
+    grep -q "cfg=${HOME}/.claude claude plugin uninstall claude-code-memory-plugin@openviking-plugin" "${TEST_HOME}/log"
+    grep -q "cfg=${alt} claude plugin marketplace remove openviking-plugin" "${TEST_HOME}/log"
+}
+
+@test "reports a config dir it did not visit instead of silently leaving it" {
+    seed_alt_config_dir "${TEST_HOME}/.claude-stray"
+    remove_ov --yes
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"still references OpenViking"* ]]
+    [[ "$output" == *"--config-dir ${TEST_HOME}/.claude-stray"* ]]
+    # Reported only — an unvisited dir is never edited.
+    grep -qi openviking "${TEST_HOME}/.claude-stray/settings.json"
+}
+
 @test "never touches the vault framework or a project vault" {
     mkdir -p "${HOME}/vault/_global" "${HOME}/.claude/commands"
     ln -s "${VAULT_ROOT}/commands/v-work.md" "${HOME}/.claude/commands/v-work.md"
