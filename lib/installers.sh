@@ -323,12 +323,18 @@ doctor() {
     ensure_session_path
     section "Doctor — tool health"
     local failed_required=0
+    local cfg="${VAULT_HOME:-${HOME}/vault}/_global/config.md" mode=""
+    [ -f "${cfg}" ] && mode="$(sed -n 's/^install_mode:[[:space:]]*//p' "${cfg}" | head -1)"
+    [ -n "${mode}" ] && info "install: ${mode}"
 
-    _doctor_row "uv"                   have uv || true
-    _doctor_row "bun"                  have bun || true
-    _doctor_row "python >=3.10 (pipx)" pick_python || true
-    _doctor_row "graphify"             have graphify || true
-    _doctor_row "serena"               check_serena || true
+    # Serena and Graphify ship only in the --full (developer) profile. An empty
+    # box next to them on a light install is expected, not a fault — the label
+    # says so, and neither has ever affected the exit code. See ADR-021.
+    _doctor_row "uv"                       have uv || true
+    _doctor_row "bun"                      have bun || true
+    _doctor_row "python >=3.10 (pipx)"     pick_python || true
+    _doctor_row "graphify (developer)"     have graphify || true
+    _doctor_row "serena (developer)"       check_serena || true
     if claude_cli_ok; then
         _doctor_row "claude CLI"                       true
         _doctor_row "  claude-mem plugin"  bash -c 'claude plugin list 2>/dev/null | grep -qi claude-mem' || true

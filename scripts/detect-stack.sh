@@ -19,19 +19,14 @@ missing=()
 
 [ -f "${VAULT_HOME}/_global/config.md" ] || missing+=("the machine layer (~/vault/_global/)")
 
-# Both installs are a graceful degrade, not a failure — mention them only alongside
-# a real gap, never on their own.
-if [ "${#missing[@]}" -gt 0 ]; then
-    command -v graphify >/dev/null 2>&1 || missing+=("graphify")
-    command -v serena >/dev/null 2>&1 || command -v serena-agent >/dev/null 2>&1 || missing+=("serena")
-fi
+# Graphify and Serena are deliberately NOT checked here. They ship only in the
+# --full (developer) profile, so on a normal light install their absence is the
+# expected state, not a gap — naming them would report normality as a problem
+# (ADR-021). The machine layer is the one thing every install needs.
 
 [ "${#missing[@]}" -gt 0 ] || exit 0
 
-printf 'vault plugin: not set up on this machine yet — missing %s' "${missing[0]}"
-if [ "${#missing[@]}" -gt 1 ]; then
-    printf ' (and %d optional tool(s))' "$(( ${#missing[@]} - 1 ))"
-fi
-printf '. Run /v-setup once to fix it.\n'
+printf 'vault plugin: not set up on this machine yet — missing %s.' "${missing[0]}"
+printf ' Run /v-setup once to fix it.\n'
 
 exit 0

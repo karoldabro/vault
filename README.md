@@ -27,8 +27,12 @@ be asked for. `/v-setup` shows you what it will run before it runs anything.
 Prefer not to use plugins? Clone the repo and symlink the commands instead:
 
 ```bash
-git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh --full --yes
+git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh
 ```
+
+It asks which install you want. Take the light one unless you work on code with these commands — the
+developer install adds Serena and Graphify, which need uv, pipx and Python 3.10+. Either way you can
+switch later with `./setup.sh --full`.
 
 Run it as your normal user (not `sudo`). When it finishes, open a fresh shell with `exec $SHELL -l` and
 restart Claude Code.
@@ -87,8 +91,8 @@ accepts a list to seat several packs). Selection rules: `personas/_resolution.md
 
 - [vault-guide.md](vault-guide.md) — how the vault is laid out and how the lifecycle works. The doc to
   read if you want to understand the framework.
-- [tool-playbook.md](tool-playbook.md) — the helper tools (claude-mem, Serena, Graphify) and when to
-  use each.
+- [tool-playbook.md](tool-playbook.md) — the helper tools (claude-mem always; Serena and Graphify on
+  the developer install) and when to use each.
 - [docs/removing-openviking.md](docs/removing-openviking.md) — OpenViking was dropped; this takes an
   older install off your machine.
 - [INSTALL.md](INSTALL.md) — install options, uninstall, and tests.

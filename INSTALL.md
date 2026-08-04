@@ -52,17 +52,30 @@ and the helper tools alone — see [Uninstall](#uninstall) for the rest.
 ## Symlink install — one machine, once
 
 ```bash
-git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh --full --yes
+git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh
 ```
 
-`setup.sh` is the installer. On Ubuntu, `--full` sets up the whole tool stack for you:
+`setup.sh` is the installer. Run with no flags it asks which install you want.
 
-- uv and Serena
-- bun and claude-mem
-- pipx and Graphify
-- the claude-mem Claude Code plugin
+## Which install?
 
-It then scaffolds `~/vault/_global/`, runs a health check, and links the slash commands into
+| Install | Flag | You get | You give up |
+|---------|------|---------|-------------|
+| **Light** — recommended | `--light` | bun, claude-mem and its Claude Code plugin: memory recall across sessions | Questions about code structure fall back to grep, so they cost more tokens |
+| **Full** — for developers | `--full` | Everything in light, plus uv + Serena and pipx + Graphify: symbol navigation and a structural code graph, so code work is much cheaper | Vendor `curl \| sh` installs, apt, and Python 3.10 or newer |
+| Minimal | `--minimal` | The commands, nothing else | Every context lookup is grep |
+
+Serena and Graphify are **developer tools**. If you use the vault for notes, decisions and session
+history rather than for working on code, take the light install — the commands all work without them.
+You can add them later with `./setup.sh --full`; it is idempotent.
+
+Whichever you pick is recorded as `install_mode` in `~/vault/_global/config.md`, which is how the
+commands know not to keep offering you tools you chose not to install.
+
+With no terminal to answer the question, `--yes` gives you the light install and passing nothing at all
+gives you the minimal one — the installer never installs unattended without consent.
+
+Setup then scaffolds `~/vault/_global/`, runs a health check, and links the slash commands into
 `~/.claude/commands/`. Restart Claude Code afterwards so the new plugins load. (If the vault plugin is
 already installed, it skips the linking step and leaves the plugin's commands as the only copy.)
 
@@ -97,7 +110,8 @@ reasoning. MorphLLM Fast Apply is not installed for you — it needs a paid API 
 
 | Flag | What it does |
 |------|--------------|
-| `--full` | Install the whole stack: Serena, claude-mem, Graphify. Recommended. |
+| `--light` | claude-mem only. Recommended — see [Which install?](#which-install). |
+| `--full` | Adds the developer tools: Serena and Graphify. |
 | `--minimal` | Framework only, no tools. Commands degrade without the tools. |
 | `--with-serena` / `--with-claude-mem` | Install one tool (uv + Serena, or bun + claude-mem). |
 | `--with-graphify` | Install pipx + Graphify. (The per-project commit hook is added by `/v-init`.) |
@@ -107,7 +121,7 @@ reasoning. MorphLLM Fast Apply is not installed for you — it needs a paid API 
 
 ## Python 3.10 or newer
 
-The pipx tool (`graphifyy`) needs Python 3.10+. The installer picks a `python3.12`,
+Only the full (developer) install needs this. The pipx tool (`graphifyy`) needs Python 3.10+. The installer picks a `python3.12`,
 `3.11`, or `3.10` it finds on your PATH. On an old box (for example WSL or Ubuntu 20.04, which ship
 Python 3.8) pipx fails with a misleading "No matching distribution found". Install a newer Python and
 re-run:

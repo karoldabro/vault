@@ -180,6 +180,16 @@ teardown() {
     [[ "$output" == *"/v-setup"* ]]
 }
 
+@test "the detect hook never reports the developer tools as missing" {
+    # Serena and Graphify ship only in the --full profile, so on a normal light
+    # install their absence is the expected state. Naming them would report
+    # normality as a problem (ADR-021).
+    run "${VAULT_ROOT}/scripts/detect-stack.sh"
+    [ "$status" -eq 0 ]
+    [[ "${output,,}" != *"graphify"* ]]
+    [[ "${output,,}" != *"serena"* ]]
+}
+
 @test "the detect hook is silent once the machine layer exists" {
     mkdir -p "${HOME}/vault/_global"
     echo "vault_home: ${HOME}/vault" > "${HOME}/vault/_global/config.md"

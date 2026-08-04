@@ -79,15 +79,20 @@ the right ticket. See `tool-playbook.md` §6.
 
 `graph.json` is kept fresh by the per-project post-commit hook. For **any** structural question —
 what calls X, where is Y defined, which modules touch Z, dependency chains — query the graph before
-Serena or grep: `graphify query "<q>"`, `graphify path "A" "B"`. If `graphify-out/graph.json` is
-missing the hook isn't installed: surface it and offer `graphify hook install` + an initial
-`graphify .` build before falling back to grep. Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §3.
+Serena or grep: `graphify query "<q>"`, `graphify path "A" "B"`.
+
+Graphify is a **developer-install tool** (`setup.sh --full`). If `graphify-out/graph.json` is missing,
+read `install_mode` from `~/vault/_global/config.md`: on `full` the per-repo hook is simply absent —
+surface it and offer `graphify hook install` + an initial `graphify .` build. On `light`/`minimal` the
+tool was never installed, so fall back to grep silently. Full rules:
+`$VAULT_FRAMEWORK_PATH/tool-playbook.md` §3.
 
 ### 2.5 — Serena (semantic navigation — if code change implied)
 
 `get_symbols_overview(<file>)` for a file outline, `find_symbol(<name>)` to locate, and
-`find_referencing_symbols(<symbol>)` for impact. Orient before reading whole files. §4 of the
-playbook for full rules.
+`find_referencing_symbols(<symbol>)` for impact. Orient before reading whole files. Serena is a
+**developer-install tool** like Graphify — absent on a `light` machine by design, so read the file and
+move on rather than reporting it missing. §4 of the playbook for full rules.
 
 ### 2.6 — Recent sessions + decisions
 

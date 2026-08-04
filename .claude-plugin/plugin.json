@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "vault",
   "displayName": "Vault knowledge framework",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Vault-first development lifecycle for Claude Code: /v-work, /v-team, /v-cr, /v-pm and friends, plus the personas, templates and process docs they read.",
   "author": {
     "name": "Karol Dabrowski",

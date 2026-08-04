@@ -64,6 +64,28 @@ teardown() {
     [[ "$output" != *"=== Graphify ==="* ]]
 }
 
+# The chosen profile is recorded so the commands know whether Serena/Graphify are
+# meant to be there. Without it a light machine reads as a broken one (ADR-021).
+@test "--light records install_mode: light in the machine config" {
+    run "${VAULT_ROOT}/setup.sh" --light --yes
+    [ "$status" -eq 0 ]
+    grep -q '^install_mode: light$' "${VAULT_HOME}/_global/config.md"
+}
+
+@test "re-running with --full updates install_mode instead of duplicating it" {
+    "${VAULT_ROOT}/setup.sh" --light --yes >/dev/null
+    run "${VAULT_ROOT}/setup.sh" --full --dry-run
+    [ "$status" -eq 0 ]
+    grep -q '^install_mode: full$' "${VAULT_HOME}/_global/config.md"
+    [ "$(grep -c '^install_mode:' "${VAULT_HOME}/_global/config.md")" -eq 1 ]
+}
+
+@test "--minimal records install_mode: minimal" {
+    run "${VAULT_ROOT}/setup.sh" --minimal --yes
+    [ "$status" -eq 0 ]
+    grep -q '^install_mode: minimal$' "${VAULT_HOME}/_global/config.md"
+}
+
 @test "the installer no longer mentions OpenViking or its ollama backend" {
     run "${VAULT_ROOT}/setup.sh" --full --dry-run
     [ "$status" -eq 0 ]

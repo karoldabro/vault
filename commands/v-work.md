@@ -16,7 +16,9 @@ context (keeps the run lean; the whole body never loads at once).
 
 ## Tools — preferred, force when present (never gating)
 
-claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-saving backbone.
+claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-saving backbone. Serena and
+graphify ship only in the developer install (`setup.sh --full`); on a `light` machine
+(`~/vault/_global/config.md` → `install_mode`) their absence is expected — grep and say nothing.
 
 Present → use it (don't hand-roll grep/full-file reads/`sed` in its place); genuinely down →
 health-check to confirm, warn once, fall back, **never halt the lifecycle**. Canonical health-check +

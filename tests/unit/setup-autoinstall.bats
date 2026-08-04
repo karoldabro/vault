@@ -53,6 +53,64 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
 }
 
+#------------------------------------------------------------------------------
+# Install profiles (ADR-021) — light is the default; Serena + Graphify are the
+# developer tools and must appear ONLY under --full / an explicit --with-* flag.
+#------------------------------------------------------------------------------
+@test "--light installs claude-mem and neither developer tool" {
+    stub_claude_empty
+    run_setup --light --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
+    [[ "$output" != *"uv tool install -p 3.13 serena-agent"* ]]
+    [[ "$output" != *"pipx install graphifyy"* ]]
+}
+
+@test "no profile flag with --yes resolves to light (claude-mem only)" {
+    stub_claude_empty
+    # --dry-run implies --yes, so this is the scripted no-profile path.
+    run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --dry-run </dev/null
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
+    [[ "$output" != *"uv tool install -p 3.13 serena-agent"* ]]
+    [[ "$output" != *"pipx install graphifyy"* ]]
+}
+
+@test "no profile flag, no consent, no terminal installs nothing and names the flags" {
+    stub_claude_empty
+    run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" </dev/null
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"claude plugin install"* ]]
+    [[ "$output" != *"uv tool install"* ]]
+    [[ "$output" != *"pipx install"* ]]
+    [[ "$output" == *"--light"* ]]
+}
+
+@test "an explicit --with-* flag is never overridden by the light default" {
+    stub_claude_empty
+    run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --with-graphify --dry-run </dev/null
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"pipx install graphifyy"* ]]
+    # Hand-picked means hand-picked: claude-mem was not asked for.
+    [[ "$output" != *"claude plugin install claude-mem@thedotmack"* ]]
+}
+
+@test "--minimal beats --light (no tool installs at all)" {
+    stub_claude_empty
+    run_setup --light --minimal --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"claude plugin install claude-mem@thedotmack"* ]]
+    [[ "$output" != *"uv tool install"* ]]
+    [[ "$output" != *"pipx install"* ]]
+}
+
+@test "doctor labels Serena and Graphify as developer tools" {
+    run_setup --doctor
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"graphify (developer)"* ]]
+    [[ "$output" == *"serena (developer)"* ]]
+}
+
 @test "pipx installs pin a Python interpreter (--python)" {
     stub_claude_empty
     run_setup --full --dry-run

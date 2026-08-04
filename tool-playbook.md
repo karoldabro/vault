@@ -32,6 +32,10 @@ up empty.
 Rule of thumb: **graph before grep, symbol before full-file read.** If you're about to `Grep`
 across source to answer "what calls X" or "where is Y" — stop, that's a graphify query (layer 2).
 
+**Layers 2 and 3 ship only in the `--full` (developer) install.** On a `light` machine they are absent
+by design: layer 4 (grep) is the whole code path, and their absence is never reported as a gap. Check
+`~/vault/_global/config.md` → `install_mode` before offering to install either one (ADR-021).
+
 ---
 
 ## Health checks & fallbacks — canonical table
@@ -44,7 +48,7 @@ Present → use it; down → health-check to confirm, warn once, fall back, **ne
 | claude-mem | `search("test", limit=1)` via mcp-search | `Grep` over `~/vault/`; say so once |
 | Serena | `check_onboarding_performed()` | graphify → Glob/Grep/LSP |
 | MorphLLM | (MCP — no runtime check) | `Edit` / `MultiEdit` |
-| graphify | `graphify-out/graph.json` present | offer `graphify hook install`, then grep |
+| graphify | `graphify-out/graph.json` present | grep — offer `graphify hook install` only on a full install |
 | PostHog (MCP) | a cheap read query via the MCP (e.g. list insights / `query` skill ping) | metric findings → `advisory`; say so |
 | Bright Data | `bdata` CLI auth/status (or a 1-result `search`) | SERP/scrape findings → `advisory`; say so |
 | BOE (MCP) | MCP handshake / trivial statute lookup | legal findings → `advisory`; cite "unwired" |
@@ -96,8 +100,11 @@ Tools: `graphify query "<q>"`, `graphify path "A" "B"`, `graphify explain "<node
 **When:** what calls X, where is X defined, which modules touch Z, dependency/call chains. Prefer the
 graph over grepping source for these — usually far cheaper.
 **When NOT:** exact current line of one known symbol (read that line) or non-structural prose.
-**If `graphify-out/graph.json` is missing:** the hook isn't installed. Surface it and offer
-`graphify hook install` + an initial `graphify .` build. Do **not** silently grep instead.
+**If `graphify-out/graph.json` is missing:** check `~/vault/_global/config.md` → `install_mode` first.
+On `full` the hook simply isn't installed for this repo — surface it and offer `graphify hook install`
+plus an initial `graphify .` build rather than silently grepping. On `light` (or `minimal`) the tool was
+never installed and its absence is the expected state: fall back to grep **without comment**. Repeating
+"install Graphify" at someone who chose not to have it is noise, not help (ADR-021).
 
 ```
 # "What calls validateUserToken?"  — ~200 tok vs ~10k for recursive grep + reads
@@ -127,8 +134,10 @@ Session: `check_onboarding_performed`, `activate_project`, `list_memories`, `rea
 dependency-tracked rename / extract.
 **When NOT:** a file <~200 lines you'll read whole anyway; generic symbol names that need grep to
 disambiguate.
-**On failure:** if Serena is unavailable or the project isn't onboarded, surface it and offer to run
-`serena init` / onboarding. Do **not** silently fall back to reading whole files.
+**On failure:** if the project isn't onboarded, surface it and offer to run `serena init` / onboarding
+rather than silently reading whole files. If Serena is not installed at all, check
+`~/vault/_global/config.md` → `install_mode`: on `light` / `minimal` it was never meant to be there —
+read the file and say nothing (ADR-021).
 
 ```
 # Understand a file WITHOUT reading it whole (~500 tok vs ~2-3k for the full file)

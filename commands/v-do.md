@@ -37,8 +37,10 @@ Escalating means: state in one line why it's bigger than `/v-do`, and suggest `/
 ## Tools — preferred, never gating
 
 claude-mem, Serena, MorphLLM, graphify — present → use it (don't hand-roll grep/full-file
-reads/`sed`); genuinely down → health-check, warn once, fall back, never halt. Full rules:
-`$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
+reads/`sed`); genuinely down → health-check, warn once, fall back, never halt. Serena and graphify
+ship only in the developer install (`setup.sh --full`) — on a `light` machine
+(`~/vault/_global/config.md` → `install_mode`) they are absent by design: grep and say nothing. Full
+rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
 ---
 
@@ -56,7 +58,7 @@ reconsider the guardrail.
   `indications/` rows matching the files you'll touch — those are **binding constraints**, not
   suggestions. Skip the rest unless the answer needs it.
 - Structural question (what calls X, where defined) → `graphify query` / Serena `find_symbol` before
-  grepping. Otherwise go straight to the edit.
+  grepping, when they are installed. Otherwise go straight to the edit.
 
 ### 2 — Execute
 
