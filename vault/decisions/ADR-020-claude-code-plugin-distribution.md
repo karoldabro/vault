@@ -64,7 +64,10 @@ framework itself.** They are mutually exclusive and the installers enforce that.
 (`/vault:v-work`), which resolves collisions with other plugins.
 
 **Harder.** Publishing now needs a `version` bump — pushing to main alone reaches nobody, and that
-failure is silent (`/plugin update` reports "already latest"). Two install routes mean two paths to
+failure is silent (`/plugin update` reports "already latest"). **Closed 2026-08-04** by
+`bin/release-check.sh` / `make release-check`, which fails when shipped files changed since
+`origin/main` without a version bump (`tests/`, `vault/`, `docs/` excluded — they ship in the cache
+but change nothing a user invokes). Covered by `tests/unit/release-check.bats`. Two install routes mean two paths to
 reason about in every future change to command wiring. Editing the framework through a plugin install
 means editing a cache copy that the next update replaces, which is why `install.sh` survives.
 

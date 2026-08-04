@@ -46,6 +46,11 @@ its cache on that string, so pushing commits without bumping it does nothing —
 report users are already on the latest. The pin is deliberate: it means a half-finished `main` never
 reaches anyone who installed the plugin. Bump it as the last step of a release, not per commit.
 
+`make release-check` enforces it: it fails when files that ship in the plugin changed since
+`origin/main` but the version string did not. Changes under `tests/`, `vault/` and `docs/` are
+excluded — they ride along in the plugin cache but change nothing a user invokes, so they need no
+release. An unreachable `origin/main` warns and passes rather than blocking.
+
 To remove: `/plugin uninstall vault@kdabro-vault`. That takes away the commands and leaves your vaults
 and the helper tools alone — see [Uninstall](#uninstall) for the rest.
 

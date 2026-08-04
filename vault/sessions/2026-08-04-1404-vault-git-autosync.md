@@ -89,9 +89,11 @@ script hardening plus its tests, and the intro deck refresh.
 
 ## Next
 
-- **Unguarded:** nothing fails a release commit that forgot to bump `plugin.json`. A `make
-  release-check` comparing the manifest version against the version at the last git tag would catch
-  it. Deliberately left out of scope this session.
+- ~~**Unguarded:** nothing fails a release commit that forgot to bump `plugin.json`.~~ **Closed in
+  this session** — `bin/release-check.sh` + `make release-check` fail when shipped files changed since
+  `origin/main` without a bump (`tests/`, `vault/`, `docs/` excluded; unreachable base ref warns and
+  passes). 11 tests in `tests/unit/release-check.bats`. Shipped as **1.2.1**. Note the base is a
+  branch, not `git describe` — this repo has no release tags.
 - `tests/unit/vault-sync.bats` enumerates the wired command files by path, so a *new* vault-touching
   command can be added without the test noticing. Recorded in the indication.
 - The exit-4 check compares against `$VAULT_SYNC_CODE_REPO` (default `$PWD`); a command invoked from

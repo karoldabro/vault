@@ -100,7 +100,11 @@ path and are meaningless under a plugin install.
 - The plugin cache is a copy, not a checkout. `git pull` in the clone changes nothing for a plugin
   install.
 - Publishing failure is silent. Pushing without a `version` bump produces "already at the latest
-  version", not an error.
+  version", not an error. **Guarded since 2026-08-04:** `make release-check` (`bin/release-check.sh`)
+  fails when files that ship in the plugin changed since `origin/main` without a bump. `tests/`,
+  `vault/` and `docs/` are excluded — they ride in the cache but change nothing a user invokes. It is
+  deliberately **not** part of `make test`: the offline container has no `origin/main` ref. An
+  unreachable base ref warns and passes, so it never blocks work offline.
 - The plugin cache holds the whole repo, `tests/` and the framework's own `vault/` included. Harmless
   today; revisit if cache size ever matters.
 - Developing the framework through a plugin install means editing a cache copy that the next update
