@@ -35,6 +35,8 @@ TARGET_DIR="${HOME}/.claude/commands"
 COMMANDS_DIR="${VAULT_ROOT}/commands"
 STYLES_TARGET_DIR="${HOME}/.claude/output-styles"
 STYLES_DIR="${VAULT_ROOT}/output-styles"
+HOOKS_TARGET_DIR="${HOME}/.claude/hooks"
+HOOK_SRC="${VAULT_ROOT}/scripts/doc-lint-hook.sh"
 
 linked=0
 skipped=0
@@ -125,6 +127,14 @@ fi
 # a user's own symlinks safe.
 prune_stale "${STYLES_DIR}" "${STYLES_TARGET_DIR}"
 
+# The doc-lint hook. A plugin install reads hooks/hooks.json and needs none of this; a symlink
+# install has no manifest, so the script is linked here and the user registers it themselves.
+# Registering it would mean editing settings.json, which this installer never does.
+if [ -f "${HOOK_SRC}" ]; then
+    mkdir -p "${HOOKS_TARGET_DIR}"
+    ln -sfn "${HOOK_SRC}" "${HOOKS_TARGET_DIR}/doc-lint-hook.sh"
+fi
+
 echo "Vault framework installed."
 echo "  Linked:  ${linked}"
 echo "  Skipped: ${skipped} (already correct)"
@@ -135,6 +145,20 @@ if [ -L "${STYLES_TARGET_DIR}/director.md" ]; then
     echo "  Turn it on:  /config  ->  Output style  ->  director"
     echo "  Or set \"outputStyle\": \"director\" in ~/.claude/settings.json"
     echo "  Takes effect after /clear or in a new session."
+fi
+if [ -L "${HOOKS_TARGET_DIR}/doc-lint-hook.sh" ] \
+   && ! grep -q "doc-lint-hook" "${HOME}/.claude/settings.json" 2>/dev/null; then
+    echo
+    echo "Document linting is installed but not switched on."
+    echo "  It checks every markdown document Claude writes and hands the findings back to it."
+    echo "  It never blocks a write and never prompts you."
+    echo "  Add to the \"hooks\" object in ~/.claude/settings.json:"
+    echo
+    echo '    "PostToolUse": [{ "matcher": "Write|Edit|MultiEdit",'
+    echo '      "hooks": [{ "type": "command",'
+    echo '                  "command": "$HOME/.claude/hooks/doc-lint-hook.sh" }] }]'
+    echo
+    echo "  Turn it off any time with DOC_LINT=off."
 fi
 if [ "${refused}" -gt 0 ]; then
     echo "  Refused: ${refused} (see warnings above)" >&2

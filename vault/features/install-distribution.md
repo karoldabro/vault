@@ -26,7 +26,7 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
 - `.claude-plugin/marketplace.json` — marketplace name `kdabro-vault`, one plugin entry, `source: "./"`.
 - Install: `/plugin marketplace add karoldabro/vault` → `/plugin install vault@kdabro-vault`.
 - Update: `/plugin update vault@kdabro-vault`. Remove: `/plugin uninstall vault@kdabro-vault`.
-- Component roots scanned by Claude Code: `commands/`, `output-styles/`, `hooks/hooks.json`, `bin/`
+- Component roots scanned by Claude Code: `commands/`, `output-styles/`, `hooks/hooks.json`, `bin/`, `scripts/`
   (added to the Bash tool's PATH).
 
 **Symlink route**
@@ -51,7 +51,10 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
   `~/vault/_global/config.md` → `~/workspace/vault`. Documented in `vault-guide.md` §1.1 and
   `commands/v-work/steps/01-analyze.md` §1.4.
 - `lib/plugin-detect.sh` — `vault_running_from_plugin_cache`, `vault_plugin_installed`.
-- `/v-setup` → `setup.sh` behind a consent gate. `hooks/hooks.json` → `scripts/detect-stack.sh`.
+- `/v-setup` → `setup.sh` behind a consent gate. `hooks/hooks.json` → `scripts/detect-stack.sh` (SessionStart)
+  and `scripts/doc-lint-hook.sh` (PostToolUse). A **symlink install reads no manifest**, so `install.sh`
+  links the hook into `~/.claude/hooks/` and prints the `settings.json` snippet for the user to paste —
+  it never edits `settings.json` itself.
 - Uninstall beyond the wiring: `bin/vault-uninstall.sh` (`--tools`, `--purge-data`, `--all`).
 
 ## Behaviors & rules

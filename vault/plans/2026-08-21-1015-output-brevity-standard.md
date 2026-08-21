@@ -106,7 +106,9 @@ clean `doc-lint` run as "this document is good".
 | F14 | Fix the documented binding path in `vault/indications/user-facing-communication.md` and `ADR-018` | both name `~/.claude/...`; every real binding uses `$VAULT_FRAMEWORK_PATH` | matches the files | TODO |
 | F15 | Wire `doc-lint` to a `PostToolUse` hook | non-blocking; caps its own output at ~12 lines | a markdown write triggers it, exit 2 feeds the model | DONE |
 | F16 | Write `commands/v-reconcile.md` | applies the standard to documents that already exist; approval gate per file | `--compare` blocks a lossy rewrite | DONE |
-| G3 | `PostToolUse` hook in `~/.claude/settings.json` | settings backed up first | valid JSON, smoke-tested both ways | DONE |
+| G3 | Register the hook in `~/.claude/settings.json` | settings backed up first | valid JSON, smoke-tested both ways | DONE |
+| G4 | Ship the hook as `scripts/doc-lint-hook.sh` **inside the repo** | resolves the framework from its own path; symlinked into `~/.claude/hooks/` like `commands/` and `output-styles/` | works through the symlink | DONE |
+| G5 | Add `PostToolUse` to `hooks/hooks.json` | a plugin install gets the hook with no settings edit | `${CLAUDE_PLUGIN_ROOT}` form matches the existing `SessionStart` entry | DONE |
 | G1 | Add an output-rules section to `~/.claude/CLAUDE.md` | six rules inline + pointer; file is 86 lines | — | DONE |
 | G2 | Extend `output-styles/director.md` with the document half | written, **not activated** — the user reviews first | `/output-style director` when approved | DONE |
 | V1 | Write ADR-023 + the indication + both indexes | one decision, one place | both lint clean | DONE |
@@ -118,8 +120,9 @@ clean `doc-lint` run as "this document is good".
   writes a file is still ungoverned. The binding path documented in
   `vault/indications/user-facing-communication.md` and `ADR-018` names `~/.claude/...`, which no file
   actually uses.
-- **Needs the operator:** activate the output style with `/output-style director` after reading
-  `output-styles/director.md`. It is installed and active in none of 18 projects.
+- **Needs the operator:** activate the output style via `/config` → Output style → *director*, after
+  reading `output-styles/director.md`. The dedicated `/output-style` command was removed in Claude
+  Code v2.1.91; the feature still exists. It is installed and active in none of 18 projects.
 - **The suite has not run.** `tests/run.sh` needs Docker; the 25 linter behaviours and 17 file
   assertions were verified directly instead. Run `tests/run.sh tests/unit` before merging.
 - Caps: plan 300 · feature 200 · guide 600 · ADR 120 · indication 80. Grounded in review cost —

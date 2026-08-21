@@ -70,7 +70,8 @@ the rule enforceable rather than aspirational.
   which no file uses.
 - Run `tests/run.sh tests/unit` — needs Docker; 25 linter behaviours and 17 file assertions were
   verified directly instead.
-- Operator: activate the output style with `/output-style director` after reviewing it.
+- Operator: activate the output style via `/config` → Output style → *director*. The dedicated
+  `/output-style` command was removed in Claude Code v2.1.91; the feature itself still exists.
 
 ## Refs
 
