@@ -191,6 +191,36 @@ Turn it off any time with `DOC_LINT=off`. `install.sh --enable-all` does both th
 Both flags edit `~/.claude/settings.json`, back it up first, and are idempotent. Without a flag,
 `install.sh` never touches your settings.
 
+### A second Claude config directory
+
+`CLAUDE_CONFIG_DIR` lets you run a separate Claude home — a work profile, say:
+
+```
+alias claude-work='CLAUDE_CONFIG_DIR="$HOME/workspace/.claude-work" claude'
+```
+
+`install.sh` does not know about it: every path it writes is `~/.claude/...`. Wire the second home
+by hand, once. Symlinking rather than copying means both homes track the framework:
+
+```
+W="$HOME/workspace/.claude-work"
+ln -s ~/.claude/commands      "$W/commands"        # if not already linked
+ln -s ~/.claude/output-styles "$W/output-styles"
+ln -s ~/.claude/hooks         "$W/hooks"
+```
+
+Then add to `$W/settings.json` — that file is separate from `~/.claude/settings.json` and inherits
+nothing from it:
+
+```json
+"outputStyle": "director",
+"hooks": { "PostToolUse": [{ "matcher": "Write|Edit|MultiEdit",
+  "hooks": [{ "type": "command",
+              "command": "$HOME/workspace/.claude-work/hooks/doc-lint-hook.sh" }] }] }
+```
+
+`CLAUDE.md` is worth symlinking too, so one edit reaches both profiles.
+
 ## Uninstall
 
 On a plugin install, `/plugin uninstall vault@kdabro-vault` removes the commands. The helper tools,
