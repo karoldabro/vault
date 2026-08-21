@@ -181,7 +181,7 @@ print_header() {
     [ "$header_printed" = 1 ] && return 0
     header_printed=1
     [ "$quiet" = 1 ] && return 0
-    printf '%s  [%s/%s, %s lines, cap %s]\n' "$1" "$2" "$3" "$4" "$5"
+    printf '%s  [%s/%s, %s lines, cap %s%s]\n' "$1" "$2" "$3" "$4" "$5" "${type_note:-}"
 }
 
 finding() {
@@ -214,7 +214,7 @@ case_flag() {
 }
 
 check_patterns() {
-    local file="$1" body_start="$2" want_group="$3"
+    local _target="$1" body_start="$2" want_group="$3"
     local code group regex message lineno
     while IFS=$'	' read -r code group regex message; do
         [ -z "${code:-}" ] && continue
@@ -232,13 +232,13 @@ check_patterns() {
 # Rule 3 — one rule, one place. A substantial line repeated more than twice has more than one home.
 # Twice is tolerated: a heading restated in a summary table is normal and useful.
 check_duplicates() {
-    local file="$1" count text
+    local _target="$1" count text
     while read -r count text; do
         [ -z "${count:-}" ] && continue
         header
         finding "DUP1" "x${count}" "repeated line — define it once and reference it: \"$(printf '%s' "$text" | cut -c1-56)…\""
     done < <(
-        sed -e 's/^[[:space:]#>*|+-]*//' -e 's/[[:space:]]*$//' -e 's/[*_`]//g' "$file" \
+        sed -e 's/^[[:space:]#>*|+-]*//' -e 's/[[:space:]]*$//' -e 's/[*_`]//g' "$_target" \
         | tr '[:upper:]' '[:lower:]' \
         | awk 'length($0) >= 45' \
         | sort | uniq -c \
@@ -249,7 +249,7 @@ check_duplicates() {
 # Sentence ceiling. communication.md caps prose the user reads at 25 words; a document gets 30,
 # because a specification sentence legitimately carries more qualifiers than a message does.
 check_sentences() {
-    local file="$1" lineno
+    local _target="$1" lineno
     while IFS= read -r lineno; do
         [ -z "${lineno:-}" ] && continue
         header
@@ -266,7 +266,7 @@ check_sentences() {
                     if (w > 30) { print NR; break }
                 }
             }
-        ' "$file"
+        ' "$_target"
     )
 }
 
@@ -399,10 +399,12 @@ for file in "${files[@]}"; do
     cap="${cap_override:-$(cap_for_type "$doc_type")}"
 
     # An unrecognised type takes the loosest cap, which silently exempts exactly the documents most
-    # likely to need one. Say so rather than letting it pass as a checked file.
-    if [ "$quiet" = 0 ] && [ -z "$cap_override" ] && ! is_known_type "$doc_type"; then
-        printf '%s  [unknown type %s — capped at %s by default; set `type:` in frontmatter]\n' \
-            "$file" "'${doc_type}'" "$cap"
+    # likely to need one — so the header says so. It rides along with a real finding rather than
+    # printing on its own: a notice on an otherwise-clean file is noise, and noise gets a linter
+    # switched off.
+    type_note=""
+    if [ -z "$cap_override" ] && ! is_known_type "$doc_type"; then
+        type_note=" — unknown type, set \`type:\` in frontmatter"
     fi
 
     MATCHABLE="$(mktemp)"
