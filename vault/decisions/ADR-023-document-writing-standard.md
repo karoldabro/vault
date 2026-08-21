@@ -83,6 +83,12 @@ place" has a real exception: where omission is catastrophic, aviation checklist 
 repeating the item, and plain-language guidance warns that cross-references get skipped. The
 standard carries that carve-out rather than pretending the corpus agrees.
 
+**One justification withdrawn.** ADR-018 capped its module at 120 lines because "a bloated
+instruction file gets ignored". The only factorial experiment on this (1,650 sessions) found **no
+detectable effect** of instruction-file size, position or architecture, with Bayes factors favouring
+the null; the measured drivers were turn-depth decay and instruction *count*. The caps stay — a short
+contract is cheap — but the reason is judgement, not evidence. See [[document-writing]] §4 A-07.
+
 **Known limit, stated plainly.** `tests/unit/document-standard.bats` is a file contract plus real
 linter behaviour tests. It proves the rules exist and the linter works. It does not prove a written
 document is good. Do not read a green suite as evidence the output got shorter.

@@ -74,9 +74,11 @@ document starts carrying how it got here, write the record to its own file and l
 
 8. **Every item is executable — action, constraint, verification.** Name the exact file path; never
    collapse several into a phrase like "the resources". Status is a field beside the item (`DONE`,
-   `PENDING`, `BLOCKED`), never a sentence in prose, and open work lives in one section near the
-   top. The next reader may be an agent paying for every token: a table row survives a hand-off, a
-   paragraph does not.
+   `PENDING`, `BLOCKED`), never a sentence in prose. Open work lives in one section **near the top**:
+   a constraint buried mid-document scores worse than one never supplied at all.
+   **Tables for settled facts, prose for judgement.** Decisions, paths and acceptance criteria
+   transfer best as rows. A trade-off the reader must still reason through transfers worst that way —
+   forcing it into a table costs more than the tokens it saves.
 
 9. **A heading — and every unheaded block — states its own kind.** `Why it warns instead of
    blocking:` · `Constraint:` · `Failure mode:`. Every word must be one the reader already has;

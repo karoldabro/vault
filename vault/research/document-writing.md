@@ -88,7 +88,32 @@ answer from practice (10–20 pages). D-16 and D-17 say what happens instead: at
 with depth, and readers skip. The caps are a smell test grounded in review cost, not a style
 preference.
 
-## §4 Evidence honesty
+## §4 When the reader is an agent
+
+A plan is handed to an implementing agent as often as to a person, and that reader has its own
+measured failure modes. Two of them converge with §1 from a completely separate corpus.
+
+| id | finding | maturity | source |
+|----|---------|----------|--------|
+| A-01 | **A buried constraint scores worse than a missing one.** Mid-document position costs up to **22.9 points**; a fact placed mid-context can score below not supplying it at all. | measured | lost-in-the-middle / long-context position studies |
+| A-02 | **Topically adjacent noise hurts more than random filler.** One irrelevant sentence cost **22.6 points** on an otherwise-solved task; semantically related but unused prose distracts more than incoherent text. A superseded approach left beside the current one is the worst case of this. | measured | Shi et al., distractor studies; Chroma context-rot |
+| A-03 | "Ignore anything not relevant" recovers only **15–28%** of the lost accuracy. The guard is deletion, not an instruction. | measured | distractor-mitigation results |
+| A-04 | Instruction adherence decays with turn depth (**~5.6% in odds per generated unit**) regardless of file structure — so a critical constraint is **re-issued at the point of use**, not assumed to still bind from the top of the file. Independent convergence with D-24. | measured | 1,650-session factorial study |
+| A-05 | **Structure helps settled facts and hurts judgement.** Key/value and table form aids transfer of decided facts; forcing reasoning-dependent content into hard structure cost up to **63 points**. Markdown ornamentation adds **22–37% tokens** with no reliable accuracy benefit. | measured | structured-output comparisons |
+| A-06 | Models **misreport their own compliance**, including word counts they did not produce. Length rules need an external check, not a self-check. This is why `bin/doc-lint.sh` exists rather than an instruction to be brief. | measured | LIFEBench / LIFT |
+| A-07 | **Counter-finding — "shorter instruction file = better adherence" is doctrine, not evidence.** The only factorial experiment (1,650 sessions) found **no detectable effect** of instruction-file size, position or architecture, with Bayes factors favouring the null. The measured drivers were turn-depth decay (A-04) and instruction *count*, not file length. | measured (null) | 1,650-session factorial study |
+| A-08 | **Brevity is not free in every direction.** A plain "be brief" cost up to **20% of hallucination resistance** — brevity over the justification of a factual claim removes the room needed to refute a false premise. Brevity over reasoning scaffolding measured as *improving* accuracy. No clean operational test separates the two cases. | measured, both directions | Giskard/Phare; CCoT; TALE |
+
+**What A-07 means for this framework.** The 120-line cap on `document-standard.md` is a judgement
+call, not a measured requirement, and the same is true of the cap on `communication.md`. Keep them —
+a short contract is cheap and the null result is one study — but do not cite "bloated instruction
+files get ignored" as though it were established.
+
+**What A-08 means.** It is the reason every rule here caps *prose* and none caps reasoning, and the
+reason the edit pass has a floor. Cutting narrative is close to free; cutting the support under a
+factual claim is not.
+
+## §5 Evidence honesty
 
 **Do not cite these — no primary source exists:**
 
@@ -103,7 +128,16 @@ preference.
 
 **The gap that matters most:** no study compares reader outcomes under stale-content versus
 no-content conditions. D-29 measures prevalence, not error rates. The rule that a document carries
-current truth only is well-motivated doctrine, and should not be presented as validated science.
+current truth only is well-motivated doctrine for a human reader, and should not be presented as
+validated science. For an agent reader it is on firmer ground: A-02 measures topically adjacent
+unused prose as actively costly, and a superseded approach sitting beside the current one is exactly
+that.
+
+**Also unadjudicated:** whether a hand-off should be compressed at all. One vendor compresses
+sub-agent work to 1,000–2,000 tokens; another argues that compression is precisely why multi-agent
+systems fail, because the receiver acts on assumptions never surfaced. Both are doctrine from teams
+shipping opposite architectures, and no measured study settles it. The sidecar split sidesteps the
+question rather than answering it: nothing is compressed away, it is moved and referenced.
 
 ## Refs
 
