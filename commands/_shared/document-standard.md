@@ -16,7 +16,7 @@ not code — put a phrase you are *quoting* in backticks and it reads as a quota
 | The contract read "every narrated sentence has its sourced entry", and the row schema demanded a `src:` key per line. 164 of 186 rows joined a numbered research row… | Unsourced lines are rejected. The fact-check is a hard gate. |
 | v1 `was rejected` for lacking storytelling and a craft-first brief was issued for v2. The writer resolved all thirteen craft files… The prose moved backwards on every rhythm axis. | The second run improved no metric. |
 | Blocking a claim costs you a real handover. Someone who says "next week" might still be the only person who ever comes. So the warning appears before they commit… | **Why it warns instead of blocking:** both sides keep the flexibility and neither takes a risk. The giver learns when the receiver can come, then accepts or rejects. |
-| 600 seconds, not 540. The channel's own binding sets a ten-minute floor, so the operator's brief and that floor meet at exactly one value. Named as a decision, not taken quietly. | The operator agreed to a shorter video. |
+| 600 seconds, not 540. The channel's own binding sets a ten-minute floor, so the operator's brief and that floor meet at exactly one value. `Named as a decision, not taken quietly.` | The operator agreed to a shorter video. |
 
 Every left-hand cell obeys the content rules below and is still unusable. Read the table first; it
 carries what a rule cannot state.
@@ -45,7 +45,9 @@ document starts carrying how it got here, write the record to its own file and l
 
 3. **Say it; do not allude to it.** If the reader has to finish your sentence, you have not written
    it. No verbless fragments, no idiom, no metaphor, no `X, not Y` inversion for rhythm. Sentence
-   ceiling 25 words in prose, 30 in a specification.
+   ceiling 25 words in prose, 30 in a specification — and **never bury a definition inside a rule**.
+   Nesting one clause inside another damages recall more than any other feature measured, expert
+   readers included. Hoist it into its own sentence.
 
 4. **Name the actor, use a verb.** The subject is the person or system that acts; the action is the
    main verb. `Blocking a claim costs you a real handover` → `If you block the claim, the one person
@@ -53,10 +55,15 @@ document starts carrying how it got here, write the record to its own file and l
 
 5. **Write the current truth.** Delete superseded state; never mark it. No revision logs, no `rev N`
    headings, no strikethrough, no `WITHDRAWN`, no `the first implementation omitted…`. Git holds
-   history.
+   history. Where a contract or regulator demands a revision notice, it goes in **frontmatter as
+   metadata** — never interleaved with the body, which is the only part checked.
 
 6. **One rule, one place.** Define each constraint once, at its most specific owner; reference it
    everywhere else. Never re-quote the guideline you are following.
+   **Exception — a rule whose omission is catastrophic** may be restated at each point of use, the
+   way an aviation checklist repeats a critical item across procedures. Three conditions, all
+   required: it is short, forgetting it causes real damage, and the copy reads as a copy of a named
+   rule. Exempt `DUP1` in `.doc-lint` with that reason rather than arguing with the linter.
 
 7. **No process inside a contract document.** Not which agent found it, how many reviewers ran, how
    many rounds it took, what got rejected on the way, or any remark about this document's own act of
@@ -93,3 +100,5 @@ Then, on each surviving line: **would deleting it cause a wrong action?** If not
 **Never cut a failure mode, a rollback path, an open blocker, an exact file path, or an assumption
 you could not verify.** These survive every deletion, and they survive the cap. Shortening removes
 narrative, never constraints; `bin/doc-lint.sh --compare <before> <after>` proves which you did.
+
+Evidence for the rules and the caps: `vault/research/document-writing.md`.

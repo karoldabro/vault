@@ -60,6 +60,11 @@ five defect examples obeyed all ten and remained unusable.
 7. **`/v-reconcile` applies the standard to documents that already exist** — load context, extract
    the load-bearing set, split, rewrite, verify with `--compare`, then an approval gate per file.
 
+6b. **The caps rest on review cost, not taste.** Conforming inspection runs at 0.5–1.5 logical pages
+   per hour, so a 1,000-line document is 22–66 hours of review nobody spends — it gets skimmed, and a
+   buried requirement survives. Practitioner guidance lands in the same place (10–20 pages). Evidence:
+   [[document-writing]] §3.
+
 ## Consequences
 
 **Accepted costs.** The rules now live in four places (module, output style, global `CLAUDE.md`, and
@@ -71,11 +76,18 @@ this repo's own rules forbid installing globally.
 **Not done.** The 54 existing over-cap plans are left alone; `/v-reconcile` handles them on demand
 rather than in a migration.
 
+**Two rules the evidence forced, against how the standard was first written.** Sentence length is doctrine; the one
+measured sentence-level effect is **center-embedding**, which damages recall more than jargon or
+passive voice, for expert readers too — so the standard names it explicitly. And "one rule, one
+place" has a real exception: where omission is catastrophic, aviation checklist practice *mandates*
+repeating the item, and plain-language guidance warns that cross-references get skipped. The
+standard carries that carve-out rather than pretending the corpus agrees.
+
 **Known limit, stated plainly.** `tests/unit/document-standard.bats` is a file contract plus real
 linter behaviour tests. It proves the rules exist and the linter works. It does not prove a written
 document is good. Do not read a green suite as evidence the output got shorter.
 
 ## Refs
 
-[[ADR-018-decision-communication-contract]] · [[document-writing-standard]] ·
+[[ADR-018-decision-communication-contract]] · [[document-writing-standard]] · [[document-writing]] ·
 [[decision-communication]] · `commands/_shared/document-standard.md` · `bin/doc-lint.sh`

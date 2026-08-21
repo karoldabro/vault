@@ -121,6 +121,7 @@ Test for each surviving line: *would deleting it cause a wrong action?* If not, 
 | G1 | Add an output-rules section to `~/.claude/CLAUDE.md` | six rules inline + pointer; file is 86 lines | — | DONE |
 | G2 | Extend `output-styles/director.md` with the document half | written, **not activated** — the user reviews first | `/output-style director` when approved | DONE |
 | V1 | Write ADR-023 + the indication + both indexes | one decision, one place | both lint clean | DONE |
+| V2 | Write `vault/research/document-writing.md` | 30 findings, with the unciteable figures named | record class, lint clean | DONE |
 
 ## Open
 
@@ -132,8 +133,9 @@ Test for each surviving line: *would deleting it cause a wrong action?* If not, 
   `output-styles/director.md`. It is installed and active in none of 18 projects.
 - **The suite has not run.** `tests/run.sh` needs Docker; the 25 linter behaviours and 17 file
   assertions were verified directly instead. Run `tests/run.sh tests/unit` before merging.
-- Caps come from judgement, not evidence: plan 300 · feature 200 · guide 600 · ADR 120 ·
-  indication 80. The research on measured document limits never returned.
+- Caps: plan 300 · feature 200 · guide 600 · ADR 120 · indication 80. Grounded in review cost —
+  conforming inspection runs at 0.5–1.5 logical pages/hour, so a 1,000-line document is 22–66 hours
+  of review nobody spends. Evidence in `vault/research/document-writing.md`.
 - Migrating the 54 existing over-cap plans is out of scope here — `/v-reconcile` handles them on
   demand, one approval gate per file.
 - The global `~/.claude/CLAUDE.md` copy cannot be reached by any test in this repo, so it will drift.
