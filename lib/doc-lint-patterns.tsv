@@ -1,0 +1,31 @@
+# doc-lint pattern table.  code <TAB> group <TAB> regex <TAB> message
+#
+# A rule change is a data edit here, not a script edit. Every code maps to a numbered rule in
+# commands/_shared/document-standard.md, and tests/unit/document-standard.bats asserts that mapping —
+# a check with no written rule behind it is an unaccountable check.
+#
+# group: history | process | reference | contract-only, all skipped for record-class documents.
+# Keep every regex narrow enough that a hit is wrong under any reading. Precision is the whole
+# product: a linter that fires on legitimate work gets switched off and then enforces nothing.
+#
+# rule 2 — write the current truth
+HIST1	history	^#{1,6}[[:space:]].*([Aa]mendment log|[Rr]evision (log|history)|[Cc]hange ?log)	revision history in a contract document — move it to the record sidecar (git already holds history)
+HIST2	history	^#{1,6}[[:space:]]*(rev|Rev|REV|v|V)[[:space:]]?[0-9]+[[:space:]]*(—|-|:|$)	a versioned section heading — keep only the current state
+HIST3	history	~~[^~]+~~	struck-through text — delete the superseded state instead of marking it
+HIST4	history	\b(WITHDRAWN|SUPERSEDED|REVERSED|OBSOLETE)\b	a superseded-state marker — delete the old state and write only the current one
+HIST5	history	\b(was|were) (wrong|rejected|withdrawn|reverted|abandoned|superseded)\b	what an earlier version got wrong is history — state the current rule instead
+HIST6	history	\b(the (first|previous|earlier|original|old) (implementation|approach|attempt|version|plan|draft))\b	a discovery anecdote — keep the resulting requirement, drop the story
+HIST7	history	\b(used to be|as it (used to|once) did|in the (previous|earlier) (pass|round|revision|version))\b	a comparison with a past state — write only what is true now
+HIST8	history	^#{1,6}[[:space:]].*\((v[0-9]|pre-panel|pre-review|draft)\)	a draft-stage heading — a contract document carries the current state only
+# rule 4 — no process inside a contract document
+PROC1	process	^#{1,6}[[:space:]].*([Cc]ritique trail|[Rr]ound [0-9]|[Pp]anel output|[Rr]eviewer findings)	panel process inside a contract document — it belongs in the record sidecar
+PROC2	process	\b(critics?|reviewers?|personas?|agents?|panel)\b.{0,40}\b(spawned|re-spawned|returned|converged|ran out of rounds)\b	agent activity is not part of the contract — keep only the resulting requirement
+PROC3	process	\b(spawned|ran|seated|fielded|dispatched) [0-9]+ (critics?|reviewers?|agents?|personas?)	a count of agents run — state the resulting fact instead
+PROC4	process	[Cc]onvergence[[:space:]]*:[[:space:]]*(clean|capped)	convergence status is process state — record it in the sidecar
+PROC5	process	\b(BLOCKER|MAJOR|NIT)\b	panel severity vocabulary — translate it into the requirement it produced
+PROC6	process	(per-round metrics|findings-delta|persona overlap|sycophancy flag)	panel metrics belong in the record sidecar
+PROC7	process	\b([Nn]amed as a decision|stated explicitly rather than implied|for the record|worth flagging here|[Nn]oted rather than|[Ss]tated here rather than)\b	a remark about this document's own act of writing — state the decision, not that you are stating it
+# rule 9 — references resolve; rule 3 — say it once
+REF1	reference	\b[Ss]ee (the |his |her |their )?(plan|brief|document|file|doc|spec|above|below)\b	an unresolvable reference — give the path and one line on why it matters here
+REF2	reference	\bas (noted|stated|described|mentioned) (above|below|earlier|previously)\b	a back-reference to your own text — say it once, in one place
+REF3	reference	\b(in other words|to clarify|to put it another way|that is to say)\b	an explanation of your explanation — keep one version

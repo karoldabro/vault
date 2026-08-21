@@ -1,0 +1,5 @@
+# Checks exempted in THIS repo, with the reason. Each line: <code>  <why>.
+# The framework's own subject matter is the review panel, so its ADRs and indications name the
+# panel's severity vocabulary in prose. That is the thing being specified here, not leaked jargon.
+PROC5   this repo specifies the panel; BLOCKER/MAJOR are its domain nouns
+PROC3b  ADRs record how many findings a documented panel run produced, as evidence for the decision

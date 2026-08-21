@@ -2,64 +2,77 @@
 type: plan
 project: {{project}}
 slug: {{slug}}
-status: proposed   # proposed | approved | executed | superseded
-personas: [{{pack}}]
-rounds: {{n}}
-convergence: clean   # clean | capped-with-open-blockers
-tags: [plan, team]
+repos: [{{repos}}]                   # blast radius — every repo this touches
+status: proposed                     # proposed | approved | executed | superseded
+process_record: {{slug}}.trail.md    # sibling record file: findings, dispositions, rejected options
+session: {{session}}                 # the session that executed this, once it has
+tags: [plan]
 ---
 
-# {{slug}} — team plan
+# {{slug}} — plan
 
-Written by `/v-team`. The converged implementation plan plus the full critique trail and the
-proposed-test backlog. Reviewed at the approval gate; drives EXECUTE.
+<!-- Governed by commands/_shared/document-standard.md. Contract class: current truth only.
+     Everything about HOW this plan was reached — critic findings, rounds, rejected options,
+     research that did not survive — goes to the sibling {{slug}}.trail.md and is never repeated
+     here. Run bin/doc-lint.sh on this file before naming its path to anyone. -->
 
 ## Task
-<!-- One-sentence restatement + keywords (from ANALYZE). -->
+<!-- One sentence: what gets built and where. Then the keywords the implementer will search for. -->
 
-## Converged plan
-<!-- Final implementation steps, dependency-ordered (v-work 03 §3a.4 shape):
-     File (exact path) · Action · Tool · Pattern. -->
+## Open & deferred
+<!-- The ONLY place open work lives, and it sits near the top so nobody reads 300 lines to find it.
+     open (undecided, blocks work) · blocked (waiting on something named) · needs the operator.
+     Then accepted deferrals: what is knowingly not being done, and why. Anything you could not
+     verify belongs here. When a line closes, delete it — never mark it done. -->
+
+## Verified current state
+<!-- Facts the implementer must not re-derive: `fact · how it was checked · date`. Only facts that
+     change an implementation choice. An assumption that was NOT verified goes in Open & deferred. -->
+
+## Decisions
+<!-- What is settled, so nobody re-opens it mid-implementation. One line each:
+     `decision — the one-line reason it went this way`. The reason must be shorter than the decision.
+     No alternatives, no who-argued-what: those live in the process_record file. -->
+
+## Scope & non-goals
+<!-- What this covers, then explicitly what it does not — stated so it is not mistaken for done. -->
+
+## Work items
+<!-- THE PAYLOAD. Dependency-ordered, one row per NAMED FILE. Never collapse several files into a
+     phrase like "the resources" or "the composables": the exact path is the thing an implementing
+     agent cannot reconstruct, and it is the first thing lost when a plan gets shortened. A file
+     that changes gets a row even if the change is one line. The narrative around this table is what
+     gets cut; the table does not. -->
+
+| id | file (exact path) | action | tool | constraint | verification | status |
+|----|-------------------|--------|------|------------|--------------|--------|
+|    |                   |        |      |            |              | TODO   |
+
+## Sequencing & dependencies
+<!-- Cross-repo and cross-session order, and anything external this waits on: which repo moves
+     first, which id cannot start before another lands, which release is gated. Omit this section
+     when the Work-items order already says everything. -->
+
+## Rollback
+<!-- How to undo this if it lands badly: the exact revert, the switch to flip, or what makes it
+     irreversible. State irreversibility plainly — that is what the approval gate approves. -->
 
 ## Test plan
-<!-- Harness/level strategy. Per unit: type · scenarios · file location (v-work 03 §3a.5 shape). -->
+<!-- Harness and level strategy. Per unit: type · scenarios · file location (exact path). -->
 
-## Test Design Dossier
-<!-- Authored by the PROPOSE (f2) test-design fan-out (v-team). The generated test design, split out of
-     solution design: decision tables (variant/type rules), fault hypotheses + metamorphic relations,
-     boundary partitions + property invariants. Each entry is `advisory` until a bound critic confirms it
-     post-impl in EXECUTE (routing: personas/_shared/testing/design/README.md).
-     TRACEABILITY: every dossier artifact below must map to ≥1 Proposed test backlog row. -->
+## Test design dossier
+<!-- Decision tables (variant/state rules), fault hypotheses + metamorphic relations, boundary
+     partitions + property invariants. Routing: personas/_shared/testing/design/README.md.
+     Every artifact here maps to at least one Test-backlog row below. -->
 
-### Advisory test hints
-<!-- Design-critic PROPOSED_TESTS (demoted, not authoritative) the (f2) fan-out reconciles into the backlog. -->
+## Test backlog
+<!-- `disposition` is filled during EXECUTE: implement | change | skip + reason. In feature mode a
+     row grounded in a requirements.md rule echoes its REQ-NN in `source`. -->
 
-## Proposed test backlog
-<!-- Sole authoritative writer: the (f2) test-design fan-out (critic hints above are advisory inputs).
-     `source` = the generator/critic that proposed the row. `disposition` is filled during EXECUTE by the
-     testing agent (implement | change | skip + reason). -->
-
-| id | source | kind | target | intent | priority | disposition |
-|----|--------|------|--------|--------|----------|-------------|
-|    |        |      |        |        |          |             |
-
-## Open trade-offs / deferrals
-<!-- Conflicts surfaced to the user (e.g. perf cache vs security freshness), accepted MINOR/NIT
-     deferrals with rationale, and advisory (unconfirmed) findings worth recording. -->
-
-## Critique trail
-<!-- One subsection per round. Each finding's disposition: applied | deferred | rejected (+reason).
-     Plus per-round metrics (findings-delta, per-persona overlap, confirmed-vs-advisory, token cost). -->
-
-### Round 0 — draft
-<!-- The v0 plan before any critique. -->
-
-### Round 1 — findings + dispositions
-| persona | id | severity | grounding | issue | disposition |
-|---------|----|----------|-----------|-------|-------------|
-|         |    |          |           |       |             |
-
-_Metrics: new confirmed blockers: N · findings-delta: N · persona overlap: N · tokens: N_
+| id | source | kind | target (exact path) | intent | priority | disposition |
+|----|--------|------|---------------------|--------|----------|-------------|
+|    |        |      |                     |        |          |             |
 
 ## Refs
-<!-- Wikilinks: ADRs, feature dossiers, and the session ([[YYYY-MM-DD-HHMM-<slug>]]) that executes this. -->
+<!-- Repo-relative path plus one line on why it matters here — a bare wikilink is a defect.
+     ADRs this obeys · feature dossiers it changes · the process_record file · the session. -->

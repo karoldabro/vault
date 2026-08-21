@@ -4,6 +4,8 @@
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
+
 **Multi-repo mode only.** In **single-repo mode** (1 participant) this step is **skipped** — `01-intake.md`
 §1.3 already wrote `requirements.md` into the project's own `<project-vault>/requirements/<feature>.md`
 (no `_features/` workspace, no symlink, no shard). Proceed straight to CAPTURE (Step 5, project-vault

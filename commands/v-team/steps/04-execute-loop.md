@@ -4,6 +4,8 @@
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
+
 Implement the approved plan, triage the proposed tests, then run a **diff-review panel loop** — the same
 personas in review posture, tool-first, fixing between rounds until convergence.
 
@@ -21,7 +23,7 @@ architect personas' `base_agent`s (e.g. `system-architect`/`backend-architect` f
 
 ## 5.2 Test triage (mutation-aware)
 
-Spawn `test-writer-fixer` to work the plan's **Proposed test backlog**. LLM-proposed tests over-produce
+Spawn `test-writer-fixer` to work the plan's **Test backlog**. LLM-proposed tests over-produce
 (~1:5–1:20 keep ratio is normal) and coverage alone passes tautological tests — so triage strictly. Per
 proposed test, decide:
 
@@ -36,7 +38,8 @@ For every test it **keeps**, enforce the gate before counting it done:
 4. **kills ≥1 seeded mutant** — or, equivalently, a characterization check: temporarily break the code
    and confirm the test fails. (Coverage without fault-detection = tautological → reject.)
 
-Stamp each backlog row's `disposition` (implement | change | skip) + reason in the plan artifact.
+Stamp each backlog row's `disposition` (implement | change | skip) + reason in the plan artifact —
+in the row itself, never as a paragraph beside the table.
 
 ## 5.3 Diff-review loop (panel → synthesize → re-loop, tool-first)
 
@@ -59,7 +62,7 @@ Each round:
 4. **Apply fixes** between rounds with the §4.2 tools; **re-run the relevant tests** (§4.6).
 5. Re-spawn for the next round.
 
-**Confirm the Test Design Dossier here (post-impl half of the generate→confirm loop).** When PROPOSE
+**Confirm the Test design dossier here (post-impl half of the generate→confirm loop).** When PROPOSE
 `(f2)` produced a dossier, this loop is where its `advisory` entries get confirmed against real code —
 generators emit pre-impl, critics confirm post-impl. Seat [[system-domain-expert]] in the panel whenever
 `(f2)` ran (it confirms each [[business-logic-cartographer]] decision-table row maps to a covered branch
@@ -71,7 +74,9 @@ decision-table/boundary rows → `edge-case-hunter` (coverage); metamorphic rela
 
 **Stop on ANY:** `team_max_review_rounds` (default **2**) reached, or no new **confirmed** BLOCKER/MAJOR.
 Not on approval alone. Cap hit with open confirmed blockers → **present to user** (mirrors v-work §4.8).
-Append each review round + metrics to the plan's Critique trail.
+Append each review round + metrics to the **trail sidecar** (`plans/<slug>.trail.md`), never to the
+plan. Update the plan's work-item rows in place: a row that shipped flips its `status`, a row that no
+longer applies is deleted. Then run `bin/doc-lint.sh` on the plan before finishing.
 
 ## 5.4 Self-review
 
@@ -95,10 +100,15 @@ v-pm-seeded ids, never overwrite). Chain: `requirements.md (REQ-NN)` → backlog
 
 ```
 Implemented: [changed files]
-Test triage: [N implemented · N changed · N skipped] (dispositions stamped in the plan)
-Review rounds: <n>  ·  Convergence: <clean | capped-with-open-blockers>
-Tests: [pass/fail — pre-existing vs newly introduced]
+Test triage: [N implemented · N changed · N skipped]
+Tests: [only when something FAILED or was skipped — never "all passing"]
+Still open: [only when the review ended with something unresolved — say it in plain words,
+             e.g. "the reviewers ran out of rounds with 2 things still open"]
 Vault docs: [written/updated alongside code]
 ```
+
+**Never print `Review rounds`, `Convergence`, `BLOCKER` or `MAJOR` to the user** — that is process
+state and panel vocabulary, both barred by `_shared/communication.md`. It goes to the trail sidecar.
+A clean review is the expected outcome and is not reported; an unresolved blocker always is.
 
 Mark EXECUTE `completed`.

@@ -7,6 +7,8 @@ argument-hint: "<feature-slug> [--source <project-slug>] [--for <project-slug,..
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
+
 # /v-guide — Integration Guide Generator
 
 Generate a structured **integration guide** from a feature that already exists in one project, so other projects can implement it without repeating the same prompt. The guide captures the external contract only: API endpoints, request/response shapes, data structures, enums, filtering, and data flow — no implementation code.

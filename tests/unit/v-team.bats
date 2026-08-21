@@ -35,12 +35,53 @@ teardown() {
     [ -f "${VAULT_ROOT}/commands/v-team/steps/04-execute-loop.md" ]
 }
 
-@test "plan template exists with type: plan and a proposed-test backlog" {
+@test "plan template exists with type: plan and a test backlog" {
     local f="${VAULT_ROOT}/templates/plan.md"
     [ -f "${f}" ]
-    grep -qE '^type: plan$'            "${f}"
-    grep -q  'Proposed test backlog'   "${f}"
-    grep -q  'Critique trail'          "${f}"
+    grep -qE '^type: plan$'   "${f}"
+    grep -q  'Test backlog'   "${f}"
+    grep -q  'Work items'     "${f}"
+}
+
+@test "the plan template carries no process record, and points at the sidecar that does" {
+    # The plan is a contract document: current truth only. Everything about how it was reached —
+    # rounds, findings, rejected options — lives in templates/trail.md, or the plan grows past a
+    # thousand lines again.
+    local plan="${VAULT_ROOT}/templates/plan.md"
+    local trail="${VAULT_ROOT}/templates/trail.md"
+    [ -f "${trail}" ]
+    grep -qE '^process_record:'          "${plan}"
+    ! grep -q  'Critique trail'          "${plan}"
+    ! grep -qE '^rounds:'                "${plan}"
+    ! grep -qE '^convergence:'           "${plan}"
+    ! grep -q  'Round 0'                 "${plan}"
+    grep -qE '^type: trail$'             "${trail}"
+    grep -q  'Findings & dispositions'   "${trail}"
+    grep -q  'Rejected / deferred'       "${trail}"
+}
+
+@test "the plan template demands an exact file path per work item" {
+    # The first thing lost when a plan is shortened is the path an implementing agent cannot
+    # reconstruct. The table column is what protects it.
+    grep -q 'file (exact path)' "${VAULT_ROOT}/templates/plan.md"
+}
+
+@test "the propose loop writes the trail to the sidecar, not into the plan" {
+    local f="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -q 'trail sidecar'      "${f}"
+    grep -q 'templates/trail.md' "${f}"
+    ! grep -q 'as \*\*Round 0\*\*'  "${f}"
+}
+
+@test "the execute loop never prints rounds or convergence to the user" {
+    # Both are process state, already barred by _shared/communication.md.
+    local f="${VAULT_ROOT}/commands/v-team/steps/04-execute-loop.md"
+    ! grep -qE '^Review rounds: <n>' "${f}"
+    grep -q 'Never print'            "${f}"
+}
+
+@test "v-team commits the sidecar alongside the plan" {
+    grep -q 'trail.md' "${VAULT_ROOT}/commands/v-team.md"
 }
 
 @test "each shared persona declares type: persona and a base_agent" {

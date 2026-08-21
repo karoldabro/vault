@@ -166,8 +166,6 @@ Use this before marking the integration done in your project:
 
 ---
 
-## Changelog
-
-| Date | Change |
-|------|--------|
-| `<!-- YYYY-MM-DD -->` | Initial guide |
+<!-- No changelog section, deliberately: git holds the history of this file, and a changelog inside
+     a contract document forces the reader to reconstruct the current truth from a list of edits.
+     See commands/_shared/document-standard.md rule 5. -->

@@ -6,6 +6,8 @@ description: Capture this session as a vault sessions/*.md doc. Runs dedupe vs r
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
+
 # /v-capture — Enhanced session capture
 
 Force-write this session into the project vault: dedupe vs recent sessions, session doc, ADR +

@@ -26,6 +26,7 @@ plugin cache directory and from a git clone. Resolution order: `../vault-guide.m
 | `v-capture.md` | `/v-capture` | Enhanced session capture. |
 | `v-link.md` | `/v-link` | Declare two projects as coupled. |
 | `v-guide.md` | `/v-guide` | Generate a cross-project integration guide from an existing feature. |
+| `v-reconcile.md` | `/v-reconcile` | Rewrite an existing document to the writing standard; verified with `doc-lint --compare` so no constraint is lost. |
 | `v-pm.md` | `/v-pm` | Cross-project feature planning: a critic pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file-based threads. |
 
 Multi-step commands (`v-work`, `v-team`, `v-cr`) keep their steps in a sibling subdirectory

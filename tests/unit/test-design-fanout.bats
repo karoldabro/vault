@@ -104,11 +104,18 @@ setup() {
     grep -qi 'system-domain-expert'              "${f}"
 }
 
-@test "plan template has Test Design Dossier, source column, and traceability rule" {
+@test "plan template has the test design dossier, source column, and traceability rule" {
     local f="${VAULT_ROOT}/templates/plan.md"
-    grep -q  'Test Design Dossier'   "${f}"
-    grep -qi 'traceability'          "${f}"
-    grep -q  '| id | source |'       "${f}"
+    grep -qi 'Test design dossier'  "${f}"
+    grep -q  'maps to at least one' "${f}"
+    grep -q  '| id | source |'      "${f}"
+}
+
+@test "advisory test hints land in the record sidecar, not in the plan" {
+    # They are panel input, not contract content. Keeping them in the plan is how a contract
+    # document starts carrying a second job.
+    grep -qi 'Advisory test hints' "${VAULT_ROOT}/templates/trail.md"
+    ! grep -qi 'Advisory test hints' "${VAULT_ROOT}/templates/plan.md"
 }
 
 @test "v-team dispatcher documents the (f2) fan-out + cost envelope" {

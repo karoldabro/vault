@@ -7,6 +7,8 @@ argument-hint: [task description]
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
+
 # /v-team — persona-critique development lifecycle
 
 Heavier sibling of `/v-work` for **BIG / high-stakes work**. Same vault-first lifecycle, but PROPOSE
@@ -80,15 +82,15 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/02-load-context.md`, then exec
 ## Step 3 — PROPOSE (panel loop)
 Read `$VAULT_FRAMEWORK_PATH/commands/v-team/steps/03-propose-loop.md`, then execute. The design panel converges
 first, then sub-phase **(f2)** fans out the generative test-design group (`personas/_shared/testing/
-design/`) to author the Test Design Dossier + Proposed test backlog (test design is split out of solution
+design/`) to author the Test design dossier + Test backlog (test design is split out of solution
 design). Mark PROPOSE `completed`.
 
 ## Step 4 — APPROVAL GATE
 **STOP. Present the decision. Do not proceed until the user explicitly approves.** Approval covers
 the whole lifecycle **through capture** (Step 6).
 
-**Present the decision, not the plan.** The converged plan, critique trail and test backlog live in
-the artifact. What the user reads is the **≤15-line** block from `03-propose-loop.md` §"Required
+**Present the decision, not the plan.** The converged plan and test backlog live in the artifact;
+the critique trail lives in its sidecar. What the user reads is the **≤15-line** block from `03-propose-loop.md` §"Required
 output — Layer 1": `Recommendation · Impact · Options · Assumed · Open · Ask`. Name the artifact path
 in one line; never require opening it to decide.
 
@@ -111,7 +113,8 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-team/steps/04-execute-loop.md`, then exec
 
 ## Step 6 — COMMIT + CAPTURE
 Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/05-commit-capture.md`, then execute.
-**v-team addendum:** also stage/commit the `plans/<...>.md` artifact (converged plan + critique trail).
+**v-team addendum:** also stage/commit **both** artifacts — `plans/<...>.md` (the plan) and its
+sibling `plans/<...>.trail.md` (the process record). Staging only the plan loses the trail.
 Mark COMMIT + CAPTURE `completed` — only after `/v-capture` has run.
 
 ---

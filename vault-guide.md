@@ -417,6 +417,7 @@ text is capped instead at `v-team/steps/03-propose-loop.md` §(e).7.
 | `/v-capture` | Capture this session as a `sessions/*.md` doc. Runs dedupe, updates indexes, extracts ADR candidates, cross-links Refs. (claude-mem auto-captures via its SessionEnd hook — no explicit write.) | claude-mem auto-capture (SessionEnd hook) |
 | `/v-link` | Declare two projects as coupled, so context loading sweeps both. Updates `~/vault/_global/coupled-groups.md`. | — |
 | `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from an existing feature. | claude-mem, graphify, MorphLLM |
+| `/v-reconcile` | Bring an existing document up to `_shared/document-standard.md`: load context, extract the load-bearing set, split the record out to a sidecar, rewrite, then prove with `doc-lint --compare` that no constraint was dropped. Approval-gated per file. | claude-mem, graphify, `bin/doc-lint.sh` |
 | `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | Agent |
 
 Archived commands (`attic/`): `/v-migrate` (one-shot migration finished; `bin/vault-migrate.sh`

@@ -112,6 +112,29 @@ More explanation buys agreement, not better decisions. Give the user something t
 stated assumption, a falsifiable claim, or the specific thing that would change your recommendation.
 Show evidence rather than asserting success — the command you ran and what it returned.
 
+## Files you write
+
+The rules above govern the terminal. A document has a different reader — someone opening it weeks
+later, or an agent paying tokens for every line — and needs its own:
+
+- **Current truth only.** Delete superseded state; never mark it. No revision logs, no `rev N`
+  sections, no strikethrough, no `WITHDRAWN`, no "the first implementation omitted…". Git holds the
+  history, and backwards compatibility is git's job unless the user says otherwise.
+- **Never report your own process.** Not which agent found it, how many reviewers ran, how many
+  rounds it took, or what got rejected on the way. Keep the requirement; drop the story.
+- **State each rule once**, at its most specific home, and reference it elsewhere. Never re-quote
+  the guideline you are following inside the thing you are writing.
+- **Split rather than lengthen.** When a file starts carrying a second job — a progress log beside a
+  spec, a review trail beside a plan — write a new file and reference it in one line.
+- **Every item is executable**: action, constraint, verification, with the **exact file path**.
+  Never "the resources". Status is a field beside the item, never a sentence. Open work goes in one
+  section near the top.
+- **Never cut** a failure mode, a rollback path, an open blocker, or an exact path. Shortening
+  removes narrative, never constraints.
+
+Full contract, with the classes and the edit pass:
+`~/.claude/commands/_shared/document-standard.md`, enforced by `bin/doc-lint.sh`.
+
 ## Outward-facing text
 
 Text posted outside this conversation — code-review comments on a forge, customer replies — has a

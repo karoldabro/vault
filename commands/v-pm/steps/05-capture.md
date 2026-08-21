@@ -4,6 +4,8 @@
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
+
 Planning is where the cross-project decisions are made — record them, or they evaporate. This is v-pm's
 own `/v-capture`, scoped to the feature workspace and cross-project. Runs after SEED WORKSPACE (plan
 mode) and at the end of `reconcile`.

@@ -23,7 +23,9 @@ Test plan
 Serena rules
 Lite critic
 Converged plan
-Proposed test backlog
+Test backlog
+Test design dossier
+Critique trail
 Vault writes
 Index updates
 
@@ -34,6 +36,7 @@ advisory
 grounding
 persona
 convergence
+rounds
 dedupe
 fan-out
 disposition

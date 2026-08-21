@@ -4,6 +4,8 @@
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
+
 Draft a plan, then run a **panel → synthesize → re-loop** until it converges. Critics work in parallel,
 each through its own tool-grounded lens, and share state **only via the revised plan** (no agent-to-
 agent messaging — independence is what makes the panel worth its cost). Do not write source code here.
@@ -28,7 +30,10 @@ so critics can see them — an **unresearched design** or an **unsound assumptio
 finding for a critic to raise (grounded by the missing citation / the untested assumption).
 
 Instantiate `$VAULT_FRAMEWORK_PATH/templates/plan.md` into
-`<project-vault>/plans/YYYY-MM-DD-HHMM-<slug>.md` and write the draft as **Round 0**. If `plans/`
+`<project-vault>/plans/YYYY-MM-DD-HHMM-<slug>.md` and `$VAULT_FRAMEWORK_PATH/templates/trail.md` into
+the sibling `<same-slug>.trail.md`. **Two files, two classes.** The plan carries the current state of
+the design and is rewritten in place each round — it never accumulates a `Round 0` section, a draft
+marker or a revision log. The trail carries everything about how the design got there. If `plans/`
 doesn't exist, create it (warn once; add `add_folders: [plans]` to `VAULT.md` so it's recognised) —
 don't halt.
 
@@ -43,7 +48,7 @@ default 4, per `_resolution.md` §2.2), hard max 5.
 One message, **multiple `Agent` calls** — one per selected persona, spawned as its `base_agent`
 (fallback: `Explore` with the persona block as prompt). Critics are **read-only**. Each critic envelope:
 
-- the **current plan** (round R, from the artifact);
+- the **current plan** (its present state, from the artifact — not a diff and not a round history);
 - the **task restatement + keywords** (ANALYZE);
 - the **LOAD-CONTEXT digest** — indications, ADRs, conventions, **and (feature mode) the feature's
   `requirements.md` — its business rules (`REQ-NN`) + `## Variant & state rules` tables + glossary** (so
@@ -101,16 +106,18 @@ The synthesizer is itself an LLM-judge, so neutralise its known biases:
 4. **Revise the plan:** apply confirmed BLOCKER/MAJOR recommendations; record MINOR/NIT and advisory as
    "Open trade-offs / deferrals" with rationale. Bump to v(R+1).
 5. **Demote `PROPOSED_TESTS` to advisory test hints.** Design critics review *design*, not written tests,
-   so their `PROPOSED_TESTS` are **not** authoritative — write them to an **"Advisory test hints"**
-   subsection of the plan artifact. The §(f2) test-design fan-out is the **sole authoritative writer** of
-   the Proposed test backlog and reconciles these hints into it. (The §(d) schema still emits
+   so their `PROPOSED_TESTS` are **not** authoritative — write them to the
+   **`## Advisory test hints`** section of the **trail sidecar**, never to the plan. The §(f2) test-design fan-out is the **sole authoritative writer** of
+   the Test backlog and reconciles these hints into it. (The §(d) schema still emits
    `PROPOSED_TESTS`; only their consumption changes.)
-6. **Append** round R to the **Critique trail** with each finding's disposition (applied / deferred /
-   rejected + reason) and **metrics**: new confirmed blockers, findings-delta, per-persona overlap,
-   confirmed-vs-advisory counts, previously-confirmed findings dropped this round (sycophancy flag),
-   token cost. A critic-assigned `grounding: confirmed` BLOCKER/MAJOR dispositioned anything other
-   than **applied** surfaces at the approval gate as a **minority flag** — regardless of relabeling.
-7. **Cap what reaches the user.** The critique trail is written **to the artifact**; the panel's own
+6. **Append** round R to the **trail sidecar** (`plans/<slug>.trail.md`, `## Findings & dispositions`
+   and `## Metrics`), never to the plan: each finding's disposition (applied / deferred / rejected +
+   reason) plus new confirmed blockers, findings-delta, per-persona overlap, confirmed-vs-advisory
+   counts, previously-confirmed findings dropped this round (sycophancy flag) and token cost. The
+   plan itself is **rewritten to the new current state** — a superseded step is deleted, not struck
+   through. A critic-assigned `grounding: confirmed` BLOCKER/MAJOR dispositioned anything other than
+   **applied** surfaces at the approval gate as a **minority flag** — regardless of relabeling.
+7. **Cap what reaches the user.** The trail is written **to the sidecar**; the panel's own
    output is the single largest block of text this command can put in front of the user, and the
    Claude Code output style does **not** reach spawned subagents — so this step is the only place it
    is controlled. To the user, surface **only**: confirmed findings that changed the plan, one plain
@@ -136,7 +143,7 @@ set `team_max_rounds: 1` and make round 2 opt-in for high-risk work.)
 After the *design* plan converges (f) and before finalise (g), design the tests as a **first-class
 generative activity** — split out of solution design. This sub-phase performs **no confirmation**: it
 **only generates** (all confirmation is post-impl in EXECUTE §5.3 — the generators bind no analyzer and
-never seat on the critique panel). It is the **sole authoritative writer** of the Proposed test backlog.
+never seat on the critique panel). It is the **sole authoritative writer** of the Test backlog.
 
 **Gating — fail open.** Run `(f2)` by default for any diff touching endpoints/handlers/migrations/business
 logic. **Skip only** pure refactor/docs/formatting diffs, with a one-line note surfaced at the approval
@@ -149,12 +156,12 @@ gate (the happy-path bias this counters must not gate its own activation).
    rules — the post-`type` case), [[boundary-property-explorer]] (BVA/EP + property invariants). Each
    envelope: the converged design plan + LOAD-CONTEXT digest (**incl. the feature's `requirements.md` in
    feature mode — the `## Variant & state rules` decision/state tables are `business-logic-cartographer`'s
-   primary input**) + the **advisory test hints** (the demoted design-critic `PROPOSED_TESTS`, see §(e)
-   item 5) + its persona block.
+   primary input**) + the **advisory test hints** (the demoted design-critic `PROPOSED_TESTS`, read from
+   the trail sidecar — see §(e) item 5) + its persona block.
 2. **Merge dossiers with cross-generator dedup.** Collapse same-branch error/partition intents emitted by
    more than one generator into a single backlog row (horizontal decorrelation is by intent, not output).
-3. **Write the Test Design Dossier** into the plan artifact (decision tables, fault hypotheses,
-   metamorphic relations, property invariants) and **populate the Proposed test backlog** from it.
+3. **Write the Test design dossier** into the plan artifact (decision tables, fault hypotheses,
+   metamorphic relations, property invariants) and **populate the Test backlog** from it.
    **Traceability (mandatory):** every dossier artifact maps to ≥1 backlog row; generator entries are
    `advisory` until a bound critic confirms them in EXECUTE (routing table: `design/README.md`). **In
    feature mode, a backlog row grounded in a `requirements.md` rule echoes its `REQ-NN` in the `source`
@@ -163,15 +170,19 @@ gate (the happy-path bias this counters must not gate its own activation).
 
 ## (g) Finalise
 
-Mark the plan `status: proposed`, set `rounds` + `convergence` in frontmatter. Then run v-work
-`03-propose.md` **§3b dedupe** for the plan artifact and any implied feature/ADR docs.
+Mark the plan `status: proposed` and set `process_record` to the sidecar filename. **`rounds` and
+`convergence` are process state and live in the sidecar, not in the plan's frontmatter.** Then run
+v-work `03-propose.md` **§3b dedupe** for the plan artifact and any implied feature/ADR docs, and run
+`bin/doc-lint.sh <plan>` — a finding here means the plan is carrying something that belongs in the
+sidecar. Fix it before the approval gate.
 
 ---
 
 ## Required output — two layers
 
-The converged plan, the critique trail and the test backlog are written **to the plan artifact**.
-Only the decision is written **to the user**. Do not print the artifact to the terminal.
+The converged plan and the test backlog are written **to the plan artifact**, the critique trail to
+its **sidecar**. Only the decision is written **to the user**. Do not print either file to the
+terminal.
 
 ### Layer 1 — to the user (≤15 lines, governed by `_shared/communication.md`)
 
@@ -193,10 +204,14 @@ Panel-specific rules for this layer:
 
 ### Layer 2 — to the plan artifact (not printed)
 
-`plans/YYYY-MM-DD-HHMM-<slug>.md` — converged plan (file · action · tool · pattern) · the full
-critique trail with per-round metrics · Test Design Dossier · proposed test backlog · research
-sources · vault writes per §3b dedupe.
+`plans/YYYY-MM-DD-HHMM-<slug>.md` — the converged plan: work items one row per **exact file path**
+(never "the resources"), decisions, verified state, open work, Test design dossier, proposed test
+backlog, vault writes per §3b dedupe.
 
-Name the artifact path to the user in one line. Never require them to open it to decide.
+`plans/YYYY-MM-DD-HHMM-<slug>.trail.md` — the critique trail, per-round metrics, rejected
+alternatives, and research that did not survive into the plan.
+
+Name the plan path to the user in one line. Never require them to open it to decide. Do not name the
+sidecar unless they ask why something was decided.
 
 Mark PROPOSE `completed`, then proceed to the APPROVAL GATE.

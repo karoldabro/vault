@@ -75,6 +75,7 @@ is how you disambiguate if another plugin ships a command with the same name.
 | `/v-init` | Set up a vault for the current repo. |
 | `/v-link` | Link two projects so context loading sweeps both. |
 | `/v-guide` | Generate a cross-project integration guide from a feature. |
+| `/v-reconcile` | Rewrite an existing document to the writing standard: split the history out, keep every constraint, prove nothing was lost. |
 
 Archived (see [attic/](attic/)): `/v-migrate` (migration finished; `bin/vault-migrate.sh` remains).
 
