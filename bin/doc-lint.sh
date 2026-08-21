@@ -15,6 +15,7 @@
 # try to detect vagueness, verbosity or weak headings — those stay human judgement.
 #
 # Usage:  bin/doc-lint.sh [--quiet] [--force] [--cap N] [--class contract|record] <file>...
+#         bin/doc-lint.sh --changed          only the markdown this working tree has touched
 #         bin/doc-lint.sh --list-caps
 #         bin/doc-lint.sh --compare <before.md> <after.md>
 #
@@ -41,6 +42,7 @@ class_override=""
 compare=0
 show_all=0
 force=0
+changed=0
 skip_codes=""
 files=()
 violations=0
@@ -59,6 +61,7 @@ cap_for_type() {
         guide)              echo 600 ;;
         requirement)        echo 400 ;;
         integration-guide)  echo 400 ;;
+        instruction)        echo 120 ;;
         *)                  echo 400 ;;
     esac
 }
@@ -81,6 +84,14 @@ is_instruction_type() {
     return 1
 }
 
+is_known_type() {
+    case "$1" in
+        plan|decision|adr|indication|feature|architecture|process|guide|requirement|\
+        integration-guide|instruction|session|research|trail|changelog|log|planning-session) return 0 ;;
+    esac
+    return 1
+}
+
 is_record_type() {
     case "$1" in
         session|research|trail|changelog|log|planning-session) return 0 ;;
@@ -100,6 +111,7 @@ while [ $# -gt 0 ]; do
         --all)        show_all=1; shift ;;
         --skip)       skip_codes="${skip_codes},$2"; shift 2 ;;
         --force)      force=1; shift ;;
+        --changed)    changed=1; shift ;;
         --cap)        cap_override="$2"; shift 2 ;;
         --class)      class_override="$2"; shift 2 ;;
         --list-caps)  for t in plan decision indication feature architecture process requirement; do
@@ -113,6 +125,18 @@ while [ $# -gt 0 ]; do
 done
 
 [ "${DOC_LINT:-}" = "off" ] && exit 0
+
+# --changed: only what this session actually touched. A first sweep over an existing vault reports
+# hundreds of findings on documents nobody is going to rewrite, and that is how a linter earns a
+# permanent DOC_LINT=off. /v-reconcile is the deliberate sweep; this is the everyday default.
+if [ "$changed" = 1 ]; then
+    while IFS= read -r m; do
+        case "$m" in *.md|*.markdown) [ -f "$m" ] && files+=("$m") ;; esac
+    done < <(git diff --name-only HEAD 2>/dev/null; git diff --cached --name-only 2>/dev/null;
+             git ls-files --others --exclude-standard 2>/dev/null)
+    [ ${#files[@]} -eq 0 ] && exit 0
+fi
+
 [ ${#files[@]} -eq 0 ] && usage 2
 
 # A repo whose subject matter is the thing a rule bans needs a documented exemption, not a switched-
@@ -373,6 +397,13 @@ for file in "${files[@]}"; do
 
     lines="$(wc -l < "$file" | tr -d ' ')"
     cap="${cap_override:-$(cap_for_type "$doc_type")}"
+
+    # An unrecognised type takes the loosest cap, which silently exempts exactly the documents most
+    # likely to need one. Say so rather than letting it pass as a checked file.
+    if [ "$quiet" = 0 ] && [ -z "$cap_override" ] && ! is_known_type "$doc_type"; then
+        printf '%s  [unknown type %s — capped at %s by default; set `type:` in frontmatter]\n' \
+            "$file" "'${doc_type}'" "$cap"
+    fi
 
     MATCHABLE="$(mktemp)"
     trap 'rm -f "$MATCHABLE"' EXIT

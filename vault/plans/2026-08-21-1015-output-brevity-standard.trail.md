@@ -52,12 +52,22 @@ Contract document: `vault/plans/2026-08-21-1015-output-brevity-standard.md`.
 | quality | 9 | MINOR | confirmed | "every doc-writing step file" is not a testable set | applied — 14 paths pinned |
 | quality | 10 | NIT | confirmed | 400 lines of bash, of which ~80 are argument parsing | applied — patterns moved to `lib/doc-lint-patterns.tsv` |
 | correctness | — | — | — | did not return findings | — |
+| skeptic | 6 | MINOR | confirmed | `vault-guide.md` and `vault/features/v-team.md` still tell the next session the trail lives in the plan | applied |
+| skeptic | 7 | MAJOR | confirmed | `templates/decision.md` defines `## Context` as pure origin story; read literally the rule deletes it | applied — the exception names `## Context` and `## Consequences` |
+| skeptic | 8 | MAJOR | confirmed | the register rules have no pattern behind them and the standard implied every rule was checked | applied — the standard now says which rules are judgement |
+| skeptic | 9 | MAJOR | confirmed | the plan restated all ten rules, breaking the rule it introduces | applied — cut to a pointer |
+| skeptic | 12 | MINOR | confirmed | a first sweep over an existing vault buries the operator and earns a permanent `DOC_LINT=off` | applied — `--changed` scopes to the working tree |
+| skeptic | 13 | MINOR | confirmed | an unrecognised type silently took the loosest cap | applied — unknown types are reported |
 
 ## Metrics
 
-Four reviewers spawned, three returned. 39 findings, 36 applied, 1 accepted with its cost stated,
-2 left open as work items. One reviewer (correctness) returned nothing, so the linter's execution
-bugs were found by a 25-case behaviour harness run directly instead.
+Four reviewers spawned, three returned. 45 findings: 42 applied, 1 accepted with its cost stated in
+ADR-023, 2 left open as work items. One reviewer (correctness) returned nothing, so the linter's
+execution bugs were found by a 27-case behaviour harness run directly instead.
+
+The skeptic's full findings arrived after the first implementation pass and six of them were still
+live — the stale trail references, the ADR `## Context` carve-out, the unchecked register rules, the
+plan restating its own rules, the unscoped first sweep, and the silent unknown-type cap.
 
 ## Rejected / deferred
 

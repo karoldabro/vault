@@ -159,7 +159,7 @@ Precedence and failure modes (the framework never halts):
 ├── marketing/               # Channels, listings (optional)
 ├── memory/                  # Auto-memory mountpoint (symlink; .gitignored)
 ├── operations/              # Runbook, support, vendors (optional)
-├── plans/                   # /v-team converged plans + critique trails (opt-in via add_folders)
+├── plans/                   # /v-team plans + their .trail.md sidecars (opt-in via add_folders)
 ├── processes/               # Repeatable workflows
 ├── requirements/            # /v-pm business-logic specs — the knowledge center (single-repo). SPEC stage (optional)
 │   ├── _index.md
@@ -201,7 +201,8 @@ In `$VAULT_FRAMEWORK_PATH/templates/` (default `~/workspace/vault/templates/`):
 | `feature.md` | New feature dossier. |
 | `indication.md` | New working rule / pattern / standard. Catalogued in `indications/_index.md`. |
 | `session.md` | New session log. Usually written by `/v-capture`. |
-| `plan.md` | `/v-team` converged plan + critique trail + proposed-test backlog. Lives in `plans/`. |
+| `plan.md` | `/v-team` converged plan + work items + test backlog. Current truth only; lives in `plans/`. |
+| `trail.md` | The plan's process record — findings, rejected options, `per-round metrics`. Sibling `plans/<slug>.trail.md`, named by the plan's `process_record` key. |
 | `project-moc.md` | First-time project setup. |
 | `process.md` | Repeatable workflow. |
 | `architecture.md` | System-level design doc. |

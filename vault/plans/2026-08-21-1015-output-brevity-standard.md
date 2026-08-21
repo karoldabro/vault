@@ -56,7 +56,9 @@ every step file that writes a document. Same pattern as `communication.md` (ADR-
 
 ### Enforcement
 
-`bin/doc-lint.sh` runs before a document is written. Numeric caps and pattern checks, precision-first.
+`bin/doc-lint.sh` runs on a document **after** it is written, via a `PostToolUse` hook, and hands the
+findings back to the model that wrote it. `--changed` scopes it to what this working tree touched, so
+a first run does not bury the operator in findings on documents nobody will rewrite.
 Prose rules alone already failed: `communication.md` has shipped since ADR-018 and plans still reach
 1,500 lines.
 
@@ -65,36 +67,23 @@ switched off. Across the framework's own 50 contract documents it now reports 2 
 A repo whose subject matter collides with a rule declares the exemption in a repo-root `.doc-lint`
 file, one code per line with its reason, so the exemption is reviewable instead of invisible.
 
-## The ten rules
+## The rules
 
-1. **One file answers one question.** Content that answers a different question moves to another file,
-   referenced by path.
-2. **Write the current truth.** Delete superseded state; never mark it. No revision logs, no `rev N`,
-   no strikethrough, no `was wrong`, no `changed this pass`. Git holds history.
-3. **One rule, one place.** Define each constraint once, at its most specific owner. Reference it
-   elsewhere. Never re-quote the guideline you are following.
-4. **No process inside a contract document.** Not which agent found it, how many reviewers, how many
-   rounds, or what got rejected. That is the record sidecar's job.
-5. **Rule before reason. Reason only when it changes what someone does.** The rationale must be
-   shorter than the rule it explains.
-6. **Every item is executable:** action, constraint, verification. Status is a field, not a sentence.
-7. **A heading states its rule.** A heading a stranger cannot act on is a defect.
-8. **Open work lives in one top-level section.** Never inside a completed one.
-9. **References resolve.** Repo-relative path plus a one-line gloss. Bare `§7.6`, a lone `[[link]]`
-   or `see the brief` are defects.
-10. **Numeric caps per document type**, enforced by `doc-lint`.
+Defined once, in `commands/_shared/document-standard.md`. Two axes, and the second is what this plan
+was missing when it was drafted: **which file content belongs in**, and **how a sentence is
+written**.
 
-## The edit pass
+Four of the five defect passages in the brief obey every filing rule and are still unusable, so
+filing rules alone would have let them through unchanged. The standard therefore leads with the
+before-and-after pairs and puts the rules beneath them.
 
-Run before writing any document. Four deletions, in order:
+**Exception, deliberate:** a decision record keeps its `## Context`, its rejected options and its
+`## Consequences`. Those are its current truth and the only place "why did we decide this" survives
+the session; a literal reading of the no-process rule deletes them.
 
-1. Delete every sentence about **how the current state came to be**.
-2. Delete every sentence about **who did it or how many rounds it took**.
-3. Collapse every rule stated more than once to its most specific home.
-4. Invert each remaining paragraph — rule first, reason second — then cut the reason if it is longer
-   than the rule.
-
-Test for each surviving line: *would deleting it cause a wrong action?* If not, cut it.
+**Not every rule has a check.** The register rules are judgement — no regex separates a good heading
+from a bad one — and they are the ones that decide whether a document can be used. Do not read a
+clean `doc-lint` run as "this document is good".
 
 ## Work items
 

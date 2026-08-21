@@ -299,6 +299,31 @@ doc() {  # doc <name> <type> <body...>
     [[ "$output" == *SIZE1* ]]
 }
 
+@test "an unrecognised type is reported, not silently given the loosest cap" {
+    # Otherwise the documents most likely to need a cap are exactly the ones that escape it.
+    printf -- '---\ntype: bananas\n---\n\nA line.\n' > "${TMP}/odd.md"
+    run "${LINT}" --force "${TMP}/odd.md"
+    [[ "$output" == *"unknown type"* ]]
+}
+
+@test "--changed exits cleanly outside a git tree" {
+    cd "${TMP}"
+    run "${LINT}" --changed
+    [ "$status" -eq 0 ]
+}
+
+@test "a decision record keeps Context and Consequences, not only rejected options" {
+    # templates/decision.md defines ## Context as pure origin story. Read literally, the
+    # current-truth rule deletes the one place "why did we decide this" survives the session.
+    grep -qF '## Context' "${STANDARD}"
+    grep -qF '## Consequences' "${STANDARD}"
+}
+
+@test "the standard says which of its own rules a machine cannot check" {
+    # A clean linter run must never be read as "this document is good".
+    grep -qE 'not every rule has a check' "${STANDARD}"
+}
+
 @test "--list-caps prints a cap for every contract type" {
     run "${LINT}" --list-caps
     [ "$status" -eq 0 ]

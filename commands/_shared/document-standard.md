@@ -6,8 +6,13 @@ terminal and owns the rules the two share — the scope caveat, jargon, referenc
 exceptions. This file governs what lands on disk and is read again later, by a person or an agent.
 **Not** binding on: source code, commit messages, machine-read schemas, or your reasoning.
 
-Enforced by `bin/doc-lint.sh`; every check it makes maps to a numbered rule below. It matches prose,
-not code — put a phrase you are *quoting* in backticks and it reads as a quotation.
+Enforced by `bin/doc-lint.sh`, which runs on the file **after** you write it and hands the findings
+back to you. Every check maps to a numbered rule below, but **not every rule has a check**: rules 2,
+3, 4 and 9 are register, and no regex separates a good heading from a bad one. Those stay your
+judgement, and they are the ones that decide whether the document can be used at all.
+
+The linter matches prose, not code — put a phrase you are *quoting* in backticks and it reads as a
+quotation.
 
 ## What the fix looks like
 
@@ -69,8 +74,9 @@ document starts carrying how it got here, write the record to its own file and l
    many rounds it took, what got rejected on the way, or any remark about this document's own act of
    writing (`named as a decision`, `stated explicitly rather than implied`, `for the record`). Keep
    the requirement; drop the story that produced it.
-   **Exception — a decision record.** An ADR's rejected options and consequences *are* its current
-   truth. This bars the panel that produced the decision, never the alternatives it rules out.
+   **Exception — a decision record.** An ADR's `## Context`, rejected options and `## Consequences`
+   *are* its current truth: they are the only place "why did we decide this" survives the session.
+   This rule bars the panel that produced the decision, never the forces that shaped it.
 
 8. **Every item is executable — action, constraint, verification.** Name the exact file path; never
    collapse several into a phrase like "the resources". Status is a field beside the item (`DONE`,

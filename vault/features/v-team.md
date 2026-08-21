@@ -46,7 +46,7 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
   for multi-pack seating), `team_max_rounds` (2), `team_max_review_rounds` (2),
   `team_max_parallel_critics` (3, business packs 4, hard max 5), `team_max_test_designers` (3).
 - **Artifact**: `templates/plan.md` → `<vault>/plans/YYYY-MM-DD-HHMM-<slug>.md` (converged plan +
-  critique trail + proposed-test backlog).
+  work items + test backlog; the critique trail goes to the sibling `<slug>.trail.md`).
 - **Finding schema**: severity (BLOCKER/MAJOR/MINOR/NIT) + `grounding` (confirmed|advisory) +
   PROPOSED_TESTS; only `confirmed` findings may block.
 - **Panel hardening** (ADR-017): `grounding` is critic-owned (synthesizer may not re-grade it downward);

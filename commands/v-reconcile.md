@@ -44,6 +44,7 @@ Resolve the vault (`vault-guide.md` §1.1). Then run the linter over the target 
 
 ```bash
 bin/doc-lint.sh <target>            # a directory: pass every *.md under it
+bin/doc-lint.sh --changed           # everyday scope: only what this working tree touched
 ```
 
 Rank by how much a rewrite would return: line count over cap first, then finding count. Report the
