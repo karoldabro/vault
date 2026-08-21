@@ -66,6 +66,30 @@ cap_for_type() {
     esac
 }
 
+# Folder names are plural and type names are not, so one has to be folded onto the other. A trailing
+# `s` strip cannot tell the two apart: it turned `process` into `proces` and `corpus` into `corpu`,
+# which matched no cap and no known type, so the process cap of 250 never once applied. The table is
+# exact, and anything not listed keeps its own name — including in the "unknown type" note, which is
+# useless if it reports a name the author never wrote.
+singularize_type() {
+    case "$1" in
+        plans)         echo plan ;;
+        decisions)     echo decision ;;
+        adrs)          echo adr ;;
+        indications)   echo indication ;;
+        features)      echo feature ;;
+        processes)     echo process ;;
+        requirements)  echo requirement ;;
+        runbooks)      echo runbook ;;
+        sessions)      echo session ;;
+        trails)        echo trail ;;
+        changelogs)    echo changelog ;;
+        logs)          echo log ;;
+        guides)        echo guide ;;
+        *)             echo "$1" ;;
+    esac
+}
+
 # Folders whose contents are documents by convention, even without frontmatter.
 is_document_folder() {
     case "$(dirname "$1")" in
@@ -184,8 +208,14 @@ print_header() {
     printf '%s  [%s/%s, %s lines, cap %s%s]\n' "$1" "$2" "$3" "$4" "$5" "${type_note:-}"
 }
 
+# Every finding passes through here, so the exemption is checked here and nowhere else. A guard at
+# the call site is one the next check added will forget: the size, duplicate and sentence checks all
+# shipped without one, and `DOC_LINT_SKIP=SIZE1` did nothing. Printing the header from here too keeps
+# a fully-exempted file silent instead of leaving a header line with no findings under it.
 finding() {
+    is_skipped "$1" && return 0
     violations=$((violations + 1))
+    header
     [ "$quiet" = 1 ] && return 0
     printf '  %-6s %-8s %s\n' "$1" "$2" "$3"
 }
@@ -223,7 +253,6 @@ check_patterns() {
         while IFS= read -r lineno; do
             [ -z "${lineno:-}" ] && continue
             [ "$lineno" -lt "$body_start" ] && continue
-            header
             finding "$code" "L${lineno}" "$message"
         done < <(grep -n $(case_flag "$code") -E "$regex" "$MATCHABLE" 2>/dev/null | cut -d: -f1 || true)
     done <<< "$PATTERNS"
@@ -235,7 +264,6 @@ check_duplicates() {
     local _target="$1" count text
     while read -r count text; do
         [ -z "${count:-}" ] && continue
-        header
         finding "DUP1" "x${count}" "repeated line — define it once and reference it: \"$(printf '%s' "$text" | cut -c1-56)…\""
     done < <(
         sed -e 's/^[[:space:]#>*|+-]*//' -e 's/[[:space:]]*$//' -e 's/[*_`]//g' "$_target" \
@@ -252,7 +280,6 @@ check_sentences() {
     local _target="$1" lineno
     while IFS= read -r lineno; do
         [ -z "${lineno:-}" ] && continue
-        header
         finding "LONG1" "L${lineno}" "sentence over 30 words — split it; one idea per sentence"
     done < <(
         awk '
@@ -372,7 +399,7 @@ for file in "${files[@]}"; do
     doc_type="$(awk 'NR==1 && $0=="---"{fm=1;next} fm && /^---/{exit} fm && /^type:[[:space:]]*/{print $2; exit}' "$file" || true)"
     has_type=1
     [ -z "$doc_type" ] && { has_type=0; doc_type="$(basename "$(dirname "$file")")"; }
-    doc_type="${doc_type%s}"
+    doc_type="$(singularize_type "$doc_type")"
     case "$file" in *.trail.md) doc_type="trail" ;; esac
 
     # Scope. The standard governs vault DOCUMENTS, not command instructions, READMEs or generated
@@ -416,7 +443,6 @@ for file in "${files[@]}"; do
 
     if [ "$doc_class" = "contract" ]; then
         if [ "$lines" -gt "$cap" ]; then
-            header
             finding "SIZE1" "FILE" "${lines} lines, cap ${cap} for type '${doc_type}' — split out what answers a different question"
         fi
         check_patterns "$file" "$body_start" history

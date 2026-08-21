@@ -381,6 +381,82 @@ doc() {  # doc <name> <type> <body...>
     [ "$status" -eq 0 ]
 }
 
+@test "the size cap is exemptible by flag, by env, and by a sibling .doc-lint file" {
+    # The pattern checks were suppressible and SIZE1 was not, so a repo that needed one long
+    # document had to switch the whole linter off. 203 lines against the indication cap of 80, so
+    # the exemption is what makes it pass, not the file being short.
+    f="${TMP}/big.md"
+    printf -- '---\ntype: indication\n---\n' > "$f"
+    for i in $(seq 1 200); do printf 'line %s\n' "$i" >> "$f"; done
+    run "${LINT}" "$f";                      [ "$status" -eq 1 ]
+    [[ "$output" == *SIZE1* ]]
+    run "${LINT}" --skip SIZE1 "$f";         [ "$status" -eq 0 ]
+    DOC_LINT_SKIP=SIZE1 run "${LINT}" "$f";  [ "$status" -eq 0 ]
+    printf 'SIZE1  this one document is a catalog\n' > "${TMP}/.doc-lint"
+    run "${LINT}" "$f";                      [ "$status" -eq 0 ]
+}
+
+@test "an exempted finding leaves no header line behind" {
+    # A header with nothing under it reads as a finding the reader cannot see.
+    f="${TMP}/quiet.md"
+    printf -- '---\ntype: indication\n---\n' > "$f"
+    for i in $(seq 1 200); do printf 'line %s\n' "$i" >> "$f"; done
+    run "${LINT}" --skip SIZE1 "$f"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "the duplicate and sentence checks are exemptible too" {
+    # Every check goes through finding(), so none of them may be the one that ignores the exemption.
+    dupe='this is a substantial repeated line that is definitely longer than forty-five characters'
+    f="$(doc dup.md plan "$dupe" "$dupe" "$dupe" "$dupe")"
+    run "${LINT}" "$f";                 [ "$status" -eq 1 ]
+    [[ "$output" == *DUP1* ]]
+    run "${LINT}" --skip DUP1 "$f";     [ "$status" -eq 0 ]
+
+    long="$(for i in $(seq 1 31); do printf 'word%s ' "$i"; done)"
+    g="$(doc long.md plan "${long}.")"
+    run "${LINT}" "$g";                 [ "$status" -eq 1 ]
+    [[ "$output" == *LONG1* ]]
+    run "${LINT}" --skip LONG1 "$g";    [ "$status" -eq 0 ]
+}
+
+@test "a type ending in s keeps its own name" {
+    # A trailing-`s` strip read `corpus` as a plural and reported the type as `corpu`, which matches
+    # no cap and tells the author to fix a name they never wrote.
+    f="${TMP}/corp.md"
+    printf -- '---\ntype: corpus\n---\n' > "$f"
+    for i in $(seq 1 500); do printf 'line %s\n' "$i" >> "$f"; done
+    run "${LINT}" "$f"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *corpus* ]]
+    [[ "$output" != *corpu\ * ]]
+    [[ "$output" != *"'corpu'"* ]]
+}
+
+@test "a process document is held to the process cap, not the fallback" {
+    # `process` also ends in s-less form only after the strip mangled it, so its cap of 250 was dead
+    # and every process document was silently measured against the 400-line fallback.
+    f="${TMP}/proc.md"
+    printf -- '---\ntype: process\n---\n' > "$f"
+    for i in $(seq 1 300); do printf 'line %s\n' "$i" >> "$f"; done
+    run "${LINT}" "$f"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *SIZE1* ]]
+    [[ "$output" == *"cap 250"* ]]
+}
+
+@test "a plural folder name still folds onto its singular type" {
+    # The replacement for the strip must keep the case it got right: a document with no frontmatter
+    # takes its type from the folder, and `indications/` means `indication`.
+    mkdir -p "${TMP}/indications"
+    f="${TMP}/indications/rule.md"
+    for i in $(seq 1 200); do printf 'line %s\n' "$i" >> "$f"; done
+    run "${LINT}" "$f"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"cap 80"* ]]
+}
+
 @test "this repo declares its own exemptions with reasons" {
     # The framework's subject matter is the review panel, so it names the panel's vocabulary.
     # The exemption must be visible and justified, never an unexplained switched-off check.
