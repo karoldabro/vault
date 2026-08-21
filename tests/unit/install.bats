@@ -143,3 +143,46 @@ teardown() {
     [ ! -e "${HOME}/.claude/commands/v-resume.md" ]
     [ ! -e "${HOME}/.claude/commands/v-migrate.md" ]
 }
+
+# --- opt-in activation flags -------------------------------------------------------------------
+
+@test "install.sh links the style but does not switch it on without a flag" {
+    # Linking and activating are separate steps. The default must never touch settings.json.
+    local home="${BATS_TEST_TMPDIR}/h"; mkdir -p "${home}/.claude"
+    printf '{"permissions":{"allow":[]}}' > "${home}/.claude/settings.json"
+    HOME="${home}" run bash "${VAULT_ROOT}/install.sh"
+    [ "$status" -eq 0 ]
+    run grep -c outputStyle "${home}/.claude/settings.json"
+    [ "$output" -eq 0 ]
+}
+
+@test "--enable-style writes the global setting and keeps what was there" {
+    local home="${BATS_TEST_TMPDIR}/h2"; mkdir -p "${home}/.claude"
+    printf '{"permissions":{"allow":["Bash"]}}' > "${home}/.claude/settings.json"
+    HOME="${home}" run bash "${VAULT_ROOT}/install.sh" --enable-style
+    [ "$status" -eq 0 ]
+    grep -q '"outputStyle": "director"' "${home}/.claude/settings.json"
+    grep -q '"permissions"'             "${home}/.claude/settings.json"
+}
+
+@test "--enable-doc-lint registers the hook once, however many times it runs" {
+    local home="${BATS_TEST_TMPDIR}/h3"; mkdir -p "${home}/.claude"
+    printf '{}' > "${home}/.claude/settings.json"
+    HOME="${home}" bash "${VAULT_ROOT}/install.sh" --enable-doc-lint >/dev/null
+    HOME="${home}" bash "${VAULT_ROOT}/install.sh" --enable-doc-lint >/dev/null
+    run grep -c 'doc-lint-hook' "${home}/.claude/settings.json"
+    [ "$output" -eq 1 ]
+}
+
+@test "an unknown flag is refused rather than ignored" {
+    run bash "${VAULT_ROOT}/install.sh" --enable-everything
+    [ "$status" -eq 2 ]
+}
+
+@test "INSTALL.md documents both flags and the scope trap" {
+    local f="${VAULT_ROOT}/INSTALL.md"
+    grep -q -- '--enable-style'     "${f}"
+    grep -q -- '--enable-doc-lint'  "${f}"
+    # /config writes project-local settings; that is the thing people get wrong.
+    grep -q 'settings.local.json'   "${f}"
+}

@@ -155,17 +155,41 @@ sources.
 ### Optional: the `director` output style
 
 `output-styles/director.md` ships with both install modes — the plugin loads it directly, and
-`install.sh` links it into `~/.claude/output-styles/`. It applies the
-framework's writing rules — answer first, no jargon, options with their consequences, decisions
-capped at ~15 lines — to **every** Claude Code session, not just v-* commands. It is off until you
-turn it on:
+`install.sh` links it into `~/.claude/output-styles/`. It applies the framework's writing rules —
+answer first, no jargon, options with their consequences, decisions capped at ~15 lines — to
+**every** Claude Code session, not just v-* commands, and it carries the document rules from
+`commands/_shared/document-standard.md` too.
+
+**Linking it and switching it on are separate steps.** The file arrives with every install; the
+switch never flips itself. Pick one:
 
 ```
-/config  ->  Output style  ->  director
+install.sh --enable-style          # writes "outputStyle": "director" to ~/.claude/settings.json
+/config  ->  Output style  ->  director    # interactive; the /output-style command was removed in v2.1.91
 ```
 
-or set `"outputStyle": "director"` in `~/.claude/settings.json`. Takes effect after `/clear` or in a
-new session; switch back with the same menu.
+By hand, if you prefer: add `"outputStyle": "director"` to `~/.claude/settings.json`. Takes effect
+in a new session.
+
+**Scope matters.** `/config` writes to the *project's* `.claude/settings.local.json`, so it applies
+to that project only and does not travel between machines. `--enable-style` writes to
+`~/.claude/settings.json`, which applies everywhere. A separate Claude home (e.g. a work config with
+its own `settings.json`) needs its own line.
+
+### Optional: document linting
+
+`scripts/doc-lint-hook.sh` runs `bin/doc-lint.sh` on every markdown document Claude writes and hands
+the findings back to it. It never blocks a write and never prompts you. A plugin install picks it up
+from `hooks/hooks.json`; a symlink install links the script and needs the hook registered:
+
+```
+install.sh --enable-doc-lint
+```
+
+Turn it off any time with `DOC_LINT=off`. `install.sh --enable-all` does both this and the style.
+
+Both flags edit `~/.claude/settings.json`, back it up first, and are idempotent. Without a flag,
+`install.sh` never touches your settings.
 
 ## Uninstall
 
