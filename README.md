@@ -5,36 +5,33 @@ decisions, features, session notes, and the rules for working on the code. Obsid
 tracks it.
 
 You install the framework once per machine. Each project then points at that one install and gets its
-own vault, either beside your code or inside the repo. The framework never copies itself into a
-project.
+own vault, either beside your code or inside the repo.
 
 ## Install once per machine
 
-You need Linux, git, Python 3.10 or newer, and Claude Code. Ubuntu is the tested path. On a Mac the
-tool installer prints the commands for you to run by hand. [INSTALL.md](INSTALL.md) carries the flags,
-the uninstall, and the tests.
-
-Run two lines inside Claude Code:
+You need Linux, git, Python 3.10 or newer, and Claude Code. Ubuntu is the tested path; on a Mac the tool
+installer prints the commands for you to run by hand. [INSTALL.md](INSTALL.md) carries the flags, the
+uninstall, and the tests.
 
 ```
 /plugin marketplace add karoldabro/vault
 /plugin install vault@kdabro-vault
 ```
 
-Restart Claude Code, then run `/v-setup` once. `/v-setup` installs the helper tools and creates the
-machine-level config, because installing a plugin never runs an installer on your machine. It prints
-every command before it runs it.
+Restart Claude Code, then run `/v-setup` once. It installs the helper tools and creates the machine-level
+config, because installing a plugin never runs an installer on your machine. It prints every command
+before it runs it.
 
-**Take the symlink install instead if you edit the framework itself.** The plugin copies the files into
-a versioned cache that each update replaces, so edits made there do not survive.
+**Take the symlink install instead if you edit the framework itself.** The plugin copies the files into a
+versioned cache that each update replaces, so edits made there do not survive.
 
 ```bash
 git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh
 ```
 
-`setup.sh` asks which install you want. Choose the light one unless you write code with these commands.
-The developer install adds Serena and Graphify, which need uv, pipx and Python 3.10 or newer. You can
-switch later with `./setup.sh --full`.
+`setup.sh` asks which install you want. Choose the light one unless you write code with these commands;
+the developer install adds Serena and Graphify, which need uv, pipx and Python 3.10 or newer. Switch
+later with `./setup.sh --full`.
 
 Run `setup.sh` as your normal user, never with `sudo`. When it finishes, open a fresh shell with
 `exec $SHELL -l` and restart Claude Code.
@@ -55,12 +52,13 @@ cd ~/workspace/<your-code-repo>
 repo root recording where the vault lives, and adds a short note to your repo's `CLAUDE.md`. After that,
 run `/v-work` to do work and `/v-capture` to save what happened.
 
-`~/workspace/vault/bin/vault-migrate.sh` converts an older vault that still carries a `_process/` submodule.
+`~/workspace/vault/bin/vault-migrate.sh` converts an older vault that still carries a `_process/`
+submodule.
 
 ## The commands
 
 Type them in Claude Code. A plugin install also exposes each one as `/vault:v-work` and so on, which is
-how you disambiguate when another plugin ships a command with the same name.
+how you disambiguate when another plugin ships the same name.
 
 | Command | What it's for |
 |---------|---------------|
@@ -81,8 +79,8 @@ how you disambiguate when another plugin ships a command with the same name.
 
 ## Reviewer packs for /v-team
 
-`/v-team` draws its reviewers from packs in [personas/](personas/). Development stacks come as
-`api-laravel`, `nuxt` and `flutter`; the business family adds `marketing`, `sales`, `seo`, `support`,
+`/v-team` draws its reviewers from packs in [personas/](personas/): the development stacks
+`api-laravel`, `nuxt` and `flutter`, and the business family `marketing`, `sales`, `seo`, `support`,
 `business` and `startup-eval`. Reviewers used by several packs live once in `personas/_shared/`,
 including the `_shared/testing` group that critiques AI-written tests and the `_shared/business` group
 that critiques numeric evidence.
@@ -95,8 +93,7 @@ selection rules.
 
 - [vault-guide.md](vault-guide.md) — the vault layout and the lifecycle. Read this to understand the
   framework.
-- [tool-playbook.md](tool-playbook.md) — the helper tools and when to reach for each. claude-mem ships
-  with every install; Serena and Graphify need the developer install.
+- [tool-playbook.md](tool-playbook.md) — the helper tools and when to reach for each.
 - [INSTALL.md](INSTALL.md) — install options, uninstall, and tests.
 - [docs/removing-openviking.md](docs/removing-openviking.md) — takes an OpenViking install off a machine
   that still has one.

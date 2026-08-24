@@ -16,11 +16,9 @@ Take the symlink mode if you develop the framework itself. Otherwise take the pl
 
 Running both installs every command twice, under two names, resolving to two different copies of the
 files. `install.sh` refuses to run when it detects the plugin, and `setup.sh` skips its symlink step.
-Set `VAULT_ALLOW_DOUBLE_INSTALL=1` to override that guard.
+`VAULT_ALLOW_DOUBLE_INSTALL=1` overrides that guard.
 
 ## Install the plugin
-
-Run two lines inside Claude Code:
 
 ```
 /plugin marketplace add karoldabro/vault
@@ -28,28 +26,23 @@ Run two lines inside Claude Code:
 ```
 
 The first line registers this repository as a marketplace; the second installs the plugin it lists. The
-`/plugin` menu does the same thing through a browser. Restart Claude Code so the commands load.
+`/plugin` menu does the same through a browser. Restart Claude Code so the commands load.
 
 Then run **`/v-setup`** once. Installing a plugin never runs an installer on your machine, by design, so
 the helper tools and the `~/vault/_global/` config need a separate explicit step. `/v-setup` wraps
 `setup.sh`: it reports what is missing, prints what it will run, and asks before running it.
-`/v-setup --doctor` checks without changing anything.
-
-The plugin also registers a session-start check. It stays silent unless something is missing, and it
-never installs.
+`/v-setup --doctor` checks without changing anything. The plugin also registers a session-start check
+that stays silent unless something is missing, and never installs.
 
 Update with `/plugin update vault@kdabro-vault`. Remove with `/plugin uninstall vault@kdabro-vault`,
 which takes the commands away and leaves your vaults and the helper tools alone — see
 [Uninstall](#uninstall) for those.
 
 **Publishing a change requires bumping `version` in `.claude-plugin/plugin.json`.** Claude Code keys its
-cache on that string, so commits pushed without a bump reach nobody, and `/plugin update` reports users
-are already current. That pin keeps an unfinished `main` away from installed users. Bump it as the last
-step of a release, never per commit.
-
-`make release-check` enforces the bump. It fails when files that ship in the plugin changed since
-`origin/main` and the version string did not. It excludes `tests/`, `vault/` and `docs/`, which ship in
-the plugin cache but change nothing a user invokes. An unreachable `origin/main` warns and passes.
+cache on that string, so commits pushed without a bump reach nobody. Bump it as the last step of a
+release, never per commit. `make release-check` fails when files that ship in the plugin changed since
+`origin/main` and the version did not; it excludes `tests/`, `vault/` and `docs/`, and an unreachable
+`origin/main` warns rather than blocks.
 
 ## Install the symlinks
 
@@ -72,17 +65,15 @@ decisions and session history rather than for working on code; every command wor
 them later with `./setup.sh --full`, which is safe to run repeatedly.
 
 `setup.sh` records your choice as `install_mode` in `~/vault/_global/config.md`. That is how the commands
-know not to keep offering tools you chose not to install.
-
-With no terminal to answer the question, `--yes` selects the light install and passing nothing selects
-the minimal one. The installer never installs unattended without consent.
+know not to keep offering tools you chose not to install. With no terminal to answer, `--yes` selects
+light and passing nothing selects minimal; the installer never installs unattended without consent.
 
 `setup.sh` then scaffolds `~/vault/_global/`, runs a health check, and links the slash commands into
-`~/.claude/commands/`. Restart Claude Code afterwards so the new plugins load. It skips the linking step
-when the vault plugin is already installed, leaving the plugin's commands as the only copy.
+`~/.claude/commands/`. Restart Claude Code afterwards. It skips the linking step when the vault plugin is
+already installed, leaving the plugin's commands as the only copy.
 
-Run it as your normal user, never with `sudo`. Everything lands per-user: uv, bun and the plugins all go
-into your `$HOME`. At the apt steps it asks for your sudo password once and escalates for you.
+Run it as your normal user, never with `sudo`. Everything lands per-user: uv, bun and the plugins go into
+your `$HOME`. At the apt steps it asks for your sudo password once and escalates for you.
 `sudo ./setup.sh` is refused, because it would point `$HOME` at `/root` and leave everything there. Set
 `VAULT_ALLOW_SUDO=1` if you mean it.
 
@@ -94,8 +85,8 @@ exec $SHELL -l
 
 `./setup.sh --doctor` reports what actually landed, at any time.
 
-**OpenViking is no longer part of this stack.** `setup.sh` neither installs nor uses it. To take an
-install predating that change off your machine, see [removing-openviking.md](docs/removing-openviking.md).
+**OpenViking is no longer part of this stack.** To take an install predating that change off your
+machine, see [removing-openviking.md](docs/removing-openviking.md).
 
 ## Consent and safety
 
@@ -103,9 +94,9 @@ Auto-install asks before it touches anything, prints every remote URL it runs, a
 `--yes` skips the prompt. On a Mac, which has no apt, and non-interactively without passwordless sudo, it
 prints the exact commands instead of running them, so it never half-installs and never hangs.
 
-It does run vendor `curl | sh` scripts for uv and bun, and it adds a third-party Claude marketplace. It
-prints every source before running it. `vault/decisions/ADR-005-installer-auto-exec.md` records why.
-MorphLLM Fast Apply is not installed for you, because it needs a paid API key.
+It does run vendor `curl | sh` scripts for uv and bun, and it adds a third-party Claude marketplace, and
+it prints every source first. `vault/decisions/ADR-005-installer-auto-exec.md` records why. MorphLLM Fast
+Apply is not installed for you, because it needs a paid API key.
 
 ## Flags
 
@@ -122,10 +113,9 @@ MorphLLM Fast Apply is not installed for you, because it needs a paid API key.
 
 ## Python 3.10 or newer, for the full install only
 
-The pipx tool `graphifyy` needs Python 3.10 or newer, so only the full install requires it. The
-installer picks up a `python3.12`, `3.11` or `3.10` from your PATH. On an older box such as WSL or
-Ubuntu 20.04, which ship Python 3.8, pipx fails with a misleading "No matching distribution found".
-Install a newer Python and re-run:
+The pipx tool `graphifyy` needs Python 3.10 or newer. The installer picks up a `python3.12`, `3.11` or
+`3.10` from your PATH. On an older box such as WSL or Ubuntu 20.04, which ship Python 3.8, pipx fails
+with a misleading "No matching distribution found". Install a newer Python and re-run:
 
 ```bash
 sudo apt install -y python3.12 python3.12-venv   # or the deadsnakes PPA
@@ -135,18 +125,11 @@ sudo apt install -y python3.12 python3.12-venv   # or the deadsnakes PPA
 
 ## Refresh after a pull
 
-A plugin install has nothing to relink: `/plugin update vault@kdabro-vault` fetches and swaps the whole
-thing.
+A plugin install has nothing to relink: `/plugin update vault@kdabro-vault` swaps the whole thing.
 
-A symlink install needs the commands relinked after `git pull`:
-
-```bash
-./install.sh
-```
-
-It is safe to run repeatedly. It overwrites nothing in `~/.claude/commands/` or
-`~/.claude/output-styles/` that is not already a symlink, and it prunes links pointing at deleted
-sources.
+A symlink install needs `./install.sh` after `git pull`. It is safe to run repeatedly, overwrites nothing
+in `~/.claude/commands/` or `~/.claude/output-styles/` that is not already a symlink, and prunes links
+pointing at deleted sources.
 
 ### Turn on the `director` output style
 
@@ -154,10 +137,8 @@ sources.
 only the v-* commands: answer first, no jargon, options with their consequences, decisions capped at
 about 15 lines. It carries the document rules from `commands/_shared/document-standard.md` too.
 
-Both install modes ship the file. The plugin loads it directly, and `install.sh` links it into
-`~/.claude/output-styles/`.
-
-**Shipping the file and switching it on are separate steps.** The switch never flips itself. Pick one:
+Both install modes ship the file — the plugin loads it directly, `install.sh` links it into
+`~/.claude/output-styles/` — but **shipping it and switching it on are separate steps**. Pick one:
 
 ```
 install.sh --enable-style          # writes "outputStyle": "director" to ~/.claude/settings.json
@@ -168,8 +149,8 @@ By hand, add `"outputStyle": "director"` to `~/.claude/settings.json`. It takes 
 
 **The two routes write to different files.** `/config` writes the *project's*
 `.claude/settings.local.json`, so it applies to that project alone and does not travel between machines.
-`--enable-style` writes `~/.claude/settings.json`, which applies everywhere. A separate Claude home, such
-as a work config with its own `settings.json`, needs its own line.
+`--enable-style` writes `~/.claude/settings.json`, which applies everywhere. A separate Claude home needs
+its own line.
 
 ### Turn on document linting
 
@@ -181,10 +162,9 @@ findings back to it. It never blocks a write and never prompts you. A plugin ins
 install.sh --enable-doc-lint
 ```
 
-`DOC_LINT=off` turns it off at any time. `install.sh --enable-all` does both this and the style.
-
-Both flags edit `~/.claude/settings.json`, back it up first, and are safe to run repeatedly. Without a
-flag, `install.sh` never touches your settings.
+`DOC_LINT=off` turns it off at any time. `install.sh --enable-all` does both this and the style. Both
+flags edit `~/.claude/settings.json`, back it up first, and are safe to run repeatedly. Without a flag,
+`install.sh` never touches your settings.
 
 ### Wire a second Claude config directory
 
@@ -204,8 +184,8 @@ ln -s ~/.claude/output-styles "$W/output-styles"
 ln -s ~/.claude/hooks         "$W/hooks"
 ```
 
-Then add these keys to `$W/settings.json`. That file is separate from `~/.claude/settings.json` and
-inherits nothing from it:
+Then add these keys to `$W/settings.json`, which is separate from `~/.claude/settings.json` and inherits
+nothing from it:
 
 ```json
 "outputStyle": "director",
@@ -242,8 +222,8 @@ project vaults or your code repos.
 
 Two tiers, both run in Docker. Docker is the only thing you need installed.
 
-The offline suite is the default and gates pull requests. It runs the unit and integration tests on
-alpine with no network and no sudo:
+The offline suite is the default and gates pull requests. It runs on alpine with no network and no sudo,
+mounts the repo read-only at `/code`, and uses a throwaway `$HOME`:
 
 ```bash
 make test              # unit + integration
@@ -251,10 +231,11 @@ make test-unit
 make test-integration
 ```
 
-The repo is mounted read-only at `/code` and the tests use a throwaway `$HOME`. The image comes from
-`tests/Dockerfile` (alpine + bats-core + bash/git/jq). `tests/unit/setup-autoinstall.bats` covers the
-installer's execute path through its `--dry-run` transcript: real command construction, no real
-installs.
+The image comes from `tests/Dockerfile` (alpine + bats-core + bash/git/jq).
+`tests/unit/setup-autoinstall.bats` covers the installer's execute path through its `--dry-run`
+transcript: real command construction, no real installs. `tests/unit/plugin-install.bats` covers the
+plugin manifests, the repo layout the plugin loader assumes, the session-start hook, and the
+double-install guard.
 
 The end-to-end suite is opt-in and slow. It runs `setup.sh` on a throwaway Ubuntu container with real
 network, proving the installers land on disk:
@@ -263,13 +244,11 @@ network, proving the installers land on disk:
 VAULT_E2E=1 make test-e2e
 ```
 
-It errors out unless `VAULT_E2E=1` is set, which keeps it off the default path. It builds from
-`tests/e2e/Dockerfile.ubuntu` and covers the lightweight installers: uv via `curl|sh`, Graphify via
-pipx. `tests/e2e/run.sh` covers the `claude` plugin paths at the dry-run level.
+It errors out unless `VAULT_E2E=1` is set. It builds from `tests/e2e/Dockerfile.ubuntu` and covers the
+lightweight installers (uv via `curl|sh`, Graphify via pipx); `tests/e2e/run.sh` covers the `claude`
+plugin paths at the dry-run level.
 
-`tests/unit/plugin-install.bats` covers the plugin manifests, the repo layout the plugin loader assumes,
-the session-start hook, and the double-install guard. Run Claude Code's own validator before publishing
-a change to either manifest:
+Run Claude Code's own validator before publishing a change to either plugin manifest:
 
 ```bash
 claude plugin validate . --strict
