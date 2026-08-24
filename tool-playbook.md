@@ -5,18 +5,20 @@ tags: [process, tools, tokens]
 
 # Tool playbook — token-saving tools
 
-Rules and worked examples for the tools every vault command depends on. The commands (`/v-work`,
-`/v-team`, and the rest) carry a short inline example at the point of use and link back here for the
-full ruleset. This file is the source of truth.
+This file is the source of truth for the tools every vault command depends on. Each command — `/v-work`,
+`/v-team`, and the rest — carries a short inline example at the point of use and links back here.
 
-The reason is token cost. A vault hit costs about 100–2000 tokens. A graph slice or a symbol query costs
-a few hundred. Reading 40 source files costs about 20k. Pick the wrong default and you waste 100×, so
-default to the cheap path and reach for grep or full-file reads only when the cheap layers genuinely come
-up empty.
+Token cost is the reason to care. A vault hit costs about 100 to 2000 tokens, a graph slice or symbol
+query a few hundred, and reading 40 source files about 20k. Start on the cheap path and reach for grep
+or a full-file read only when the cheap layers come up empty.
 
-> These are suggestions, not rules. Claude picks the tool that fits the moment, and the cost hierarchy
-> below is a sensible default rather than a gate. The exception is genuine safety notes (like Morph's
-> `// ... existing code ...` markers): those stay firm.
+> These are suggestions, not rules: Claude picks the tool that fits the moment, and the cost hierarchy
+> below is a default rather than a gate. Safety notes such as Morph's `// ... existing code ...` markers
+> stay firm.
+
+**Section numbering starts at 2 and never changes** — a dozen files under `commands/` and `vault/` cite
+these sections by number. Section 1 held OpenViking, which the framework dropped; `docs/removing-openviking.md`
+takes an old install off a machine.
 
 ---
 
@@ -26,22 +28,23 @@ up empty.
 |----------|------|------|---------|
 | 1 | claude-mem `search`→`timeline`→`get_observations` | ~100→300→1000 tok | Project history, progressive disclosure |
 | 2 | Graphify `query` / `path` | ~hundreds tok | **Structural questions**: what calls X, where is Y defined, which modules touch Z |
-| 3 | Serena `get_symbols_overview` / `find_symbol` | small, real-time | Reading/navigating a specific file or symbol without dumping the whole file |
+| 3 | Serena `get_symbols_overview` / `find_symbol` | small, real-time | Reading or navigating a specific file or symbol without dumping the whole file |
 | 4 | Grep / Read over `~/vault/` and source | ~1000–20k tok | **Last resort** — only after layers 1–3 come up empty, or to verify an exact current line. Grep over the vault is also the standing fallback when claude-mem is not installed. |
 
-Rule of thumb: **graph before grep, symbol before full-file read.** If you're about to `Grep`
-across source to answer "what calls X" or "where is Y" — stop, that's a graphify query (layer 2).
+Query the graph before you grep, and read a symbol before you read a whole file. Grepping source for
+"what calls X" or "where is Y" is a graphify query (layer 2).
 
-**Layers 2 and 3 ship only in the `--full` (developer) install.** On a `light` machine they are absent
-by design: layer 4 (grep) is the whole code path, and their absence is never reported as a gap. Check
+**Layers 2 and 3 ship only in the `--full` developer install.** A `light` machine lacks them by design,
+layer 4 (grep) is its whole code path, and nothing reports their absence as a gap. Read
 `~/vault/_global/config.md` → `install_mode` before offering to install either one (ADR-021).
 
 ---
 
 ## Health checks & fallbacks — canonical table
 
-The single source of truth for every vault command (dispatchers link here instead of carrying copies).
-Present → use it; down → health-check to confirm, warn once, fall back, **never halt**.
+This table is the single source of truth for every vault command, and the dispatchers link here rather
+than carrying copies. Use a present tool; health-check one that looks down, warn once, fall back, and
+**never halt**.
 
 | Tool | Health check | Fallback if down |
 |------|-------------|------------------|
@@ -53,26 +56,25 @@ Present → use it; down → health-check to confirm, warn once, fall back, **ne
 | Bright Data | `bdata` CLI auth/status (or a 1-result `search`) | SERP/scrape findings → `advisory`; say so |
 | BOE (MCP) | MCP handshake / trivial statute lookup | legal findings → `advisory`; cite "unwired" |
 
-Business-pack persona analyzers that are *agents* (sales-*/seo-*, finance-tracker, …) need no health
-row — they resolve via `personas/_resolution.md` §3 base_agent fallback (Explore + persona block).
-**Grounding tiers:** recompute/grep checks (no external tool) can always be `confirmed`; tool-pull
-findings are `advisory` unless the wiring check above passes.
+Business-pack persona analyzers that are *agents* (sales-*/seo-*, finance-tracker) need no health row.
+They resolve through the base_agent fallback in `personas/_resolution.md` §3, which pairs Explore with
+the persona block.
+
+**Grounding tiers:** a recompute or grep check needs no external tool and can always be `confirmed`. A
+finding pulled from a tool is `advisory` unless the wiring check above passes.
 
 ---
 
 ## 2. claude-mem — project history (progressive disclosure)
 
-> Section 1 was OpenViking. It was removed from the framework — reads were 4% of its traffic against a
-> four-part install (`docs/removing-openviking.md`). **The numbering below is deliberately unchanged**:
-> a dozen files across `commands/` and `vault/` cite these sections by number.
-
-Read-only `mcp-search` server. Three layers — climb only as far as you need. **Not installed**
-(it ships with `setup.sh --full` / `--with-claude-mem`) → say so once and grep the vault instead:
+A read-only `mcp-search` server with three layers. Climb only as far as you need. It ships with
+`setup.sh --full` and `setup.sh --with-claude-mem`; when it is absent, say so once and grep the vault
+instead:
 `grep -ril "<keyword>" <project-vault>/{decisions,sessions,indications,features}/`.
 
 **When:** "did we already solve this?", "how did we do X last time?", what-changed-when.
-**When NOT:** as a write target — it auto-captures via its SessionEnd hook; there is no write tool.
-The durable record is the vault's own `sessions/*.md`, which is git-tracked and greppable.
+**When NOT:** as a write target. It auto-captures through its SessionEnd hook and exposes no write tool.
+The durable record is the vault's own `sessions/*.md`, which git tracks and grep reads.
 
 ```
 # Layer 1 — compact index of IDs (~100 tok). Stop here if nothing relevant.
@@ -85,26 +87,26 @@ timeline(anchor="6042")
 get_observations(ids=["6042", "6051"])
 ```
 
-Filter by `type` (decision, bugfix, feature, refactor, discovery) and date when it narrows fast.
+Filter by `type` (decision, bugfix, feature, refactor, discovery) and by date when that narrows fast.
 
 ---
 
 ## 3. Graphify — structural code graph
 
-`graph.json` is **auto-rebuilt by a post-commit hook** (`graphify hook install`) using AST
-extraction — **no LLM, no token cost** for code. `/v-init` installs the hook per project, so the
-graph is always fresh. **Query the graph; never grep source to answer a structural question.**
+A post-commit hook rebuilds `graph.json` by AST extraction (`graphify hook install`), so it costs no LLM
+tokens and stays fresh. `/v-init` installs the hook per project. **Query the graph; never grep source to
+answer a structural question.**
 
 Tools: `graphify query "<q>"`, `graphify path "A" "B"`, `graphify explain "<node>"`.
 
-**When:** what calls X, where is X defined, which modules touch Z, dependency/call chains. Prefer the
-graph over grepping source for these — usually far cheaper.
-**When NOT:** exact current line of one known symbol (read that line) or non-structural prose.
-**If `graphify-out/graph.json` is missing:** check `~/vault/_global/config.md` → `install_mode` first.
-On `full` the hook simply isn't installed for this repo — surface it and offer `graphify hook install`
-plus an initial `graphify .` build rather than silently grepping. On `light` (or `minimal`) the tool was
-never installed and its absence is the expected state: fall back to grep **without comment**. Repeating
-"install Graphify" at someone who chose not to have it is noise, not help (ADR-021).
+**When:** what calls X, where X is defined, which modules touch Z, dependency and call chains.
+**When NOT:** the exact current line of one known symbol — read that line — or non-structural prose.
+
+**If `graphify-out/graph.json` is missing**, read `~/vault/_global/config.md` → `install_mode` first. On
+`full` the hook is simply not installed for this repo: surface that and offer `graphify hook install`
+plus an initial `graphify .` build rather than grepping silently. On `light` or `minimal` the tool was
+never installed, so fall back to grep **without comment** — repeating "install Graphify" at someone who
+chose not to have it is noise (ADR-021).
 
 ```
 # "What calls validateUserToken?"  — ~200 tok vs ~10k for recursive grep + reads
@@ -117,26 +119,25 @@ graphify path "AuthModule" "DatabaseConnection"
 graphify explain "PaymentProcessor"
 ```
 
-Edges carry confidence (`EXTRACTED` certain → `INFERRED` → `AMBIGUOUS`) and `source_location` —
-cite the location when you answer.
+Edges carry a confidence (`EXTRACTED` certain → `INFERRED` → `AMBIGUOUS`) and a `source_location`. Cite
+the location when you answer.
 
 ---
 
 ## 4. Serena — symbol-aware navigation & editing
 
-LSP-backed. Reads/edits by symbol so you never dump a whole file into context.
+Serena is LSP-backed. It reads and edits by symbol, so you never dump a whole file into context.
 
 Navigation: `get_symbols_overview`, `find_symbol`, `find_referencing_symbols`, `find_implementations`.
 Editing: `replace_symbol_body`, `insert_after_symbol`, `insert_before_symbol`, `rename_symbol`.
 Session: `check_onboarding_performed`, `activate_project`, `list_memories`, `read_memory`, `write_memory`.
 
-**When:** orient in a file, locate a symbol, find all call sites before a refactor, do a
-dependency-tracked rename / extract.
-**When NOT:** a file <~200 lines you'll read whole anyway; generic symbol names that need grep to
-disambiguate.
-**On failure:** if the project isn't onboarded, surface it and offer to run `serena init` / onboarding
-rather than silently reading whole files. If Serena is not installed at all, check
-`~/vault/_global/config.md` → `install_mode`: on `light` / `minimal` it was never meant to be there —
+**When:** orient in a file, locate a symbol, find every call site before a refactor, run a
+dependency-tracked rename or extract.
+**When NOT:** a file under about 200 lines you will read whole anyway, or a generic name needing grep.
+**On failure:** when the project is not onboarded, surface that and offer to run `serena init` or
+onboarding rather than silently reading whole files. When Serena is not installed at all, read
+`~/vault/_global/config.md` → `install_mode`: on `light` or `minimal` it was never meant to be there, so
 read the file and say nothing (ADR-021).
 
 ```
@@ -155,20 +156,21 @@ find_referencing_symbols(name_path="fetchUser", relative_path="src/api/users.ts"
 rename_symbol(name_path="fetchUser", new_name="getUserProfile", relative_path="src/api/users.ts")
 ```
 
-Token math: a TypeScript rename via grep + 15 file reads ≈ 38k tokens; via Serena symbols ≈ 4k.
+Token math: a TypeScript rename costs about 38k tokens through grep plus 15 file reads, and about 4k
+through Serena symbols.
 
 ---
 
 ## 5. MorphLLM Fast Apply — targeted multi-line / multi-file edits
 
-Fast-apply model merges an edit *snippet* into a file — you transmit only changed lines, never the
-whole file. MCP: `morph_edit(target_filepath, instructions, code_edit)`.
+A fast-apply model merges an edit *snippet* into a file, so you transmit only the changed lines and never
+the whole file. MCP: `morph_edit(target_filepath, instructions, code_edit)`.
 
-**When:** edits to files ~50–1000 lines changing a fraction of them; bulk edits across many files;
-style/framework sweeps.
-**When NOT:** files <~30 lines (just `Write`); >~60% rewrites (cost/benefit inverts — `Write`).
-**Hard rule:** **always include `// ... existing code ...` markers at both ends** of `code_edit`.
-Omitting them tells the model to delete everything else.
+**When:** files of about 50 to 1000 lines changing a fraction; bulk edits; style or framework sweeps.
+**When NOT:** files under about 30 lines — just `Write` — or rewrites above about 60%, where the
+cost-benefit inverts back to `Write`.
+**Hard rule: always include `// ... existing code ...` markers at both ends of `code_edit`.** Omitting
+them tells the model to delete everything else.
 
 ```
 morph_edit(
@@ -184,36 +186,35 @@ morph_edit(
 )
 ```
 
-Token math: you transmit only changed lines, so a partial edit costs ~30–50% of a full-file rewrite
-(more on large files); high merge accuracy.
+Token math: transmitting only the changed lines costs about 30 to 50% of a full-file rewrite, and less on
+large files, at high merge accuracy.
 
-For project-wide symbol renames / extract-method, prefer Serena (it tracks references). Best combo:
-**Serena finds the semantic context → Morph applies the precise edit.**
+For a project-wide symbol rename or an extract-method, prefer Serena, which tracks references. The best
+combination is Serena finding the semantic context and Morph applying the precise edit.
 
 ---
 
 ## Anti-patterns (usually avoid)
 
-- Grepping source to answer "what calls X / where is Y defined" → usually a graphify query (§3).
+- Grepping source to answer "what calls X" or "where is Y defined" → usually a graphify query (§3).
 - Reading a whole 800-line file to understand structure → `get_symbols_overview` (§4).
 - Rewriting an entire file to change 10 lines → `morph_edit` with markers (§5).
-- `sed`/`awk`/`python`/heredocs to edit file content → use Edit / MultiEdit / Morph / Serena.
-- Silently falling back to grep when a tool is "unavailable" → confirm it's down first, then say so.
-  Don't degrade quietly. (Grep over the vault is a legitimate destination — an *unannounced* fallback
-  is the defect.)
+- Editing file content with `sed`, `awk`, `python` or heredocs → use Edit, MultiEdit, Morph or Serena.
+- Falling back to grep silently when a tool looks unavailable → confirm it is down, then say so. Grep
+  over the vault is a legitimate destination; the unannounced fallback is the defect.
 
 ---
 
 ## 6. Project tools (task trackers & team MCPs)
 
-Beyond the backbone above, a repo may use **project-specific MCPs** — most often a task tracker (Jira,
-Asana, Linear, GitHub Issues). The framework hard-wires none: a repo declares its own in `VAULT.md` →
-`tools` (see `vault-guide.md` §1.1) and the lifecycle picks it up.
+A repo may use **project-specific MCPs** beyond the backbone above, most often a task tracker such as
+Jira, Asana, Linear or GitHub Issues. The framework hard-wires none. A repo declares its own in
+`VAULT.md` → `tools` (see `vault-guide.md` §1.1) and the lifecycle picks it up.
 
-**Suggestion, not a rule:** if the task references a ticket (e.g. `VAULT-123`, `#42`) and the repo
-declares a `task_tracker` + `task_tracker_mcp`, that MCP is usually the best first source for ticket
-context — reach for it before grep or web. None declared → ask which tracker (or skip). MCP down → fall
-back to web/grep and say so; never halt.
+**Suggestion, not a rule:** when the task references a ticket such as `VAULT-123` or `#42`, and the repo
+declares a `task_tracker` and a `task_tracker_mcp`, that MCP is usually the best first source for ticket
+context — reach for it before grep or the web. With none declared, ask which tracker or skip. With the
+MCP down, fall back to web or grep and say so. Never halt.
 
 ```
 # VAULT.md
@@ -224,26 +225,26 @@ task_tracker_key: VAULT
 guidance: "Fetch the ticket's description + acceptance criteria before proposing."
 ```
 
-The per-step *when* (fetch at LOAD CONTEXT, remind at post-commit) is expressed with `VAULT.md` `hooks`
-(§1.1) — e.g. `on_start`/`pre_load_context` to fetch, `post_commit` to remind. This file stays generic;
-the project fills in the specifics. (Layer-picking rules are §§1–5 above — not repeated here.)
+`VAULT.md` `hooks` (§1.1) express the per-step *when*: `on_start` or `pre_load_context` to fetch,
+`post_commit` to remind. This file stays generic and the project fills in the specifics. Sections 1 to 5
+above own the layer-picking rules.
 
 ---
 
 ## 7. Web research — grounding against hallucination
 
-Not token-*saving* — correctness-saving. Everything above answers **what this codebase does**; the web
-answers **how this class of problem is usually solved**. Reach for it in PROPOSE §3a.0b, before
-committing to a non-trivial approach, and any time you're about to assert a fact from memory rather than
+Web research saves correctness rather than tokens. Everything above answers **what this codebase does**;
+the web answers **how this class of problem is usually solved**. Reach for it in PROPOSE §3a.0b before
+committing to a non-trivial approach, and any time you are about to assert a fact from memory rather than
 from a source.
 
 - `WebSearch` — find the problem, the common solutions, the pitfalls, and the community-default library
   or tool for the job.
-- `WebFetch <url>` — pull a specific doc / RFC / issue / benchmark for detail.
-- Agents for depth: `deep-research` (multi-source cited report), `tool-evaluator` (framework/library
-  comparison), `trend-researcher` (what the ecosystem actually adopted).
+- `WebFetch <url>` — pull a specific doc, RFC, issue or benchmark for detail.
+- Agents for depth: `deep-research` for a multi-source cited report, `tool-evaluator` for a framework or
+  library comparison, `trend-researcher` for what the ecosystem actually adopted.
 
-**Rule of thumb:** your first-instinct approach is a hypothesis, not a conclusion. One search that
-surfaces a widely-adopted alternative is far cheaper than a wrong build. Cite the sources in the plan
-artifact, and reconcile any contradicting consensus **explicitly** — adopt it, or write down the
-constraint that justifies keeping your approach. Never silently override the internet with your prior.
+**Treat your first-instinct approach as a hypothesis, not a conclusion.** One search that surfaces a
+widely-adopted alternative costs far less than a wrong build. Cite the sources in the plan artifact, and
+reconcile a contradicting consensus **explicitly**: adopt it, or write down the constraint that justifies
+keeping your approach. Never override the internet with your prior in silence.
