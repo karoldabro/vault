@@ -21,6 +21,12 @@ upstream, not a re-pointed remote).
   the BLOCKER/MAJOR findings that §3.4 exempts from the volume cap still count toward this limit, so a
   changeset carrying more must-fix findings than `--max-comments` prompts rather than posting silently.
 
+**A non-empty unexamined set requires its own fresh confirmation**, the way `--max-comments` does
+above. Show the coverage line and name every unexamined path in the preview. The operator may accept
+a stated limit — a review that says what it did not read is honest — but that acceptance is a
+decision they make, not one the tool makes for them by staying quiet. Record it as
+`coverage_accepted` in step 5.
+
 If the user declines → stop; nothing is written. (The review is still captured in step 5.)
 
 ## 4.2 Redact at the write boundary (sec-2 / sec-5)

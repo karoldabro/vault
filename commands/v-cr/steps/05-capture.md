@@ -11,8 +11,11 @@ Capture **only finding metadata, posted comment ids, and the coverage block**:
 
 ### The coverage block (mandatory)
 ```
-files_changed:          <n>     # from the forge file list via cr_diff_stats
-files_entered_context:  <n>     # files whose content the panel actually read
+files_changed:          <n>     # cr_diff_stats < $CR_CHANGED_FILES, field 1
+files_examined:         <n>     # cr_coverage: with_findings + clean — read rows with a valid anchor
+files_unexamined:       <n>     # cr_coverage: unexamined
+unexamined_paths:       [...]   # cr_coverage: the unexamined rows, verbatim
+coverage_accepted:      <yes|no|n/a>   # operator accepted a stated gap at the §4.1 gate
 changed_lines:          <n>     # from cr_diff_stats
 indication_rows_loaded: <n>     # index rows after the §2.4 surface filter
 indication_bodies_read: <n>     # full rule bodies fetched on demand
@@ -24,14 +27,17 @@ capped_chunked:         <none | dropped j over cap | chunked into c>
 ```
 
 **Why these are recorded and not just printed.** A terminal line dies with the session and a summary
-comment dies with a failed post. `files_entered_context` against `files_changed` is the only evidence
-that says whether a sparse review was precise or blind, and `inline_verified` against `inline_intended`
-is the only evidence that the review reached the author. Without both in a git-tracked file, every
+comment dies with a failed post. `files_examined` against `files_changed` is the only evidence that
+says whether a sparse review was precise or blind, and `inline_verified` against `inline_intended`
+is the only evidence that the review reached the author. Both come from a function — `cr_coverage`
+and `cr_verify_posted` — because a field with no measurement behind it gets asserted: one run wrote
+33 into this block against a true 41 of 48, and the seven files nobody had read held two real
+findings. Without both in a git-tracked file, every
 later question about review quality is unanswerable — which is how a run came to record 10 inline
 comments and a summary id that does not exist.
 
-`summary_verified: no` or `inline_verified` below `inline_intended` is an **exception, always
-reported** — never smoothed into a success line.
+`summary_verified: no`, `inline_verified` below `inline_intended`, or a non-zero `files_unexamined`
+is an **exception, always reported** — never smoothed into a success line.
 
 **Never write**: bearer tokens, request/response headers, raw diff hunks, or any secret-scanner-flagged
 string. Run the redaction pass over the capture artifact **before** the session write **and** before the
@@ -83,7 +89,7 @@ which already owns branching and approval.
 ## 5.4 Completion report
 ```
 Review: <host/owner/repo#PR>  ·  verdict: <…>
-Coverage: read <files_entered_context> of <files_changed> files (<changed_lines> changed lines)
+Coverage: read <files_examined> of <files_changed> files (<changed_lines> changed lines)  ·  <files_unexamined> NOT EXAMINED
 Delivery: <inline_verified>/<inline_intended> inline verified on forge  ·  summary <verified|MISSING>
 Findings: <n posted · m advisory · k suppressed>   ·   task alignment: <…>
 Comments: <created/updated/resolved>

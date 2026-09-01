@@ -13,6 +13,11 @@ Via the resolved adapter (`commands/v-cr/adapters/<platform>.md`):
 - PR/MR **title**, **body/description**, **head/base branch**, **linked issues**
   (`closingIssuesReferences` / `closes_issues` / native links).
 
+**Write the changed-file list to a path and carry it as `$CR_CHANGED_FILES`** — rows
+`<path><TAB><added><TAB><deleted>`, the shape `cr_diff_stats` and `cr_coverage` both read. Step 3
+§3.2's size guard and §3.6's coverage gate each take this file as input; without it neither can run,
+and both degrade to the assertions they replaced.
+
 ## 2.2 Secret-scan the diff AND every comment body BEFORE they enter any model context (sec-2)
 Run a secret scan (gitleaks/trufflehog rules if present; always the token-shape regex fallback:
 `gh[pousr]_`, `glpat-`, `Bearer `, `ATATT`, `xox[abpr]-`, AWS `AKIA…`). Replace matches with redaction

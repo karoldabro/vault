@@ -17,9 +17,10 @@ covered. Three requirements, all mandatory:
 2. **Read back every post.** After posting, list the PR's comments and diff actual against intended by
    fingerprint (`cr_verify_posted`). A non-zero return is an error: name each missing fingerprint with
    its `file:line` and do not report success.
-3. **Record coverage durably.** `files_changed`, `files_entered_context`, `inline_intended`,
-   `inline_verified`, `summary_verified` and `dropped_over_cap` go in the captured session file, every
-   value computed and none asserted.
+3. **Record coverage durably.** `files_changed`, `files_examined`, `files_unexamined`,
+   `unexamined_paths`, `coverage_accepted`, `inline_intended`, `inline_verified`, `summary_verified`
+   and `dropped_over_cap` go in the captured session file, every value computed by a named function
+   (`cr_diff_stats`, `cr_coverage`, `cr_verify_posted`) and none asserted.
 
 Never print a count the run did not verify against the forge.
 
@@ -46,4 +47,5 @@ or a closed session. The durable record is the vault file.
 
 ## Applies-to
 `commands/v-cr/steps/04-post.md`, `commands/v-cr/steps/05-capture.md`, `lib/cr-helpers.sh`
-(`cr_verify_posted`, `cr_diff_stats`), and any future command that writes review output to a forge.
+(`cr_verify_posted`, `cr_diff_stats`, `cr_coverage`), and any future command that writes review output
+to a forge.

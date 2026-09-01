@@ -87,7 +87,33 @@ FINDINGS:
     target: <file:line>
     issue: <one sentence>
     recommendation: <concrete change — advisory text only; never auto-applied>
+FILES_EXAMINED:
+  - <evidence><TAB><reason><TAB><path>
 ```
+
+**`FILES_EXAMINED` is mandatory and is the panel's coverage measurement.** One row per changed file
+the critic was given, paths taken from the caller's changed-file list and never invented. The reason
+is variable-length, so the **path is the last field** — a path containing a tab would otherwise shift
+the row and vanish from the count.
+
+| evidence | means | counts as examined |
+|---|---|---|
+| `read` | the file's content was in context; the reason carries an anchor `L<n>:"<token quoted from that line>"` | **yes** |
+| `context` | a subject-under-test read from outside the changeset | no (and never `extra`) |
+| `diff-only` | only the hunk was seen | no |
+| `grep-only` | the file was searched, not read | no |
+| `skipped` | not examined; the reason says why | no |
+
+Two rules make the receipt worth collecting:
+
+- **A `read` row carries an anchor the caller can check** against the diff it already holds. Without
+  one, a critic that echoes the changed-file list back with `read` on every path scores perfect
+  coverage. An anchor that does not match the diff counts as **not examined**.
+- **A file examined and found clean states what was checked**, in its reason. Silence is a claim, and
+  a claim the caller cannot falsify without reopening the file is worth nothing — an assigned critic
+  returning empty on a file must be distinguishable from one that checked it.
+
+Under the caller's chunking each critic receipts **its own chunk**; the caller unions across chunks.
 
 ## (e) Verify — the grounding gate (generate-then-verify)
 
@@ -116,13 +142,24 @@ ConfidenceFilter / Sourcery's validation pass all do). Machine-checked, not pros
 ```
 Panel: <pack> → [selected critics]   (or: generic fallback)
 Spawned: [<persona> → <base_agent>, …]   # actual Agent calls made — MUST match the selected critics
+Receipt: <path to the merged FILES_EXAMINED rows, strongest-evidence-wins per path>
+Unexamined: [<paths from the changed-file list that no critic read>]
 Confirmed actionable: [findings — file:line · severity · issue · recommendation]
 Advisory (summary-only): [findings]
 Suppressed (already posted): [n]
 Conflicts / escalations: [...]
 ```
 
+`Receipt:` and `Unexamined:` are a **machine set, not prose** — this module never renders a coverage
+sentence. Each caller words its own: `/v-cr` step 3 §3.6 prints the three-bucket line, and `/v-team`
+is exempt because its execute loop bars panel vocabulary from user-facing output.
+
 `Spawned:` is a conformance check, not decoration: if it is empty or shorter than the selected set, the
 panel did not actually run — say so and do not present inlined reasoning as panel output.
+
+**Every critic writes its findings block to a file and reports that absolute path** (`agent-conduct.md`
+§3). A long report is truncated in transit, and a truncated report loses its tail — which is where
+`FILES_EXAMINED` sits. A caller holding only a truncated report has no receipt and cannot compute
+coverage, so it must re-request the file rather than treat the visible part as the whole panel.
 
 The caller decides what to do with this (post it, fix-and-reloop, etc.). This module never writes.

@@ -6,6 +6,7 @@ RUN apk add --no-cache \
     git \
     grep \
     findutils \
+    zsh \
     coreutils \
     curl \
     jq

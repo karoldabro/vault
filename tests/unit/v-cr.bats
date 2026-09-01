@@ -113,7 +113,8 @@ setup() {
 }
 
 @test "capture step records every coverage field" {
-    for f in files_changed files_entered_context inline_intended inline_verified \
+    for f in files_changed files_examined files_unexamined unexamined_paths \
+             coverage_accepted inline_intended inline_verified \
              summary_verified dropped_over_cap capped_chunked; do
         grep -q "$f" /code/commands/v-cr/steps/05-capture.md
     done
