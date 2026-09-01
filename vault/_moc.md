@@ -27,12 +27,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-01-1000-vcr-delivery-and-coverage]] — Fix /v-cr comment delivery verification and coverage recording
 - [[sessions/2026-09-01-0900-vpm-pm-discipline]] — Give /v-pm elicitation, a Definition of Done, an appetite instead of a task list, and a tracker that lives where the working session already looks
 - [[sessions/2026-08-24-1214-docs-writing-standard-pass]] — Rewrite the seven reader-facing docs to the writing contracts
 - [[sessions/2026-08-21-1422-doc-lint-skip-and-type]] — Fix the two defects that made bin/doc-lint.sh unusable: the size cap could not be exempted, and the type resolver corrupted type names.
 - [[sessions/2026-08-04-1404-vault-git-autosync]] — Answer the plugin auto-update question and make the lifecycle keep an out-of-repo vault synced with git
-- [[sessions/2026-08-04-1339-install-profiles-light-full]] — Install profiles: light default, full for developers (Serena + Graphify demoted)
-- [[sessions/2026-08-04-1225-claude-code-plugin-install]] — Ship the framework as a Claude Code plugin: two manifests, plugin-root-first path resolution, /v-setup consent gate, detect-only SessionStart hook, double-install guard (ADR-020)
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center (rules REQ-NN + axis tags, glossary, decision/state tables) for 1+ repos; single-repo `requirements/` category; id chain → established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)
