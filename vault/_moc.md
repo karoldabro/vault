@@ -27,6 +27,7 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-01-0900-vpm-pm-discipline]] — Give /v-pm elicitation, a Definition of Done, an appetite instead of a task list, and a tracker that lives where the working session already looks
 - [[sessions/2026-08-24-1214-docs-writing-standard-pass]] — Rewrite the seven reader-facing docs to the writing contracts
 - [[sessions/2026-08-21-1422-doc-lint-skip-and-type]] — Fix the two defects that made bin/doc-lint.sh unusable: the size cap could not be exempted, and the type resolver corrupted type names.
 - [[sessions/2026-08-04-1404-vault-git-autosync]] — Answer the plugin auto-update question and make the lifecycle keep an out-of-repo vault synced with git
