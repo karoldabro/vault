@@ -168,6 +168,37 @@ gate (the happy-path bias this counters must not gate its own activation).
    column** — this is the spec→backlog half of the id chain (the dossier half is written at capture,
    `04-execute-loop.md` §5.4a).
 
+## (f3) Decompose into sessions — feature mode only
+
+Runs when this session has a feature workspace (Step 0 resolved one). Skip entirely otherwise; an
+ordinary `/v-team` run has no shard to write.
+
+`/v-pm` gave this repo an **appetite** — a session budget in `generic-plan.md` — and named the **first
+slice**. It did not enumerate the work, because it does not read this code. Splitting is this session's
+job, and the rows it writes are this session's to maintain.
+
+1. **Read the appetite. Do not re-derive it.** It is a ceiling, not an estimate. If the converged plan
+   does not fit, cut scope — `[could]` rules first, then `[should]` — and record what you cut. Never
+   quietly exceed the budget; if only `[must]` rules remain and it still does not fit, say so at the
+   approval gate and let the operator re-size.
+2. **Size each unit against what actually lands here.** Units are **session-sized**, not edit-sized. In this framework a session that finished
+   cleanly touched a median of ~9 files; sessions that reached ~49 dropped work permanently and needed
+   a follow-up. Treat ~9 as the target and anything past ~15 as a unit that wants splitting.
+3. **Cut vertically, hardest part first.** Start with `/v-pm`'s first slice. Each later unit should
+   deliver something observable on its own, not one architectural layer of something.
+4. **Pick each unit's command** off the existing ladder — `/v-do` for a contained edit, `/v-work` for
+   ordinary work, `/v-team` where a wrong decision is expensive to reverse. `/v-ask` is not eligible: it
+   writes nothing, so it can never close a row. Rules:
+   `$VAULT_FRAMEWORK_PATH/vault/indications/light-command-siblings.md`.
+5. **Write the rows** into `projects/<this>/plan.md` `## Sessions`, one per unit: id, scope, command,
+   `status: todo`, the `REQ-NN` ids it covers, and today's date. Leave `evidence` empty — it is filled
+   when the row closes, and a `done` row without it is invalid.
+
+**Expect these rows to be wrong in detail.** The tracker that worked here shipped all ten of its
+sessions and rewrote nearly every row on the way — scope cut, work added, one session inserted that no
+plan predicted. That is the tracker doing its job. Write the rows so the executing session can correct
+them, and never treat a recorded deviation as a failure.
+
 ## (g) Finalise
 
 Mark the plan `status: proposed` and set `process_record` to the sidecar filename. **`rounds` and

@@ -16,9 +16,13 @@ knowledge center is the whole deliverable. **Skip `contracts.md`** (no cross-pro
 runs to sharpen requirements.md; the contract critic simply has no seam to split. Everything below about
 `contracts.md`/`generic-plan.md` applies to **multi-repo** mode.
 
-**Front gate (inherited).** Run `v-work/steps/03-propose.md` **§3a.0b external research** (soft — the AI
-decides, or `--research` / `--no-research`) to ground the approach in how this class of problem is solved
-in the wild, before drafting. Cite sources in the plan.
+**Front gate — research runs by default.** Run `v-work/steps/03-propose.md` **§3a.0b external research**
+before drafting, to ground the approach in how this class of problem is solved in the wild. In `/v-pm`
+it is **on unless `--no-research` is passed** — planning is where a wrong approach is cheapest to catch,
+and `/v-pm` runs rarely enough that the cost does not matter. (`/v-work` and `/v-team` keep §3a.0b's
+novel-choices-only gate; this default applies here only.) Cite sources, and record the approaches you
+rejected in `generic-plan.md` `## Options considered` — a reason that dies with the session is a reason
+the next planner has to rediscover.
 
 ## (a) Draft the requirements knowledge center + the generic plan v0
 Author **two** artifacts, grounded in the **Step 2 LOAD CONTEXT digest** (reuse existing contracts /
@@ -33,10 +37,23 @@ project can act without re-deriving the whole thing.
    invariants. This is what grounds rich tests + lets AI understand the product. Don't manufacture rules —
    only what the necessity actually implies; omit ❖ sections when empty.
 2. **`generic-plan.md`** — the *how*: **solution shape** across the products + **sequencing** (which
-   project moves first — usually the api) + scope/non-goals. Its `## Problem & outcome` is a **one-line
-   back-reference** to `requirements.md`, NOT a restatement (requirements owns the why). generic-plan =
-   *how/sequencing* · contracts = *interface seam* · requirements = *what & why* — three non-overlapping
-   artifacts.
+   project moves first — usually the api) + scope/non-goals + an **appetite** and a **first slice**.
+   Its `## Problem & outcome` is a **one-line back-reference** to `requirements.md`, NOT a restatement
+   (requirements owns the why). generic-plan = *how/sequencing* · contracts = *interface seam* ·
+   requirements = *what & why* — three non-overlapping artifacts.
+
+**Emit a budget, never a task list.** Two fields carry the sizing, and neither enumerates work:
+
+- **`## Appetite`** — how many sessions this feature is worth **in each repo**, decided before the
+  design is detailed, not derived from it. It is a ceiling the executing session must fit inside by
+  cutting scope, not an estimate it may exceed.
+- **`## First slice`** — the one cut that runs vertically through the hardest part, so the surprise
+  arrives first. Name the part most likely to be wrong (a new integration, an external dependency, a
+  rule nobody has stated cleanly) and slice through that, not through the easiest layer.
+
+Do **not** write session-sized tasks here. `/v-pm` does not read the code it would be slicing, and each
+repo's own `/v-team` session splits its scope against what it finds
+(`v-team/steps/03-propose-loop.md`). Rule: `vault/indications/plan-appetite-not-tasks.md`.
 
 ## (b) The pipeline — sequential, each stage consumes the last
 Unlike `/v-team`'s **parallel** design panel, planning is a **linear pipeline**: each critic refines the
@@ -75,10 +92,11 @@ prose. The generic plan references it; the contract is the single source of trut
 
 ## Required output
 ```
-Research: [sources + takeaways | skipped (trivial) | unavailable]
+Research: [sources + takeaways | --no-research | unavailable]
 Rounds: <n> · Convergence: <clean | capped-with-open-blockers>
 requirements.md: [business rules REQ-NN · glossary terms · variant/state tables · invariants]
-generic-plan.md: [drafted — solution shape + sequencing; why → requirements.md]
+generic-plan.md: [solution shape + sequencing + options considered; why → requirements.md]
+Appetite: [<proj>: N sessions, per participant]   ·   First slice: <the cut through the hard part>
 contracts.md: [endpoints / enums / shapes captured — refs requirements by REQ-NN]
 ```
 Mark PLAN PANEL `completed` → Step 3.

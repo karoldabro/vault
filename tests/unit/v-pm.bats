@@ -252,3 +252,130 @@ teardown() {
 @test "vault.gitignore ignores the feature workspace symlinks" {
     grep -qi 'features/\*/\|_features'      "${VAULT_ROOT}/templates/vault.gitignore"
 }
+
+# --- ADR-024: elicitation, definition of done, appetite, tracking -------------
+
+@test "elicitation module exists, stays under its cap, and carries a checkable stopping rule" {
+    EL="${VAULT_ROOT}/commands/_shared/elicitation.md"
+    [ -f "${EL}" ]
+    [ "$(wc -l < "${EL}")" -le 250 ]
+    grep -qi '5 whys\|five whys'        "${EL}"
+    grep -qi 'document analysis'        "${EL}"
+    grep -qi 'scenario walkthrough'     "${EL}"
+    grep -qi 'judgement call, no evidence' "${EL}"
+    # the stopping rule, and the promise that it never blocks
+    grep -qi 'stopping'                 "${EL}"
+    grep -qi 'definition of ready'      "${EL}"
+    grep -qi 'stated default'           "${EL}"
+    # the ledger has ONE home, not a new store
+    grep -q  '## Open questions'        "${EL}"
+    grep -q  '## Assumptions to test'   "${EL}"
+    # question shape is referenced, never restated
+    grep -qi 'communication.md'         "${EL}"
+}
+
+@test "definition-of-done module is two-tier, three-state, and honest about missing tooling" {
+    DOD="${VAULT_ROOT}/commands/_shared/definition-of-done.md"
+    [ -f "${DOD}" ]
+    [ "$(wc -l < "${DOD}")" -le 250 ]
+    grep -qi 'not-applicable'           "${DOD}"
+    grep -qi 'baseline'                 "${DOD}"
+    grep -qi 'feature extension\|feature-mode extension' "${DOD}"
+    # §5.2's characterization-check alternative must survive verbatim, or the gate is unmeetable here
+    grep -qi 'characterization check'   "${DOD}"
+    grep -qi 'temporarily break the code' "${DOD}"
+    # evidence and the stale-row date are what make a `done` row trustworthy
+    grep -qi 'evidence'                 "${DOD}"
+    grep -qi 'last touched'             "${DOD}"
+}
+
+@test "the done gate runs BEFORE staging, not after the commit" {
+    CC="${VAULT_ROOT}/commands/v-work/steps/05-commit-capture.md"
+    grep -qi 'definition-of-done.md'    "${CC}"
+    dod_line=$(grep -n 'definition-of-done.md' "${CC}" | head -1 | cut -d: -f1)
+    stage_line=$(grep -n '^## 5.1 Code commit' "${CC}" | head -1 | cut -d: -f1)
+    [ "${dod_line}" -lt "${stage_line}" ]
+    # a plain session must not be blocked by a feature-mode row it does not have
+    grep -qi 'plain session'            "${CC}"
+}
+
+@test "/v-do carries the done gate itself, since it never reads the capture step" {
+    grep -qi 'definition-of-done.md'    "${VAULT_ROOT}/commands/v-do.md"
+    ! grep -qi '05-commit-capture'      "${VAULT_ROOT}/commands/v-do.md"
+}
+
+@test "v-pm emits an appetite and a first slice, never a task list" {
+    grep -qi 'appetite'                 "${PM}"
+    grep -qi 'appetite'                 "${STEPS}/03-plan-panel.md"
+    grep -qi 'first slice'              "${STEPS}/03-plan-panel.md"
+    grep -qi 'never a task list\|not a task list\|never write session-sized\|not enumerate' "${STEPS}/03-plan-panel.md"
+    grep -q  '## Appetite'              "${TPL}/generic-plan.md"
+    grep -q  '## First slice'           "${TPL}/generic-plan.md"
+    grep -q  '## Options considered'    "${TPL}/generic-plan.md"
+}
+
+@test "the shard carries a Sessions tracker with evidence, a date, and a bounded vocabulary" {
+    SH="${TPL}/project-shard.md"
+    grep -q  '## Sessions'              "${SH}"
+    grep -qi 'evidence'                 "${SH}"
+    grep -qi 'last touched'             "${SH}"
+    grep -qi 'todo | doing | done | dropped' "${SH}"
+    # /v-ask writes nothing, so it can never close a row
+    grep -qi 'NOT /v-ask\|not /v-ask'   "${SH}"
+    # the drift check is a mechanical table compare — keep this table out of its way
+    grep -qi 'Consumed contract'        "${SH}"
+    # coverage has ONE home: the table, not the REQ id list
+    ! grep -qi 'annotates coverage'     "${SH}"
+}
+
+@test "v-pm seeds the Sessions header and appetite but never a row" {
+    grep -q  '## Sessions'              "${STEPS}/04-seed-workspace.md"
+    grep -qi 'no rows\|NO rows'         "${STEPS}/04-seed-workspace.md"
+    grep -qi 'Consumed contract'        "${STEPS}/04-seed-workspace.md"
+}
+
+@test "status derives progress from shard rows, not the header field that goes stale" {
+    ST="${STEPS}/07-status.md"
+    grep -qi 'shard'                    "${ST}"
+    grep -qi 'REQ coverage\|REQ COVERED' "${ST}"
+    grep -qi 'never started'            "${ST}"
+    grep -qi 'disagree'                 "${ST}"
+    grep -qi 'evidence'                 "${ST}"
+}
+
+@test "capture rolls the feature status up from the rows instead of leaving two copies" {
+    VC="${VAULT_ROOT}/commands/v-capture.md"
+    grep -qi 'Step 4e'                  "${VC}"
+    grep -qi 'header.md'                "${VC}"
+    grep -qi 'derive it, never ask\|Derive it, never ask' "${VC}"
+}
+
+@test "intake elicits rather than merely clarifying, and never blocks on a non-fork" {
+    IN="${STEPS}/01-intake.md"
+    grep -qi 'elicitation.md'           "${IN}"
+    grep -qi 'success metric'           "${IN}"
+    grep -qi 'definition-of-done.md'    "${IN}"
+    tr '\n' ' ' < "${IN}" | grep -qi 'stated *default'
+}
+
+@test "requirements template keeps ONE home for the success metric and marks rule priority" {
+    RQ="${TPL}/requirements.md"
+    grep -qi 'MEASURABLE'               "${RQ}"
+    grep -q  '## Assumptions to test'   "${RQ}"
+    grep -qi '\[must\]'                 "${RQ}"
+    # a second acceptance-shaped section is the duplication this avoids
+    ! grep -q '## Success criteria'     "${RQ}"
+}
+
+@test "the appetite rule and ADR-024 are recorded in the vault" {
+    grep -q 'plan-appetite-not-tasks' "${VAULT_ROOT}/vault/indications/plan-appetite-not-tasks.md"
+    grep -qi 'amends' "${VAULT_ROOT}/vault/decisions/ADR-024-vpm-pm-discipline.md"
+    grep -qi 'ADR-012' "${VAULT_ROOT}/vault/decisions/ADR-024-vpm-pm-discipline.md"
+}
+
+@test "requirements-spec-vs-established points at the step that actually exists" {
+    IND="${VAULT_ROOT}/vault/indications/requirements-spec-vs-established.md"
+    grep -q 'Step 4d'  "${IND}"
+    ! grep -q 'Step 5b' "${IND}"
+    grep -q '^## Step 4d' "${VAULT_ROOT}/commands/v-capture.md"
+}

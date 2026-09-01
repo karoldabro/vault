@@ -141,3 +141,23 @@ teardown() {
         grep -q "${id}-" "${dir}/_inventory.md" || { echo "unregistered ADR: ${id}"; return 1; }
     done
 }
+
+@test "propose loop decomposes into session-sized units inside the appetite" {
+    PL="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -qi 'f3'              "${PL}"
+    grep -qi 'session-sized'   "${PL}"
+    grep -qi 'appetite'        "${PL}"
+    grep -qi 'ceiling'         "${PL}"
+    grep -qi 'light-command-siblings' "${PL}"
+    # /v-ask writes nothing, so it cannot be assigned a row
+    grep -qi 'v-ask` is not eligible' "${PL}"
+    # a deviation is the tracker working, not a failure
+    grep -qi 'deviation'       "${PL}"
+}
+
+@test "feature pickup reports progress from the Sessions rows" {
+    PU="${VAULT_ROOT}/commands/v-team/steps/00-feature-pickup.md"
+    grep -q  '## Sessions'     "${PU}"
+    grep -qi 'evidence'        "${PU}"
+    grep -qi 'Progress'        "${PU}"
+}

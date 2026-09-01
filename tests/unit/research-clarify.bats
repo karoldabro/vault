@@ -136,3 +136,15 @@ setup() {
     grep -qi 'clarify'  "${VAULT_ROOT}/commands/v-team.md"
     grep -qi 'research' "${VAULT_ROOT}/commands/v-team.md"
 }
+
+@test "v-pm runs research by default while v-work and v-team keep the novel-only gate" {
+    PM="${VAULT_ROOT}/commands/v-pm.md"
+    grep -qi 'by default'   "${PM}"
+    grep -qi 'no-research'  "${PM}"
+    # the panel step must agree with the dispatcher, and must not still call it "soft"
+    PANEL="${VAULT_ROOT}/commands/v-pm/steps/03-plan-panel.md"
+    grep -qi 'by default'   "${PANEL}"
+    ! grep -qi 'soft — the AI decides' "${PANEL}"
+    # the shared gate is unchanged for the execution lifecycles
+    grep -qi 'novel'        "${VAULT_ROOT}/commands/v-work/steps/03-propose.md"
+}

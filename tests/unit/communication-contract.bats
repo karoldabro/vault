@@ -142,10 +142,10 @@ flat() { tr '\n' ' ' < "$1"; }
     [ "${missing}" -eq 0 ]
 }
 
-@test "the Required-output file set is exactly 15 — a new one cannot silently fall out" {
+@test "the Required-output file set is exactly 17 — a new one cannot silently fall out" {
     local n
     n="$(grep -rl '^## Required output' "${VAULT_ROOT}/commands" | grep -vc '/attic/')"
-    [ "${n}" -eq 15 ] || { echo "expected 15 Required-output files, found ${n}"; return 1; }
+    [ "${n}" -eq 17 ] || { echo "expected 17 Required-output files, found ${n}"; return 1; }
 }
 
 @test "no brevity rule survives outside the contract, except the forge-comment one" {

@@ -87,6 +87,18 @@ Quick pass over each changed file: no dead/commented-out code, no magic numbers/
 (extract shared), pattern + `indications/` compliance, input validated at boundaries. Issue → fix,
 re-run the relevant check (max 3 iterations); still failing → present to the user.
 
+Then work `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md`. `/v-do` needs its own
+reference because it never reads `/v-work`'s capture step, where the same gate sits for the heavier
+lifecycles.
+
+- **Baseline** — always. Each line is `met`, `failed`, or `not-applicable` with a reason. Report only
+  what failed or was waived; a fully met baseline earns no line. A `failed` line stops the change —
+  fix it, or take it to the user.
+- **Feature-mode extension** — only when this change closes a `## Sessions` row in a feature shard,
+  which the shard template does allow `/v-do` to do. Set the row's status, write the evidence and
+  today's date, and note any deviation. That is three fields, not ceremony; leaving them costs the next
+  session more than writing them costs you.
+
 ### 4 — Capture (optional, OFF by default)
 
 `/v-do` does **not** capture by default — that's what keeps it cheap. After the change lands:

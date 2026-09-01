@@ -21,8 +21,15 @@ Identify `<this>` — the current repo's vault slug.
 
 ## 0.2 Load the shared context
 Read `requirements.md` (the business knowledge center — rules `REQ-NN`, glossary, variant/state tables),
-`generic-plan.md`, `contracts.md`, this project's `projects/<this>/plan.md` shard (incl. its
-`## Business rules to satisfy` id list), and scan `conversation/` filenames for open / answered threads.
+`generic-plan.md` (incl. its `## Appetite` for this repo and the `## First slice`), `contracts.md`, this
+project's `projects/<this>/plan.md` shard (incl. its `## Business rules to satisfy` id list **and its
+`## Sessions` table**), and scan `conversation/` filenames for open / answered threads.
+
+**Report where the work stands** from the session rows — how many are `done`, `doing`, `todo` and
+`dropped`, which `REQ-NN` ids no `done` row covers yet, and any row whose `last touched` date is old
+enough to look abandoned. Flag a `done` row with an empty `evidence` cell: it cannot be trusted as done.
+If the table has no rows but the appetite is non-zero, this repo has not been decomposed yet — the
+propose step's `(f3)` will do it.
 This is a **read** only — it carries requirements.md into the session so LOAD CONTEXT (Step 2) and the
 test-design fan-out can use it; the `REQ-NN` → dossier/backlog **writes** happen later (propose-loop +
 capture), not here.
@@ -52,8 +59,11 @@ user: `conversation/THREAD_<n>_OPEN_→<target>.md` from `templates/_features/TH
 ## Required output
 ```
 Feature: <feature>  ·  This project: <this>
+Progress: <done>/<total> rows  (dropped: <n>)  ·  Appetite: <N> sessions  ·  REQ uncovered: [ids]
 Picked up: [threads answered / acted]  ·  Replies surfaced: [answers to our questions]
 Contract drift: [none | field X drifted → thread raised]
 Raised: [new threads → target]
 ```
+Omit the `Progress` line when there is no feature workspace. Always print a `done` row missing its
+evidence, and a row not touched in a long time — those are exceptions, not status.
 Then continue into Step 1 (ANALYZE) normally.

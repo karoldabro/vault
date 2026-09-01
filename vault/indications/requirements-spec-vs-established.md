@@ -13,7 +13,7 @@ Plan-time business logic is a **spec** and lives in `requirements/` (single-repo
 `_features/<f>/requirements.md` (2+ repos): test-shaped business rules (`precondition → expected [; edge]`)
 with stable `REQ-NN` ids + `[authz]/[error]/[nfr]` axis tags, plus glossary + optional decision/state
 tables. It is **aspirational by design**. The *established* form lives in the `features/` dossier,
-written at `/v-capture` Step 5b (shared by `/v-work` + `/v-team`), which promotes only **built** rules and
+written at `/v-capture` Step 4d (shared by `/v-work` + `/v-team`), which promotes only **built** rules and
 carries each `REQ-NN` id inline. Never write aspirational rules into `features/` (the
 [[capture-behaviors-test-shaped]] "established, not aspirational" rule still governs it); never collapse
 spec into established. `/v-pm` authors the spec for **any** feature (1+ repos) — only the `_features/`
@@ -38,5 +38,5 @@ lifecycle's step) is what keeps it closing for both `/v-work` and `/v-team`.
 - Don't: seed a `status: stub` dossier into a *participant* vault `/v-pm` doesn't own (cross-repo footgun).
 
 ## Applies-to
-`commands/v-pm/steps/**`, `commands/v-capture.md` (Step 5b), `commands/v-team/steps/{00,03,04}-*.md`,
+`commands/v-pm/steps/**`, `commands/v-capture.md` (Step 4d), `commands/v-team/steps/{00,03,04}-*.md`,
 `templates/_features/requirements.md`, `vault-guide.md` §13

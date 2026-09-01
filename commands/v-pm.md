@@ -57,8 +57,10 @@ The token-saving backbone from `/v-team`, plus the **Agent** tool for the planni
 | Serena | `check_onboarding_performed()` | graphify → Glob/Grep |
 
 Search precedence (`CLAUDE.md`): vault → graph → source. Full rules:
-`$VAULT_FRAMEWORK_PATH/tool-playbook.md`. Web research (soft — the AI decides, or force with `--research`
-/ disable with `--no-research`) per `tool-playbook.md` §7.
+`$VAULT_FRAMEWORK_PATH/tool-playbook.md`. **Web research runs by default in `/v-pm`** — planning is
+where a wrong approach is cheapest to catch, and `/v-pm` runs rarely enough that the cost does not
+matter. `--no-research` opts out. `/v-work` and `/v-team` keep their novel-choices-only gate; see
+`tool-playbook.md` §7.
 
 ---
 
@@ -72,8 +74,11 @@ Search precedence (`CLAUDE.md`): vault → graph → source. Full rules:
 5. CAPTURE
 
 ### Step 1 — INTAKE
-Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/01-intake.md`, then execute. The clarify gate
-hard-blocks on a no-safe-default fork. The break-even gate (§1.3) splits on the **coordination
+Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/01-intake.md`, then execute. Intake runs the
+**elicitation protocol** (`$VAULT_FRAMEWORK_PATH/commands/_shared/elicitation.md`) — a technique menu
+worked cheapest-first, a checkable stopping rule, and every question carrying the evidence behind its
+options. Whatever is still unanswered at the end becomes a **stated default**, flagged for correction;
+it never blocks the feature. The clarify gate still hard-blocks on a no-safe-default fork. The break-even gate (§1.3) splits on the **coordination
 machinery**, not the knowledge center: a **single-participant** feature still authors `requirements.md`
 into the project's own `requirements/` vault, skips the `_features/` workspace, then hands execution to
 `/v-team`/`/v-work`. 2+ participants → full multi-repo run.
@@ -112,6 +117,10 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/07-status.md`, then execute. (Re
 ## Notes
 - **`_features/` is its own committed vault** — neutral ground owned by no single
   project. Path resolution + the full protocol: `vault-guide.md` §1.1 + §13.
+- **v-pm states a budget, not a task list.** It writes an **appetite** (how many sessions this is worth
+  in each repo) and names the **first slice**; it does not enumerate the work, because it does not read
+  the code it would be slicing. Each repo's own `/v-team` session splits its scope into session-sized
+  pieces and owns the resulting rows. See `vault/indications/plan-appetite-not-tasks.md`.
 - v-pm **plans**, it does not execute. Only v-pm writes `requirements.md` (the knowledge center) +
   `generic-plan.md` (`plan` + `reconcile`); projects write their own `projects/<proj>/plan.md` shard and,
   at capture, their established `features/` dossier (carrying each `REQ-NN`).

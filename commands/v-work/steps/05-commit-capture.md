@@ -9,6 +9,23 @@
 Finalise: stage, commit, capture the session. This task stays `in_progress` until `/v-capture` has
 actually run — never close out `/v-work` without it.
 
+## 5.0 Definition of Done (before anything is staged)
+
+Read `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md` and work its checklist **now**,
+before §5.1 stages a single file. A gate that runs after the commit blocks nothing.
+
+- The **baseline** applies to every session.
+- The **feature-mode extension** applies only when this session has a `## Sessions` row in a feature
+  shard. A plain session has no such row and is **not** blocked by those lines — do not invent one.
+
+Each line is `met`, `failed`, or `not-applicable` **with a reason**. Silence is not a pass, and a line
+you cannot honestly assert is recorded as not-applicable rather than ticked. That distinction is the
+whole point: four sessions in one feature were once closed as done against a code path that could
+never run, because nothing asked for the evidence.
+
+A `failed` line stops the close. Fix it, or take it to the user with what it would cost to fix — never
+commit past it silently.
+
 ## 5.1 Code commit
 
 Honor any carried `pre_commit` hook before staging.
@@ -77,6 +94,8 @@ Vault: [docs written/updated, session file path]
 **Print only when there is something to say** — omit the line entirely otherwise:
 
 ```
+DoD: [only lines that failed or were waived, each with its reason — never the ones that passed]
+Session row: [only in feature mode — id, new status, evidence recorded, any deviation noted]
 Tests: [only when something FAILED or was skipped — never "all passing"]
 Review: [only when there are warnings — never "PASS"]
 Follow-up: [deferred items, open threads — omit when there are none]

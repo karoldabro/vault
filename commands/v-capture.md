@@ -102,6 +102,24 @@ rules stay in `requirements.md`. `/v-team` `04-execute-loop.md` §5.4a defers he
 
 Report per feature: `created | updated | skipped: <reason>`.
 
+## Step 4e — Feature status rollup (feature mode only)
+
+When this session worked a `_features/<feature>/` workspace, **derive** that feature's `header.md`
+`status:` from the session rows across every `projects/*/plan.md` `## Sessions` table, and write it:
+
+| every row | status |
+|---|---|
+| `todo`, or no rows at all | `planning` |
+| any row `doing` or `done`, but not all | `in-progress` |
+| every row `done` or `dropped` | `shipped` |
+
+**Derive it, never ask.** This field exists in two places today — the header and the rows — and only
+the rows get written, so nine of twelve features currently claim `planning` while their own shards say
+otherwise. That is what makes `/v-pm status` unable to tell you what is really moving. Writing it here,
+on the way out of every session, is what keeps the two in step.
+
+Report the rollup only when it **changed** the field.
+
 ## Step 5 — Indexes + push
 
 - **`_moc.md`:** `$VC index-moc --vault <vault> --session <filename> --goal "<goal>"` (idempotent,

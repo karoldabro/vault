@@ -8,13 +8,28 @@
 
 Capture the business necessity, make sure it's understood, and decide who's in.
 
-## 1.1 Restate + clarify (hard-block)
-Write one sentence capturing the business necessity in your own words, plus the assumptions you're
-relying on. Then run the **clarify gate** exactly as `v-work/steps/03-propose.md` §3a.0a defines it:
-surface open doubts about direction / scope / which products are involved; answer what you can from the
-vault; for a genuine plan-fork with **no safe default**, ask via `AskUserQuestion` and **wait** — do not
-proceed past an unanswered fork. This is planning-ahead; a wrong assumption here cascades across every
-project, so it is the most expensive place to guess.
+## 1.1 Elicit (do not merely clarify)
+Read `$VAULT_FRAMEWORK_PATH/commands/_shared/elicitation.md` and run it. That module owns the whole
+protocol: the technique menu worked cheapest-first (document analysis → five whys when the operator
+hands you a solution → research → scenario walkthrough → example-driven), where each answer lands, and
+the stopping rule. It is not repeated here.
+
+Three things this step must produce beyond the module's own output:
+
+1. **The need, restated in one sentence** — after the whys, not before them. The operator usually
+   arrives with a solution; the need behind it is what the plan is built on.
+2. **The measurable success metric**, into `requirements.md` `## Business context & goals`. If the
+   operator cannot name one, record that as an open question rather than inventing one.
+3. **What "done" adds** beyond the baseline in
+   `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md`. Ask only for the additions — a
+   performance bound, a migration that must complete, a third party that must confirm. The floor is
+   fixed and is not the operator's to restate.
+
+**Unanswered does not mean blocked.** Every question still open after the stopping rule gets a stated
+default, written to `requirements.md` `## Assumptions to test` and surfaced at the approval gate where
+it can still be corrected. The one exception is a genuine plan-fork with **no safe default** — ask via
+`AskUserQuestion` and **wait**. Planning ahead is the most expensive place to guess, but holding a
+whole feature for a question that changes nothing is its own failure.
 
 ## 1.2 Resolve participants
 Determine which repos the feature spans:
@@ -59,8 +74,12 @@ where single-repo mode writes it, not `_features/`).
 
 ## Required output
 ```
-Necessity: <one sentence>
-Assumptions: [stated defaults] · Clarifications: [asked | none needed]
+Need: <one sentence, after the whys — the problem, not the requested solution>
+Techniques used: [document analysis · five-whys · …]   (ruled out: <n> — <reason>)
+Asked: <n> · Answered: <n> · Defaulted: <n>   (defaults → requirements.md `## Assumptions to test`)
+Still open: [carried to `## Open questions`, with why each does not block]
+Success metric: <the operator's measurable outcome | not supplied — recorded as open>
+Done adds: [what this feature adds to the baseline | nothing beyond the baseline]
 Participants: [api, frontend, …]   (source: named | coupled-group <g> | asked)
 Feature slug: <feature>
 ```
