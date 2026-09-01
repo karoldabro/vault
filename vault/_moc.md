@@ -23,6 +23,7 @@ tags: [moc]
 - [[research/llm-collaboration-patterns]] — living, source-cited catalog of LLM collaboration patterns (dev/marketing/sales/planning/support + foundations); evidence reference for panel-mechanism changes (ADR-017). Covers **agent↔agent**.
 - [[research/decision-communication]] — living, source-cited evidence base for how commands write **to the user** (BLUF/Minto/Amazon/SBAR doctrine + cognitive-load, jargon, question-design and human-AI decision research); drives `commands/_shared/communication.md` + `output-styles/director.md` (ADR-018). Covers **agent↔human**.
 - [[research/document-writing]] — living, source-cited evidence base for how commands write **to disk** (IEEE 830 / ISO 29148 specification rules, Diátaxis mode purity, Carroll's measured minimalism, requirements-clone and inspection-cost studies, ASD-STE100 limits); drives `commands/_shared/document-standard.md` + `bin/doc-lint.sh` (ADR-023). Covers **agent↔document**. Names the figures that have no primary source.
+- [[research/subagent-token-economics]] — first-party measurement of one large fan-out run: 190M cache-read against 322K output. Drives the fan-out section of `commands/_shared/agent-conduct.md`. Covers **orchestrator↔agent**. n=1.
 - `/v-cr` — automated code review on a remote PR (forge+task auto-detect, critic swarm, posts comments); see [[decisions/ADR-008-v-cr-remote-pr-review]] + [[plans/2026-06-19-1106-v-cr-command]]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 

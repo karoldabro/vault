@@ -78,6 +78,17 @@ is usually right even when its example is not.
 
 Rules 1-5 bind the agent. These bind whoever spawns several:
 
+- **Choose the model per agent, never once for the batch.** Route by whether the agent's output is
+  mechanically checkable. Compressing a file to a fixed-length row, repairing links to a spec,
+  applying a stated lint fix — all verifiable, all cheaper-model work. Judgement that would cost more
+  to redo than to do well — extraction, critique, merge — is frontier work. Passing one model to
+  every spawn is a default, not a decision; in the measured run it put 13% of the tokens on the
+  frontier model for work that did not need it (`vault/research/subagent-token-economics.md`).
+- **Hand a verifier an index, not a repository.** An agent given a tree re-reads it once per item.
+  Build the symbol and path list once in the orchestrator and pass it. One grounding critic spent 15%
+  of a run's subagent tokens re-grepping the same tree 57 times.
+- **Slice shared context by what each agent needs, not by what they share.** A reference sheet handed
+  whole to six agents is paid for six times.
 - **Settle names before spawning, never during.** A slug, filename or identifier changed mid-run
   reaches the agent after it has already written that name. Renaming is then the orchestrator's job.
 - **Partitioning a corpus does not partition the findings.** Agents given separate slices produce
