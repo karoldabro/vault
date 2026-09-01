@@ -13,12 +13,17 @@ Via the resolved adapter (`commands/v-cr/adapters/<platform>.md`):
 - PR/MR **title**, **body/description**, **head/base branch**, **linked issues**
   (`closingIssuesReferences` / `closes_issues` / native links).
 
-## 2.2 Secret-scan the diff BEFORE it enters any model context (sec-2)
+## 2.2 Secret-scan the diff AND every comment body BEFORE they enter any model context (sec-2)
 Run a secret scan (gitleaks/trufflehog rules if present; always the token-shape regex fallback:
 `gh[pousr]_`, `glpat-`, `Bearer `, `ATATT`, `xox[abpr]-`, AWS `AKIA…`). Replace matches with redaction
 placeholders in the copy that will be sent to critics and **warn the user** that the diff contains
 apparent secrets (that itself is a finding worth a comment). The raw secret never enters a prompt, a
 comment, or the captured session.
+
+**The same scan runs over every PR/MR comment body fetched in §2.5**, with no second implementation.
+People paste tokens into review threads, and a comment body now reaches both a critic prompt and — via
+§5.3's learning loop — a git-tracked vault file. An unscanned comment is the shortest path from a
+pasted token to a committed one.
 
 ## 2.3 Extract + fetch the linked task (skeptic-4)
 ```bash
@@ -39,9 +44,30 @@ do what the ticket asked?").
 
 ## 2.4 Load the reviewed repo's vault — by base-repo slug (skeptic-6)
 Resolve the vault for the **base repo** (`<owner>/<repo>` from step 1), not by assuming cwd is the repo.
-Reuse the v-work context loader's **vault-only layer**:
-- claude-mem `search` + `~/vault/<slug>/` decisions (ADRs), indications, the feature dossier for
-  the touched area. These give the panel the project's rules and conventions to check the diff against.
+Reuse the v-work context loader's **vault-only layer**: claude-mem `search` + `~/vault/<slug>/`
+decisions (ADRs), indications, and the feature dossier for the touched area. These give the panel the
+project's rules and conventions to check the diff against.
+
+### The indication retrieval rule (mandatory, in this order)
+Naming `indications` without saying how many or which leaves every run to invent its own subsetting and
+record none of it — one project's rule set is 225 files and ~111k tokens, several times the whole review
+budget, so a run cannot have loaded them all and cannot say what it did load.
+
+1. **Read `indications/_index.md` only.** Never read rule bodies to decide relevance.
+2. **Filter rows by `scope`** — only when the index has a `scope` column. Keep the reviewed surface
+   plus `cross-repo`; the surface is the base repo resolved in step 1, and the project's valid values
+   are its `VAULT.md` `indication_scopes`. A row naming another surface **cannot** apply — a mobile
+   rule against an API diff is a wrong finding, not a noisy one.
+   **Most indexes have no `scope` column** (a single-surface project does not need one). There, load
+   every row and say `scope filter: n/a (single-surface index)`. Never skip the load for want of a
+   column — an unrouted index is smaller than a routed one, not more dangerous.
+3. **Fetch a full rule body only on demand, by slug**, when a critic is about to cite that rule.
+4. **Record both counts** — rows loaded after the filter, bodies fetched — in the step output and in
+   the capture block (`05-capture.md` §5.1).
+
+If the index file itself is missing, say so and fall back to reading rule bodies directly, capped at
+the token budget and with the count recorded. An unrecorded partial load is what this rule prevents;
+loading nothing is not the safe default, it is a silent hole in the review.
 
 **Local-only layers run only if `Local match: yes` from step 1** (local HEAD == the PR's repo/branch):
 graphify `graph.json`, Serena symbols, the project `CLAUDE.md`. Otherwise **skip them and say so** — do
@@ -74,9 +100,10 @@ clone even when step-1 `local-match` was no — note that they ran against the s
 
 ## Required output
 ```
-Diff: <n files, +a/-b>  ·  secrets: <none | N redacted (warned)>
+Diff: <n files, +a/-b, c changed lines>  ·  secrets: <none | N redacted (warned)>
 Task: <JIRA-KEY / asana:GID / #N "summary"> | none
 Vault: <pack resolved | GENERIC FALLBACK>  ·  layers: [vault-only | + graph/serena/CLAUDE.md]
+Rules: <r> index rows (<scope <surface>+cross-repo | scope filter: n/a>)  ·  <b> bodies fetched
 Suppression set: <n prior v-cr fingerprints>  (<m> threads have human replies)
 Sandbox: <off | recipe <source> · test-gate <pass|new-failure|red-unattributed|could-not-provision> · evidence [analyzers/coverage/repro]>
 ```

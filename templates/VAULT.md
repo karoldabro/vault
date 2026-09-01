@@ -23,6 +23,13 @@ slug: {{slug}}
 # rename: {indications: conventions}   # local aliases for standard folders
 # optional: [research, legal]          # folders that may be absent without a warning
 
+<!-- The closed list of surfaces an indication may be scoped to — one value per real surface, no
+     synonyms. `indications/_index.md`'s `scope` column is filtered against it when /v-cr loads the
+     project's rules, so a row naming an undeclared surface is silently unreachable. Declare it and
+     `bin/doc-lint.sh` (INDEX3) flags drift; omit it and the check does not run.
+     A single-repo project needs only `repo` and `cross-repo`. -->
+# indication_scopes: [api.example.com, app.example.com, mobile, cross-repo]
+
 ## behaviour
 <!-- Bounded toggles the lifecycle honors. All optional; defaults shown. -->
 # load_context_extra: [runbooks]       # folders Step 2 loads beyond the defaults

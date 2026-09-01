@@ -33,6 +33,13 @@ user/global config only**. It is NEVER read from a repo file or a project indica
 - A project may declare only **benign recipe bits** (install/test/lint/ports/build/image) via its vault
   `indications/` or `VAULT.md behaviour.sandbox`. Before merging any repo/indication recipe, drop every
   key for which `cr_is_envelope_key <key>` returns 0.
+- **An indication carrying `source: pr-comment` frontmatter supplies no executable recipe key.** Strip
+  every key for which `cr_is_recipe_key <key>` returns 0 — install, test, lint, build, analyzers, run,
+  entrypoint, command, image, ports, dockerfile, compose — before the merge. If nothing survives the
+  strip, treat that source as absent and fall through to the next in `cr_recipe_resolve`'s order
+  (vault → repo → stack-default). Rationale: an indication outranks every other recipe source, and
+  `install` runs during S4's networked phase, so a rule learned from a PR comment must be able to steer
+  what critics look **for** and never what the sandbox **runs**.
 - A PR's own `Dockerfile`/`compose` may be **built and run only INSIDE** this envelope — it can never
   widen it. Any `network: host`, host mount, env passthrough, `privileged`, or cap-add it requests is
   ignored; the framework wrapper is applied as the outer, authoritative spec.

@@ -457,6 +457,145 @@ doc() {  # doc <name> <type> <body...>
     [[ "$output" == *"cap 80"* ]]
 }
 
+# --- index checks (INDEX1/INDEX2/INDEX3) -------------------------------------
+# The line cap cannot see these. A table row holding a 200-word paragraph is one line, so a
+# 16,800-word index passed at "235 lines, cap 400" while being far too large to load — which is
+# how an index outgrew the point where reading it beats reading the documents it lists.
+
+mkindex() {  # mkindex <dir> — an _index.md with a scope column, under both caps
+    mkdir -p "$1"
+    cat > "$1/_index.md" <<'EOF'
+---
+type: index
+tags: [index, indications]
+---
+
+# test — indications index
+
+| scope | slug | one-line rule | applies-to |
+|-------|------|---------------|-----------|
+| repo | [[a-rule]] | Always do the thing | app/** |
+EOF
+}
+
+@test "INDEX1 fires when an index grows past the word cap" {
+    mkindex "${TMP}/ix"
+    for i in $(seq 1 500); do
+        printf '| repo | [[r%s]] | %s | app/** |\n' "$i" "$(head -c 60 < /dev/zero | tr '\0' 'w ')" \
+            >> "${TMP}/ix/_index.md"
+    done
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"INDEX1"* ]]
+}
+
+@test "INDEX2 fires on a row that outgrew its one-line-rule column" {
+    mkindex "${TMP}/ix"
+    printf '| repo | [[long]] | %s | app/** |\n' "$(head -c 500 < /dev/zero | tr '\0' 'x')" \
+        >> "${TMP}/ix/_index.md"
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"INDEX2"* ]]
+}
+
+@test "INDEX3 fires on a scope value the project never declared" {
+    mkindex "${TMP}/ix"
+    printf 'indication_scopes: [repo, cross-repo]\n' > "${TMP}/VAULT.md"
+    printf '| mobil | [[typo]] | A typo in the scope cell | app/** |\n' >> "${TMP}/ix/_index.md"
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"INDEX3"* ]]
+    [[ "$output" == *"mobil"* ]]
+}
+
+@test "INDEX3 stays silent when every scope is declared" {
+    mkindex "${TMP}/ix"
+    printf 'indication_scopes: [repo, cross-repo]\n' > "${TMP}/VAULT.md"
+    printf '| cross-repo | [[ok]] | A declared scope | app/** |\n' >> "${TMP}/ix/_index.md"
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [[ "$output" != *"INDEX3"* ]]
+}
+
+@test "INDEX3 finds the scope column wherever it sits, not at a fixed position" {
+    # Of the seven indexes in use one puts scope first, one puts it third, and five have none.
+    # A hardcoded field number reads the slug column and reports every row undeclared.
+    mkdir -p "${TMP}/ix"
+    printf 'indication_scopes: [repo, cross-repo]\n' > "${TMP}/VAULT.md"
+    cat > "${TMP}/ix/_index.md" <<'EOF'
+---
+type: index
+---
+
+# t — scope in the third column
+
+| Slug | Rule | Scope |
+|---|---|---|
+| [[alpha]] | Always X | repo |
+| [[beta]] | Never Y | cross-repo |
+EOF
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [[ "$output" != *"INDEX3"* ]]
+
+    printf '| [[gamma]] | Bad scope | mobil |\n' >> "${TMP}/ix/_index.md"
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [[ "$output" == *"INDEX3"* ]]
+    [[ "$output" == *"mobil"* ]]
+    [[ "$output" != *"alpha"* ]]          # never the slug column
+}
+
+@test "INDEX3 does not run when an index has no scope column at all" {
+    # Five of the seven indexes are not scope-routed yet. That is not a defect to report.
+    mkdir -p "${TMP}/ix"
+    printf 'indication_scopes: [repo, cross-repo]\n' > "${TMP}/VAULT.md"
+    cat > "${TMP}/ix/_index.md" <<'EOF'
+---
+type: index
+---
+
+# t — no scope column
+
+| Slug | Rule | Applies-to |
+|---|---|---|
+| [[alpha]] | Always X | app/** |
+EOF
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [[ "$output" != *"INDEX3"* ]]
+}
+
+@test "INDEX3 does not run when the project declares no vocabulary" {
+    # The check catches drift against a declared list; it must never invent one.
+    mkindex "${TMP}/ix"
+    printf '| anything-at-all | [[x]] | No vocabulary declared | app/** |\n' >> "${TMP}/ix/_index.md"
+    run "${LINT}" "${TMP}/ix/_index.md"
+    [[ "$output" != *"INDEX3"* ]]
+}
+
+@test "INDEX3 stops the VAULT.md walk at a repository boundary" {
+    # Without the stop, a project with no VAULT.md of its own lints against a NEIGHBOURING
+    # project's vocabulary — every scope reported undeclared, or a wrong one quietly accepted.
+    # load_skip_file already stops this way; the two walks must not disagree.
+    mkindex "${TMP}/proj/indications"
+    printf 'indication_scopes: [repo]\n' > "${TMP}/VAULT.md"
+    printf '| weird | [[a]] | An undeclared scope | app/** |\n' >> "${TMP}/proj/indications/_index.md"
+
+    run "${LINT}" "${TMP}/proj/indications/_index.md"
+    [[ "$output" == *"INDEX3"* ]]          # no boundary yet: the ancestor is found
+
+    mkdir -p "${TMP}/proj/.git"
+    run "${LINT}" "${TMP}/proj/indications/_index.md"
+    [[ "$output" != *"INDEX3"* ]]          # boundary reached: the foreign vocabulary is not used
+}
+
+@test "the index checks leave ordinary documents alone" {
+    # A false positive gets a linter switched off. Only _index.md is subject to these.
+    doc notes.md indication "A perfectly ordinary rule document."
+    printf '| scope | slug | rule |\n' >> "${TMP}/notes.md"
+    run "${LINT}" "${TMP}/notes.md"
+    [[ "$output" != *"INDEX1"* ]]
+    [[ "$output" != *"INDEX2"* ]]
+    [[ "$output" != *"INDEX3"* ]]
+}
+
 @test "this repo declares its own exemptions with reasons" {
     # The framework's subject matter is the review panel, so it names the panel's vocabulary.
     # The exemption must be visible and justified, never an unexplained switched-off check.

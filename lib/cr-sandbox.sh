@@ -105,6 +105,28 @@ cr_is_envelope_key() {
     esac
 }
 
+# cr_is_recipe_key <key> -> rc 0 if <key> chooses a COMMAND OR IMAGE the sandbox executes.
+#
+# These keys survive cr_is_envelope_key by design: a project legitimately declares how its own
+# suite installs and runs. That is safe only while an indication is operator-authored. An
+# indication derived from a PR comment is not: cr_recipe_resolve (below) ranks `indication`
+# ABOVE vault, repo and stack-default, so a single promoted comment would choose the command
+# that runs in the container — and `install` runs during the one networked phase (sandbox.md S4).
+#
+# Callers strip every key for which this returns 0 from any recipe whose source carries
+# `source: pr-comment` provenance. Such a recipe may steer what critics look FOR, never what the
+# sandbox RUNS. Deny-list, not allow-list: a new executable key must be added here explicitly.
+cr_is_recipe_key() {
+    case "${1:-}" in
+        install|install_cmd|test|test_cmd|lint|lint_cmd|build|build_cmd|coverage_cmd \
+        |analyzers|analyzer|run|exec|script|scripts|entrypoint|command \
+        |image|ports|dockerfile|compose|compose_file|compose_files|build_args)
+            return 0 ;;
+        *)
+            return 1 ;;
+    esac
+}
+
 # Recipe source precedence (the "logic given inputs" half of recipe resolution — file discovery itself
 # is I/O and lives in sandbox.md). Each argument is the resolved recipe VALUE for one source, or empty
 # if that source is absent. Prints "<source>\t<value>" for the highest-precedence present source:

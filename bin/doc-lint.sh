@@ -123,6 +123,104 @@ is_record_type() {
     esac
 }
 
+# Word cap for index documents. The line cap cannot see these: an `_index.md` row carrying a
+# 200-word paragraph is one line, so a 16,800-word index passed at "235 lines, cap 400" while
+# being far too large to load. An index earns its keep only while reading it is cheaper than
+# reading the documents it lists, and ~4,000 words (~5k tokens) is where that stops.
+INDEX_WORD_CAP=4000
+
+# Longest a single `_index.md` table row may be. The column is called "one-line rule"; a row that
+# needs more than this is a document, and belongs in the file the row points at.
+INDEX_ROW_CHAR_CAP=400
+
+is_index_file() {
+    case "$(basename "$1")" in _index.md) return 0 ;; esac
+    return 1
+}
+
+# INDEX1/INDEX2/INDEX3 — checks that apply only to an `_index.md`.
+#   INDEX1  the whole file is too large to be worth loading instead of the bodies
+#   INDEX2  an individual row has outgrown its "one-line rule" column
+#   INDEX3  a row's scope cell is not one of the values the project declared in VAULT.md
+# INDEX3 is skipped when the project declares no vocabulary — the check exists to catch drift
+# against a declared list, not to invent one.
+check_index() {
+    local file="$1" words rows long_rows scope declared bad_scopes=""
+    words="$(wc -w < "$file" | tr -d ' ')"
+    if [ "$words" -gt "$INDEX_WORD_CAP" ]; then
+        finding "INDEX1" "FILE" "${words} words, cap ${INDEX_WORD_CAP} — an index this large costs more to load than the documents it lists"
+    fi
+
+    long_rows="$(awk -v cap="$INDEX_ROW_CHAR_CAP" '/^\|/ && length($0) > cap {n++} END {print n+0}' "$file")"
+    if [ "$long_rows" -gt 0 ]; then
+        finding "INDEX2" "FILE" "${long_rows} table row(s) over ${INDEX_ROW_CHAR_CAP} chars — the column is a one-line rule, move the prose into the linked document"
+    fi
+
+    declared="$(index_scope_vocabulary "$file")"
+    [ -n "$declared" ] || return 0
+
+    # Which column holds the scope is per-index, not fixed: of the seven indexes in use, one puts
+    # it first, one puts it third, and five have no scope column at all. A hardcoded field number
+    # reads the slug column and reports every row undeclared, so find it from the header instead.
+    local col; col="$(index_scope_column "$file")"
+    [ -n "$col" ] || return 0
+
+    while IFS= read -r scope; do
+        [ -n "$scope" ] || continue
+        case "
+$declared
+" in *"
+$scope
+"*) ;; *) bad_scopes="${bad_scopes}${scope} " ;; esac
+    done <<EOF
+$(awk -F'|' -v c="$col" '
+    /^\|/ {
+        v = $(c + 1)                                   # leading "|" makes field 1 empty
+        gsub(/^[ \t]+|[ \t]+$/, "", v)
+        if (v == "" || v ~ /^:?-+:?$/) next            # separator row
+        if (tolower(v) == "scope") next                # header row
+        print v
+    }' "$file" | sort -u)
+EOF
+    if [ -n "$bad_scopes" ]; then
+        finding "INDEX3" "FILE" "undeclared scope value(s): ${bad_scopes}— add them to VAULT.md \`indication_scopes\` or fix the rows"
+    fi
+}
+
+# Print the 1-based position of the `scope` column in an index's header row, or nothing when the
+# index has no scope column. Empty output disables INDEX3 for that file: an index without the
+# column is not broken, it simply is not scope-routed yet.
+index_scope_column() {
+    awk -F'|' '
+        /^\|/ {
+            for (i = 2; i <= NF; i++) {
+                v = $i
+                gsub(/^[ \t]+|[ \t]+$/, "", v)
+                if (tolower(v) == "scope") { print i - 1; exit }
+            }
+            exit                                       # header is the first table row; stop there
+        }' "$1"
+}
+
+# Read the project's declared scope vocabulary from the nearest VAULT.md above the index file.
+# Format: `indication_scopes: [a, b, c]`. Absent → empty, and INDEX3 does not run.
+#
+# The walk stops at a repository boundary, exactly as load_skip_file does. Without that stop a
+# project with no VAULT.md of its own keeps climbing and lints against a NEIGHBOURING project's
+# vocabulary — every scope reported undeclared, or worse, a wrong one quietly accepted.
+index_scope_vocabulary() {
+    local dir; dir="$(cd "$(dirname "$1")" 2>/dev/null && pwd)" || return 0
+    while [ -n "$dir" ] && [ "$dir" != "/" ]; do
+        if [ -r "$dir/VAULT.md" ]; then
+            sed -n 's/^indication_scopes:[[:space:]]*\[\(.*\)\][[:space:]]*$/\1/p' "$dir/VAULT.md" \
+                | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$'
+            return 0
+        fi
+        [ -d "${dir}/.git" ] && return 0
+        dir="$(dirname "$dir")"
+    done
+}
+
 usage() {
     sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit "${1:-2}"
@@ -449,6 +547,8 @@ for file in "${files[@]}"; do
         check_patterns "$file" "$body_start" process
         check_patterns "$file" "$body_start" reference
     fi
+
+    is_index_file "$file" && check_index "$file"
 
     check_duplicates "$file"
     check_sentences "$MATCHABLE"

@@ -42,10 +42,27 @@ finding + `file:line` + rationale + a quote limited to the **already-public diff
 vault / `CLAUDE.md` content, file contents beyond the changed lines, or any secret-scanner-flagged
 string. (The redaction pass in step 4 enforces this again at the write boundary.)
 
+**Cite a project rule by slug, never by its text.** Critics hold indication rows and rule bodies from
+§2.4, so the natural way to justify a finding is to quote the rule it breaks — which publishes private
+vault content to a public PR. On a `Fork/public: yes` target write `violates <indication-slug>`, and put
+the reasoning in your own words about the changed lines. On a private target the rule text may appear.
+
 ## 3.4 Volume cap (skeptic-5)
-Cap the actionable inline set hard: **v0 default ≤10 inline comments + 1 summary**. If the panel
-produced more confirmed findings, keep the highest-severity N and note the count dropped in the summary
-(no silent truncation). `--max-comments <n>` raises it but requires re-confirmation at the gate.
+Cap the actionable inline set: **v0 default ≤10 inline comments + 1 summary**, with one exemption and
+one scope rule.
+
+- **BLOCKER and MAJOR findings are exempt from the cap.** Every confirmed one posts. The cap applies to
+  MINOR and NIT only. A cap that can silently withhold a must-fix finding is a defect, not a budget:
+  the reader has no way to tell "nothing serious found" from "the serious one ranked eleventh".
+  **The exemption does not bypass the gate.** Exempt findings still count toward `--max-comments`, so a
+  changeset with more must-fix findings than that limit still triggers §4.1's fresh confirmation before
+  anything is written. The exemption decides what may be *dropped*; the gate decides what may be
+  *posted*, and the operator's preview stays the injection backstop either way.
+- **The cap applies to the merged post-synthesis set for the whole review — never per critic, per file,
+  or per review unit.** One review produces one capped set and one gate. A per-unit cap multiplies into
+  a preview no operator can read, and the preview is the only injection backstop `/v-cr` has (ADR-008).
+- Over the cap on MINOR/NIT: keep the highest-severity N and state the dropped count in the summary
+  (no silent truncation). `--max-comments <n>` raises it but requires re-confirmation at the gate.
 
 ## 3.5 Build the comment set
 Assemble what step 4 will preview/post. **Be short, concise, precise** — brevity is a hard rule, not a

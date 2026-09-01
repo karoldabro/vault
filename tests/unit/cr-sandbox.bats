@@ -115,6 +115,58 @@ setup() {
     done
 }
 
+# --- cr_is_recipe_key (pr-comment provenance) --------------------------------
+# The keys cr_is_envelope_key deliberately lets through choose a command the sandbox EXECUTES,
+# and cr_recipe_resolve ranks an indication above every other recipe source. That is safe while
+# an indication is operator-authored; a rule learned from a PR comment must not reach them.
+
+@test "is_recipe_key flags every key that chooses something the sandbox executes" {
+    for k in install install_cmd test test_cmd lint lint_cmd build build_cmd coverage_cmd \
+             analyzers analyzer run exec script scripts entrypoint command \
+             image ports dockerfile compose compose_file compose_files build_args; do
+        run cr_is_recipe_key "$k"
+        [ "$status" -eq 0 ]
+    done
+}
+
+@test "is_recipe_key covers the executable keys the sandbox contract names elsewhere" {
+    # sandbox.md line 43 builds and runs a PR's own Dockerfile/compose; S6 runs "the recipe's
+    # analyzers". Both name recipe keys, and both were missing from the first deny-list.
+    for k in dockerfile compose analyzers; do
+        run cr_is_recipe_key "$k"
+        [ "$status" -eq 0 ]
+    done
+    grep -qi 'analyzers' /code/commands/v-cr/sandbox.md
+}
+
+@test "sandbox contract states the strip as the mechanism, not an unreachable extra" {
+    # "Refused outright" plus "additionally strip" makes cr_is_recipe_key dead code by contract.
+    ! grep -qi 'refused as a recipe source outright' /code/commands/v-cr/sandbox.md
+    grep -qi 'supplies no executable recipe key' /code/commands/v-cr/sandbox.md
+}
+
+@test "is_recipe_key ignores keys that choose nothing executable" {
+    for k in network cpus memory volumes environment registry description tags; do
+        run cr_is_recipe_key "$k"
+        [ "$status" -ne 0 ]
+    done
+}
+
+@test "every key is_envelope_key lets through is caught by is_recipe_key" {
+    # The two predicates together must leave no executable key unguarded — that gap is exactly
+    # what let an indication choose the install command run during the networked phase.
+    for k in install test lint ports build image; do
+        run cr_is_envelope_key "$k"; [ "$status" -ne 0 ]
+        run cr_is_recipe_key "$k";   [ "$status" -eq 0 ]
+    done
+}
+
+@test "sandbox contract strips every executable key from a pr-comment-sourced indication" {
+    grep -q 'source: pr-comment' /code/commands/v-cr/sandbox.md
+    grep -q 'cr_is_recipe_key' /code/commands/v-cr/sandbox.md
+    grep -qi 'fall through to the next' /code/commands/v-cr/sandbox.md
+}
+
 # --- cr_recipe_resolve (precedence) ------------------------------------------
 
 @test "recipe_resolve prefers a project indication over all others" {
