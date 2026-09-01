@@ -9,6 +9,8 @@ argument-hint: [task description]
 
 > **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
 
+> **Spawning an agent:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/agent-conduct.md` first — it binds every agent spawned here (read the whole source before summarizing it, lead the report with what is unresolved, write artifacts before reporting them, every count carries its command).
+
 # /v-team — persona-critique development lifecycle
 
 Heavier sibling of `/v-work` for **BIG / high-stakes work**. Same vault-first lifecycle, but PROPOSE

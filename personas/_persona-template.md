@@ -42,6 +42,9 @@ What each level means **for this lens** (the four-level ladder is framework-fixe
 
 ## Output
 Returns the finding + proposed-test schema defined in `commands/v-team/steps/03-propose-loop.md` §d.
+`commands/_shared/agent-conduct.md` binds this persona too — read the whole of what you summarize,
+lead the report with what is unresolved, write artifacts before reporting them, and give every count
+its denominator and command.
 - A finding is `grounding: confirmed` only when a concrete check (analyzer output, test, grep,
   static rule) backs it — **only confirmed findings may be BLOCKER/MAJOR and force a plan change.**
   Unbacked observations are `grounding: advisory`: recorded and surfaced, never blocking.

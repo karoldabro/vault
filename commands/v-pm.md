@@ -7,6 +7,8 @@ argument-hint: [business necessity] | reconcile <feature> | status
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
+> **Spawning an agent:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/agent-conduct.md` first — it binds every agent spawned here (read the whole source before summarizing it, lead the report with what is unresolved, write artifacts before reporting them, every count carries its command).
+
 # /v-pm — cross-project feature planning & coordination
 
 The planning brain that sits **above** execution. You describe a business necessity once; a panel of

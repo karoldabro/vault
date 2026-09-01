@@ -37,6 +37,10 @@ carries what a rule cannot state.
 **Mixing two classes in one file is the defect this module exists to prevent.** When a contract
 document starts carrying how it got here, write the record to its own file and link it in one line.
 
+**Spotting the mix in a file you did not write:** a dated heading, rediscovery narration (`found
+again`, `flagged … fixed`), an incident statistic, or a commit hash paired with a year. Any one is a
+record leaking into a contract. Exempt decision records first, per rule 7.
+
 ## The rules
 
 1. **One file answers one question.** Content that answers a different question moves to another
@@ -73,7 +77,9 @@ document starts carrying how it got here, write the record to its own file and l
 7. **No process inside a contract document.** Not which agent found it, how many reviewers ran, how
    many rounds it took, what got rejected on the way, or any remark about this document's own act of
    writing (`named as a decision`, `stated explicitly rather than implied`, `for the record`). Keep
-   the requirement; drop the story that produced it.
+   the requirement; drop the story that produced it. **This bars naming who supplied it** — no
+   `X asked for`, no block-quoted review comment, no `source:` key. A rule with an author attached
+   reads as one person's opinion. Provenance lives in the session record and the commit.
    **Exception — a decision record.** An ADR's `## Context`, rejected options and `## Consequences`
    *are* its current truth: they are the only place "why did we decide this" survives the session.
    This rule bars the panel that produced the decision, never the forces that shaped it.
@@ -91,8 +97,10 @@ document starts carrying how it got here, write the record to its own file and l
    idiom and in-house nouns are defects even in an imperative heading. `never generate text` works,
    `never baked into a plate` does not.
 
-10. **References resolve without you.** `communication.md` owns this rule. One addition here: the
-    path must be repo-relative.
+10. **References resolve without you.** `communication.md` owns this rule. Two additions here. The
+    path must be repo-relative, and the target must be **committed and inside the repo**. An
+    untracked file, a gitignored symlink and a `~/.claude/` path are all equally dead: they resolve
+    for the author and nobody else. Inline the fact instead, or drop the link.
 
 ## The edit pass
 
