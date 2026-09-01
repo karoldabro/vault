@@ -27,9 +27,10 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 - Forge adapter interface `commands/v-cr/adapters.md` → `adapters/{github,bitbucket-cloud,bitbucket-server}.md`.
 - Task-source contract → `tasks/{jira,asana,forge-issue}.md`.
 - Pure logic: `lib/forge-detect.sh` (URL→platform, host allowlist, `forge_validate_host`),
-  `lib/cr-helpers.sh` (`cr_fingerprint`, `cr_code_hash`, `cr_jira_keys`, `cr_asana_gids`).
+  `lib/cr-helpers.sh` (`cr_fingerprint`, `cr_code_hash`, `cr_jira_keys`, `cr_asana_gids`,
+  `cr_diff_stats`, `cr_vault_leak_check`, `cr_verify_posted`, `cr_coverage`).
 - Persona: `personas/_shared/correctness.md`; selection wired in `personas/_resolution.md` §2.
-- Tests: `tests/unit/forge-detect.bats`, `tests/unit/v-cr.bats`.
+- Tests: `tests/unit/forge-detect.bats`, `tests/unit/v-cr.bats`, `tests/unit/cr-coverage.bats`.
 - Config (user/global env): `VCR_HOST_MAP` (self-hosted host→platform), `VCR_JIRA_PROJECTS` (Jira-key
   allowlist), `VCR_MAX_TOKENS`, `--max-comments`, `--post`, `--unpost`.
 - Decision: [[../decisions/ADR-008-v-cr-remote-pr-review]].
@@ -41,11 +42,27 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 - `install.sh` auto-symlinks `commands/v-cr.md`, `commands/v-cr/`, `commands/_shared/` (no installer
   change). Reads the reviewed repo's vault by base-repo slug.
 
+## Behaviors & rules
+- The panel returns findings **and** a `FILES_EXAMINED` receipt per critic → `cr_coverage` diffs the
+  merged receipt against the changed-file list and reports three buckets; edge: a finding list alone
+  cannot separate examined-clean from never-opened, which is how a review reported coverage it had
+  not earned.
+- A receipt row claims `read` → its reason carries a line anchor the caller checks against the diff;
+  edge: an unverifiable anchor counts as not examined, so echoing the file list back scores nothing.
+- The unexamined set is non-empty → step 4's gate demands fresh confirmation and the summary names the
+  paths; edge: the operator may accept the gap, recorded as `coverage_accepted`.
+- One testing critic owns every changed test file → its receipt lists each one and §3.6 reports
+  unexamined test files as their own count; edge: `personas/_resolution.md` §2.1 seats only one, so
+  per-file assignment is unavailable.
+
 ## Gotchas
 - **Idempotency fingerprint = `sha256(file:rule:code_hash)`** — never the LLM message (non-deterministic)
   or line number (rebase-fragile). Comment generation at temperature 0.
 - **Untrusted input**: diff/PR-body/ticket fenced as data; verdict + post decision from the grounding
   gate, never agent prose. Secret redaction before LLM context, at the post boundary, and before capture.
+- **Coverage is computed, never asserted.** `files_examined` comes from `cr_coverage`, `files_changed`
+  and `changed_lines` from `cr_diff_stats`, delivery counts from `cr_verify_posted`. A field with no
+  function behind it gets invented — that is how a run recorded 33 files read against a true 41 of 48.
 - **Host-scoped credentials**: tokens go only to exact-match-allowlisted hosts; self-hosted needs
   confirmation; Jira/Asana base config from user/global only (SSRF guard).
 - **Non-bypassable first-post gate** per `host/owner/repo#PR`; `--post` only skips re-confirmation.
@@ -59,3 +76,5 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 ## Sessions
 - [[../sessions/2026-06-19-1132-v-cr-code-review-command]] — designed + built via /v-team design panel
 - [[../sessions/2026-06-19-1605-v-cr-panel-spawn-coverage-brevity]] — enforce real panel spawn, surface coverage + test posture, tighten comments
+- [[../sessions/2026-09-01-1000-vcr-delivery-and-coverage]] — verify comment delivery on the forge, record coverage durably
+- [[../sessions/2026-09-01-1930-vcr-coverage-receipts]] — compute coverage from per-file critic receipts; wire cr_diff_stats
