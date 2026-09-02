@@ -63,16 +63,12 @@ session in another project shipped an approved plan carrying four such holes.
   description of the handoff grounds nothing.
 
 ## Next
-- `/v-work` and `/v-do` have the critic but no linter, because neither writes a plan file. This is
-  the gap both critics named in their pre-mortem.
-- PLAN2 misses handoffs created by editing rather than creating. Widening it to any non-empty
-  work-items table fires on the 8 plans still marked `status: proposed`; widen once those carry their
-  real status.
-- The `## Artifact lifecycles` comment is ambiguous in three ways the seat had to guess at:
-  artifact granularity (is a CLI flag one row or two), whether "who asks for it" means the requester
-  or the surface obliging the artifact to exist, and whether "absent or malformed" means absent at
-  build time or malformed at run time.
-- Nothing outside prose notices if the guaranteed seat stops being seated.
+- `/v-do` stays unguarded: it writes no plan artifact by design, so neither the table nor the linter
+  reaches a handoff it introduces.
+- Nothing catches a run that seated three mechanism lenses and skipped the consumer seat. The
+  contract tests catch deletion and demotion; there is no runtime to check.
+- Seven historical plans carry panel process inline and fail `bin/doc-lint.sh` on PROC1/PROC4. They
+  predate `commands/_shared/document-standard.md`.
 - Six pre-existing unit-test failures remain, none from this change.
 
 ## Refs
@@ -82,3 +78,24 @@ session in another project shipped an approved plan carrying four such holes.
 - [[../indications/artifact-has-a-named-consumer]] — the durable rule this session established.
 - [[../indications/enforced-not-just-stated]] — the rule that forced the linter and its tests rather
   than prose alone.
+
+## Continuation 2026-09-02-2230
+
+Closed the four findings the panel left open.
+
+- `/v-work` now instantiates `templates/plan.md`. Its §3a "Layer 2 — to the plan artifact" listed
+  everything the artifact holds and closed with "the user is told this layer exists and where", while
+  `grep -rn "plans/" commands/v-work/steps/*.md` returned nothing. It promised a file it never wrote.
+  No trail sidecar there, since it runs no panel; `05-commit-capture.md` stages the plan.
+- `PLAN2` widened from a `create` work item to any work-items row. Seven plans still marked
+  `status: proposed` were blocking that — each has a matching session record and its named paths
+  exist, so all seven now say `executed`. The `v-pm` plan looked incomplete at 4 of 14 paths; the
+  misses are renumbered step files, paths written without their `commands/` prefix, a scratchpad file
+  and a machine-local path.
+- The lifecycle table's column `who asks for it` became `what requires it`, and `absent or malformed`
+  became `missing or wrong`. The section comment now settles granularity (one row per receiver-facing
+  contract) and pins both ends, because the consumer seat filled the table for a sample plan and
+  reported it had to invent all three conventions.
+- Seven contract tests in `tests/unit/v-team.bats` assert the seat across all three selection
+  regimes, the cap-raise escape, the dry-run instruction, the `/v-work` artifact and the literal
+  `none` row. 448 unit tests pass.
