@@ -1,6 +1,6 @@
 ---
 type: plan
-status: proposed
+status: executed
 session: team-presentation-vault-commands
 date: 2026-07-20
 tags: [presentation, onboarding, v-work, v-team, v-ask, v-do]

@@ -19,24 +19,23 @@ PLAN2, guaranteed seat, claim word.
 
 ## Open & deferred
 
-- **`/v-work` and `/v-do` get no linter coverage.** `templates/plan.md` is instantiated only by
-  `commands/v-team/steps/03-propose-loop.md:32`; `/v-work` writes no plan artifact and `/v-do` writes
-  nothing at all, so `check_plan` never sees their work. For those two the lite critic in
-  `commands/v-work/steps/03-propose.md` §3a.6 is the only thing that asks the four questions, and it
-  runs only when the plan spans more than two files.
-- **PLAN2 keys off the word `create`, and editing a file can create a handoff too.** Item 7 of this
-  plan edits `commands/v-team/steps/03-propose-loop.md` §(c) and creates a handoff by doing it;
-  PLAN2 does not notice. The wider trigger — any non-empty work-items table — fires on all 8 plans in
-  `vault/plans/` that still carry `status: proposed`, which switches the linter off. Widen it once
-  those 8 carry their real status. A work item written as `add` or `new` also escapes. The
-  `consumer` critic covers the judgement half.
+- **`/v-do` is unguarded.** It writes no plan artifact by design, so neither the table nor the linter
+  reaches it. A handoff introduced by a `/v-do` change has nothing asking about it.
+- **Nothing catches a run that skipped the seat.** `tests/unit/v-team.bats` asserts
+  `personas/_resolution.md` still names `consumer` as undroppable in all three regimes, which catches
+  deletion and demotion. There is no runtime, so a run that quietly seated three mechanism lenses
+  instead cannot be detected.
 - **Claim words are not linted.** `wired`, `complete`, `covered`, `integrated` appear legitimately in
   ordinary prose, so a regex over them would fire on correct work and get `bin/doc-lint.sh` switched
-  off — the failure `lib/doc-lint-patterns.tsv` warns about in its own header. They are interrogated
-  by the `consumer` critic's checklist instead.
+  off — the failure `lib/doc-lint-patterns.tsv` warns about in its own header. The `consumer`
+  critic's checklist asks instead, and PLAN1's identifier rule catches a claim word standing alone in
+  a cell.
 - **Two pre-existing test failures remain in `tests/unit/document-standard.bats`,** neither touched
   by this change: test 33 expects the `unknown type` note on a file that produces no other finding,
   and the note is designed to ride along with one; test 39 (`--compare`) expects `VP8X` in output.
+- **Seven historical plans carry panel process inline** and fail `bin/doc-lint.sh` on PROC1/PROC4.
+  They predate `commands/_shared/document-standard.md`. Stripping them is a separate job; git holds
+  what they recorded.
 
 ## Verified current state
 
@@ -81,7 +80,7 @@ contract.
 
 ## Artifact lifecycles
 
-| artifact | who asks for it | who writes it | who reads it | absent or malformed |
+| artifact | what requires it | who writes it | who reads it | missing or wrong |
 |---|---|---|---|---|
 | `personas/_shared/consumer.md` | `personas/_resolution.md` §2 seats it every run | this plan | `03-propose-loop.md` §(b) loads it, §(c) spawns it | loader finds no file → `_resolution.md` §1 fallback item 4 warns once, panel runs a seat short |
 | `## Artifact lifecycles` table in a plan | `templates/plan.md` section comment | the drafting session | the `consumer` critic (§(c) envelope) and the implementing session | `bin/doc-lint.sh` PLAN2 fires: section missing; PLAN1 fires: blank cell |
@@ -102,6 +101,12 @@ contract.
 | 8 | `commands/v-work/steps/03-propose.md` | edit §3a.6 lite critic | Edit | the lite critic asks the four lifecycle questions; `/v-work` is the default command and carries most plans | §3a.6 names the lifecycle questions | DONE |
 | 9 | `vault/indications/artifact-has-a-named-consumer.md` | create | Write | ≤80 lines (indication cap) | `bin/doc-lint.sh` clean | DONE |
 | 10 | `vault/indications/_index.md` | add row | Edit | row ≤400 chars (INDEX2); it took two passes to fit | `bin/doc-lint.sh vault/indications/_index.md` clean | DONE |
+| 11 | `vault/plans/*.md` (7 files) | set `status: executed` | Edit | each has a matching session record and its named paths exist; the `v-pm` misses are renumbered step files and paths written without their `commands/` prefix | `grep -l "^status: proposed" vault/plans/*.md` returns nothing | DONE |
+| 12 | `bin/doc-lint.sh` | widen PLAN2 | Edit | fires on any plan with a work-items row, not only a `create` row — editing a prompt or a critic envelope creates a handoff too | edit-only fixture exits 1; no-work-items fixture exits 0; 24 real plans still return 0 | DONE |
+| 13 | `templates/plan.md` | rewrite the section comment | Edit | settles granularity (one row per receiver-facing contract), renames `who asks for it` to `what requires it`, and pins `missing or wrong` to the moment the receiver reaches for it | `tests/unit/v-team.bats` asserts all three | DONE |
+| 14 | `commands/v-work/steps/03-propose.md` | instantiate the plan template in Layer 2 | Edit | the step described an artifact and named no path, so `/v-work` wrote no plan file; no trail sidecar, since it runs no panel | `grep -q 'templates/plan.md'` and the doc-lint call | DONE |
+| 15 | `commands/v-work/steps/05-commit-capture.md` | stage the plan artifact | Edit | a plan left unstaged is a plan the next session cannot read | `grep -q 'Stage the plan artifact too'` | DONE |
+| 16 | `tests/unit/v-team.bats` | add 7 contract tests | Edit | the seat is asserted in all three regimes, the cap-raise line, the dry-run instruction, the `/v-work` artifact, the staging line, and the literal `none` row | 448 unit tests pass | DONE |
 
 ## Sequencing & dependencies
 
@@ -114,10 +119,12 @@ item 10.
 
 The one lasting effect is on the 24 plans already in `vault/plans/`, which predate
 `## Artifact lifecycles`. `check_plan` has one gate and it is unambiguous: PLAN1 runs only when the
-file carries the section, PLAN2 only when it does not. PLAN2 needs both a work-items cell whose text
-is exactly `create` and a frontmatter `status` of `proposed` or `approved`, so a plan already built
-is never re-linted. Measured after the gate landed:
-`bin/doc-lint.sh vault/plans/*.md 2>&1 | grep -c PLAN` returns 0.
+file carries the section, PLAN2 only when it does not. PLAN2 needs both a work-items row and a
+frontmatter `status` of `proposed` or `approved`, so a plan already built is never re-linted, and
+none of the 24 is. Measured: `bin/doc-lint.sh vault/plans/*.md 2>&1 | grep -c PLAN` returns 0.
+
+The seven `status: executed` edits revert separately. They record what those plans actually are, and
+stand on their own regardless of this change.
 
 ## Test plan
 

@@ -1,7 +1,7 @@
 ---
 type: plan
 project: vault
-status: proposed
+status: executed
 date: 2026-08-04
 tags: [plan, install, setup, tooling]
 ---

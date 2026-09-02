@@ -161,3 +161,73 @@ teardown() {
     grep -qi 'evidence'        "${PU}"
     grep -qi 'Progress'        "${PU}"
 }
+
+# --- the consumer seat -------------------------------------------------------------------
+#
+# The seat is called guaranteed, and nothing outside prose would notice if it stopped being seated.
+# These are the ceiling: they catch the seat being deleted or quietly demoted to a relevance pick.
+# They cannot catch a run that skipped it, because there is no runtime to check.
+
+@test "the consumer persona exists and simulates rather than reviews" {
+    local f="${VAULT_ROOT}/personas/_shared/consumer.md"
+    [ -f "${f}" ]
+    grep -q '^id: consumer'        "${f}"
+    grep -q '^base_agent: '        "${f}"
+    # The dry run is the whole method. A checklist-only version of this seat approves the handoff
+    # that reads complete and is not, which is the defect it exists to catch.
+    grep -qi 'literal text'        "${f}"
+    grep -qi 'one real output'     "${f}"
+}
+
+@test "the consumer seat is guaranteed in all three selection regimes" {
+    local f="${VAULT_ROOT}/personas/_resolution.md"
+    # §2 dev packs, §2.1 testing group, §2.2 business packs each carry their own seat list. A seat
+    # written into one of them only is not guaranteed; it is guaranteed for dev work and absent
+    # everywhere else.
+    [ "$(grep -c 'consumer' "${f}")" -ge 3 ]
+    grep -q 'always in on the PROPOSE panel'                    "${f}"
+    grep -q 'never dropped by the cap'                          "${f}"
+    grep -q 'The testing group replaces the mechanism lenses'   "${f}"
+    grep -q 'the primary architect, or `consumer`'              "${f}"
+}
+
+@test "the cap may be raised rather than dropping a triggered lens" {
+    # architect + consumer + a triggered lens + skeptic is four seats against a default of three.
+    # Without this line the resolution silently drops the lens the change itself implicated.
+    grep -q 'raise' "${VAULT_ROOT}/personas/_resolution.md"
+    tr '\n' ' ' < "${VAULT_ROOT}/personas/_resolution.md" \
+        | grep -q '`team_max_parallel_critics` to 4'
+}
+
+@test "the propose loop spawns the seat and demands its dry run" {
+    local f="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -q '_shared/consumer.md'  "${f}"
+    grep -qi 'literal text'        "${f}"
+    # The envelope must say where the dry run goes, or the critic returns prose instead of grounding.
+    grep -q '`check` field'        "${f}"
+}
+
+@test "v-work writes the plan artifact its own output contract describes" {
+    local f="${VAULT_ROOT}/commands/v-work/steps/03-propose.md"
+    # The step described a Layer 2 artifact and named no path, so /v-work wrote no plan file and
+    # nothing mechanical ever saw its work.
+    grep -q 'templates/plan.md'    "${f}"
+    grep -q 'plans/YYYY-MM-DD-HHMM' "${f}"
+    grep -q 'doc-lint.sh <plan>'   "${f}"
+    # It runs no panel, so it must not claim a trail sidecar.
+    grep -q 'no trail sidecar'     "${f}"
+}
+
+@test "the commit step stages the plan artifact" {
+    grep -q 'Stage the plan artifact too' "${VAULT_ROOT}/commands/v-work/steps/05-commit-capture.md"
+}
+
+@test "the plan template carries the artifact lifecycle table" {
+    local f="${VAULT_ROOT}/templates/plan.md"
+    grep -q '^## Artifact lifecycles' "${f}"
+    grep -q 'what requires it'        "${f}"
+    grep -q 'missing or wrong'        "${f}"
+    # The `none` escape must be shown, not described: the first version described it and the two
+    # plausible shapes an author would write both failed the check they were meant to escape.
+    grep -qF '| none | this plan edits three existing files and hands nothing to anyone | | | |' "${f}"
+}

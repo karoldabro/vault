@@ -2,7 +2,7 @@
 type: plan
 project: vault
 slug: business-persona-packs
-status: proposed   # proposed | approved | executed | superseded
+status: executed   # proposed | approved | executed | superseded
 personas: [fallback-panel (skeptic, quality, conventions-architect)]
 rounds: 2
 convergence: capped-round-2-fixes-applied-unverified   # cap hit; round-2 findings fixed in v2, no round 3 ran

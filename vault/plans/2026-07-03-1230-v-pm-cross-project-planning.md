@@ -2,7 +2,7 @@
 type: plan
 project: vault
 slug: v-pm-cross-project-planning
-status: proposed   # proposed | approved | executed | superseded
+status: executed   # proposed | approved | executed | superseded
 personas: [fallback-shared]
 rounds: 1
 convergence: clean   # clean | capped-with-open-blockers — 1 escalation to user (_features git owner)

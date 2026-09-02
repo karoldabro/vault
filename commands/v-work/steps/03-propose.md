@@ -167,8 +167,10 @@ user asked for a second opinion. **Skip** (one-line note) for single-file or mec
    — a file, a field, a marker, a report, a prompt, a row on a choice surface — who asks for it, who
    writes it, who reads it, and what happens when it is absent or malformed. `/v-work` writes no plan
    artifact, so `bin/doc-lint.sh` never sees this work and the critic is the only thing that asks.
-   An unanswerable end — a binding nothing collects, a report no seat must read — is a `confirmed`
-   finding when the missing surface is shown. Full lens: `personas/_shared/consumer.md`.
+   An unanswerable end — a binding nothing requires, a report no seat must read — is a `confirmed`
+   finding when the missing surface is shown. The plan's `## Artifact lifecycles` table is where the
+   answers land, and `bin/doc-lint.sh` checks that they are there but not that they are true — that
+   part is this critic's. Full lens: `personas/_shared/consumer.md`.
 3. Apply `confirmed` BLOCKER/MAJOR recommendations to the plan; record everything else as open
    trade-offs for the approval gate. **One pass — never re-loop here.**
 4. If the critique surfaces panel-worthy risk (architecture, schema, auth, billing, cross-repo
@@ -221,12 +223,22 @@ radius; a summary that hides it converts the gate into a rubber stamp.
 
 ### Layer 2 — to the plan artifact (not printed)
 
-Research sources + takeaways · Serena memories read · lite-critic findings and dispositions ·
-implementation steps (file + action + tool + pattern) · test plan (type + scenarios + location) ·
-vault writes (CREATE/UPDATE per §3b dedupe, with match counts) · index updates
-(`_moc.md` / `_feature-index.md` / `decisions/_inventory.md`).
+Instantiate `$VAULT_FRAMEWORK_PATH/templates/plan.md` into
+`<project-vault>/plans/YYYY-MM-DD-HHMM-<slug>.md`. `/v-work` runs no panel, so there is
+**no trail sidecar** here — the lite critic's findings and dispositions go in the plan's own
+`## Open & deferred`, and `process_record` stays empty. If `plans/` does not exist, create it (warn once; add
+`add_folders: [plans]` to `VAULT.md` so it is recognised) — do not halt.
 
-The user is told this layer exists and where. They are never required to open it to decide.
+The artifact carries: research sources + takeaways · Serena memories read · lite-critic findings and
+dispositions · work items (one row per exact file path) · `## Artifact lifecycles` · test plan (type
++ scenarios + location) · vault writes (CREATE/UPDATE per §3b dedupe, with match counts) · index
+updates (`_moc.md` / `_feature-index.md` / `decisions/_inventory.md`).
+
+Run `bin/doc-lint.sh <plan>` before the approval gate and fix what it reports. `PLAN2` fires when the
+plan has work items and no `## Artifact lifecycles` table, which is the only mechanical check that
+sees `/v-work` work at all — the lite critic in §3a.6 is optional and this is not.
+
+Name the plan path to the user in one line. They are never required to open it to decide.
 
 Before marking complete, honor any carried `post_propose` hook (surface + apply). Mark PROPOSE
 `completed`.

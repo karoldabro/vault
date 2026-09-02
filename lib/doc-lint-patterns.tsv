@@ -44,7 +44,7 @@ REF3	reference	\b(in other words|to clarify|to put it another way|that is to say
 #   PLAN2  -> rule 8   a plan whose work items create files and which carries no lifecycle table
 #
 # PLAN1/PLAN2 apply rule 8 to a plan's artifacts: an item is executable only when its consumer is
-# named. For everything a plan creates, `## Artifact lifecycles` records who asks for it, who writes
-# it, who reads it, and what happens when it is absent or malformed — or one `none` row plus the
-# reason. Plans record who writes a thing by habit and fail at the two ends: a binding nothing asks
-# for, a report no seat is obliged to read. The form and its comment live in templates/plan.md.
+# named. For everything a plan hands to something else, `## Artifact lifecycles` records what requires
+# it, who writes it, who reads it, and what happens when it is missing or wrong — or one `none` row
+# plus the reason. Plans record who writes a thing by habit and fail at the two ends: a binding
+# nothing requires, a report no seat is obliged to read. The form lives in templates/plan.md.

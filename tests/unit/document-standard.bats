@@ -592,7 +592,7 @@ mkplan() {  # mkplan <name> <status> <body...> — a plan document with frontmat
     echo "${TMP}/${name}"
 }
 
-LIFECYCLE_HEADER='| artifact | who asks for it | who writes it | who reads it | absent or malformed |'
+LIFECYCLE_HEADER='| artifact | what requires it | who writes it | who reads it | missing or wrong |'
 LIFECYCLE_RULE='|---|---|---|---|---|'
 CREATE_ITEM='| 1 | `lib/x.sh` | create |'
 
@@ -636,17 +636,27 @@ CREATE_ITEM='| 1 | `lib/x.sh` | create |'
     [ "$status" -eq 0 ]
 }
 
-@test "PLAN2 fires on a plan that creates a file and has no lifecycle table" {
+@test "PLAN2 fires on a plan with work items and no lifecycle table" {
     f="$(mkplan p.md proposed '## Work items' '| id | file | action |' '|---|---|---|' "${CREATE_ITEM}")"
     run "${LINT}" "$f"
     [ "$status" -eq 1 ]
     [[ "$output" == *"PLAN2"* ]]
 }
 
-@test "PLAN2 leaves a plan that creates nothing alone" {
-    # False positives are what get a linter switched off. A plan that only edits existing files
-    # hands nobody a new artifact, so there is nothing for it to declare.
+@test "PLAN2 fires on an edit-only plan, because editing creates handoffs too" {
+    # Editing a prompt, a critic envelope or a choice surface hands something to a receiver as
+    # often as creating a file does. An edit-only plan still has to answer, with `none` if it
+    # genuinely hands nothing over.
     f="$(mkplan p.md proposed '## Work items' '| id | file | action |' '|---|---|---|' '| 1 | `lib/x.sh` | edit |')"
+    run "${LINT}" "$f"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"PLAN2"* ]]
+}
+
+@test "PLAN2 leaves a plan with no work items alone" {
+    # False positives are what get a linter switched off. There is nothing to declare about a plan
+    # that lists no work.
+    f="$(mkplan p.md proposed '## Task' 'Decide whether to keep the cache.')"
     run "${LINT}" "$f"
     [ "$status" -eq 0 ]
 }

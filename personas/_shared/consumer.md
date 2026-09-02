@@ -25,9 +25,11 @@ Simulate the receiver. Do not review the plan.
 1. **Enumerate every handoff.** Every artifact, file, field, marker, report, prompt, choice surface
    or command the plan creates and then hands to something else — another agent, a later command
    step, a human operator, a parser.
-2. **Fill the lifecycle for each one.** Four answers, no blanks: **who asks for it · who writes it ·
-   who reads it · what happens when it is absent or malformed.** A blank cell is the finding. The
-   middle two are almost always answered; the ends are where plans fail.
+2. **Fill the lifecycle for each one.** Four answers, no blanks: **what requires it · who writes it ·
+   who reads it · what happens when it is missing or wrong.** A blank cell is the finding. The
+   middle two are almost always answered; the ends are where plans fail. "What requires it" is the
+   surface that would carry a blank without the artifact, never whoever asked for the work; "missing
+   or wrong" is the behaviour at the moment the receiver reaches for it, not at build time.
 3. **Run one dry run on the riskiest handoff.** Write out the **literal text the receiver gets** —
    not a description of it — and then produce **one real output** from it: one shot, one walk
    answer, one parsed value, one row. State plainly whether the attempt succeeded.
@@ -55,7 +57,8 @@ receiving surface has no row, no case, no branch for it.
 
 ## Checklist
 
-- [ ] Every artifact the plan creates is listed with all four lifecycle answers filled.
+- [ ] Every artifact the plan creates is listed with all four lifecycle answers filled, one row per
+      receiver-facing contract rather than one per file.
 - [ ] The riskiest handoff has a written-out receiver input and one produced output.
 - [ ] Every binding the plan states has a row on the surface that collects it.
 - [ ] Every new marker, field or format names its parser and the refusal on a malformed value.

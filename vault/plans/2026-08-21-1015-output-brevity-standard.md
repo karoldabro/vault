@@ -2,7 +2,7 @@
 type: plan
 project: vault
 slug: output-brevity-standard
-status: proposed
+status: executed
 process_record: 2026-08-21-1015-output-brevity-standard.trail.md
 tags: [plan, team, communication, documentation]
 ---

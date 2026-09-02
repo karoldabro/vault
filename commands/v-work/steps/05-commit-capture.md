@@ -36,7 +36,9 @@ git diff --stat
 ```
 
 Stage **specific files only** — never `git add -A` / `git add .` (avoids `.env`, credentials,
-generated or unrelated files). Commit with a conventional message (`feat`/`fix`/`refactor`/`test`/
+generated or unrelated files). **Stage the plan artifact too** — `plans/<...>.md` from §3a Layer 2,
+plus its `<...>.trail.md` sidecar when `/v-team` wrote one. A plan left unstaged is a plan the next
+session cannot read. Commit with a conventional message (`feat`/`fix`/`refactor`/`test`/
 `docs`/`chore`, subject ≤50 chars, body only when the "why" isn't obvious). Do not auto-push.
 
 After the commit lands (before `/v-capture`), honor any carried `post_commit` hook — e.g. "remind to

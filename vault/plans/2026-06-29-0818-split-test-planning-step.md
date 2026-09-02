@@ -2,7 +2,7 @@
 type: plan
 project: vault
 slug: split-test-planning-step
-status: proposed
+status: executed
 personas: [degraded-no-pack, process-architect, skeptic, test-behaviorist, edge-case-hunter]
 rounds: 2
 convergence: capped-then-applied (round-2 surfaced 2 confirmed-MAJOR structural fixes; all applied in v1.1; fixes re-aligned the design to its own pre-impl/post-impl axis)

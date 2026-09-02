@@ -9,19 +9,23 @@ tags: [indication, planning, personas, doc-lint]
 # artifact-has-a-named-consumer
 
 ## Rule
-Every artifact a plan creates carries four answers before the plan is approved: **who asks for it,
-who writes it, who reads it, and what happens when it is absent or malformed.** An artifact is a
-file, a field, a marker, a report, a prompt, or a row on a choice surface. Four obligations:
+Every artifact a plan creates carries four answers before the plan is approved: **what requires it,
+who writes it, who reads it, and what happens when it is missing or wrong.** An artifact is a file, a
+field, a marker, a report, a prompt, a flag, or a row on a choice surface, and the table carries one
+row per receiver-facing contract rather than one per file. Five obligations:
 
 1. **Answer both ends, not just the middle.** A plan records who writes a thing by habit. It fails
-   at the ends — a binding nothing asks for, a report no seat is obliged to read.
-2. **Simulate, do not review.** To show a handoff works, write out the literal text its receiver
+   at the ends — a binding nothing requires, a report no seat is obliged to read.
+2. **Read the two ends narrowly.** "What requires it" is the surface that would carry a blank without
+   the artifact, not whoever asked for the work. "Missing or wrong" is what happens when the receiver
+   reaches for it, not at build time.
+3. **Simulate, do not review.** To show a handoff works, write out the literal text its receiver
    gets and produce one real output from it. A checklist can approve a handoff that reads complete
    and is not.
-3. **Break the panel's frame by construction.** `consumer` holds a guaranteed seat on the PROPOSE
+4. **Break the panel's frame by construction.** `consumer` holds a guaranteed seat on the PROPOSE
    panel (`personas/_resolution.md` §2, §2.1, §2.2), never a relevance pick. Critics chosen for
    mechanism by one mind all inherit that mind's blind spot.
-4. **Interrogate claim words.** `wired`, `complete`, `covered`, `integrated`, `end to end`. If the
+5. **Interrogate claim words.** `wired`, `complete`, `covered`, `integrated`, `end to end`. If the
    claim has no falsifier, replace it with the specific reachable thing it means. These are not
    linted — a regex over them fires on legitimate prose and gets the linter switched off — so the
    `consumer` critic's checklist is the only thing that asks.
@@ -40,13 +44,14 @@ critics were architect, skeptic and correctness — every one a mechanism lens, 
 author.
 
 ## Examples
-- Do: `templates/plan.md` `## Artifact lifecycles` — one row per artifact, four filled cells, or a
-  single `none` row plus the reason.
+- Do: `templates/plan.md` `## Artifact lifecycles` — one row per receiver-facing contract, four
+  filled cells, or a single `none` row plus the reason.
 - Do: `personas/_shared/consumer.md` — the dry run's literal receiver text and produced output go in
   the finding's `check` field, because that text is the grounding.
 - Do: name the parser and the refusal for every new marker or field, the way `[gap: N]` has one
   strict regex and a loud refusal on a malformed value.
 - Don't: write "a channel binds its device set" without a row on the surface that collects it.
+- Don't: fill "what requires it" with the person who asked for the work — that cell is a surface.
 - Don't: write that an artifact "reports rather than fails" and name no seat obliged to read it.
 - Don't: describe the handoff instead of writing the receiver's input — a description grounds nothing.
 

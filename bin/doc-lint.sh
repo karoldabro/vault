@@ -232,7 +232,7 @@ index_scope_vocabulary() {
 # a table onto a plan that has no artifacts. Templates are exempt — their placeholder row is empty
 # by design, and linting it would fire on the very file that teaches the format.
 check_plan() {
-    local file="$1" blanks vague creates
+    local file="$1" blanks vague items
     case "$file" in */templates/*|templates/*) return 0 ;; esac
 
     if grep -qE '^##[[:space:]]+[Aa]rtifact lifecycles[[:space:]]*$' "$file"; then
@@ -272,7 +272,7 @@ check_plan() {
         vague="${blanks#*: }"
         blanks="${blanks%%:*}"
         if [ "$blanks" -gt 0 ]; then
-            finding "PLAN1" "FILE" "${blanks} artifact lifecycle row(s) with an empty cell — name who asks for it, who writes it, who reads it, and what happens when it is absent or malformed"
+            finding "PLAN1" "FILE" "${blanks} artifact lifecycle row(s) with an empty cell — name what requires it, who writes it, who reads it, and what happens when it is missing or wrong"
         fi
         if [ "$vague" -gt 0 ]; then
             finding "PLAN1" "FILE" "${vague} artifact lifecycle row(s) name nothing a reader can open — give each row at least one path or backticked identifier, not four cells of prose"
@@ -289,20 +289,26 @@ check_plan() {
         *) return 0 ;;
     esac
 
-    creates="$(awk '
-        /^[[:space:]]*\|/ {
+    # Any work item can create a handoff, not only one whose action is `create`: editing a prompt,
+    # a critic envelope or a choice surface hands something to a receiver just as often. So the
+    # trigger is a work-items table with at least one row. A plan that genuinely hands nothing to
+    # anyone answers with one `none` row, which is a line of typing and a decision on the record.
+    items="$(awk '
+        /^##[[:space:]]+[Ww]ork items[[:space:]]*$/ { inside = 1; body = 0; next }
+        inside && /^##[[:space:]]/                  { inside = 0 }
+        !inside                                     { next }
+        !/^[[:space:]]*\|/                          { next }
+        /^[[:space:]]*\|[[:space:]]*:?-{2,}/        { body = 1; next }
+        !body                                       { next }
+        {
             row = $0
-            n = split(row, cell, "|")
-            for (i = 1; i <= n; i++) {
-                c = cell[i]
-                gsub(/^[[:space:]]+|[[:space:]]+$/, "", c)
-                if (tolower(c) == "create") { hits++; break }
-            }
+            gsub(/[|[:space:]]/, "", row)
+            if (row != "") rows++
         }
-        END { print hits + 0 }
+        END { print rows + 0 }
     ' "$file")"
-    if [ "$creates" -gt 0 ]; then
-        finding "PLAN2" "FILE" "${creates} work item(s) create a file and there is no \`## Artifact lifecycles\` table — say who reads each new thing and what happens when it is missing"
+    if [ "$items" -gt 0 ]; then
+        finding "PLAN2" "FILE" "${items} work item(s) and no \`## Artifact lifecycles\` table — for everything this creates, say who reads it and what happens when it is missing, or write one \`none\` row with the reason"
     fi
     return 0
 }

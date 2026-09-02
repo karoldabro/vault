@@ -88,3 +88,17 @@ hypothetical plan and reported three conventions the section comment does not st
   asks for"; the first reading yields a different and equally fillable table.
 - **"Absent or malformed" mixes two senses** — absent at build time, malformed at run time — and the
   seat used a different sense per row.
+
+## Round 1 — closing the open findings
+
+| id | disposition | note |
+|---|---|---|
+| skeptic-7 | applied | PLAN2 now fires on any work-items row. It was held back by seven plans still marked `status: proposed`; each has a matching session record and its named paths exist, so all seven were set to `executed` first. |
+| consumer-5 | applied | `/v-work` now instantiates `templates/plan.md`. Its §3a "Layer 2 — to the plan artifact" already listed what the artifact contains and closed with "the user is told this layer exists and where", while `grep -rn "plans/" commands/v-work/steps/*.md` returned nothing. The step promised a file it never wrote. |
+| consumer dry-run 2 | applied | the section comment now settles all three ambiguities the seat reported: one row per receiver-facing contract; `what requires it` is the surface that would carry a blank, never the requester; `missing or wrong` is the behaviour when the receiver reaches for it. |
+| consumer held MINOR | applied | seven contract tests in `tests/unit/v-team.bats` assert the seat across all three regimes, the cap-raise escape, the dry-run instruction, and the literal `none` row. They catch deletion and demotion, not a run that skipped the seat — there is no runtime to check. |
+
+The `v-pm` plan looked incomplete on a first pass: 4 of its 14 named paths existed. The misses are
+renumbered step files (`02-plan-panel` is now `03-plan-panel`), paths written without their
+`commands/` prefix, a scratchpad file and a machine-local `~/vault/_global/` path. The command
+shipped.
