@@ -19,6 +19,13 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 ## Contracts
 - **Command**: `commands/v-team.md` (dispatcher) + `commands/v-team/steps/{03-propose-loop,
   04-execute-loop}.md`. Reuses `/v-work` steps 01/02/05 verbatim → **depends on `/v-work` installed**.
+- **Consumer seat**: `personas/_shared/consumer.md` — guaranteed on the PROPOSE panel across all three
+  selection regimes (`_resolution.md` §2, §2.1, §2.2), never a relevance pick, never dropped by the cap
+  (over cap, raise `team_max_parallel_critics` to 4 rather than drop a triggered lens). It simulates the
+  receiver: the finding's `check` carries the literal text the receiver gets plus one produced output.
+  Its form is `templates/plan.md` `## Artifact lifecycles`, enforced by `check_plan` in `bin/doc-lint.sh`
+  (PLAN1 blank cell or a row naming nothing openable; PLAN2 file-creating plan with no table). Rule:
+  [[../indications/artifact-has-a-named-consumer]]. Tests: `tests/unit/document-standard.bats`.
 - **Persona library**: `personas/_shared/{security,performance,quality,skeptic}.md` (reusable lenses)
   composed by stack packs `personas/{api-laravel,nuxt,flutter}.md` via `use_shared` + overlays + local
   architects. Selection + resolution: `personas/_resolution.md`. Authoring specs: `_persona-template.md`,
@@ -87,3 +94,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-07-03-1205-propose-clarify-research-gates]]
 - [[../sessions/2026-07-20-1027-team-presentation-vault-commands]] — no-pack fallback panel validated on a non-code deliverable
 - [[../sessions/2026-07-10-1740-llm-collaboration-patterns]]
+- [[../sessions/2026-09-02-2147-consumer-seat-and-artifact-lifecycles]] — the consumer seat, the artifact-lifecycle table and PLAN1/PLAN2
