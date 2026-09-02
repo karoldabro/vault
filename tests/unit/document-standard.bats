@@ -113,7 +113,7 @@ doc() {  # doc <name> <type> <body...>
     # Each group names the rule it enforces, in a comment above its block.
     grep -qE '^# rule 5 ' "${PATTERNS}"
     grep -qE '^# rule 7 ' "${PATTERNS}"
-    grep -qE '^# rule 9 ' "${PATTERNS}"
+    grep -qE '^# rule 10 ' "${PATTERNS}"
 }
 
 @test "standard declares its scope boundary against communication.md" {
@@ -584,6 +584,124 @@ EOF
     mkdir -p "${TMP}/proj/.git"
     run "${LINT}" "${TMP}/proj/indications/_index.md"
     [[ "$output" != *"INDEX3"* ]]          # boundary reached: the foreign vocabulary is not used
+}
+
+mkplan() {  # mkplan <name> <status> <body...> — a plan document with frontmatter status
+    local name="$1" status="$2"; shift 2
+    { printf -- '---\ntype: plan\nstatus: %s\n---\n\n' "$status"; printf '%s\n' "$@"; } > "${TMP}/${name}"
+    echo "${TMP}/${name}"
+}
+
+LIFECYCLE_HEADER='| artifact | who asks for it | who writes it | who reads it | absent or malformed |'
+LIFECYCLE_RULE='|---|---|---|---|---|'
+CREATE_ITEM='| 1 | `lib/x.sh` | create |'
+
+@test "PLAN1 fires on an artifact lifecycle row with an empty cell" {
+    # The blank is the whole point: a plan that names an artifact and leaves "who reads it" empty
+    # has recorded a handoff nobody receives. This is the defect the section exists to catch.
+    f="$(mkplan p.md proposed '## Artifact lifecycles' \
+        "${LIFECYCLE_HEADER}" "${LIFECYCLE_RULE}" \
+        '| `lib/x.sh` | step 3 | this plan | nobody | |')"
+    run "${LINT}" "$f"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"PLAN1"* ]]
+}
+
+@test "PLAN1 stays silent when every lifecycle cell is filled" {
+    f="$(mkplan p.md proposed '## Artifact lifecycles' \
+        "${LIFECYCLE_HEADER}" "${LIFECYCLE_RULE}" \
+        '| `lib/x.sh` | step 3 asks | this plan writes | step 5 reads | step 5 refuses and says so |')"
+    run "${LINT}" "$f"
+    [ "$status" -eq 0 ]
+}
+
+@test "PLAN1 fires on a lifecycle row that names nothing a reader can open" {
+    # Emptiness alone is a weak test: four cells of plausible prose pass it while naming nobody,
+    # which is the same defect the section exists to catch. A claim word standing in for an answer
+    # fails here too, because it carries no identifier.
+    f="$(mkplan p.md proposed '## Artifact lifecycles' \
+        "${LIFECYCLE_HEADER}" "${LIFECYCLE_RULE}" \
+        '| the new report | the drafting session | this plan | the implementing session | it is wired up anyway |')"
+    run "${LINT}" "$f"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"PLAN1"* ]]
+    [[ "$output" == *"nothing a reader can open"* ]]
+}
+
+@test "PLAN1 accepts a row that points at one real path" {
+    f="$(mkplan p.md proposed '## Artifact lifecycles' \
+        "${LIFECYCLE_HEADER}" "${LIFECYCLE_RULE}" \
+        '| `lib/x.sh` | step 3 asks | this plan writes | `bin/run.sh` reads it | run.sh exits 1 and says which file |')"
+    run "${LINT}" "$f"
+    [ "$status" -eq 0 ]
+}
+
+@test "PLAN2 fires on a plan that creates a file and has no lifecycle table" {
+    f="$(mkplan p.md proposed '## Work items' '| id | file | action |' '|---|---|---|' "${CREATE_ITEM}")"
+    run "${LINT}" "$f"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"PLAN2"* ]]
+}
+
+@test "PLAN2 leaves a plan that creates nothing alone" {
+    # False positives are what get a linter switched off. A plan that only edits existing files
+    # hands nobody a new artifact, so there is nothing for it to declare.
+    f="$(mkplan p.md proposed '## Work items' '| id | file | action |' '|---|---|---|' '| 1 | `lib/x.sh` | edit |')"
+    run "${LINT}" "$f"
+    [ "$status" -eq 0 ]
+}
+
+@test "PLAN2 leaves an already-executed plan alone" {
+    # The check catches a plan while it can still be fixed. Re-linting history changes nothing that
+    # ships, and firing on every plan ever written is how the linter gets turned off.
+    f="$(mkplan p.md executed '## Work items' '| id | file | action |' '|---|---|---|' "${CREATE_ITEM}")"
+    run "${LINT}" "$f"
+    [ "$status" -eq 0 ]
+}
+
+@test "a plan that declares it creates nothing satisfies the section" {
+    # `none` plus the reason is a valid answer, the way definition-of-done accepts
+    # not-applicable-with-a-reason. Silence is not; an empty `none` row still fires.
+    good="$(mkplan good.md proposed '## Artifact lifecycles' \
+        "${LIFECYCLE_HEADER}" "${LIFECYCLE_RULE}" \
+        '| none | this plan edits two files and creates nothing anyone else consumes | | | |' \
+        '## Work items' '| id | file | action |' '|---|---|---|' "${CREATE_ITEM}")"
+    run "${LINT}" "$good"
+    [ "$status" -eq 0 ]
+
+    # The `none` row is exempt from the identifier rule: it points at nothing because there is
+    # nothing to point at. It still needs its reason.
+    bare="$(mkplan bare.md proposed '## Artifact lifecycles' \
+        "${LIFECYCLE_HEADER}" "${LIFECYCLE_RULE}" '| none | | | | |')"
+    run "${LINT}" "$bare"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"PLAN1"* ]]
+}
+
+@test "the plan template is exempt from its own checks" {
+    # templates/plan.md carries an empty placeholder row by design. Linting it would fire on the one
+    # file that teaches the format.
+    run "${LINT}" "${VAULT_ROOT}/templates/plan.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "the plan checks are wired into the main loop, not merely defined" {
+    # A function nobody calls enforces nothing. Assert the dispatch line, not the definition.
+    grep -qE '^[[:space:]]*check_plan "\$file"' "${LINT}"
+    grep -qE '^check_plan\(\)' "${LINT}"
+}
+
+@test "every finding code the linter emits maps to a written rule" {
+    # A check with no rule behind it is unaccountable, and the author cannot learn from it. The
+    # pattern-table loop below only ever checked the group column, so the structural checks — which
+    # emit their codes from the script rather than the table — were never covered by anything.
+    local missing=""
+    for code in $(grep -oE 'finding "[A-Z]+[0-9]+"' "${LINT}" | grep -oE '[A-Z]+[0-9]+' | sort -u); do
+        grep -qF "${code}" "${STANDARD}" \
+            || grep -qF "${code}" "${VAULT_ROOT}/lib/doc-lint-patterns.tsv" \
+            || missing="${missing} ${code}"
+    done
+    [ -z "${missing}" ] || { echo "codes with no written rule:${missing}"; return 1; }
 }
 
 @test "the index checks leave ordinary documents alone" {

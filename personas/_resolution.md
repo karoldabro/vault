@@ -42,6 +42,12 @@ relevant, decorrelated** set, capped by `team_max_parallel_critics` (default 3, 
 packs default 4** — see §2.2):
 
 - **Architect persona(s): always in** — they own structure and reuse.
+- **`consumer`: always in on the PROPOSE panel** — plan critique only, never a relevance pick and
+  never dropped by the cap (`_shared/consumer.md`). It owns the one question the mechanism lenses do
+  not: can the agent, command or operator on the receiving end produce one correct output from the
+  exact text this plan hands it. It takes the seat `correctness` would take, which the next bullet
+  already makes optional for plan critique. Drop it only when the change creates no handoff at all —
+  no new artifact, field, marker, report, prompt or choice-surface row — and note the drop in the trail.
 - **`correctness` (bug-hunter): default-in for diff review** — `/v-cr` and `/v-team`'s diff-review loop
   review *existing code's behaviour*, where logic/edge/null/race bugs are the highest-value findings
   (`_shared/correctness.md`). For pure plan critique (no diff yet) it is optional. Decorrelated from
@@ -52,7 +58,10 @@ packs default 4** — see §2.2):
 - **`skeptic`: add only on high-risk changes** — auth, billing/payments, migrations, multi-tenant
   boundaries, deletion/data-loss paths, or anything touching a coupled-repo contract.
 - If selection would exceed the cap, keep architect + the highest-relevance lenses; note the dropped
-  ones in the critique trail (no silent truncation).
+  ones in the critique trail (no silent truncation). **Never drop architect, `consumer`, or the lens
+  the change's own keywords triggered.** When those three plus `skeptic` exceed the default 3, raise
+  `team_max_parallel_critics` to 4 for that run (hard max is 5) and record the raise in the trail —
+  dropping a triggered `security` lens on an auth change to fit a cap is the worse trade.
 
 Record the outcome in the ANALYZE output — multi-pack seating joins pack names with `+`:
 ```
@@ -73,6 +82,9 @@ When the change **adds or modifies test files** — path globs `*test*`, `*spec*
   (grounding rule — a metric-less double-critic is advisory-only, so it doesn't earn a panel seat).
 - Mixed diffs (production + test code): keep the production-code critics for the source change and add
   **one** testing critic for the test change, still within the cap; note the trade-off in the trail.
+- **The testing group replaces the mechanism lenses, never the `consumer` seat.** On a PROPOSE panel
+  for test-writing work the seat still holds: the test plan is itself a handoff to the session that
+  writes the tests, and a backlog row naming no exact target path is a blank nobody fills.
 - See `personas/_shared/testing/README.md` for the lens table, decorrelation boundaries, and per-stack
   analyzer overlays.
 
@@ -97,15 +109,18 @@ seating (N≥2 packs) uses the hard max 5. **Seat priority order (deterministic)
    architects compete as ordinary relevance picks.
 2. **Guaranteed domain lens** — family-wide ≥1, chosen by the trigger table below **across ALL seated
    packs** (it need not belong to the primary pack). Never dropped.
-3. **`business/data-evidence`** — when the deliverable carries decision-driving numbers (spend,
+3. **`consumer`** — the deliverable's receiver. A proposal is read by a buyer, an SOP by the operator
+   who runs it, a brief by the writer who fills it. Same guarantee and same drop condition as the dev
+   panel (§2): dropped only when the deliverable hands nothing to anyone.
+4. **`business/data-evidence`** — when the deliverable carries decision-driving numbers (spend,
    pricing, forecast, funnel, market size). Relevance-gated, not default-in.
-4. **`skeptic`** — on high-stakes work (budget/spend commitment, pricing/positioning change,
+5. **`skeptic`** — on high-stakes work (budget/spend commitment, pricing/positioning change,
    market-entry/launch bet, auto-send flows, legal exposure). For `startup-eval`, every go/no-go memo
    and sizing doc IS high-stakes → skeptic default-in there.
-5. Remaining seats fill by relevance (other domain lenses, other packs' architects).
+6. Remaining seats fill by relevance (other domain lenses, other packs' architects).
 
-Over cap → drop from the bottom of this order (relevance extras first); **never** the guaranteed lens
-or the primary architect. Note drops in the critique trail (no silent truncation).
+Over cap → drop from the bottom of this order (relevance extras first); **never** the guaranteed lens,
+the primary architect, or `consumer`. Note drops in the critique trail (no silent truncation).
 
 **Trigger table — one trigger selects ONE lens** (cross-pack double-votes are a selection bug):
 outreach/sequence → Outreach & Sequencing · proposal-instance/deal → Proposal & Pricing (sales) ·

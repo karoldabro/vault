@@ -221,6 +221,92 @@ index_scope_vocabulary() {
     done
 }
 
+# PLAN1/PLAN2 — checks that apply only to a plan document.
+#   PLAN1  a row of `## Artifact lifecycles` has an empty cell — a lifecycle nobody filled in
+#   PLAN2  the plan's work items create files and the plan carries no `## Artifact lifecycles` table
+#
+# PLAN2 keys off a work item whose action cell reads `create`, so it fires on plans written against
+# the current template and stays silent on the ones already in `vault/plans/`, whose work-item
+# tables predate the section. A plan that creates nothing anyone else consumes writes one row whose
+# first cell is `none`, plus the reason: the check exists to make the answer explicit, not to force
+# a table onto a plan that has no artifacts. Templates are exempt — their placeholder row is empty
+# by design, and linting it would fire on the very file that teaches the format.
+check_plan() {
+    local file="$1" blanks vague creates
+    case "$file" in */templates/*|templates/*) return 0 ;; esac
+
+    if grep -qE '^##[[:space:]]+[Aa]rtifact lifecycles[[:space:]]*$' "$file"; then
+        blanks="$(awk '
+            /^##[[:space:]]+[Aa]rtifact lifecycles[[:space:]]*$/ { inside = 1; body = 0; next }
+            inside && /^##[[:space:]]/                           { inside = 0 }
+            !inside                                              { next }
+            !/^[[:space:]]*\|/                                   { next }
+            /^[[:space:]]*\|[[:space:]]*:?-{2,}/                 { body = 1; next }
+            !body                                                { next }
+            {
+                row = $0
+                sub(/^[[:space:]]*\|/, "", row)
+                sub(/\|[[:space:]]*$/, "", row)
+                m = split(row, cell, "|")
+                blank = 0
+                for (i = 1; i <= m; i++) {
+                    gsub(/^[[:space:]]+|[[:space:]]+$/, "", cell[i])
+                    if (cell[i] == "") blank++
+                }
+                if (tolower(cell[1]) == "none") {
+                    reason = 0
+                    for (i = 2; i <= m; i++) if (cell[i] != "") reason++
+                    if (reason == 0) bad++
+                    next
+                }
+                if (blank > 0) { bad++; next }
+                # A row whose four cells are all prose named nobody. "the drafting session" in every
+                # cell passes an emptiness test and is the same defect the section exists to catch,
+                # so a row must point at something a reader can open: a path or a backticked name.
+                # This is also what stops a claim word standing in for an answer — `wired` alone in
+                # a cell carries no identifier.
+                if (index($0, "`") == 0) vague++
+            }
+            END { print bad + 0 ": " vague + 0 }
+        ' "$file")"
+        vague="${blanks#*: }"
+        blanks="${blanks%%:*}"
+        if [ "$blanks" -gt 0 ]; then
+            finding "PLAN1" "FILE" "${blanks} artifact lifecycle row(s) with an empty cell — name who asks for it, who writes it, who reads it, and what happens when it is absent or malformed"
+        fi
+        if [ "$vague" -gt 0 ]; then
+            finding "PLAN1" "FILE" "${vague} artifact lifecycle row(s) name nothing a reader can open — give each row at least one path or backticked identifier, not four cells of prose"
+        fi
+        return 0
+    fi
+
+    # A plan that has already been built is history: rewriting its lifecycle table changes nothing
+    # that ships, and firing on it turns every historical plan into noise. PLAN2 catches a plan while
+    # it can still be fixed — `proposed` or `approved`. PLAN1 has no such gate: a table with a blank
+    # cell is wrong in any state, and only a plan carrying the section can trip it.
+    case "$(sed -n 's/^status:[[:space:]]*\([a-z]*\).*/\1/p' "$file" | head -1)" in
+        proposed|approved) ;;
+        *) return 0 ;;
+    esac
+
+    creates="$(awk '
+        /^[[:space:]]*\|/ {
+            row = $0
+            n = split(row, cell, "|")
+            for (i = 1; i <= n; i++) {
+                c = cell[i]
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", c)
+                if (tolower(c) == "create") { hits++; break }
+            }
+        }
+        END { print hits + 0 }
+    ' "$file")"
+    if [ "$creates" -gt 0 ]; then
+        finding "PLAN2" "FILE" "${creates} work item(s) create a file and there is no \`## Artifact lifecycles\` table — say who reads each new thing and what happens when it is missing"
+    fi
+    return 0
+}
+
 usage() {
     sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit "${1:-2}"
@@ -549,6 +635,9 @@ for file in "${files[@]}"; do
     fi
 
     is_index_file "$file" && check_index "$file"
+    if [ "$doc_type" = "plan" ] && [ "$doc_class" = "contract" ]; then
+        check_plan "$file"
+    fi
 
     check_duplicates "$file"
     check_sentences "$MATCHABLE"

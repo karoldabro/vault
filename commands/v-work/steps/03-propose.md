@@ -163,9 +163,15 @@ user asked for a second opinion. **Skip** (one-line note) for single-file or mec
    (`personas/_resolution.md` §2), pick the single most relevant lens for this change; else a generic
    `Plan`/`Explore` agent with critic instructions. Envelope: draft plan + task restatement +
    LOAD-CONTEXT digest. Findings use `/v-team`'s schema (severity + `confirmed`/`advisory` grounding).
-2. Apply `confirmed` BLOCKER/MAJOR recommendations to the plan; record everything else as open
+2. **Ask the four handoff questions, whichever lens you picked.** For everything this plan creates
+   — a file, a field, a marker, a report, a prompt, a row on a choice surface — who asks for it, who
+   writes it, who reads it, and what happens when it is absent or malformed. `/v-work` writes no plan
+   artifact, so `bin/doc-lint.sh` never sees this work and the critic is the only thing that asks.
+   An unanswerable end — a binding nothing collects, a report no seat must read — is a `confirmed`
+   finding when the missing surface is shown. Full lens: `personas/_shared/consumer.md`.
+3. Apply `confirmed` BLOCKER/MAJOR recommendations to the plan; record everything else as open
    trade-offs for the approval gate. **One pass — never re-loop here.**
-3. If the critique surfaces panel-worthy risk (architecture, schema, auth, billing, cross-repo
+4. If the critique surfaces panel-worthy risk (architecture, schema, auth, billing, cross-repo
    contract), don't loop — say so and suggest escalating to `/v-team`.
 
 ---

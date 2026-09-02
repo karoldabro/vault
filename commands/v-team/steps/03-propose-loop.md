@@ -43,6 +43,13 @@ Use the pack + selected critics resolved in the ANALYZE addendum (`personas/_res
 selected persona file once (shared base + pack overlay composed). Default ~3 critics (business packs
 default 4, per `_resolution.md` §2.2), hard max 5.
 
+**`_shared/consumer.md` holds a guaranteed seat on this panel** (`_resolution.md` §2). Every other
+lens reviews the mechanism; this one asks whether the agent, command or operator receiving the plan
+can produce one correct output from the exact text the plan hands it. Drop it only when the change
+creates no handoff at all, and say so in the trail. When architect + consumer + the triggered lens +
+`skeptic` exceed the default 3, raise `team_max_parallel_critics` to 4 for the run rather than
+dropping a triggered lens.
+
 ## (c) Parallel critic spawn
 
 One message, **multiple `Agent` calls** — one per selected persona, spawned as its `base_agent`
@@ -59,6 +66,12 @@ One message, **multiple `Agent` calls** — one per selected persona, spawned as
 
 Instruct each critic to **run its bound analyzer first** and cite real signals — the persona interprets
 tool output, it does not replace it.
+
+**The `consumer` critic's envelope carries one extra instruction:** name the riskiest handoff this
+plan creates, write out the **literal text its receiver gets** — not a description of it — then
+produce **one real output** from it: one shot, one walk answer, one parsed value, one row. That text
+and that output go in the finding's `check` field; they are its grounding. A description of the
+handoff is not a dry run and grounds nothing.
 
 Also put `_shared/communication.md` in every critic envelope, scoped to the **free-text** fields
 (`issue`, `recommendation`): one sentence, plain words, no restated context. The schema itself is

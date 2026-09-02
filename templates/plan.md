@@ -37,6 +37,25 @@ tags: [plan]
 ## Scope & non-goals
 <!-- What this covers, then explicitly what it does not — stated so it is not mistaken for done. -->
 
+## Artifact lifecycles
+<!-- Every thing this plan creates that something else then has to use: a file, a field, a marker, a
+     report, a prompt, a row on a choice surface. Four answers per row, no blank cells. The middle
+     two come easily; the two ends are where plans fail — a binding nothing asks for, a report no
+     seat must read, a marker with no parser. If this plan creates nothing anyone else consumes,
+     write exactly one row in this shape, reason included:
+
+         | none | this plan edits three existing files and creates nothing anyone else consumes | | | |
+
+     Silence is not a pass, and doc-lint enforces it: PLAN1 on a blank cell or on a row naming
+     nothing checkable, PLAN2 on a file-creating plan with no table. Every row that is not the
+     `none` row must carry at least one path or backticked identifier — "the implementing session"
+     in all four cells is a row that named nobody. The blank row below stays blank on purpose: it
+     fires PLAN1 until someone fills it. -->
+
+| artifact | who asks for it | who writes it | who reads it | absent or malformed |
+|---|---|---|---|---|
+|  |  |  |  |  |
+
 ## Work items
 <!-- THE PAYLOAD. Dependency-ordered, one row per NAMED FILE. Never collapse several files into a
      phrase like "the resources" or "the composables": the exact path is the thing an implementing
