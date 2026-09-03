@@ -36,6 +36,18 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# The sentence counter is shared with bin/output-lint.sh. Guard the source: an unreadable library
+# must cost one skipped check, never an aborted run under `set -e`.
+# An `a && b` list would itself abort under `set -e` when the file is absent, so use `if`.
+if [ -r "${SCRIPT_DIR}/../lib/sentence-count.sh" ]; then
+    # shellcheck source=../lib/sentence-count.sh
+    . "${SCRIPT_DIR}/../lib/sentence-count.sh"
+fi
+if [ -r "${SCRIPT_DIR}/../lib/prose-match.sh" ]; then
+    # shellcheck source=../lib/prose-match.sh
+    . "${SCRIPT_DIR}/../lib/prose-match.sh"
+fi
+
 quiet=0
 cap_override=""
 class_override=""
@@ -410,32 +422,20 @@ finding() {
     printf '  %-6s %-8s %s\n' "$1" "$2" "$3"
 }
 
-# Quoted text is not a claim. A document that defines these rules has to name the phrases it bans,
-# and a plan legitimately quotes an old string it is replacing. So the patterns are matched against
-# a copy with fenced blocks and inline `code` spans blanked out, line numbering preserved. Quote the
-# thing you are banning and the linter stays quiet; assert it in your own voice and it fires.
-matchable_copy() {
-    awk '
-        /^[[:space:]]*```/ { fence = !fence; print ""; next }
-        fence              { print ""; next }
-        {
-            line = $0
-            gsub(/`[^`]*`/, "", line)      # inline code spans
-            print line
-        }
-    ' "$1"
-}
-
-# Most rules are about wording, and a sentence-initial capital must not let one through. The three
-# exceptions match on case itself: struck-through markup and the shouted markers WITHDRAWN /
-# BLOCKER, whose lowercase forms are ordinary English words.
-case_flag() {
-    case "$1" in HIST3|HIST4|PROC5) echo "-e" ;; *) echo "-i" ;; esac
-}
+# `matchable_copy` (fenced blocks and inline code blanked) and `pattern_case_flag` (the shouted
+# markers matched on case) live in lib/prose-match.sh, shared with bin/output-lint.sh so the same
+# sentence is not a finding in one linter and clean in the other.
+#
+# Without that library the phrase checks cannot run correctly — unblanked, they would fire on every
+# document that quotes a phrase it bans. Skipping them beats running them wrong, and this script
+# runs from a live PostToolUse hook, so it must not abort either.
+case_flag() { pattern_case_flag "$1"; }
 
 check_patterns() {
     local _target="$1" body_start="$2" want_group="$3"
     local code group regex message lineno
+    command -v matchable_copy   >/dev/null 2>&1 || return 0
+    command -v pattern_case_flag >/dev/null 2>&1 || return 0
     while IFS=$'	' read -r code group regex message; do
         [ -z "${code:-}" ] && continue
         [ "$group" = "$want_group" ] || continue
@@ -444,6 +444,9 @@ check_patterns() {
             [ -z "${lineno:-}" ] && continue
             [ "$lineno" -lt "$body_start" ] && continue
             finding "$code" "L${lineno}" "$message"
+        # Unquoted on purpose: case_flag prints nothing for a case-sensitive code, and an empty
+        # quoted argument would become grep's pattern.
+        # shellcheck disable=SC2046
         done < <(grep -n $(case_flag "$code") -E "$regex" "$MATCHABLE" 2>/dev/null | cut -d: -f1 || true)
     done <<< "$PATTERNS"
 }
@@ -465,26 +468,17 @@ check_duplicates() {
 }
 
 # Sentence ceiling. communication.md caps prose the user reads at 25 words; a document gets 30,
-# because a specification sentence legitimately carries more qualifiers than a message does.
+# because a specification sentence legitimately carries more qualifiers than a message does. The
+# counter itself lives in lib/sentence-count.sh so bin/output-lint.sh uses the same one at 25.
 check_sentences() {
     local _target="$1" lineno
+    # No counter available: skip the check and let every other check run. This script is wired into
+    # a live PostToolUse hook, so aborting here would return shell errors to the model as findings.
+    command -v count_long_sentences >/dev/null 2>&1 || return 0
     while IFS= read -r lineno; do
         [ -z "${lineno:-}" ] && continue
         finding "LONG1" "L${lineno}" "sentence over 30 words — split it; one idea per sentence"
-    done < <(
-        awk '
-            /^[[:space:]]*[|>`]/  { next }
-            /^[[:space:]]*(#|---|```)/ { next }
-            /^[[:space:]]*<!--/   { next }
-            {
-                n = split($0, parts, /[.!?]([[:space:]]|$)/)
-                for (i = 1; i <= n; i++) {
-                    w = split(parts[i], _t, /[[:space:]]+/)
-                    if (w > 30) { print NR; break }
-                }
-            }
-        ' "$_target"
-    )
+    done < <(count_long_sentences "$_target" 30 1)
 }
 
 # --- comparison ---------------------------------------------------------------
@@ -626,7 +620,13 @@ for file in "${files[@]}"; do
 
     MATCHABLE="$(mktemp)"
     trap 'rm -f "$MATCHABLE"' EXIT
-    matchable_copy "$file" > "$MATCHABLE"
+    if command -v matchable_copy >/dev/null 2>&1; then
+        matchable_copy "$file" > "$MATCHABLE"
+    else
+        # No blanking available. check_patterns skips itself in this state; the sentence check
+        # still runs, on the raw file, because its own awk rules already skip fences.
+        cat "$file" > "$MATCHABLE"
+    fi
 
     header_printed=0
     header() { print_header "$file" "$doc_type" "$doc_class" "$lines" "$cap"; }

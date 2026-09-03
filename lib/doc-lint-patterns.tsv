@@ -5,6 +5,9 @@
 # a check with no written rule behind it is an unaccountable check.
 #
 # group: history | process | reference | contract-only, all skipped for record-class documents.
+# The `prose` group is read only by bin/output-lint.sh, which measures a reply rather than a file;
+# bin/doc-lint.sh never asks for it, so those rows can never fire on a document. output-lint also
+# reads `reference` and `process`, because the filler they already catch is banned in replies too.
 # Keep every regex narrow enough that a hit is wrong under any reading. Precision is the whole
 # product: a linter that fires on legitimate work gets switched off and then enforces nothing.
 #
@@ -29,6 +32,11 @@ PROC7	process	\b([Nn]amed as a decision|stated explicitly rather than implied|fo
 REF1	reference	\b[Ss]ee (the |his |her |their )?(plan|brief|document|file|doc|spec|above|below)\b	an unresolvable reference — give the path and one line on why it matters here
 REF2	reference	\bas (noted|stated|described|mentioned) (above|below|earlier|previously)\b	a back-reference to your own text — say it once, in one place
 REF3	reference	\b(in other words|to clarify|to put it another way|that is to say)\b	an explanation of your explanation — keep one version
+# communication.md — replies only. bin/doc-lint.sh never requests this group.
+PROSE1	prose	\b(no issues found|nothing to report|as expected|all tests (pass|passed)|everything (works|looks good)|0 findings)\b	reporting that a normal thing was normal — report exceptions, not normality
+PROSE2	prose	\b([Gg]reat question|[Yy]ou.?re absolutely right|[Ll]et me know if|[Ii] hope this helps|[Ff]eel free to)\b	preamble or sign-off — the user asked a question, answer it and stop
+PROSE3	prose	\bit (is|would be) (recommended|advisable|worth noting|important to note) that\b	passive indirection — name the actor and use a verb
+PROSE4	prose	\b(BLOCKER|MAJOR|APPROVE_WITH_NITS|REQUEST_CHANGES|convergence|persona|dedupe|fan-out|disposition|advisory finding)\b	framework vocabulary reaching the user — describe the outcome in plain words
 
 # Structural checks — emitted by bin/doc-lint.sh itself, not matched from this table. They are
 # registered here because this file is where a code is looked up, and a check whose rule nobody can

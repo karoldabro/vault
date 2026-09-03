@@ -162,9 +162,24 @@ findings back to it. It never blocks a write and never prompts you. A plugin ins
 install.sh --enable-doc-lint
 ```
 
-`DOC_LINT=off` turns it off at any time. `install.sh --enable-all` does both this and the style. Both
-flags edit `~/.claude/settings.json`, back it up first, and are safe to run repeatedly. Without a flag,
-`install.sh` never touches your settings.
+`DOC_LINT=off` turns it off at any time.
+
+### Turn on reply measurement
+
+Two hooks do for what Claude *says* what document linting does for what it writes.
+`scripts/output-lint-hook.sh` measures each reply and records it in `~/.claude/brevity-log.jsonl`.
+`scripts/brevity-reminder-hook.sh` then tells Claude, at your next turn, what that reply overran — and
+stays silent when nothing did, so text before a prompt always means something went over. Neither ever
+blocks a turn or prompts you.
+
+```
+install.sh --enable-brevity
+```
+
+`BREVITY=off` turns both off at any time. `install.sh --enable-all` switches on the style, document
+linting and reply measurement together. Every flag edits `~/.claude/settings.json`, backs it up first,
+leaves entries you already had in place, and is safe to run repeatedly. Without a flag, `install.sh`
+never touches your settings.
 
 ### Wire a second Claude config directory
 

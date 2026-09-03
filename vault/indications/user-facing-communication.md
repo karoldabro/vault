@@ -38,27 +38,37 @@ those as duplicates.
 
 ## Rationale
 
-The framework's own `## Required output` templates were the mechanical cause of the overload: they
-mandated always-on fields that reported normality, printed the design to the terminal, and handed
-over panel vocabulary. Nothing governed prose, so a second brevity rule drifted into `v-ask.md` and a
-third into `/v-cr`.
+The `## Required output` templates were the mechanical cause of the overload: they mandated
+always-on fields that reported normality, printed the design to the terminal, and handed over panel
+vocabulary. Prose alone never governed prose — the rules load twice per session, through
+`~/.claude/CLAUDE.md` and the output style, and replies stayed long.
 
 Grounded in [[decision-communication]]: repeating what the reader knows is *negative*-value, not
 neutral; defining jargon does not repair it; a badly framed question yields a confident wrong answer
-rather than "I don't know"; more explanation buys agreement, not accuracy. See
-[[ADR-018-decision-communication-contract]] for the decision and its accepted costs.
+rather than "I don't know"; numeric per-artifact limits move output where "be concise" does not. See
+[[ADR-018-decision-communication-contract]] and [[ADR-025-mechanical-brevity-enforcement]].
 
 ## Applies to
 
 `commands/_shared/communication.md` · `output-styles/director.md` · all `commands/v-*.md` · every
-step file with a `## Required output` block · `install.sh` (links `output-styles/` as a second tree)
+step file with a `## Required output` block · `bin/output-lint.sh` · `scripts/output-lint-hook.sh` ·
+`scripts/brevity-reminder-hook.sh` · `install.sh`
 
 ## Guard
 
-`tests/unit/communication-contract.bats` (contract shape, binding coverage, the 15-file set, style
-self-containment, no duplicate brevity rule) and `tests/unit/propose-golden.bats` (output-template
-drift). **Both are file contracts** — they prove the rules exist, not that output obeys them. Do not
-read a green suite as evidence the output is short.
+`tests/unit/communication-contract.bats` (contract shape, binding coverage, the Required-output file
+set, style self-containment, the worked-example table, the cap-yields sentence) and
+`tests/unit/propose-golden.bats` (output-template drift) are **file contracts**: they prove the rules
+exist, not that output obeys them.
+
+Output itself is measured, not asserted. `scripts/output-lint-hook.sh` runs `bin/output-lint.sh` on
+every reply and appends one row to `~/.claude/brevity-log.jsonl`;
+`scripts/brevity-reminder-hook.sh` then reports, at the next turn, only what that reply overran.
+Both are covered by `tests/unit/brevity-hooks.bats`, and both are inert until
+`install.sh --enable-brevity`. `BREVITY=off` silences them.
+
+Measuring is an experiment with an end date. Its command, its owner and the condition that
+uninstalls it live in [[ADR-025-mechanical-brevity-enforcement]] under `## Consequences`.
 
 ## Refs
 

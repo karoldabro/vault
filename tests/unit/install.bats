@@ -174,15 +174,72 @@ teardown() {
     [ "$output" -eq 1 ]
 }
 
+@test "a default run leaves settings.json with neither brevity hook registered" {
+    # Same rule as the style: linking is not activating. Without the flag the two hooks are on
+    # disk and inert, which is the only state that does not surprise someone running the installer.
+    local home="${BATS_TEST_TMPDIR}/h4"; mkdir -p "${home}/.claude"
+    printf '{}' > "${home}/.claude/settings.json"
+    HOME="${home}" run bash "${VAULT_ROOT}/install.sh"
+    [ "$status" -eq 0 ]
+    run grep -c 'brevity\|output-lint' "${home}/.claude/settings.json"
+    [ "$output" -eq 0 ]
+}
+
+@test "--enable-brevity registers both hooks once, however many times it runs" {
+    local home="${BATS_TEST_TMPDIR}/h5"; mkdir -p "${home}/.claude"
+    printf '{}' > "${home}/.claude/settings.json"
+    HOME="${home}" bash "${VAULT_ROOT}/install.sh" --enable-brevity >/dev/null
+    HOME="${home}" bash "${VAULT_ROOT}/install.sh" --enable-brevity >/dev/null
+    run grep -c 'output-lint-hook' "${home}/.claude/settings.json"
+    [ "$output" -eq 1 ]
+    run grep -c 'brevity-reminder-hook' "${home}/.claude/settings.json"
+    [ "$output" -eq 1 ]
+}
+
+@test "registering the brevity hooks leaves an unrelated Stop entry in place" {
+    # He already runs observability hooks on Stop. Appending to that bucket must not replace it.
+    local home="${BATS_TEST_TMPDIR}/h6"; mkdir -p "${home}/.claude"
+    printf '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"my-observability.py"}]}]}}' \
+        > "${home}/.claude/settings.json"
+    HOME="${home}" bash "${VAULT_ROOT}/install.sh" --enable-brevity >/dev/null
+    grep -q 'my-observability.py'  "${home}/.claude/settings.json"
+    grep -q 'output-lint-hook'     "${home}/.claude/settings.json"
+    run jq -r '.hooks.Stop | length' "${home}/.claude/settings.json"
+    [ "$output" -eq 2 ]
+}
+
+@test "--enable-all switches on the style and every shipped hook" {
+    local home="${BATS_TEST_TMPDIR}/h7"; mkdir -p "${home}/.claude"
+    printf '{}' > "${home}/.claude/settings.json"
+    HOME="${home}" bash "${VAULT_ROOT}/install.sh" --enable-all >/dev/null
+    grep -q '"outputStyle": "director"' "${home}/.claude/settings.json"
+    grep -q 'doc-lint-hook'             "${home}/.claude/settings.json"
+    grep -q 'output-lint-hook'          "${home}/.claude/settings.json"
+    grep -q 'brevity-reminder-hook'     "${home}/.claude/settings.json"
+}
+
+@test "every hook in the installer's list ships a script that exists" {
+    # The list is the single place a hook is declared; a typo there installs a dangling symlink.
+    local row script
+    while IFS= read -r row; do
+        script="${row%%;*}"
+        [ -f "${VAULT_ROOT}/scripts/${script}" ] \
+            || { echo "installer lists a missing hook script: ${script}"; return 1; }
+    done < <(sed -n '/^HOOK_ROWS=(/,/^)/p' "${VAULT_ROOT}/install.sh" \
+             | grep -oE '"[a-z-]+\.sh;[^"]*"' | tr -d '"')
+}
+
 @test "an unknown flag is refused rather than ignored" {
     run bash "${VAULT_ROOT}/install.sh" --enable-everything
     [ "$status" -eq 2 ]
 }
 
-@test "INSTALL.md documents both flags and the scope trap" {
+@test "INSTALL.md documents every flag and the scope trap" {
     local f="${VAULT_ROOT}/INSTALL.md"
     grep -q -- '--enable-style'     "${f}"
     grep -q -- '--enable-doc-lint'  "${f}"
+    grep -q -- '--enable-brevity'   "${f}"
+    grep -q    'BREVITY=off'        "${f}"
     # /config writes project-local settings; that is the thing people get wrong.
     grep -q 'settings.local.json'   "${f}"
 }

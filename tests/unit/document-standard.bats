@@ -105,7 +105,9 @@ doc() {  # doc <name> <type> <body...>
         case "$code" in ''|'#'*) continue ;; esac
         grep -qE "rule [0-9]+ — |^# rule" "${PATTERNS}" || true
         case "$group" in
-            history|process|reference|contract-only) ;;
+            # `prose` is the terminal side: rows bin/output-lint.sh reads and bin/doc-lint.sh
+            # never requests, so they govern a reply rather than a document.
+            history|process|reference|contract-only|prose) ;;
             *) echo "unknown group '${group}' for ${code}"; missing=1 ;;
         esac
     done < "${PATTERNS}"

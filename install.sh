@@ -3,7 +3,7 @@
 # ~/.claude/output-styles/.
 # Idempotent. Refuses to overwrite non-symlink files.
 #
-# Usage:  install.sh [--enable-style] [--enable-doc-lint] [--enable-all]
+# Usage:  install.sh [--enable-style] [--enable-doc-lint] [--enable-brevity] [--enable-all]
 #
 # Linking a file and switching it on are separate steps, and the default is to link only. The
 # director output style shipped on 2026-08-03 and was active in 0 of 18 projects eighteen days
@@ -15,11 +15,13 @@ VAULT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 enable_style=0
 enable_doclint=0
+enable_brevity=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --enable-style)     enable_style=1; shift ;;
         --enable-doc-lint)  enable_doclint=1; shift ;;
-        --enable-all)       enable_style=1; enable_doclint=1; shift ;;
+        --enable-brevity)   enable_brevity=1; shift ;;
+        --enable-all)       enable_style=1; enable_doclint=1; enable_brevity=1; shift ;;
         -h|--help)          sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *)                  echo "install.sh: unknown option $1" >&2; exit 2 ;;
     esac
@@ -55,7 +57,18 @@ COMMANDS_DIR="${VAULT_ROOT}/commands"
 STYLES_TARGET_DIR="${HOME}/.claude/output-styles"
 STYLES_DIR="${VAULT_ROOT}/output-styles"
 HOOKS_TARGET_DIR="${HOME}/.claude/hooks"
-HOOK_SRC="${VAULT_ROOT}/scripts/doc-lint-hook.sh"
+
+# The hooks this framework ships, as data. Adding one is a row here, not five edits scattered
+# through the file. Semicolon-separated because a matcher legitimately contains a pipe.
+# Fields: script ; flag group ; Claude Code event ; matcher ; off-switch ; one-line description.
+#
+# A plugin install reads hooks/hooks.json and needs none of this; a symlink install has no
+# manifest, so the scripts are linked here and registered only behind their flag.
+HOOK_ROWS=(
+  "doc-lint-hook.sh;doclint;PostToolUse;Write|Edit|MultiEdit;DOC_LINT;checks every markdown document Claude writes and hands the findings back to it"
+  "output-lint-hook.sh;brevity;Stop;;BREVITY;measures the length of every reply and records it"
+  "brevity-reminder-hook.sh;brevity;UserPromptSubmit;;BREVITY;says what your previous reply overran, and stays silent when nothing did"
+)
 
 linked=0
 skipped=0
@@ -146,13 +159,15 @@ fi
 # a user's own symlinks safe.
 prune_stale "${STYLES_DIR}" "${STYLES_TARGET_DIR}"
 
-# The doc-lint hook. A plugin install reads hooks/hooks.json and needs none of this; a symlink
-# install has no manifest, so the script is linked here and the user registers it themselves.
-# Registering it would mean editing settings.json, which this installer never does.
-if [ -f "${HOOK_SRC}" ]; then
-    mkdir -p "${HOOKS_TARGET_DIR}"
-    ln -sfn "${HOOK_SRC}" "${HOOKS_TARGET_DIR}/doc-lint-hook.sh"
-fi
+# Link every shipped hook. Linking is not activating: registering a hook means editing
+# settings.json, which happens below and only behind a flag.
+for _row in "${HOOK_ROWS[@]}"; do
+    IFS=';' read -r _script _flag _event _matcher _envvar _desc <<< "${_row}"
+    if [ -f "${VAULT_ROOT}/scripts/${_script}" ]; then
+        mkdir -p "${HOOKS_TARGET_DIR}"
+        ln -sfn "${VAULT_ROOT}/scripts/${_script}" "${HOOKS_TARGET_DIR}/${_script}"
+    fi
+done
 
 # --- opt-in activation -------------------------------------------------------------------------
 # Both of these edit ~/.claude/settings.json, which is yours, not the framework's. They run only
@@ -182,16 +197,34 @@ if [ "${enable_style}" -eq 1 ]; then
         "Output style 'director' switched on globally (takes effect in a new session)." || true
 fi
 
-if [ "${enable_doclint}" -eq 1 ]; then
+# Register the hooks whose flag was given. The membership test keeps this idempotent and leaves
+# every entry the user already had — including unrelated Stop hooks — in place.
+for _row in "${HOOK_ROWS[@]}"; do
+    IFS=';' read -r _script _flag _event _matcher _envvar _desc <<< "${_row}"
+    case "${_flag}" in
+        doclint) [ "${enable_doclint}" -eq 1 ] || continue ;;
+        brevity) [ "${enable_brevity}" -eq 1 ] || continue ;;
+        *)       continue ;;
+    esac
+    [ -f "${VAULT_ROOT}/scripts/${_script}" ] || continue
+    # The row's values reach Python as JSON, never pasted into its source: a matcher containing a
+    # quote would otherwise break the settings edit and look like a settings problem.
+    HOOK_ROW_JSON="$(printf '{"script":%s,"event":%s,"matcher":%s}' \
+        "\"${_script}\"" "\"${_event}\"" "\"${_matcher}\"")"
+    export HOOK_ROW_JSON
     edit_settings '
+import os
+row = json.loads(os.environ["HOOK_ROW_JSON"])
 hooks = d.setdefault("hooks", {})
-post = hooks.setdefault("PostToolUse", [])
-if not any("doc-lint-hook" in json.dumps(e) for e in post):
-    post.append({"matcher": "Write|Edit|MultiEdit",
-                 "hooks": [{"type": "command",
-                            "command": "$HOME/.claude/hooks/doc-lint-hook.sh"}]})
-' "Document linting switched on (non-blocking; DOC_LINT=off disables it)." || true
-fi
+bucket = hooks.setdefault(row["event"], [])
+if not any(row["script"] in json.dumps(e) for e in bucket):
+    entry = {"hooks": [{"type": "command",
+                        "command": "$HOME/.claude/hooks/" + row["script"]}]}
+    if row["matcher"]:
+        entry["matcher"] = row["matcher"]
+    bucket.append(entry)
+' "Switched on: ${_script} — ${_desc} (${_envvar}=off disables it)." || true
+done
 
 echo "Vault framework installed."
 echo "  Linked:  ${linked}"
@@ -206,15 +239,22 @@ if [ -L "${STYLES_TARGET_DIR}/director.md" ] && [ "${enable_style}" -eq 0 ] \
     echo "  By hand:     \"outputStyle\": \"director\" in ~/.claude/settings.json"
     echo "  Takes effect in a new session."
 fi
-if [ -L "${HOOKS_TARGET_DIR}/doc-lint-hook.sh" ] \
-   && ! grep -q "doc-lint-hook" "${HOME}/.claude/settings.json" 2>/dev/null; then
+for _row in "${HOOK_ROWS[@]}"; do
+    IFS=';' read -r _script _flag _event _matcher _envvar _desc <<< "${_row}"
+    [ -L "${HOOKS_TARGET_DIR}/${_script}" ] || continue
+    grep -q "${_script}" "${SETTINGS}" 2>/dev/null && continue
+    case "${_flag}" in
+        doclint) _turn_on="install.sh --enable-doc-lint" ;;
+        brevity) _turn_on="install.sh --enable-brevity" ;;
+        *)       _turn_on="install.sh --enable-all" ;;
+    esac
     echo
-    echo "Document linting is installed but not switched on."
-    echo "  It checks every markdown document Claude writes and hands the findings back to it."
-    echo "  It never blocks a write and never prompts you."
-    echo "  Turn it on:  install.sh --enable-doc-lint"
-    echo "  Turn it off any time with DOC_LINT=off."
-fi
+    echo "${_script} is installed but not switched on."
+    echo "  It ${_desc}."
+    echo "  It never blocks and never prompts you."
+    echo "  Turn it on:  ${_turn_on}"
+    echo "  Turn it off any time with ${_envvar}=off."
+done
 if [ "${refused}" -gt 0 ]; then
     echo "  Refused: ${refused} (see warnings above)" >&2
     exit 1

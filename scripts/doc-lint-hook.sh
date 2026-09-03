@@ -18,17 +18,20 @@
 
 set -uo pipefail
 
-[ "${DOC_LINT:-}" = "off" ] && exit 0
-
-# Resolve the framework from this script's own location, following the install symlink. The hook
-# ships inside the repo, so it always finds its own linter — no env var, no hardcoded home path.
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
-VAULT_ROOT="${CLAUDE_PLUGIN_ROOT:-$(cd "$(dirname "$SELF")/.." && pwd)}"
+COMMON="$(dirname "$SELF")/../lib/hook-common.sh"
+[ -r "$COMMON" ] || exit 0
+# shellcheck source=../lib/hook-common.sh
+. "$COMMON"
+
+hook_off DOC_LINT && exit 0
+
+VAULT_ROOT="$(hook_vault_root "${BASH_SOURCE[0]}")"
 LINT="${VAULT_ROOT}/bin/doc-lint.sh"
 [ -x "$LINT" ] || exit 0
 
 payload="$(cat)"
-file="$(printf '%s' "$payload" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty' 2>/dev/null)"
+file="$(hook_json_field "$payload" '.tool_input.file_path // .tool_input.notebook_path // empty')"
 
 [ -z "$file" ] && exit 0
 [ -f "$file" ] || exit 0

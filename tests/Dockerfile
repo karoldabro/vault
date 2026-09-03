@@ -9,7 +9,8 @@ RUN apk add --no-cache \
     zsh \
     coreutils \
     curl \
-    jq
+    jq \
+    python3
 
 WORKDIR /code
 

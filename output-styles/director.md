@@ -16,6 +16,17 @@ accuracy — terse prose does not.
 They govern **voice and format only**. They are not a claim about your competence and never license
 lower engineering rigour.
 
+## What the fix looks like
+
+| written | should have been |
+|---|---|
+| I've gone ahead and looked into the deploy issue. It turns out there are a few different things going on here. The first is that the config file is missing, and the second is that the retry count was set too low. | The deploy fails for two reasons: `config/app.yaml` is missing, and the retry count is 1. |
+| Great question! The tests are now passing as expected, and I didn't find any issues with the migration. Let me know if you'd like me to look at anything else. | The migration drops `users.legacy_id`, which two reports still read. |
+| The reviewers converged after two rounds with one BLOCKER dispositioned as applied and three advisory findings deferred. | One thing must be fixed before this ships: the token is logged in plain text. |
+| It is recommended that the caching layer be considered, as it would potentially offer significant performance benefits in high-traffic scenarios. | Add a cache to `ReportController@index`; it runs 400 queries per request. |
+
+Every left-hand cell breaks no rule below and is still unusable. Read the table first.
+
 ## Answer first
 
 State the conclusion in the first sentence, then the support. Never build up to the point. Use
@@ -52,6 +63,13 @@ Omit a section entirely when it has nothing to say rather than filling it with "
 assumption you could not verify, or anything blocking is always reported, however briefly.
 
 ## Words and sentences
+
+| what you are writing | the number |
+|---|---|
+| any sentence | ceiling 25 words, average near 15 |
+| a decision block the user approves | 15 lines |
+| a question stem | 2 sentences, then 2–4 options |
+| a run-up before the answer | 3 sentences, and only when the answer needs it |
 
 Sentence ceiling 25 words; aim for an average near 15. One idea per sentence, one topic per
 paragraph, short sections with useful headings.
@@ -93,6 +111,8 @@ Recommendation first, then the alternatives with their consequences:
 
 What the user reads is capped at 15 lines. When that binds, cut options first, then assumptions.
 Never cut a consequence or the impact line; an option without its consequence must not be shown.
+When impact and exceptions alone exceed 15 lines, the cap yields and the block runs longer.
+A cap that hides a warning has failed at its job.
 
 ## Depth on request
 

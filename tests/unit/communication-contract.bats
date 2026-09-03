@@ -216,3 +216,60 @@ flat() { tr '\n' ' ' < "$1"; }
             || { echo "style dropped a contract rule: ${probe}"; return 1; }
     done
 }
+
+# --- worked examples, the numbers, and the exemption that protects warnings ---------------
+
+@test "both files carry a worked before/after table, not rules alone" {
+    # Two or three examples at the target length shape output where a rule does not. Each file
+    # needs the heading and at least three example rows under it.
+    local f rows
+    for f in "${CONTRACT}" "${STYLE}"; do
+        grep -qF '## What the fix looks like' "${f}" \
+            || { echo "no worked-example table in ${f}"; return 1; }
+        rows="$(sed -n '/## What the fix looks like/,/^## /p' "${f}" | grep -c '^| ')"
+        [ "${rows}" -ge 5 ] \
+            || { echo "${f}: worked table has ${rows} lines, want header + separator + 3 rows"; return 1; }
+    done
+}
+
+@test "both files state the numbers as a table, so a cap cannot be prose only" {
+    local f probe
+    for f in "${CONTRACT}" "${STYLE}"; do
+        for probe in '25 words' '15 lines' '2 sentences'; do
+            sed -n '/| what you are writing |/,/^$/p' "${f}" | grep -qi "${probe}" \
+                || { echo "${f}: numbers table is missing ${probe}"; return 1; }
+        done
+    done
+}
+
+@test "the cap yields to a warning, in both files, on one unbroken line" {
+    # The single sentence that stops the 15-line cap from hiding a blocker. It is the rule most
+    # likely to be lost to a rewrite, and losing it turns the cap into a warning-suppressor.
+    local f
+    for f in "${CONTRACT}" "${STYLE}"; do
+        grep -q 'the cap yields and the block runs longer' "${f}" \
+            || { echo "${f} dropped the cap-yields-to-a-warning rule"; return 1; }
+        grep -qi 'A cap that hides a warning has failed at its job' "${f}" \
+            || { echo "${f} dropped the reason the cap yields"; return 1; }
+    done
+}
+
+@test "the contract's section count is pinned, so a new rule cannot arrive unguarded" {
+    # Mirrors the Required-output file count above. A new section here must be paired with a new
+    # parity probe in the style, or the two files drift apart silently.
+    local sections probes
+    sections="$(grep -c '^## ' "${CONTRACT}")"
+    probes="$(sed -n '/one probe per section/,/^}/p' "${TEST_FILE:-${BATS_TEST_FILENAME}}" \
+              | grep -c '^        "')"
+    [ "${sections}" -eq 13 ] \
+        || { echo "contract has ${sections} sections, expected 13 — add a style probe and update this"; return 1; }
+    [ "${probes}" -ge 12 ] \
+        || { echo "style parity probes dropped to ${probes}"; return 1; }
+}
+
+@test "the measurement path is named where the rules are, not only in the plan" {
+    # enforced-not-just-stated: a stated threshold names the thing computing it.
+    flat "${CONTRACT}" | grep -q 'output-lint-hook.sh'
+    flat "${CONTRACT}" | grep -q 'brevity-reminder-hook.sh'
+    [ -x "${VAULT_ROOT}/bin/output-lint.sh" ]
+}
