@@ -13,13 +13,17 @@
 # This script measures and nothing else: it never writes a file, never reaches the network, and
 # always exits 0. A measuring tool that can fail a turn is worse than no measuring tool.
 #
-# `is_decision_block` reports whether the reply contains a markdown table. The 15-line cap in
-# commands/_shared/communication.md governs a decision block and nothing else, so a caller must not
-# apply it to an ordinary answer whose right length is two lines.
+# `is_decision_block` reports whether the reply carries two of the six field labels a decision block
+# is made of. The 15-line cap in commands/_shared/communication.md governs a decision block and
+# nothing else, so a caller must not apply it to an ordinary answer whose right length is two lines.
+# Detecting one by the presence of a table gets both halves wrong, and is what this replaced.
+#
+# `notes` carries each matched pattern's own plain-words message, because a caller printing a code
+# number tells its reader nothing to act on.
 #
 # Usage:  printf '%s' "$reply" | bin/output-lint.sh
 # Output: {"lines":41,"words":612,"long_sentences":4,"phrase_hits":2,"phrases":"PROSE1,REF3",
-#          "is_decision_block":1}
+#          "notes":"reporting that a normal thing was normal; ...","is_decision_block":1}
 
 set -uo pipefail
 
