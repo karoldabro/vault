@@ -33,6 +33,13 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
 
 - `install.sh` — links `commands/` → `~/.claude/commands/`, `output-styles/` →
   `~/.claude/output-styles/`; prunes stale links; refuses to overwrite non-symlinks.
+- **Hooks are declared once, in `install.sh`'s `HOOK_ROWS` array** — `script;flag;event;matcher;
+  off-switch;description`, semicolon-separated because a matcher contains a pipe. Three loops read
+  it: link, register, and the not-switched-on notice. Adding a hook is one row, not five edits.
+  `hooks/hooks.json` carries the same set for the plugin route.
+- Activation flags: `--enable-style`, `--enable-doc-lint`, `--enable-brevity`, `--enable-all`. Each
+  edits `~/.claude/settings.json`, backs it up first, appends only when absent, and leaves entries
+  the user already had in place. **Without a flag, `install.sh` never touches settings.**
 - `setup.sh` — base prerequisites, `~/vault/_global/` scaffold, tool stack per profile, doctor pass,
   then `install.sh`. Flags: `--light`, `--full`, `--minimal`, `--with-*`, `--yes`, `--dry-run`,
   `--doctor`.
@@ -88,6 +95,13 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
   a light machine missing Serena or Graphify is the expected state, not a fault.
 - The installer re-runs with a different profile → `install_mode` is rewritten in place, so the file
   always holds exactly one such line.
+- `install.sh` runs with no activation flag → every shipped hook is linked into `~/.claude/hooks/`
+  and `~/.claude/settings.json` is untouched, and the closing output names each linked-but-off hook
+  with the flag that turns it on.
+- `install.sh` runs twice with the same flag → each hook holds exactly one settings entry; edge: an
+  unrelated entry the user already had in that event's bucket is preserved.
+- A hook row carries an empty matcher → the registered entry has no `matcher` key at all, rather
+  than an empty one.
 
 ## Coupling
 
@@ -115,6 +129,7 @@ path and are meaningless under a plugin install.
 
 ## Sessions
 
+- [[../sessions/2026-09-03-0929-mechanical-brevity-enforcement]]
 - [[../sessions/2026-08-04-1339-install-profiles-light-full]]
 - [[../sessions/2026-08-04-1225-claude-code-plugin-install]]
 - [[../sessions/2026-08-03-1300-drop-openviking-dependency]]
