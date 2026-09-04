@@ -30,6 +30,8 @@ sets `wrong`; a session never scores its own refusal.
 | verdict | 0 | 0 | |
 | readers | 0 | 0 | |
 | config | 0 | 0 | |
+| budget | 0 | 0 | |
+| recurrence | 0 | 0 | |
 | completion-hook | 0 | 0 | |
 | staging-hook | 0 | 0 | |
 

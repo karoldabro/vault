@@ -2,7 +2,7 @@
 type: architecture
 project: vault
 slug: session-gates
-status: proposed
+status: current
 tags: [gates, definition-of-done, enforcement]
 ---
 
@@ -16,7 +16,6 @@ it never proceeds with a warning.
 
 | id | item | state |
 |----|------|-------|
-| G-OPEN-1 | `bin/gate.sh` does not exist; nothing in this file refuses yet | OPEN |
 | G-OPEN-2 | `/v-cr` coverage is partial by design — it reviews work it did not plan, so `criteria` and `verdict` never apply there | ACCEPTED |
 
 ## Where the state lives
@@ -29,16 +28,16 @@ second state file exists. `/v-do` writes a stub plan carrying only `## Open ques
 
 | subcommand | runs before | refuses when |
 |---|---|---|
-| `clarify <plan>` | any design work | a `## Open questions` row has `blocks: yes` and `status: open`; a row has an empty `searched` cell; a row has `blocks: yes` and `status: defaulted` |
 | `criteria <plan>` | work items are written | `## Success criteria` has no rows; a row has an empty `check` or `expect`; a row's `how` is not one of `command`, `artifact`, `observed`; an `observed` row names no disconfirming condition or no `no-command:` reason; no row has `kind: delivery` and the plan declares no `no-runtime:` reason |
-| `coverage <plan>` | the approval gate | a criterion id appears in no work-item `covers` cell |
-| `verdict <plan>` | staging | the gate re-runs every mechanically runnable `check` itself and the exit code disagrees with `expect`; a row whose `check` is not runnable has a `verdict` other than `MET`, empty `evidence`, or `evidence` carrying neither a backticked command nor a `path:line` |
-| `dod <plan>` | staging | a `## Definition of done` row's `state` is not `met`, `failed`, or `absent: <reason>`; any row is `failed` |
-| `bindings <plan> [root]` | staging | a backticked identifier in `## Artifact lifecycles` has no reader in code outside its declaring file |
-| `decisions <plan>` | staging | a `## Decisions` row's `record` cell is neither a repo-relative path nor the literal `local` |
-| `states <plan>` | the close report | any `## Enforcement states` row reads `BOUND-UNREAD`. Prints `ENFORCED n/total` |
-| `tracker <vault>` | capture | a plan with `status: proposed` or `approved` has open rows absent from `vault/_open.md` |
+| `verdict <plan> [--run]` | staging | `--run` re-runs every `how: command` check and the exit code disagrees with `expect`; any other row has a `verdict` other than `MET`, empty `evidence`, or `evidence` carrying neither a backticked command nor a `path:line` |
+| `readers <plan>` | staging | a backticked identifier in `## Artifact lifecycles` has no reader in code outside its declaring file |
 | `config <repo>` | ANALYZE, before any context load | `VAULT.md` declares no `dod_profile`, or a profile line has neither a command nor an `absent: <reason>` |
+| `budget [file]` | staging | a row in `vault/check-budget.md` shows a check firing wrongly more than one time in ten |
+| `recurrence [file]` | staging | a `vault/defect-ledger.md` row's `test` cell names no path |
+
+Seven further checks are specified and not built. They live in
+`vault/architecture/session-gates-unbuilt.md`, one row each with an owner and the command that
+closes it. A phase that names one of them runs nothing.
 
 `gate.sh all <plan> --phase <propose\|approve\|close>` runs that phase's subset.
 
@@ -77,7 +76,7 @@ empty before execution, then `MET` or `NOT MET`. `evidence` carries the command 
 | `how` | `check` holds | who decides |
 |---|---|---|
 | `command` | a shell command | `gate.sh verdict --run` executes it and compares the exit code to `expect` |
-| `artifact` | a path, and a pattern that must appear in it | the gate checks both |
+| `artifact` | a path, and a pattern that must appear in it | the operator; `verdict --run` executes `command` rows only and never opens the file |
 | `observed` | a named procedure: what to look at, and what would make it fail | the operator |
 
 **Not every criterion can be a command, and forcing one produces a worse check than admitting it.**
@@ -91,8 +90,8 @@ An `observed` row carries two extra things or the gate refuses it:
 - **`no-command: <reason>`** — why no detector exists. This forces the question every time, and it
   is how a detector eventually gets built instead of assumed impossible.
 
-`gate.sh states` counts `observed` rows separately from the rest, so the enforced fraction says how
-much of a plan a script can actually decide.
+Counting `observed` rows separately — so the enforced fraction says how much of a plan a script
+can actually decide — is one of the unbuilt checks.
 
 Write the `criterion` cell as a condition and an observable behaviour: `WHEN <trigger> THE SYSTEM
 SHALL <observable>`. A criterion with no trigger and no observable is a preference, and the gate
@@ -132,8 +131,8 @@ The existing table gains a `covers` column carrying the criterion ids that row a
 ## Definition-of-done profiles
 
 `commands/_shared/definition-of-done.md` owns the baseline and the two profiles, `code` and
-`ai-instructions`. `gate.sh dod` reads which one applies from `dod_profile:` in `VAULT.md`, and a
-plan may override it in frontmatter.
+`ai-instructions`. Which one applies is read from `dod_profile:` in `VAULT.md`, and a plan may
+override it in frontmatter. Nothing enforces the profile's rows yet; `dod` is unbuilt.
 
 **Onboarding writes the profile and every command in it.** `bin/vault-init.sh` resolves the repo's
 test, lint, duplication and end-to-end commands from `scripts/detect-stack.sh`, presents them for
