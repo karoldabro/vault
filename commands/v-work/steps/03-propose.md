@@ -130,6 +130,32 @@ run concurrently; serialise only on hard dependencies (schema before service lay
 | Writing/fixing tests | `test-writer-fixer` | All test work (also Step 4) |
 | Pre-commit review | `deploy-review-panel` | BIG scope, before COMMIT |
 
+### 3a.3a Success criteria — the gate that must pass before work items exist
+
+**Write the plan's `## Success criteria` table now, and run the gate on it. A nonzero exit stops
+this step.** Planning cannot start against an unstated target: a plan with no criteria closes
+against whatever it happened to produce.
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/gate.sh criteria <plan>
+```
+
+Each row says what must become true, and who can decide it. `how` is `command` (a shell command the
+gate itself runs), `artifact` (a path and what must appear in it), or `observed` (a named procedure
+a person or the verifying agent follows).
+
+**`observed` is legitimate.** Not every criterion is a command, and forcing one produces a check
+that accepts the cases it should reject. It carries two extra things or the gate refuses it: what an
+observer would see that makes it **fail**, and `no-command: <why no detector exists>`.
+
+**One row must be `kind: e2e`** — a run of the real system through the path this change serves. Not
+a fixture, not a unit test. This is the row that catches a component which passed its own tests and
+was never wired into anything. A plan with nothing to run declares `no-runtime: <reason>` in
+frontmatter instead, and says so at the approval gate.
+
+Every criterion must be reachable from the work items that follow: §3a.4 fills each row's `covers`
+cell with the criterion ids it advances.
+
 ### 3a.4 Implementation steps (dependency-ordered)
 
 Numbered, ordered **schema/models → services/logic → controllers/routes → views/components → tests**.
@@ -234,7 +260,9 @@ dispositions · work items (one row per exact file path) · `## Artifact lifecyc
 + scenarios + location) · vault writes (CREATE/UPDATE per §3b dedupe, with match counts) · index
 updates (`_moc.md` / `_feature-index.md` / `decisions/_inventory.md`).
 
-Run `bin/doc-lint.sh <plan>` before the approval gate and fix what it reports. `PLAN2` fires when the
+Run `bin/doc-lint.sh <plan>` **and** `bin/gate.sh all <plan> --phase approve` before the approval
+gate, and fix what either reports. doc-lint checks the document is well formed; the gate checks the
+session did the work the document claims. Fix what they report. `PLAN2` fires when the
 plan has work items and no `## Artifact lifecycles` table, which is the only mechanical check that
 sees `/v-work` work at all — the lite critic in §3a.6 is optional and this is not.
 

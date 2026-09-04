@@ -11,7 +11,23 @@ actually run — never close out `/v-work` without it.
 
 ## 5.0 Definition of Done (before anything is staged)
 
-Read `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md` and work its checklist **now**,
+**Run the close gate first. A nonzero exit stops the close.**
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/gate.sh all <plan> --phase close
+```
+
+It refuses while any success criterion has no verdict, is `NOT MET`, or claims `MET` with evidence
+that names no command and no `path:line`. Add `--run` and the gate executes each `command` criterion
+itself and compares the real exit code to what the plan claims. **Prefer `--run`.** A verdict a
+script produced cannot be talked into existing, and a model asked to judge its own work agrees with
+it — measured failure detection falls to roughly half.
+
+A criterion the gate cannot run is decided by the verifying agent, which never reads the
+implementer's report and runs on a different model. It fills `evidence` before `verdict`, and a
+check it could not run is `NOT MET`, never `MET`.
+
+Then read `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md` and work its checklist,
 before §5.1 stages a single file. A gate that runs after the commit blocks nothing.
 
 - The **baseline** applies to every session.
