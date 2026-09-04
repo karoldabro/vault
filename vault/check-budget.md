@@ -31,6 +31,7 @@ sets `wrong`; a session never scores its own refusal.
 | readers | 0 | 0 | |
 | config | 0 | 0 | |
 | completion-hook | 0 | 0 | |
+| staging-hook | 0 | 0 | |
 
 ## Rules kept as prose
 

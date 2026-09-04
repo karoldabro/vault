@@ -22,7 +22,7 @@ ones. The gate contract is `vault/architecture/session-gates.md`.
 
 | id | item | state |
 |----|------|-------|
-| O-1 | An unenforced rule is not free. Deleting prose is the repair, not tidying — but nothing yet measures which rules are load-bearing, so D-01 counts before D-03 cuts | OPEN |
+| O-1 | An unenforced rule is not free. Deleting prose is the repair, not tidying. `vault/research/rule-compliance.md` now measures which rules are load-bearing: unchecked rules run from 18.1% to 98.8%, so the cut keys on whether the model can check itself, not on whether a check exists | ACCEPTED |
 | O-2 | Hooks are escapable. They do not fire in `claude -p` pipe mode, subagent and MCP tool calls ignore a deny, and a model blocked from `Write` has been observed using a `Bash` heredoc instead. This is the strongest mechanism available and it is not airtight | ACCEPTED |
 | O-3 | The agent verifier is rejected. No LLM-judge configuration exceeds 0.65 AUROC at detecting a false completion claim, and 0.54 on execution traces | REJECTED |
 | O-4 | The "read the communication rules before writing output" gate is rejected. No hook fires before a model writes prose. `bin/output-lint.sh` measures the reply instead, and already ships | REJECTED |
@@ -118,10 +118,10 @@ scored evaluation sets; any change to persona packs.
 | C-02 | `templates/VAULT.md`, `bin/vault-init.sh`, `commands/v-init.md` | modify | Edit | onboarding resolves and writes `dod_profile`, `test_command`, `lint_command` and `delivery_command`; an unresolved command is written `absent: <reason>` and never omitted | SC-7 | `tests/integration/vault-init.bats` | DONE |
 | C-03 | `bin/gate.sh` | modify | Edit | `config <repo>` refuses at ANALYZE when `VAULT.md` declares no such block | SC-7 | `tests/unit/gate.bats` | DONE |
 | C-04 | `commands/v-work/steps/01-analyze.md`, `commands/v-team.md` | modify | Edit | call `gate.sh config` before Step 2 loads anything | SC-7 | `tests/unit/gate-wiring.bats` | DONE |
-| D-01 | `bin/rule-count.sh` | create | Write | count rule-carrying lines and the prohibition-to-requirement ratio across the files a run reads; `--assert` fails above the recorded budget | SC-6 | `./bin/rule-count.sh` on this repo | TODO |
-| D-02 | `commands/_shared/*.md`, `commands/v-work/steps/*.md`, `commands/v-team/steps/*.md` | modify | Edit | rewrite every surviving prohibition as a requirement. `Never git add -A` becomes `Stage each file by name` | SC-6 | `./bin/rule-count.sh --assert` | TODO |
-| D-03 | same files | modify | Edit | delete every rule with no check behind it and record the count deleted. A rule kept without a check is listed in `vault/check-budget.md` as prose, and that list stays short | SC-6 | same | TODO |
-| D-04 | `scripts/rule-inject-hook.sh`, `hooks/hooks.json` | create | Write | a `SessionStart` hook injecting the surviving requirements, which is what restores decayed compliance without retraining | SC-6 | `tests/unit/gate-hooks.bats` | TODO |
+| D-01 | `bin/rule-count.sh` | create | Write | count rule-carrying lines and the prohibition-to-requirement ratio across the files a run reads; `--assert` fails above the recorded budget | SC-6 | `./bin/rule-count.sh` on this repo | DONE |
+| D-02 | `commands/_shared/*.md`, `commands/v-work/steps/*.md`, `commands/v-team/steps/*.md` | modify | Edit | dropped: measurement contradicts the premise. Prohibitions average 89.5% here and requirements 76.9%, so rewriting 178 prohibitions changes every file a session reads and buys nothing the data can see. Evidence: `vault/research/rule-compliance.md` | SC-6 | `bin/rule-audit.sh` | DROPPED |
+| D-03 | same files | modify | Edit | narrowed: delete or give a check to every rule whose compliance needs a count or state the writer does not hold at write time, and leave the rest. Unchecked rules score 18.1% to 98.8%, so a blanket cut would remove rules followed 92.9%, 98.8% and 74.1% of the time. Start with the 50-character subject clause at `commands/v-work/steps/05-commit-capture.md:58`, which scores 18.1%. Record the count deleted; a rule kept without a check is listed in `vault/check-budget.md` as prose | SC-6 | `bin/rule-audit.sh --by-month` | TODO |
+| D-04 | `scripts/rule-inject-hook.sh`, `hooks/hooks.json` | create | Write | a `SessionStart` hook injecting the surviving requirements, which is what restores decayed compliance without retraining | SC-6 | `tests/unit/gate-hooks.bats` | DONE |
 | E-01 | `bin/gate.sh`, `vault/check-budget.md` | create | Write | `budget`: each check records its fire count and its wrong-fire count; above one in ten it reports over budget and names the check | SC-5 | `tests/unit/gate-budget.bats` | DONE |
 | E-02 | `vault/defect-ledger.md`, `bin/gate.sh` | create | Write | one row per defect class with its repair and the test that failed before it; `recurrence` refuses a repair naming no such test | SC-8 | `tests/unit/gate.bats` | DONE |
 | E-03 | `bin/regression-count.sh` | create | Write | run the unit suite, count `^not ok`, and exit 1 above the number given | SC-9 | `./bin/regression-count.sh 4` | DONE |
@@ -173,6 +173,7 @@ which executes in the container.
 
 ## Refs
 
+`vault/research/rule-compliance.md` — the measured compliance rates that dropped D-02 and narrowed D-03.
 `vault/architecture/session-gates.md` — the gate contract this builds.
 `vault/plans/2026-09-04-0900-mechanical-session-gates.brief.md` — the operator brief.
 `commands/_shared/definition-of-done.md` — the baseline the profiles extend.

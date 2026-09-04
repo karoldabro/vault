@@ -71,6 +71,8 @@ HOOK_ROWS=(
   "output-lint-hook.sh;brevity;Stop;;BREVITY;measures the length of every reply and records it"
   "brevity-reminder-hook.sh;brevity;UserPromptSubmit;;BREVITY;says what your previous reply overran, and stays silent when nothing did"
   "completion-hook.sh;gate;Stop;;COMPLETION;refuses to end a turn that marked work done and recorded no verdict for it"
+  "rule-inject-hook.sh;gate;SessionStart;;GATE;puts the rules nothing checks back in front of the model at session start"
+  "staging-hook.sh;gate;PreToolUse;Bash;GATE;refuses a git add that stages files the session did not name"
 )
 
 linked=0

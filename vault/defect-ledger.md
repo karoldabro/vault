@@ -29,3 +29,4 @@ at 0 and is incremented by whoever finds the class again.
 | D-003 | A config key existed with no code reading it, so a later session believed the question settled | `bin/gate.sh readers` greps for a reader and refuses at zero | `tests/unit/gate.bats:455` | 0 |
 | D-004 | A repo never declared how to run its own checks, and the gap surfaced at the close | `bin/gate.sh config` refuses at ANALYZE; `bin/vault-init.sh` writes every key | `tests/unit/gate.bats:490` | 0 |
 | D-005 | `pipefail` aborted the readers walk on the exact case it exists to report, so a spurious exit read as a refusal | guard the grep with `\|\| true` and count the matches separately | `tests/unit/gate.bats:461` | 0 |
+| D-006 | A session staged another session's in-progress file with a directory-wide `git add`, committing work it did not write | `scripts/staging-hook.sh` denies the tool call before it runs; the prose prohibition it replaces did not hold | `tests/unit/staging-hook.bats:1` | 1 |
