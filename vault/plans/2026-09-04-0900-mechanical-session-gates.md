@@ -13,205 +13,168 @@ tags: [plan, gates, enforcement]
 
 ## Task
 
-Build `bin/gate.sh`, a single executable that refuses to let a `/v-*` session plan, approve or close
-work whose questions, success criteria, definition of done or verification are missing. Wire it into
-`/v-team`, `/v-work`, `/v-do`, `/v-pm` and the reporting half of `/v-cr`. The gate contract is
-`vault/architecture/session-gates.md`. Keywords: gate, refusal, success criteria, definition of done,
-verification, enforcement state.
+Replace written rules with checks that run. A session may not end while a completion claim is
+unproven, and a change may not close without one run of the real system showing that change in its
+output. Cut the instruction corpus, because every unenforced rule lowers compliance on the enforced
+ones. The gate contract is `vault/architecture/session-gates.md`.
 
 ## Open & deferred
 
 | id | item | state |
 |----|------|-------|
-| O-2 | `/v-do` gains three gates and loses its "no ceremony" character. Scaled to a stub plan of three tables, which is the smallest form that still refuses | ACCEPTED |
-| O-3 | The operator brief is printed to the terminal at up to 80 lines, above the 15-line cap in `commands/_shared/communication.md`. The operator asked for the architecture plan in the console | ACCEPTED |
-| O-4 | `/v-cr` gets evidence-per-finding and enforcement states only. It reviews work it did not plan, so `criteria` and `verdict` have no source there | ACCEPTED |
-| O-5 | Phases 2 to 6 run in later sessions. Phase 1 is done: `bin/gate.sh` refuses and passes, `criteria` and `verdict --run` are built and tested, and the gate ran against this plan | OPEN |
-| O-6 | Seven of the nine criteria are not yet due, so this session proved SC-1, SC-6 and SC-8 only. `gate.sh verdict` prints which, and refuses the moment a covering work item flips to DONE | OPEN |
-| O-6b | The agent verifier is removed. No LLM-judge configuration detects a false completion claim above 0.65 AUROC, and 0.54 on execution traces | REJECTED |
-| O-6c | The "read the communication rules before writing output" gate is removed. An instruction cannot be enforced before the model writes prose; `bin/output-lint.sh` measures the reply instead, which already ships | REJECTED |
-| O-7 | `verdict --run` executes commands written in a markdown file. It is opt-in, prints each command first, and must never run against a plan from an untrusted source | ACCEPTED |
-| O-8 | A raw `\|` inside a `check` cell splits the row. Escape it as `\\|`; the parser restores it. `gate.sh` cannot tell an unescaped pipe from a column break | ACCEPTED |
+| O-1 | An unenforced rule is not free. Deleting prose is the repair, not tidying — but nothing yet measures which rules are load-bearing, so D-01 counts before D-03 cuts | OPEN |
+| O-2 | Hooks are escapable. They do not fire in `claude -p` pipe mode, subagent and MCP tool calls ignore a deny, and a model blocked from `Write` has been observed using a `Bash` heredoc instead. This is the strongest mechanism available and it is not airtight | ACCEPTED |
+| O-3 | The agent verifier is rejected. No LLM-judge configuration exceeds 0.65 AUROC at detecting a false completion claim, and 0.54 on execution traces | REJECTED |
+| O-4 | The "read the communication rules before writing output" gate is rejected. No hook fires before a model writes prose. `bin/output-lint.sh` measures the reply instead, and already ships | REJECTED |
+| O-5 | The `Read communication.md first` banner stays in 32 command files. Dropping the hard gate is what the evidence supports; deleting 32 pointers is not | ACCEPTED |
+| O-6 | `graphify-out/graph.json` cannot support a reachability check here: 2,598 nodes, all markdown documents, all 2,385 edges `contains`, and `bin/` `scripts/` `lib/` unindexed. B-04 greps instead | ACCEPTED |
+| O-7 | `verdict --run` executes scripts named in a plan. It must never run against a plan from an untrusted source | ACCEPTED |
 
 ## Success criteria
 
 | id | criterion | kind | how | check | expect | verdict | evidence |
 |----|-----------|------|-----|-------|--------|---------|----------|
-| SC-1 | WHEN a plan states its criteria THE SYSTEM SHALL pass it, and WHEN a plan states none THE SYSTEM SHALL refuse | e2e | command | `./bin/gate.sh criteria vault/plans/2026-09-04-0900-mechanical-session-gates.md && ! ./bin/gate.sh criteria vault/plans/2026-09-03-0929-enforce-brevity-mechanically.md` | exit 0 | MET | `./bin/gate.sh criteria vault/plans/2026-09-03-0929-enforce-brevity-mechanically.md` printed `no '## Success criteria' table` and exited 1; the same command on this plan exited 0 |
-| SC-2 | WHEN a session runs `git commit` with a criterion unmet THE SYSTEM SHALL block the commit and name the criterion | e2e | command | `bash tests/unit/gate-hooks.bats` | exit 0 | | |
-| SC-3 | WHEN each gate check meets a plan carrying its defect THE SYSTEM SHALL refuse, and WHEN it meets the fixed plan THE SYSTEM SHALL pass | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | MET | `./tests/run.sh tests/unit/gate.bats` printed `ok 1` through `ok 32` with no `not ok` |
-| SC-4 | WHEN `states` runs on this plan THE SYSTEM SHALL print a state and a named mechanism for every complaint in the defect report | artifact | artifact | `bin/gate.sh states` against this plan's `## Enforcement states` | 37 rows, none blank, none BOUND-UNREAD | | |
-| SC-5 | WHEN `states` runs THE SYSTEM SHALL print an enforced count above the 13 the defect report recorded | e2e | command | `./bin/gate.sh states vault/plans/2026-09-04-0900-mechanical-session-gates.md` | exit 0, printing `ENFORCED n/37` with n above 13 | | |
-| SC-6 | WHEN the existing unit suite runs THE SYSTEM SHALL fail no more tests than it failed before this work | unit | command | `bash -c 'n=$(./tests/run.sh tests/unit 2>&1 \| grep -c "^not ok" \|\| true); [ "$n" -le 4 ]'` | exit 0 | MET | `./tests/run.sh tests/unit` reported 521 tests with 4 failures, all pre-existing: `document-standard.bats:308`, `document-standard.bats:350`, `plugin-install.bats:106`, `research-clarify.bats:108` |
-| SC-7 | WHEN the configuration gate runs on an onboarded repo THE SYSTEM SHALL pass it, and WHEN it runs on one never onboarded THE SYSTEM SHALL refuse | e2e | command | `./tests/run.sh tests/integration/vault-init.bats` | exit 0 | | |
-| SC-9 | WHEN a `/v-*` command reaches a phase boundary THE SYSTEM SHALL invoke the gate for that phase | unit | command | `./tests/run.sh tests/unit/gate-wiring.bats` | exit 0 | | |
-| SC-8 | WHEN a criterion carries a judgement no command can decide THE SYSTEM SHALL accept it with its failure condition and its no-detector reason | unit | command | `./bin/gate.sh criteria tests/fixtures/gate/observed-criterion.md` | exit 0 | MET | `./bin/gate.sh criteria tests/fixtures/gate/observed-criterion.md` exited 0 on a plan whose only criterion is `how: observed` |
+| SC-1 | WHEN a session tries to end with an unproven completion claim THE SYSTEM SHALL block the end and return the failing check as the next instruction | delivery | command | `./tests/run.sh tests/unit/completion-hook.bats` | exit 0 | | |
+| SC-2 | WHEN a criterion names a check THE SYSTEM SHALL require a committed script and refuse a command written inline in the plan | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
+| SC-3 | WHEN a plan carries no criterion that runs the real system THE SYSTEM SHALL refuse it | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
+| SC-4 | WHEN the gate runs against this repo's own plan THE SYSTEM SHALL execute every committed check and pass only on the real exit codes | delivery | command | `./bin/gate.sh verdict vault/plans/2026-09-04-0900-mechanical-session-gates.md --run` | exit 0 | | |
+| SC-5 | WHEN a check has fired wrongly more than one time in ten THE SYSTEM SHALL report it as over budget | unit | command | `./tests/run.sh tests/unit/gate-budget.bats` | exit 0 | | |
+| SC-6 | WHEN the instruction corpus is counted THE SYSTEM SHALL report fewer rule-lines than the 173 it carries today, and more requirements than prohibitions | delivery | command | `./bin/rule-count.sh --assert` | exit 0 | | |
+| SC-7 | WHEN a repo declares no test, lint and delivery commands THE SYSTEM SHALL refuse at the first step of a session | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
+| SC-8 | WHEN a defect is repaired THE SYSTEM SHALL require a test that failed before the repair | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
+| SC-9 | WHEN the existing suites run THE SYSTEM SHALL fail no more tests than the four failing today | unit | command | `./bin/regression-count.sh 4` | exit 0 | | |
 
 ## Research
 
-| source | takeaway | how it changed this plan |
-|---|---|---|
-| `https://github.com/github/spec-kit` | phases with checkpoints between them, `[NEEDS CLARIFICATION]` markers in the spec, and checklists that validate requirement completeness | the `## Open questions` table is the same marker, made to refuse rather than to annotate |
-| `https://kiro.dev/docs/specs/feature-specs/requirements-first/` | acceptance criteria in EARS notation, `WHEN <condition> THE SYSTEM SHALL <behaviour>`, written before design starts | the `criterion` cell adopts that shape |
-| `https://arxiv.org/abs/2606.09863` | 75.8% of failures in self-assessing coding agents are reported as success; no LLM judge exceeds 0.65 AUROC at detecting it, and an independent process checking state drops it from 44–52% to 3% | there is no agent verifier seat; the gate runs the check and the run produces the evidence |
-| `https://www.swebench.com/SWE-bench/guides/evaluation/` | the harness hides the tests, applies the patch in a container and re-runs them; pass or fail is mechanical and no model judges it | `gate.sh verdict --run` executes every runnable `check` itself; an agent judges only the rows a script cannot run |
-| `https://arxiv.org/abs/2607.05904` | a policy optimised against its own judge drove judge-reported success from 0.72 to 0.94 while true accuracy stayed at 0.20 | the same change: the fewer verdicts a model produces, the less there is to game |
-| `https://code.claude.com/docs/en/hooks` | a `PreToolUse` hook denies a tool call before the permission check and holds even when permission prompting is turned off; injected context does not | the close gate is a hook, not an instruction in a command file |
-| `https://leopard-lab.github.io/paper/ase23-ConfTainter.pdf` | dead-code detectors find unused code paths; no mainstream tool detects a configuration key that nothing reads | `gate.sh bindings` has no off-the-shelf substitute and is built here |
-| `https://proceedings.iclr.cc/paper_files/paper/2025/file/f3c5e56274140e0420baa3916c529210-Paper-Conference.pdf` | a model that produced an invalid step often fails to detect it | verification is a separate seat, never a self-review |
-| `https://rgalen.com/agile-training-news/2016/11/8/definition-of-ready-as-an-anti-pattern` | a stringent readiness gate becomes a stage gate and items never qualify | the clarify gate blocks only on decision-changing questions |
+| source | takeaway | bears on | verdict |
+|---|---|---|---|
+| `https://arxiv.org/abs/2505.16944` | AGENTIF: 707 instructions from 50 real agentic apps, 11.9 constraints each; the best model satisfies every constraint on under 30% | the whole instruction corpus | contradicts writing more rules |
+| `https://arxiv.org/abs/2507.11538` | IFScale: compliance falls as instruction count rises; 68% at 500 | the corpus size | contradicts growing the framework |
+| `https://arxiv.org/html/2605.10039` | 1,650 Claude Code sessions, 16,050 observations: file size, instruction position and file architecture show no detectable effect on compliance | every past attempt to fix rules by rewriting them | contradicts rewriting as a repair |
+| `https://arxiv.org/abs/2604.20911` | 4,416 trials: prohibitions fall from 73% to 33% by turn 16; requirements hold at 100%; re-injection restores compliance | 178 prohibitions against 32 requirements here | supports D-02 and D-04 |
+| `https://arxiv.org/abs/2606.09863` | 75.8% of failures in self-assessing coding agents are reported as success; no judge configuration exceeds 0.65 AUROC, 0.54 on traces; an independent process reading state drops it to 3% | the verdict path | supports A-01, contradicts an agent verifier |
+| `https://arxiv.org/html/2608.02011v1` | Read-Gate: refusing to let an agent finalise before it opened the evidence raised accuracy 14.9 to 19.9 points on the affected cases | the Stop hook shape | supports A-01 |
+| `https://abseil.io/resources/swe-book/html/ch20.html` | Tricorder launches a check only under 10% false positives; the platform runs below 5%; noisy analyzers are disabled | every check built here | supports E-01 |
+| `https://github.com/sjh9714/nuhuh` | a Stop hook that extracts completion claims and re-executes them against fresh exit codes, files and git state, with no model call | A-01's design | supports A-01 |
+| `https://code.claude.com/docs/en/hooks` | a PreToolUse hook denies before the permission check and holds when prompting is off; injected context does not | the hook layer | supports A-02 |
 
 ## Verified current state
 
 | fact | how it was checked | date |
 |---|---|---|
-| `bin/doc-lint.sh` is the only executable gate the lifecycle runs, and it checks document form, not session state | `wc -l bin/*.sh`, read of the usage header | 2026-09-04 |
-| `commands/_shared/definition-of-done.md` exists with a six-line baseline and no profiles | read of the file | 2026-09-04 |
-| `commands/_shared/elicitation.md` states that elicitation is not a gate and must not hold work | read of its "What this is not" section | 2026-09-04 |
-| `hooks/hooks.json` registers SessionStart, PostToolUse, Stop and UserPromptSubmit, and no PreToolUse | read of the file | 2026-09-04 |
-| `templates/plan.md` carries no success-criteria, open-questions or definition-of-done table | read of the file | 2026-09-04 |
+| A `/v-team` session is told to obey 173 rule-carrying lines across 2,347 lines and roughly 20,000 tokens | one grep for rule words over the twelve files a run reads | 2026-09-04 |
+| Prohibitions outnumber requirements 178 to 32 in the shared contracts and step files | two greps over `commands/_shared/` and `commands/v-*/steps/` | 2026-09-04 |
+| `bin/gate.sh` exists with `criteria`, `verdict`, `verdict --run` and `all --phase`, and 32 tests pass | `./tests/run.sh tests/unit/gate.bats` | 2026-09-04 |
+| The gate reads check strings out of markdown cells, so the session authoring the work also authors the check | read of `cmd_verdict` in `bin/gate.sh` | 2026-09-04 |
+| The unit suite is 521 tests with 4 failures, all pre-existing | `./tests/run.sh tests/unit`; failures at `document-standard.bats:308` and `:350`, `plugin-install.bats:106`, `research-clarify.bats:108` | 2026-09-04 |
+| `hooks/hooks.json` registers SessionStart, PostToolUse, Stop and UserPromptSubmit; the Stop hook only measures reply length | read of the file and `scripts/output-lint-hook.sh` | 2026-09-04 |
 
 ## Decisions
 
 | decision | reason | record |
 |---|---|---|
-| One executable, `bin/gate.sh`, with subcommands | a second script gets wired into one command and forgotten | ADR-026 |
-| The plan artifact is the machine-readable session state | a separate state file drifts from the plan nobody updates | ADR-026 |
-| A blocking question may never be answered by a default | the operator asked for a hard stop on decision-changing unknowns | ADR-026 |
-| The blocking question must carry the vault paths already searched | an operator answering what the vault answered learns that answering is wasted | ADR-026 |
-| A criterion may be decided by a command, an artifact check, or a named observation | not everything is a command, and a judgement dressed as a metric accepts the cases it should reject | ADR-026 |
-| An observed criterion must name its disconfirming condition and why no detector exists | without both it closes on "it looked fine", and no detector ever gets built | ADR-026 |
-| Onboarding writes every definition-of-done command, including the ones it cannot resolve | an omitted key makes the next session believe the question was settled | ADR-026 |
-| At most four blocking questions per session | agents measurably repeat questions and ask what the prompt already answered; an uncapped gate becomes the checkpoint that stops work over small gaps | ADR-026 |
-| The gate executes every check itself; no model reports whether a criterion was met | no LLM-judge configuration exceeds 0.65 AUROC at detecting a false completion claim, and 0.54 on execution traces | ADR-026 |
-| Every change carries one check that runs the real system and looks for this change in what it produced | an existing suite passes green while a new field never reaches the output, because the suite predates the field | ADR-026 |
-| At least one success criterion must invoke the real system | components proven in isolation and never integrated is the defect that cost the most | ADR-026 |
-| `GATE=off` is whole-run only, with no per-check suppression | a gate silenced one check at a time gets silenced | ADR-026 |
-| `elicitation.md` keeps its anti-stall rule for non-blocking questions | a stringent readiness gate is a documented anti-pattern: items never qualify and value stops shipping | ADR-026 |
-| A success criterion is written as `WHEN <trigger> THE SYSTEM SHALL <observable>` | a criterion with no trigger and no observable cannot be told apart from a preference | ADR-026 |
+| A check is a committed script, never a command string in a plan | the session that writes the work must not also author the thing that grades it | ADR-026 |
+| No model decides whether work was done | no judge configuration exceeds 0.65 AUROC, and 0.54 on execution traces | ADR-026 |
+| Every change carries one check that runs the real system and finds the change in its output | an existing suite passes green while a new field never reaches the output | ADR-026 |
+| Assertions read what the run produced, never what the system wrote about itself | a manifest records intent; the artifact records delivery | ADR-026 |
+| Rules are written as requirements, never as prohibitions | prohibitions fall to 33% by turn 16 while requirements hold | ADR-026 |
+| An unenforced rule is deleted rather than kept | compliance falls as instruction count rises, so an ignored rule costs the enforced ones | ADR-026 |
+| A check firing wrongly more than one time in ten is fixed or deleted | Google disables an analyzer at that line, and a distrusted check gets switched off wholesale | ADR-026 |
+| `GATE=off` stays, whole-run only | a gate with no relief valve is abandoned rather than used with an exception | ADR-026 |
 
 ## Scope & non-goals
 
-Covers: the gate executable, its wiring into five commands, the plan template, the two
-definition-of-done profiles, the verification contract, the operator brief, the cross-plan tracker
-and the defect ledger.
+Covers: the Stop hook that re-runs completion claims, checks as committed scripts, the delivery
+check, the instruction cut, the per-check false-positive budget, the recurrence ledger, and the
+per-project commands written at onboarding.
 
-Non-goals: scored evaluation sets for rules that cannot become gates; any change to persona packs;
-any change to `/v-capture` beyond the tracker reconciliation.
+Non-goals: judging output quality; a clarification gate that detects ambiguity, which nothing can do;
+scored evaluation sets; any change to persona packs.
 
 ## Artifact lifecycles
 
 | artifact | what requires it | who writes it | who reads it | missing or wrong |
 |---|---|---|---|---|
-| `bin/gate.sh` | every close path in `commands/v-work/steps/05-commit-capture.md` §5.0 | this plan | the five `/v-*` commands and `scripts/gate-hook.sh` | the step reports the gate unavailable and stops; it never proceeds unchecked |
-| `## Success criteria` table in a plan | `bin/gate.sh criteria` and `bin/gate.sh verdict` | PROPOSE | the verification agent | `criteria` exits 1 naming the empty table; PROPOSE cannot write work items |
-| `## Open questions` table in a plan | `bin/gate.sh clarify` | ANALYZE and PROPOSE | the operator at the clarify stop | `clarify` exits 1 naming the row with the empty `searched` cell |
-| `## Enforcement states` table in a plan | `bin/gate.sh states` | EXECUTE | the close report | `states` exits 1; the close report cannot print its ENFORCED count |
-| `## definition of done` block in `VAULT.md` (`dod_profile`, `test_command`, `lint_command`, `duplication_command`, `e2e_command`, `interface_doc_path`) | `bin/gate.sh config` at ANALYZE and `bin/gate.sh dod` at close | `bin/vault-init.sh`, confirmed by the operator | both gates, and the close report | `config` exits 1 at the start of the session and names every missing key; the session does not begin |
-| `scripts/gate-hook.sh` | `hooks/hooks.json` PreToolUse matcher on `git commit` | this plan | Claude Code | the commit is not blocked; the close gate becomes advisory, which is the failure this plan exists to prevent |
-| `vault/_open.md` | `bin/gate.sh tracker` and `/v-capture` | EXECUTE and capture | the next session | `tracker` exits 1 naming the plan whose open rows are absent |
-| `vault/defect-ledger.md` | the regression-test rule in `definition-of-done.md` | the session that repairs a defect | the next session repairing the same class | the recurrence measurement has no denominator and reports UNRUN, never clear |
-| `plans/<slug>.brief.md` | the approval gate in all five commands | PROPOSE | the operator, in the terminal | the gate prints the 15-line decision block alone and says the brief is missing |
+| `scripts/completion-hook.sh` | the `Stop` entry in `hooks/hooks.json` | A-01 | Claude Code, at every turn end | the session ends on an unproven claim, which is the failure this plan exists to stop |
+| `checks/<criterion-id>.sh` in the working repo | `bin/gate.sh criteria` and `verdict --run` | the session at PROPOSE, before work items exist | the gate, and the operator on a clean checkout | `criteria` exits 1 naming the criterion whose script is absent |
+| `## Success criteria` table in a plan | `bin/gate.sh criteria` | PROPOSE | the gate | `criteria` exits 1 and no work items may be written |
+| `## definition of done` block in `VAULT.md` holding `test_command`, `lint_command` and `delivery_command` | `bin/gate.sh config` at ANALYZE | `bin/vault-init.sh`, confirmed by the operator | the gate and the close report | `config` exits 1 at the first step and names each missing key |
+| `bin/rule-count.sh` | D-01 and SC-6 | D-01 | the close report and CI | the corpus grows unmeasured, which is how it reached 173 rules |
+| `vault/defect-ledger.md` | `bin/gate.sh recurrence` | the session that repairs a defect | the next session repairing the same class | recurrence has no denominator and reports UNRUN, never clear |
+| `vault/check-budget.md` | `bin/gate.sh budget` | the operator, when a check fires wrongly | E-01 | a noisy check survives and the whole gate gets switched off instead |
 
 ## Work items
 
-Phase 1 is the end-to-end spine and closes this session. Phases 2 to 6 are the multi-session tail
-and each row carries its own status.
-
 | id | file (exact path) | action | tool | constraint | covers | verification | status |
 |----|-------------------|--------|------|------------|--------|--------------|--------|
-| W-01 | `bin/gate.sh` | create | Write | subcommand dispatch, markdown-table parser, `GATE=off`, exit 0/1/2, usage header naming every check | SC-1 | `bash -n bin/gate.sh` and `bin/gate.sh --help` | DONE |
-| W-02 | `bin/gate.sh` | modify | Edit | implement `criteria`: refuse empty table, empty `check`/`expect`, a `check` with no backtick or path, and zero `kind: e2e` rows without a frontmatter `no-runtime:` | SC-1 | `tests/unit/gate.bats` criteria cases | DONE |
-| W-02b | `bin/gate.sh` | modify | Edit | `criteria` warns, and does not refuse, when a `criterion` cell carries no `WHEN`/`SHALL` pair — the shape is guidance until the corpus uses it | SC-1 | `tests/unit/gate.bats` shape case | DONE |
-| W-02c | `bin/gate.sh` | modify | Edit | `criteria` accepts three `how` values. `command` and `artifact` are decided by the gate. `observed` is refused unless the row names its disconfirming condition and a `no-command: <reason>` | SC-8 | `tests/unit/gate.bats` observed cases | DONE |
-| W-03 | `bin/gate.sh` | modify | Edit | implement `verdict`: refuse a non-`MET` verdict, a `MET` row with empty evidence, and evidence with no backticked command or `path:line` | SC-1 | `tests/unit/gate.bats` verdict cases | DONE |
-| W-03b | `bin/gate.sh` | modify | Edit | implement `verdict --run`: execute each `check` cell that is a command, compare its exit code to `expect`, write the output into `evidence`, and refuse on disagreement. A check that cannot be executed is marked `observed` and decided by the operator | SC-1 | `tests/unit/gate.bats` run-mode cases | DONE |
-| W-04 | `templates/plan.md` | modify | Edit | add `## Open questions`, `## Success criteria`, `## Definition of done`, `## Enforcement states`; make `## Decisions` a table with a `record` column; add `covers` to work items | SC-9 | `bin/doc-lint.sh templates/plan.md` | DONE |
-| W-05 | `commands/v-work/steps/03-propose.md` | modify | Edit | §3a.0a calls `gate.sh clarify`; a new §3a.4a calls `gate.sh criteria` before work items are written; a nonzero exit stops the step | SC-9 | `tests/unit/gate-wiring.bats` greps for both invocations | DONE |
-| W-06 | `commands/v-work/steps/05-commit-capture.md` | modify | Edit | §5.0 calls `gate.sh all <plan> --phase close` before staging; a nonzero exit stops the close | SC-9 | same test file | DONE |
-| W-07 | `tests/unit/gate.bats` | create | Write | one refuse case and one pass case per implemented subcommand, each with its own fixture | SC-3, SC-6 | `tests/run.sh unit` | DONE |
-| W-08 | `tests/fixtures/gate/observed-criterion.md` | create | Write | the committed fixture for a judgement no command can decide. The defect fixtures are generated inside `tests/unit/gate.bats` by `mkplan` instead, so each defect sits beside the assertion about it | SC-3 | `bin/gate.sh criteria tests/fixtures/gate/observed-criterion.md` | DONE |
-| W-09 | `vault/plans/2026-09-04-0900-mechanical-session-gates.md` | modify | Edit | run the full close phase against this plan and record every verdict with its evidence | SC-1 | `bin/gate.sh all` on this file exits 0 | DONE |
-| W-10 | `bin/gate.sh` | modify | Edit | implement `clarify` per the schema in `vault/architecture/session-gates.md`, including the four-row cap on `blocks: yes` questions | SC-3 | `tests/unit/gate.bats` clarify cases | TODO |
-| W-11 | `bin/gate.sh` | modify | Edit | implement `coverage`: every criterion id appears in a work-item `covers` cell | SC-3 | same | TODO |
-| W-12 | `bin/gate.sh` | modify | Edit | implement `dod`: refuse a state that is not `met`, `failed` or `absent: <reason>`, and refuse any `failed` | SC-3 | same | TODO |
-| W-13 | `bin/gate.sh` | modify | Edit | implement `decisions`: refuse a `record` cell that is neither a repo-relative path nor `local` | SC-3 | same | TODO |
-| W-14 | `bin/gate.sh` | modify | Edit | implement `bindings`: grep each backticked identifier in `## Artifact lifecycles` across the repo, excluding comment lines and the declaring file; zero readers refuses | SC-3 | same | TODO |
-| W-15 | `bin/gate.sh` | modify | Edit | implement `states`: print `ENFORCED n/total`, count `observed` criteria separately so the fraction says how much a script can decide, and refuse any `BOUND-UNREAD` row | SC-4, SC-5 | same | TODO |
-| W-16 | `bin/gate.sh` | modify | Edit | implement `tracker`: refuse when a `proposed` or `approved` plan has open rows absent from `vault/_open.md` | SC-3 | same | TODO |
-| W-16b | `bin/gate.sh` | modify | Edit | implement `config <repo>`: refuse when `VAULT.md` declares no `dod_profile`, or a profile line has neither a command nor an `absent: <reason>` | SC-7 | `tests/unit/gate.bats` config cases | TODO |
-| W-16c | `commands/v-work/steps/01-analyze.md`, `commands/v-team.md` | modify | Edit | call `gate.sh config` at ANALYZE, before Step 2 loads anything; a nonzero exit stops the session and names the missing keys | SC-7 | `tests/unit/gate-wiring.bats` | TODO |
-| W-17 | `commands/_shared/definition-of-done.md` | modify | Edit | add the `code` and `ai-instructions` profiles with their refused-evidence lists; add the regression-test rule pointing at `vault/defect-ledger.md`. Each profile line names the `VAULT.md` key holding its command | SC-7 | `bin/doc-lint.sh` on the file | TODO |
-| W-17b | `templates/VAULT.md` | modify | Edit | add a `## definition of done` section: `dod_profile`, `test_command`, `lint_command`, `duplication_command`, `e2e_command`, `interface_doc_path`. Every key is present, holding a command or `absent: <reason>` | SC-7 | `bin/gate.sh config` on a repo built from the template | TODO |
-| W-17c | `bin/vault-init.sh` | modify | Edit | after scaffolding, resolve each command from `scripts/detect-stack.sh`, present them for confirmation, and write the block. An unresolved command is written as `absent: <reason>`, never omitted | SC-7 | `tests/integration/vault-init.bats` | TODO |
-| W-17d | `commands/v-init.md` | modify | Edit | document the new step in "What it does" and name the keys it writes | SC-7 | `bin/doc-lint.sh` on the file | TODO |
-| W-19 | `commands/_shared/elicitation.md` | modify | Edit | the anti-stall rule survives for non-blocking questions; a `blocks: yes` question may never be defaulted and routes to the operator | SC-9 | `bin/doc-lint.sh` on the file | TODO |
-| W-20 | `templates/plan-stub.md` | create | Write | the three-table plan `/v-do` writes | SC-9 | `bin/doc-lint.sh` on the file | TODO |
-| W-21 | `commands/v-team/steps/03-propose-loop.md` | modify | Edit | call `clarify`, `criteria` and `coverage` at the same points `/v-work` does | SC-9 | `tests/unit/gate-wiring.bats` | TODO |
-| W-23 | `commands/v-do.md` | modify | Edit | write the stub plan, run `criteria` before editing and `verdict` plus `dod` before committing | SC-9 | same | TODO |
-| W-24 | `commands/v-pm/steps/01-intake.md` | modify | Edit | `requirements.md` carries the `## Success criteria` table and `gate.sh criteria` runs on it | SC-9 | same | TODO |
-| W-25 | `commands/v-cr/steps/03-review.md` | modify | Edit | every finding carries the command that produced it; a finding without one is advisory | SC-9 | same | TODO |
-| W-26 | `templates/brief.md` | create | Write | architecture and success criteria only, 80 lines maximum | SC-9 | `bin/doc-lint.sh --class contract templates/brief.md` | TODO |
-| W-27 | `bin/doc-lint.sh` | modify | Edit | add type `brief` with cap 80 to `cap_for_type` and `singularize_type` | SC-9 | `bin/doc-lint.sh --list-caps` shows it | TODO |
-| W-28 | `vault/_open.md` | create | Write | one row per open item across all plans: id, what, plan, state, what would close it | SC-3 | `bin/gate.sh tracker vault` | TODO |
-| W-29 | `vault/defect-ledger.md` | create | Write | one row per defect class: id, what, repair, regression-test path, recurrence count | SC-4 | referenced by `definition-of-done.md` | TODO |
-| W-30 | `scripts/gate-hook.sh` | create | Write | PreToolUse hook matching `git commit`; runs the close phase against the session's plan; blocks on exit 1 | SC-2 | `tests/unit/gate-hooks.bats` | TODO |
-| W-31 | `hooks/hooks.json` | modify | Edit | register the PreToolUse matcher; SessionStart also injects the numbers table from `commands/_shared/communication.md` | SC-2 | same | TODO |
-| W-32 | `vault/decisions/ADR-026-mechanical-session-gates.md` | create | Write | the eight decisions above, with the rejected alternatives | SC-4 | `bin/doc-lint.sh` on the file | TODO |
-| W-33 | `vault-guide.md` | modify | Edit | one section naming `bin/gate.sh`, `dod_profile` and the refusal contract | SC-4 | `bin/doc-lint.sh vault-guide.md` | TODO |
-| W-34 | `install.sh` | modify | Edit | ship `bin/gate.sh`, `scripts/gate-hook.sh` and the PreToolUse registration | SC-7 | `tests/unit/install.bats` | TODO |
-| W-35 | `vault/_moc.md`, `vault/decisions/_inventory.md` | modify | Edit | index the new architecture doc, ADR-026 and the two new vault surfaces | SC-4 | `bin/doc-lint.sh --changed` | TODO |
+| A-01 | `scripts/completion-hook.sh` | create | Write | a `Stop` hook that reads the session's plan, runs every committed check, and exits 2 with the failing check on stderr so it becomes the next instruction. No model call. Honours `stop_hook_active` so it cannot loop | SC-1 | `tests/unit/completion-hook.bats` | TODO |
+| A-02 | `hooks/hooks.json` | modify | Edit | register A-01 on `Stop` beside the existing output-lint entry | SC-1 | same | TODO |
+| A-03 | `tests/unit/completion-hook.bats` | create | Write | one case where a failing check blocks the stop, one where a passing set allows it, one asserting the hook cannot loop | SC-1 | `./tests/run.sh tests/unit/completion-hook.bats` | TODO |
+| B-01 | `bin/gate.sh` | modify | Edit | `criteria` requires each row's `check` to name an existing executable file; an inline command string is refused | SC-2 | `tests/unit/gate.bats` | TODO |
+| B-02 | `bin/gate.sh` | modify | Edit | `verdict --run` executes the named script, compares its exit code to `expect`, and writes the captured output into `evidence` itself | SC-2, SC-4 | same | TODO |
+| B-03 | `templates/check.sh` | create | Write | the skeleton a criterion script starts from: exit 0 when met, 1 when not, and print what it observed | SC-2 | `bash -n templates/check.sh` | TODO |
+| B-04 | `bin/gate.sh` | modify | Edit | `readers`: grep each identifier declared in `## Artifact lifecycles` across the repo, excluding comments and its declaring file; zero readers refuses | SC-2 | same | TODO |
+| C-01 | `bin/gate.sh` | modify | Edit | `criteria` refuses a plan with no row of `kind: delivery`. A delivery row runs the real system and asserts this change appears in what the run produced. A repo with no runtime declares `no-runtime:` in frontmatter | SC-3 | same | TODO |
+| C-02 | `templates/VAULT.md`, `bin/vault-init.sh`, `commands/v-init.md` | modify | Edit | onboarding resolves and writes `dod_profile`, `test_command`, `lint_command` and `delivery_command`; an unresolved command is written `absent: <reason>` and never omitted | SC-7 | `tests/integration/vault-init.bats` | TODO |
+| C-03 | `bin/gate.sh` | modify | Edit | `config <repo>` refuses at ANALYZE when `VAULT.md` declares no such block | SC-7 | `tests/unit/gate.bats` | TODO |
+| C-04 | `commands/v-work/steps/01-analyze.md`, `commands/v-team.md` | modify | Edit | call `gate.sh config` before Step 2 loads anything | SC-7 | `tests/unit/gate-wiring.bats` | TODO |
+| D-01 | `bin/rule-count.sh` | create | Write | count rule-carrying lines and the prohibition-to-requirement ratio across the files a run reads; `--assert` fails above the recorded budget | SC-6 | `./bin/rule-count.sh` on this repo | TODO |
+| D-02 | `commands/_shared/*.md`, `commands/v-work/steps/*.md`, `commands/v-team/steps/*.md` | modify | Edit | rewrite every surviving prohibition as a requirement. `Never git add -A` becomes `Stage each file by name` | SC-6 | `./bin/rule-count.sh --assert` | TODO |
+| D-03 | same files | modify | Edit | delete every rule with no check behind it and record the count deleted. A rule kept without a check is listed in `vault/check-budget.md` as prose, and that list stays short | SC-6 | same | TODO |
+| D-04 | `scripts/rule-inject-hook.sh`, `hooks/hooks.json` | create | Write | a `SessionStart` hook injecting the surviving requirements, which is what restores decayed compliance without retraining | SC-6 | `tests/unit/gate-hooks.bats` | TODO |
+| E-01 | `bin/gate.sh`, `vault/check-budget.md` | create | Write | `budget`: each check records its fire count and its wrong-fire count; above one in ten it reports over budget and names the check | SC-5 | `tests/unit/gate-budget.bats` | TODO |
+| E-02 | `vault/defect-ledger.md`, `bin/gate.sh` | create | Write | one row per defect class with its repair and the test that failed before it; `recurrence` refuses a repair naming no such test | SC-8 | `tests/unit/gate.bats` | TODO |
+| E-03 | `bin/regression-count.sh` | create | Write | run the unit suite, count `^not ok`, and exit 1 above the number given | SC-9 | `./bin/regression-count.sh 4` | TODO |
+| F-01 | `vault/decisions/ADR-026-mechanical-session-gates.md` | create | Write | the eight decisions above with the evidence each rests on | SC-6 | `bin/doc-lint.sh` on the file | TODO |
+| F-02 | `install.sh`, `INSTALL.md` | modify | Edit | ship `bin/gate.sh`, `scripts/completion-hook.sh`, `bin/rule-count.sh` and the hook registrations | SC-7 | `tests/unit/install.bats` | TODO |
+| F-03 | `vault-guide.md`, `vault/_moc.md`, `vault/decisions/_inventory.md` | modify | Edit | one section naming the gate and the delivery check; index ADR-026 and the two new vault surfaces | SC-6 | `bin/doc-lint.sh --changed` | TODO |
 
 ## Sequencing & dependencies
 
-W-01 through W-09 are phase 1 and run in order; W-09 is the real run that proves the spine and
-cannot start before W-07 is green. W-10 to W-16 extend the same executable and may run in any order
-after W-01. W-17 to W-20 are contract documents and gate nothing until W-21 to W-25 wire them.
-W-30 and W-31 depend on W-06, because the hook runs the same close phase the step runs. W-32 to W-35
-close the multi-session build.
+A-01 to A-03 run first and alone: the Stop hook is the highest-evidence mechanism here and it works
+against the gate as it stands today. B repoints checks at committed scripts and lands before C,
+because a delivery check living in a markdown cell carries the defect C exists to remove. D depends
+on nothing and runs in parallel, except that D-03 deletes rules and follows D-01, which counts them.
+E and F close the build.
 
 ## Rollback
 
-`GATE=off` in the environment disables every check without touching a file. To remove the machinery:
-revert the commit, delete `bin/gate.sh` and `scripts/gate-hook.sh`, and drop the PreToolUse entry
-from `hooks/hooks.json`. Nothing in the framework depends on a gate having run, so removal leaves the
-lifecycle exactly as it is today. No migration and no data change is involved.
+`GATE=off` disables every check. To remove the machinery: revert the commits, delete `bin/gate.sh`,
+`scripts/completion-hook.sh`, `bin/rule-count.sh` and `bin/regression-count.sh`, and drop the `Stop`
+and `SessionStart` entries this plan adds to `hooks/hooks.json`. D-02 and D-03 rewrite and delete
+prose, which `git revert` restores. Nothing in the lifecycle depends on a gate having run, and no
+data or migration is involved.
 
 ## Test plan
 
-`tests/unit/gate.bats` covers `bin/gate.sh`: one refusing fixture and one passing fixture per
-subcommand, asserting the exit code and the named missing thing. `tests/unit/gate-wiring.bats`
-asserts each command step file invokes the gate it is supposed to. `tests/unit/gate-hooks.bats`
-covers `scripts/gate-hook.sh` against a blocked and an allowed commit. All three live under
-`tests/unit/` and run through `tests/run.sh unit`, which executes in the container.
+`tests/unit/gate.bats` covers `bin/gate.sh` with one refusing and one passing fixture per subcommand.
+`tests/unit/completion-hook.bats` covers the Stop hook against a blocked and an allowed turn end and
+asserts it cannot loop. `tests/unit/gate-budget.bats` covers the false-positive budget.
+`tests/unit/gate-wiring.bats` asserts each step file invokes the gate it owns.
+`tests/integration/vault-init.bats` covers the onboarding keys. All run through `tests/run.sh`,
+which executes in the container.
 
 ## Test backlog
 
 | id | source | kind | target (exact path) | intent | priority | disposition |
 |----|--------|------|---------------------|--------|----------|-------------|
-| T-01 | SC-3 | unit | `tests/unit/gate.bats` | `criteria` exits 1 on an empty success-criteria table | high | |
-| T-02 | SC-3 | unit | `tests/unit/gate.bats` | `criteria` exits 1 when no row has `kind: e2e` and no `no-runtime:` is declared | high | |
-| T-03 | SC-3 | unit | `tests/unit/gate.bats` | `criteria` exits 0 when a `no-runtime:` reason is present and no e2e row exists | high | |
-| T-04 | SC-3 | unit | `tests/unit/gate.bats` | `verdict` exits 1 on a `MET` row with empty evidence | high | |
-| T-05 | SC-3 | unit | `tests/unit/gate.bats` | `verdict` exits 1 on evidence carrying prose with no command or `path:line` | high | |
-| T-05b | SC-3 | unit | `tests/unit/gate.bats` | `verdict --run` exits 1 when a check's real exit code contradicts a `MET` verdict written into the plan | high | |
-| T-07b | SC-3 | unit | `tests/unit/gate.bats` | `clarify` exits 1 on a fifth `blocks: yes` row | medium | |
-| T-06 | SC-3 | unit | `tests/unit/gate.bats` | `clarify` exits 1 on a `blocks: yes` row with an empty `searched` cell | high | |
-| T-07 | SC-3 | unit | `tests/unit/gate.bats` | `clarify` exits 1 on a `blocks: yes` row marked `defaulted` | high | |
-| T-08 | SC-3 | unit | `tests/unit/gate.bats` | `bindings` exits 1 on an identifier with no reader outside its declaring file | high | |
-| T-09 | SC-3 | unit | `tests/unit/gate.bats` | `states` exits 1 on a `BOUND-UNREAD` row and prints the ENFORCED fraction | high | |
-| T-10 | SC-3 | unit | `tests/unit/gate.bats` | `GATE=off` exits 0 on every fixture that otherwise refuses | high | |
-| T-11 | SC-3 | unit | `tests/unit/gate.bats` | a malformed table exits 2, not 0 — a parser that cannot read the plan must not pass it | high | |
-| T-11b | SC-8 | unit | `tests/unit/gate.bats` | `criteria` exits 1 on an `observed` row with no disconfirming condition | high | |
-| T-11c | SC-8 | unit | `tests/unit/gate.bats` | `criteria` exits 1 on an `observed` row with no `no-command:` reason | high | |
-| T-11d | SC-7 | unit | `tests/unit/gate.bats` | `config` exits 1 when a done-line key is omitted, and exits 0 when it reads `absent: <reason>` | high | |
-| T-11e | SC-7 | integration | `tests/integration/vault-init.bats` | a freshly initialised repo's `VAULT.md` carries every done-line key | high | |
-| T-12 | SC-2 | unit | `tests/unit/gate-hooks.bats` | `scripts/gate-hook.sh` blocks a `git commit` when the close phase exits 1 | high | |
-| T-13 | SC-1 | unit | `tests/unit/gate-wiring.bats` | each of the five command step files invokes the gate subcommand it owns | medium | |
+| T-01 | SC-1 | unit | `tests/unit/completion-hook.bats` | a failing check blocks the turn end with exit 2 | high | |
+| T-02 | SC-1 | unit | `tests/unit/completion-hook.bats` | `stop_hook_active` prevents a second block on the same turn | high | |
+| T-03 | SC-1 | unit | `tests/unit/completion-hook.bats` | the hook makes no model call and runs only the named scripts | high | |
+| T-04 | SC-2 | unit | `tests/unit/gate.bats` | `criteria` refuses a `check` cell holding an inline command instead of a script path | high | |
+| T-05 | SC-2 | unit | `tests/unit/gate.bats` | `criteria` refuses a script path that is absent or not executable | high | |
+| T-06 | SC-3 | unit | `tests/unit/gate.bats` | `criteria` refuses a plan with no `kind: delivery` row and no `no-runtime:` | high | |
+| T-07 | SC-2 | unit | `tests/unit/gate.bats` | `readers` refuses an identifier with no reader outside its declaring file | high | |
+| T-08 | SC-5 | unit | `tests/unit/gate-budget.bats` | `budget` reports over budget at eleven wrong fires in a hundred and stays quiet at nine | high | |
+| T-09 | SC-8 | unit | `tests/unit/gate.bats` | `recurrence` refuses a defect-ledger row whose repair names no failing-before test | high | |
+| T-10 | SC-7 | unit | `tests/unit/gate.bats` | `config` refuses an omitted key and accepts `absent: <reason>` | high | |
+| T-11 | SC-6 | unit | `tests/unit/gate.bats` | `rule-count.sh --assert` fails when prohibitions outnumber requirements | medium | |
+| T-12 | SC-2 | unit | `tests/unit/gate.bats` | a table the parser cannot read exits 2, never 0 | high | |
 
 ## Refs
 
-`vault/architecture/session-gates.md` — the gate contract this plan builds.
-`~/workspace/animation-studio/vault/requirements/2026-09-04-vault-framework-defects-and-required-gates.md` — the defect register whose 37 rows are the acceptance list. Outside this repo; its rows are copied into `## Enforcement states` at W-15.
-`commands/_shared/definition-of-done.md` — the baseline the two profiles extend.
-`commands/_shared/elicitation.md` — the anti-stall rule the clarify gate must not break.
+`vault/architecture/session-gates.md` — the gate contract this builds.
+`vault/plans/2026-09-04-0900-mechanical-session-gates.brief.md` — the operator brief.
+`commands/_shared/definition-of-done.md` — the baseline the profiles extend.
+`~/workspace/animation-studio/vault/requirements/2026-09-04-vault-framework-defects-and-required-gates.md` — the defect register this answers. Outside this repo.
+`~/workspace/animation-studio/vault/requirements/2026-09-04-every-feature-brings-a-fixture.md` — the same delivery rule applied to a video pipeline. Outside this repo.

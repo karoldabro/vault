@@ -54,7 +54,7 @@ tags: [plan]
                    detector exists>`. Without the first it closes on "it looked fine"; without the
                    second, nobody ever builds the detector.
 
-     AT LEAST ONE ROW MUST BE `kind: e2e` — a run of the real system through the path this change
+     AT LEAST ONE ROW MUST BE `kind: delivery` — a run of the real system through the path this change
      serves, not a fixture and not a unit test. A plan with nothing to run declares
      `no-runtime: <reason>` in frontmatter instead. This is the row that catches work which passed
      its own tests and was never wired into anything.

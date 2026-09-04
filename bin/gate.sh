@@ -178,7 +178,7 @@ cmd_criteria() {
     rows=$(table_rows "$plan" '## Success criteria' || true)
     [ -n "$rows" ] || { refuse "'## Success criteria' has no rows — planning may not start without them"; return; }
 
-    local saw_e2e=0 count=0
+    local saw_delivery=0 count=0
     while IFS= read -r row; do
         [ -n "$row" ] || continue
         local id crit kind how check expect
@@ -193,7 +193,7 @@ cmd_criteria() {
         [ -n "$crit" ]   || refuse "$id has no criterion"
         [ -n "$check" ]  || refuse "$id has no check — nothing can decide it"
         [ -n "$expect" ] || refuse "$id has no expected outcome"
-        [ "$kind" = e2e ] && saw_e2e=1
+        [ "$kind" = delivery ] && saw_delivery=1
 
         case "$how" in
             command|artifact)
@@ -219,13 +219,13 @@ cmd_criteria() {
             note "$id reads as a statement, not a rule. 'WHEN <trigger> THE SYSTEM SHALL <observable>' is what makes it testable"
     done <<<"$rows"
 
-    if [ "$saw_e2e" -eq 0 ]; then
+    if [ "$saw_delivery" -eq 0 ]; then
         local why
         why=$(frontmatter_get "$plan" no-runtime)
         if [ -n "$why" ]; then
             note "no end-to-end criterion; the plan declares no-runtime: $why"
         else
-            refuse "no criterion has kind 'e2e'. A component proven only in isolation is how work gets built and never integrated. Add one, or declare 'no-runtime: <reason>' in frontmatter"
+            refuse "no criterion has kind 'delivery'. A delivery check runs the real system and finds THIS change in what the run produced. Without one, work passes its own tests and never arrives. Add one, or declare 'no-runtime: <reason>' in frontmatter"
         fi
     fi
     [ "$count" -gt 0 ] || refuse "'## Success criteria' parsed to zero usable rows"

@@ -147,7 +147,7 @@ gate itself runs), `artifact` (a path and what must appear in it), or `observed`
 that accepts the cases it should reject. It carries two extra things or the gate refuses it: what an
 observer would see that makes it **fail**, and `no-command: <why no detector exists>`.
 
-**One row must be `kind: e2e`** — a run of the real system through the path this change serves. Not
+**One row must be `kind: delivery`** — a run of the real system through the path this change serves. Not
 a fixture, not a unit test. This is the row that catches a component which passed its own tests and
 was never wired into anything. A plan with nothing to run declares `no-runtime: <reason>` in
 frontmatter instead, and says so at the approval gate.
@@ -164,7 +164,7 @@ Each step specifies: **File** (exact path), **Action** (class/method/logic summa
 ### 3a.5 Test plan
 
 For each new/changed unit: **type** (unit = pure logic; feature/integration = endpoints, jobs, DB,
-middleware; e2e = critical journeys), **scenarios** (happy path + edge cases + error paths + data
+middleware; delivery = critical journeys), **scenarios** (happy path + edge cases + error paths + data
 integrity), **file location** (project's test conventions). List the concrete test cases.
 
 Two design moves keep this off the happy path (the heavyweight generative version is `/v-team`'s PROPOSE

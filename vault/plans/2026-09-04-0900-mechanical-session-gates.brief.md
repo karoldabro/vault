@@ -74,11 +74,22 @@ reaches the output, because the suite was written before the field existed.
 The evidence is the artifact the run produced — a manifest, a rendered file, a row in a database.
 The session cannot write it; the run does. It runs after each work item, not once at the end.
 
+## Why the framework shrinks
+
+Measured across 1,650 real Claude Code sessions, how a rules file is written — its size, its
+ordering, its structure — has no detectable effect on whether the rules are followed. What does
+have an effect is how many there are: compliance falls as the count rises, and the best model
+satisfies every constraint of a multi-part instruction under 30% of the time.
+
+This framework tells a session to obey 173 rule-lines. Five in six are phrased as prohibitions,
+the form measured falling from 73% compliance to 33% partway through a session. Requirements hold
+at 100%.
+
+So a rule with no check behind it is deleted, and the survivors are rewritten as requirements. That
+is a smaller framework, not a better-worded one.
+
 ## Sequence
 
-Phase 1 today: the program, two of its checks, the plan template, the wiring into `/v-work`, the
-tests, and one real run of the whole chain against this plan itself.
-
-Phases 2 to 6 later: the remaining seven checks, the done profiles, the delivery check, the
-wiring into `/v-team` `/v-do` `/v-pm` `/v-cr`, the cross-plan tracker, the defect ledger, the
-commit hook, and the decision record.
+The completion hook first, alone — it is the strongest mechanism found and it works against the
+gate as it stands. Then checks become committed scripts, then the delivery check, then the
+instruction cut, then the measurements.

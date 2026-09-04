@@ -30,7 +30,7 @@ second state file exists. `/v-do` writes a stub plan carrying only `## Open ques
 | subcommand | runs before | refuses when |
 |---|---|---|
 | `clarify <plan>` | any design work | a `## Open questions` row has `blocks: yes` and `status: open`; a row has an empty `searched` cell; a row has `blocks: yes` and `status: defaulted` |
-| `criteria <plan>` | work items are written | `## Success criteria` has no rows; a row has an empty `check` or `expect`; a row's `how` is not one of `command`, `artifact`, `observed`; an `observed` row names no disconfirming condition or no `no-command:` reason; no row has `kind: e2e` and the plan declares no `no-runtime:` reason |
+| `criteria <plan>` | work items are written | `## Success criteria` has no rows; a row has an empty `check` or `expect`; a row's `how` is not one of `command`, `artifact`, `observed`; an `observed` row names no disconfirming condition or no `no-command:` reason; no row has `kind: delivery` and the plan declares no `no-runtime:` reason |
 | `coverage <plan>` | the approval gate | a criterion id appears in no work-item `covers` cell |
 | `verdict <plan>` | staging | the gate re-runs every mechanically runnable `check` itself and the exit code disagrees with `expect`; a row whose `check` is not runnable has a `verdict` other than `MET`, empty `evidence`, or `evidence` carrying neither a backticked command nor a `path:line` |
 | `dod <plan>` | staging | a `## Definition of done` row's `state` is not `met`, `failed`, or `absent: <reason>`; any row is `failed` |
@@ -68,7 +68,7 @@ over small gaps.
 
 | id | criterion | kind | how | check | expect | verdict | evidence |
 
-`kind` is `unit`, `e2e`, or `artifact`. `expect` is the outcome that counts as met. `verdict` is
+`kind` is `unit`, `delivery`, or `artifact`. `expect` is the outcome that counts as met. `verdict` is
 empty before execution, then `MET` or `NOT MET`. `evidence` carries the command and its output, or
 `path:line`.
 
@@ -98,8 +98,8 @@ Write the `criterion` cell as a condition and an observable behaviour: `WHEN <tr
 SHALL <observable>`. A criterion with no trigger and no observable is a preference, and the gate
 cannot tell the two apart — the shape is what makes it checkable.
 
-**At least one `e2e` row is required.** It may be `observed` when no runnable end-to-end path exists. An `e2e` check invokes the real system through the path the
-change is meant to serve. A unit test, a fixture, and a static read are not `e2e`. A plan with no
+**At least one `delivery` row is required.** It may be `observed` when no runnable end-to-end path exists. An `delivery` check invokes the real system through the path the
+change is meant to serve. A unit test, a fixture, and a static read are not `delivery`. A plan with no
 runtime declares `no-runtime: <reason>` in frontmatter instead.
 
 ### `## Definition of done`
