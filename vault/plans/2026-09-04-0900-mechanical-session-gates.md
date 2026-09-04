@@ -34,7 +34,7 @@ ones. The gate contract is `vault/architecture/session-gates.md`.
 
 | id | criterion | kind | how | check | expect | verdict | evidence |
 |----|-----------|------|-----|-------|--------|---------|----------|
-| SC-1 | WHEN a session tries to end with an unproven completion claim THE SYSTEM SHALL block the end and return the failing check as the next instruction | delivery | command | `./tests/run.sh tests/unit/completion-hook.bats` | exit 0 | | |
+| SC-1 | WHEN a session tries to end with an unproven completion claim THE SYSTEM SHALL block the end and return the failing check as the next instruction | delivery | command | `./tests/run.sh tests/unit/completion-hook.bats` | exit 0 | MET | `./tests/run.sh tests/unit/completion-hook.bats` printed `ok 1` through `ok 12` with no `not ok`; case 1 asserts exit 2 on a DONE item with no verdict |
 | SC-2 | WHEN a criterion names a check THE SYSTEM SHALL require a committed script and refuse a command written inline in the plan | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
 | SC-3 | WHEN a plan carries no criterion that runs the real system THE SYSTEM SHALL refuse it | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
 | SC-4 | WHEN the gate runs against this repo's own plan THE SYSTEM SHALL execute every committed check and pass only on the real exit codes | delivery | command | `./bin/gate.sh verdict vault/plans/2026-09-04-0900-mechanical-session-gates.md --run` | exit 0 | | |
@@ -95,7 +95,7 @@ scored evaluation sets; any change to persona packs.
 
 | artifact | what requires it | who writes it | who reads it | missing or wrong |
 |---|---|---|---|---|
-| `scripts/completion-hook.sh` | the `Stop` entry in `hooks/hooks.json` | A-01 | Claude Code, at every turn end | the session ends on an unproven claim, which is the failure this plan exists to stop |
+| `scripts/completion-hook.sh` | the `Stop` entry in `hooks/hooks.json` | A-01 | Claude Code, at every turn end | DONE |
 | `checks/<criterion-id>.sh` in the working repo | `bin/gate.sh criteria` and `verdict --run` | the session at PROPOSE, before work items exist | the gate, and the operator on a clean checkout | `criteria` exits 1 naming the criterion whose script is absent |
 | `## Success criteria` table in a plan | `bin/gate.sh criteria` | PROPOSE | the gate | `criteria` exits 1 and no work items may be written |
 | `## definition of done` block in `VAULT.md` holding `test_command`, `lint_command` and `delivery_command` | `bin/gate.sh config` at ANALYZE | `bin/vault-init.sh`, confirmed by the operator | the gate and the close report | `config` exits 1 at the first step and names each missing key |
@@ -108,8 +108,8 @@ scored evaluation sets; any change to persona packs.
 | id | file (exact path) | action | tool | constraint | covers | verification | status |
 |----|-------------------|--------|------|------------|--------|--------------|--------|
 | A-01 | `scripts/completion-hook.sh` | create | Write | a `Stop` hook that reads the session's plan, runs every committed check, and exits 2 with the failing check on stderr so it becomes the next instruction. No model call. Honours `stop_hook_active` so it cannot loop | SC-1 | `tests/unit/completion-hook.bats` | TODO |
-| A-02 | `hooks/hooks.json` | modify | Edit | register A-01 on `Stop` beside the existing output-lint entry | SC-1 | same | TODO |
-| A-03 | `tests/unit/completion-hook.bats` | create | Write | one case where a failing check blocks the stop, one where a passing set allows it, one asserting the hook cannot loop | SC-1 | `./tests/run.sh tests/unit/completion-hook.bats` | TODO |
+| A-02 | `hooks/hooks.json` | modify | Edit | register A-01 on `Stop` beside the existing output-lint entry | SC-1 | same | DONE |
+| A-03 | `tests/unit/completion-hook.bats` | create | Write | one case where a failing check blocks the stop, one where a passing set allows it, one asserting the hook cannot loop | SC-1 | `./tests/run.sh tests/unit/completion-hook.bats` | DONE |
 | B-01 | `bin/gate.sh` | modify | Edit | `criteria` requires each row's `check` to name an existing executable file; an inline command string is refused | SC-2 | `tests/unit/gate.bats` | TODO |
 | B-02 | `bin/gate.sh` | modify | Edit | `verdict --run` executes the named script, compares its exit code to `expect`, and writes the captured output into `evidence` itself | SC-2, SC-4 | same | TODO |
 | B-03 | `templates/check.sh` | create | Write | the skeleton a criterion script starts from: exit 0 when met, 1 when not, and print what it observed | SC-2 | `bash -n templates/check.sh` | TODO |

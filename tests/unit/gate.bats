@@ -68,14 +68,14 @@ mkplan() {
 
 # ---------------------------------------------------------------- criteria: the delivery rule
 
-@test "criteria refuses when no criterion is end-to-end" {
+@test "criteria refuses when no criterion runs the real system" {
     local f
     f=$(mkplan no_e2e "" \
         '| SC-1 | WHEN the parser runs THE SYSTEM SHALL accept the row | unit | command | `true` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"kind 'delivery'"* ]]
-    [[ "$output" == *"never integrated"* ]]
+    [[ "$output" == *"never arrives"* ]]
 }
 
 @test "criteria accepts a plan with no delivery row when it declares no-runtime" {
@@ -87,7 +87,7 @@ mkplan() {
     [[ "$output" == *"no-runtime"* ]]
 }
 
-@test "criteria accepts a well-formed plan with an delivery row" {
+@test "criteria accepts a well-formed plan carrying a delivery row" {
     local f
     f=$(mkplan good "" \
         '| SC-1 | WHEN the pipeline runs THE SYSTEM SHALL emit the file | delivery | command | `true` | exit 0 | | |')
