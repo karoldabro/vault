@@ -13,6 +13,8 @@
 #         bin/gate.sh verdict  <plan> [--run]  every criterion is MET with evidence
 #         bin/gate.sh readers  <plan>          every declared identifier has a reader in code
 #         bin/gate.sh config   <repo>          the repo declares how to run its own checks
+#         bin/gate.sh budget   [file]          no check fires wrongly more than one time in ten
+#         bin/gate.sh recurrence [file]        every defect repair has a test that failed before it
 #         bin/gate.sh all      <plan> --phase <propose|approve|close>
 #         bin/gate.sh --help
 #
@@ -261,6 +263,75 @@ cmd_criteria() {
         fi
     fi
     [ "$count" -gt 0 ] || refuse "'## Success criteria' parsed to zero usable rows"
+}
+
+# ---------------------------------------------------------------------------- budget
+
+# Refuse a check that fires wrongly more than one time in ten.
+#
+# Google launches a Tricorder analyzer only below a 10% false-positive rate and disables one that
+# climbs above it; their platform runs under 5%. The reason is not tidiness: a check developers stop
+# trusting is not ignored selectively, it is switched off wholesale, and every other check goes with
+# it. GATE=off is this framework's version of that, so a noisy check costs the whole gate.
+cmd_budget() {
+    local file=${1:-vault/check-budget.md}
+    [ -r "$file" ] || { note "no check budget at $file — nothing recorded yet"; return; }
+
+    local header rows i_check i_fires i_wrong
+    header=$(table_header "$file" '## Check budget' || true)
+    [ -n "$header" ] || die "$file has no '## Check budget' table"
+    i_check=$(col_index "$header" check); i_fires=$(col_index "$header" fires); i_wrong=$(col_index "$header" wrong)
+    for pair in "check:$i_check" "fires:$i_fires" "wrong:$i_wrong"; do
+        [ -n "${pair#*:}" ] || die "'## Check budget' has no '${pair%%:*}' column"
+    done
+
+    rows=$(table_rows "$file" '## Check budget' || true)
+    while IFS= read -r row; do
+        [ -n "$row" ] || continue
+        local name fires wrong
+        name=$(cell "$row" "$i_check"); [ -n "$name" ] || continue
+        fires=$(cell "$row" "$i_fires"); wrong=$(cell "$row" "$i_wrong")
+        case "$fires$wrong" in ''|*[!0-9]*) refuse "$name has a non-numeric fire count"; continue ;; esac
+        [ "$fires" -gt 0 ] || continue
+        if [ $(( wrong * 100 )) -gt $(( fires * 10 )) ]; then
+            refuse "$name fired wrongly $wrong of $fires times, over the one-in-ten budget. Fix it or delete it — a check people stop trusting takes every other check with it"
+        fi
+    done <<<"$rows"
+}
+
+# ---------------------------------------------------------------------------- recurrence
+
+# Refuse a defect repair that has no test which failed before it.
+#
+# A repair with no failing-before test is a claim that the defect is gone. The ledger's purpose is
+# the only measurement that shows whether a repair worked: did this defect class come back?
+cmd_recurrence() {
+    local file=${1:-vault/defect-ledger.md}
+    [ -r "$file" ] || { note "no defect ledger at $file — nothing recorded yet"; return; }
+
+    local header rows i_id i_test i_again
+    header=$(table_header "$file" '## Defect ledger' || true)
+    [ -n "$header" ] || die "$file has no '## Defect ledger' table"
+    i_id=$(col_index "$header" id); i_test=$(col_index "$header" test); i_again=$(col_index "$header" recurrences)
+    for pair in "id:$i_id" "test:$i_test" "recurrences:$i_again"; do
+        [ -n "${pair#*:}" ] || die "'## Defect ledger' has no '${pair%%:*}' column"
+    done
+
+    rows=$(table_rows "$file" '## Defect ledger' || true)
+    local total=0 repeated=0
+    while IFS= read -r row; do
+        [ -n "$row" ] || continue
+        local id test again
+        id=$(cell "$row" "$i_id"); [ -n "$id" ] || continue
+        test=$(cell "$row" "$i_test"); again=$(cell "$row" "$i_again")
+        total=$((total + 1))
+        is_evidence "$test" || refuse "$id names no test that failed before its repair. Without one, the repair is a claim"
+        case "$again" in ''|*[!0-9]*) refuse "$id has a non-numeric recurrence count" ;; *)
+            [ "$again" -gt 0 ] && repeated=$((repeated + 1)) ;;
+        esac
+    done <<<"$rows"
+    [ "$total" -gt 0 ] && printf '  recurrence  %d of %d defect classes came back\n' "$repeated" "$total" >&2
+    return 0
 }
 
 # ---------------------------------------------------------------------------- config
@@ -520,6 +591,8 @@ main() {
         criteria) cmd_criteria "${1:-}" ;;
         readers)  cmd_readers "${1:-}" ;;
         config)   cmd_config "${1:-}" ;;
+        budget)   cmd_budget "${1:-}" ;;
+        recurrence) cmd_recurrence "${1:-}" ;;
         verdict)  cmd_verdict "${1:-}" "${2:-}" ;;
         all)
             local plan=${1:-} phase=""

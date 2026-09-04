@@ -38,11 +38,11 @@ ones. The gate contract is `vault/architecture/session-gates.md`.
 | SC-2 | WHEN a criterion names a check THE SYSTEM SHALL require a committed script and refuse a command written inline in the plan | unit | command | `checks/SC-2.sh` | exit 0 | MET | `checks/SC-2.sh` exited 0 · gate.bats: 46 cases, 0 failing |
 | SC-3 | WHEN a plan carries no criterion that runs the real system THE SYSTEM SHALL refuse it | unit | command | `checks/SC-3.sh` | exit 0 | MET | `checks/SC-3.sh` exited 0 · gate.bats: 46 cases, 0 failing |
 | SC-4 | WHEN the gate runs against this repo's own plan THE SYSTEM SHALL execute every committed check and pass only on the real exit codes | delivery | command | `checks/SC-4.sh` | exit 0 | MET | `checks/SC-4.sh` exited 0 · criteria accepts this plan and refuses one with no criteria table |
-| SC-5 | WHEN a check has fired wrongly more than one time in ten THE SYSTEM SHALL report it as over budget | unit | command | `checks/SC-5.sh` | exit 0 | | |
+| SC-5 | WHEN a check has fired wrongly more than one time in ten THE SYSTEM SHALL report it as over budget | unit | command | `checks/SC-5.sh` | exit 0 | MET | `checks/SC-5.sh` exited 0 · gate-budget.bats: 10 cases, 0 failing |
 | SC-6 | WHEN the instruction corpus is counted THE SYSTEM SHALL report fewer rule-lines than the 173 it carries today, and more requirements than prohibitions | delivery | command | `checks/SC-6.sh` | exit 0 | | |
 | SC-7 | WHEN a repo declares no test, lint and delivery commands THE SYSTEM SHALL refuse at the first step of a session | unit | command | `checks/SC-7.sh` | exit 0 | | |
-| SC-8 | WHEN a defect is repaired THE SYSTEM SHALL require a test that failed before the repair | unit | command | `checks/SC-8.sh` | exit 0 | | |
-| SC-9 | WHEN the existing suites run THE SYSTEM SHALL fail no more tests than the four failing today | unit | command | `checks/SC-9.sh` | exit 0 | | |
+| SC-8 | WHEN a defect is repaired THE SYSTEM SHALL require a test that failed before the repair | unit | command | `checks/SC-8.sh` | exit 0 | MET | `checks/SC-8.sh` exited 0 · gate.bats green and recurrence exists |
+| SC-9 | WHEN the existing suites run THE SYSTEM SHALL fail no more tests than the four failing today | unit | command | `checks/SC-9.sh` | exit 0 | MET | `checks/SC-9.sh` exited 0 · unit suite: 4 failing, budget 4 |
 
 ## Research
 
@@ -122,9 +122,9 @@ scored evaluation sets; any change to persona packs.
 | D-02 | `commands/_shared/*.md`, `commands/v-work/steps/*.md`, `commands/v-team/steps/*.md` | modify | Edit | rewrite every surviving prohibition as a requirement. `Never git add -A` becomes `Stage each file by name` | SC-6 | `./bin/rule-count.sh --assert` | TODO |
 | D-03 | same files | modify | Edit | delete every rule with no check behind it and record the count deleted. A rule kept without a check is listed in `vault/check-budget.md` as prose, and that list stays short | SC-6 | same | TODO |
 | D-04 | `scripts/rule-inject-hook.sh`, `hooks/hooks.json` | create | Write | a `SessionStart` hook injecting the surviving requirements, which is what restores decayed compliance without retraining | SC-6 | `tests/unit/gate-hooks.bats` | TODO |
-| E-01 | `bin/gate.sh`, `vault/check-budget.md` | create | Write | `budget`: each check records its fire count and its wrong-fire count; above one in ten it reports over budget and names the check | SC-5 | `tests/unit/gate-budget.bats` | TODO |
-| E-02 | `vault/defect-ledger.md`, `bin/gate.sh` | create | Write | one row per defect class with its repair and the test that failed before it; `recurrence` refuses a repair naming no such test | SC-8 | `tests/unit/gate.bats` | TODO |
-| E-03 | `bin/regression-count.sh` | create | Write | run the unit suite, count `^not ok`, and exit 1 above the number given | SC-9 | `./bin/regression-count.sh 4` | TODO |
+| E-01 | `bin/gate.sh`, `vault/check-budget.md` | create | Write | `budget`: each check records its fire count and its wrong-fire count; above one in ten it reports over budget and names the check | SC-5 | `tests/unit/gate-budget.bats` | DONE |
+| E-02 | `vault/defect-ledger.md`, `bin/gate.sh` | create | Write | one row per defect class with its repair and the test that failed before it; `recurrence` refuses a repair naming no such test | SC-8 | `tests/unit/gate.bats` | DONE |
+| E-03 | `bin/regression-count.sh` | create | Write | run the unit suite, count `^not ok`, and exit 1 above the number given | SC-9 | `./bin/regression-count.sh 4` | DONE |
 | F-01 | `vault/decisions/ADR-026-mechanical-session-gates.md` | create | Write | the eight decisions above with the evidence each rests on | SC-6 | `bin/doc-lint.sh` on the file | TODO |
 | F-02 | `install.sh`, `INSTALL.md` | modify | Edit | ship `bin/gate.sh`, `scripts/completion-hook.sh`, `bin/rule-count.sh` and the hook registrations | SC-7 | `tests/unit/install.bats` | TODO |
 | F-03 | `vault-guide.md`, `vault/_moc.md`, `vault/decisions/_inventory.md` | modify | Edit | one section naming the gate and the delivery check; index ADR-026 and the two new vault surfaces | SC-6 | `bin/doc-lint.sh --changed` | TODO |
