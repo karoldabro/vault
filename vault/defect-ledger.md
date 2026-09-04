@@ -14,6 +14,12 @@ whose `test` cell names no path.
 Recurrence is the only measurement that shows whether a repair worked. A defect class that reappears
 after its repair was applied means the repair addressed an instance, not a source.
 
+**A written rule counts as a repair.** When a defect happens while a rule already prohibited it, the
+rule was the repair and it did not hold, so the count goes up and the next repair has to be
+mechanical. That is what a recurrence of 1 against a prose repair means, and it is the only entry
+that reads oddly at a glance: the count records the failure of the previous repair, not a failure of
+the one named in the row.
+
 ## How a row gets added
 
 When a session repairs a defect, add the row before the close. `test` names the test that failed
