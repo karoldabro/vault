@@ -32,11 +32,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-04-1200-rule-compliance-study]] — Measure which property predicts whether a framework rule is followed
 - [[sessions/2026-09-04-0900-mechanical-session-gates]] — Built bin/gate.sh: a session cannot plan without success criteria or close without verdicts backed by a real run
 - [[sessions/2026-09-03-0929-mechanical-brevity-enforcement]] — Measure replies instead of restating the brevity rules: bin/output-lint.sh plus Stop and UserPromptSubmit hooks that name only what a reply overran
 - [[sessions/2026-09-02-2147-consumer-seat-and-artifact-lifecycles]] — Stop the framework producing plans that specify what gets built and never who consumes it
 - [[sessions/2026-09-01-1930-vcr-coverage-receipts]] — Compute /v-cr review coverage from per-file critic receipts instead of asserting it
-- [[sessions/2026-09-01-1000-vcr-delivery-and-coverage]] — Fix /v-cr comment delivery verification and coverage recording
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center (rules REQ-NN + axis tags, glossary, decision/state tables) for 1+ repos; single-repo `requirements/` category; id chain → established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)

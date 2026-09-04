@@ -31,9 +31,11 @@ observations found no detectable effect from file size, instruction position, fi
 contradictions between adjacent files. It measured one trivial annotation on two TypeScript
 projects, so it bounds the claim rather than settling it.
 
-**Grammar does help.** Across 4,416 trials, prohibitions fell from 73% compliance at turn 5 to 33%
-by turn 16 while requirements held at 100%. Re-injecting a constraint restores it. This framework
-carries 178 prohibitions against 32 requirements.
+**Grammar does not help here.** Across 4,416 trials elsewhere, prohibitions fell from 73%
+compliance at turn 5 to 33% by turn 16 while requirements held at 100%. Measured against this
+framework's own 155 commits, 299,105 shell commands and 332 document versions, the ordering
+reverses: prohibitions average 89.5% and requirements 76.9%. Re-injecting a constraint still
+restores it. Evidence: `vault/research/rule-compliance.md`.
 
 **A model cannot judge whether an agent finished.** Across 9,876 trajectories, 75.8% of failures in
 self-assessing coding agents were reported as success. No judge configuration — five judges, five
@@ -62,8 +64,11 @@ records intent; the artifact records delivery.
 when a work item is marked done and its criterion has no verdict, and returns the failing check as
 the next instruction. It makes no model call.
 
-**Rules are written as requirements, never as prohibitions**, and a rule with no check behind it is
-deleted rather than reworded. An unenforced rule competes for the same attention as an enforced one.
+**A rule is written so the model can decide it from the text it is writing**, and a rule that needs
+a count or state the writer does not hold at write time gets a check or is deleted. Rules decidable
+from the text average 92.0% compliance here and rules needing a count 64.3%; among unenforced rules
+the split is 88.6% against 46.5%. Grammar is not the lever, and an unenforced rule still competes
+for the same attention as an enforced one.
 
 **A check firing wrongly more than one time in ten is fixed or deleted.** Google disables a
 Tricorder analyzer at that line; their platform runs under 5%.
@@ -94,10 +99,12 @@ Hooks are escapable: they do not fire in `claude -p` pipe mode, subagent and MCP
 deny, and a model blocked from one tool has been observed reaching the same result through another.
 This is the strongest mechanism available and it is not airtight.
 
-The instruction cut waits on measurement. `vault/plans/2026-09-04-1100-rule-compliance-study.md`
-scores framework rules against 150 commits and 1,708 transcripts before anything is deleted, because
-two rules in one sentence of one file already differ by 74 points in compliance — which no file-level
-explanation covers.
+The instruction cut is measured, not assumed. `vault/research/rule-compliance.md` scores ten
+framework rules and reports eight; unchecked rules run from 18.1% to 98.8%, so the cut keys on
+whether the model can check itself rather than on whether a check exists. The two rules sharing one
+sentence at `commands/v-work/steps/05-commit-capture.md:57-58` differ by 74.8 points — 92.9% against
+18.1% — with file, position, grammar, age and non-enforcement all held constant. Re-run the numbers
+with `bin/rule-audit.sh`.
 
 `bin/gate.sh` now refuses on nine conditions. Every one of them is a candidate for the ten percent
 budget, and a check that crosses it is removed rather than tolerated.
