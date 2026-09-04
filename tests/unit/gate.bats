@@ -552,3 +552,45 @@ delivery_command: make ship' >/dev/null
     [ "$status" -eq 1 ]
     [[ "$output" == *"no dod_profile"* ]]
 }
+
+# ---------------------------------------------------------------- check ownership
+#
+# checks/ is flat and keyed by criterion id, so two plans that both number a criterion SC-2 would
+# share one script and each would grade itself against the other's check. A second plan running in
+# parallel hit this and worked around it by inventing a filename prefix — a convention nothing
+# enforced. These cases enforce it.
+
+@test "criteria refuses a check script another plan already claims" {
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${TMP}/shared.sh"; chmod +x "${TMP}/shared.sh"
+    mkplan first "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `shared.sh` | exit 0 | | |' >/dev/null
+    local f
+    f=$(mkplan second "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `shared.sh` | exit 0 | | |')
+    run "${GATE_SH}" criteria "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"already claims"* ]]
+    [[ "$output" == *"grades itself against the other"* ]]
+}
+
+@test "criteria accepts a check only this plan names" {
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${TMP}/mine.sh"; chmod +x "${TMP}/mine.sh"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${TMP}/theirs.sh"; chmod +x "${TMP}/theirs.sh"
+    mkplan other "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `theirs.sh` | exit 0 | | |' >/dev/null
+    local f
+    f=$(mkplan ours "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `mine.sh` | exit 0 | | |')
+    run "${GATE_SH}" criteria "${f}"
+    [ "$status" -eq 0 ]
+}
+
+@test "a plan's own brief and trail sidecars do not count as another claimant" {
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${TMP}/solo.sh"; chmod +x "${TMP}/solo.sh"
+    local f
+    f=$(mkplan solo "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `solo.sh` | exit 0 | | |')
+    cp "${f}" "${TMP}/solo.trail.md"; cp "${f}" "${TMP}/solo.brief.md"
+    run "${GATE_SH}" criteria "${f}"
+    [ "$status" -eq 0 ]
+}

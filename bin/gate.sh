@@ -166,6 +166,27 @@ checks_root() {
     printf '%s' "${root:-$(cd "$(dirname "$plan")" && pwd)}"
 }
 
+# Refuse a check path a different plan already claims.
+#
+# checks/ is flat and keyed by criterion id, so two plans that both number a criterion SC-2 would
+# silently share one script and each would grade itself against the other's check. Found by the
+# session running the second plan, which had to invent a prefix by hand — a convention nothing
+# enforced. This enforces it, without dictating where checks live.
+check_is_claimed_elsewhere() {
+    local plan=$1 path=$2 other
+    local dir; dir=$(dirname "$plan")
+    for other in "$dir"/*.md; do
+        [ -f "$other" ] || continue
+        [ "$other" -ef "$plan" ] && continue
+        case "$other" in *.trail.md|*.brief.md) continue ;; esac
+        if grep -qF "\`${path}\`" "$other" 2>/dev/null; then
+            printf '%s' "$(basename "$other")"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # A committed check: an existing executable file, named as a repo-relative path.
 check_script() {
     local root=$1 cell=$2 path
@@ -225,9 +246,11 @@ cmd_criteria() {
 
         case "$how" in
             command)
-                local script
+                local script owner
                 if ! script=$(check_script "$root" "$check"); then
                     refuse "$id is 'command' and its check is not a committed executable. Write the check as a script in the repo and name its path — a command typed into the plan is authored by the same session the check is meant to grade: $check"
+                elif owner=$(check_is_claimed_elsewhere "$plan" "$script"); then
+                    refuse "$id names \`$script\`, which $owner already claims. Two plans sharing one check script means each grades itself against the other's check. Give it a name only this plan uses"
                 fi
                 ;;
             artifact)
