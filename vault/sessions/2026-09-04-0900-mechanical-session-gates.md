@@ -67,16 +67,43 @@ ignore. Phase 1 of a six-phase build.
 - A table the parser cannot read → exit 2, never 0.
 - `GATE=off` skips every check; there is no per-check suppression.
 
+## Continuation 2026-09-04-1200
+
+Every work item in the plan is DONE. The build ran phases A to F and the instruction cut was
+narrowed by the compliance study running beside it.
+
+**Built:** `scripts/completion-hook.sh` blocks a turn end when a work item is DONE and its criterion
+has no verdict. A criterion's check is a committed script in `checks/`, and `bin/gate.sh verdict
+--run` executes it and writes the verdict and captured output itself. `criteria` refuses a plan with
+no `kind: delivery` row, a check that is not an executable, and a check path another plan claims.
+`config` refuses at ANALYZE when `VAULT.md` omits a done command. `readers` refuses a declared
+identifier no code reads. `budget` refuses a check wrong more than one time in ten. `recurrence`
+refuses a defect repair with no failing-before test. `scripts/staging-hook.sh` denies a directory-
+wide `git add`. `bin/rule-count.sh` measures the corpus; `scripts/rule-inject-hook.sh` re-injects
+only the rules nothing checks.
+
+**What the study changed.** Rewriting prohibitions as requirements was dropped: locally prohibitions
+score 89.5% and requirements 76.9%, the opposite of the paper the plan cited. A blanket deletion of
+unenforced rules was dropped: they score 18.1% to 98.8%, so it would have removed rules followed
+92.9%, 98.8% and 74.1% of the time. One rule was deleted — the 50-character commit subject at 18.1%.
+
+**Two defects this session caused, both now enforced.** `git add -A bin/` swept a parallel session's
+work into two commits; `scripts/staging-hook.sh` now denies it. Two plans could name the same check
+script and each grade itself against the other's; `criteria` now refuses it. Both are D-006 and
+D-007 in the ledger.
+
 ## Next
 
-- Phases 2 to 6 are rows in `vault/plans/2026-09-04-0900-mechanical-session-gates.md`: the seven
-  remaining checks, the two definition-of-done profiles, the verifier contract, the wiring into
-  `/v-team` `/v-do` `/v-pm` `/v-cr`, the onboarding keys in `bin/vault-init.sh`, the cross-plan
-  tracker, the defect ledger, the commit hook, and ADR-026.
-- Six of the nine criteria are not yet due. `gate.sh verdict` names which, and refuses the moment a
-  covering work item flips to `DONE`.
-- ADR-026 is named in the plan's `## Decisions` rows and does not exist yet. The `decisions` check
-  that would refuse this is W-13, itself unbuilt.
+- **The open question that matters:** `scripts/completion-hook.sh` blocks a turn end, while the two
+  rules `scripts/doc-lint-hook.sh` merely reports on score 100% and 94.4%. Reporting may do the same
+  work with less friction. `vault/check-budget.md` records each check's fires; a block that was never
+  needed would settle it.
+- The wiring into `/v-do`, `/v-pm` and `/v-cr` was dropped from the plan and never built. Only
+  `/v-work` and `/v-team` call the gate today.
+- The two definition-of-done profiles are specified in `vault/architecture/session-gates.md` and are
+  not yet in `commands/_shared/definition-of-done.md`.
+- `bin/gate.sh` has no `coverage`, `decisions`, `states` or `tracker` subcommand. Those were in the
+  43-item plan and did not survive the rewrite.
 
 ## Refs
 
