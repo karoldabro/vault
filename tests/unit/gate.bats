@@ -21,10 +21,21 @@ setup() {
     GATE_SH="${VAULT_ROOT}/bin/gate.sh"
     TMP="$(mktemp -d)"
     unset GATE
+    printf '#!/usr/bin/env bash\nprintf "ok\\n"\nexit 0\n' > "${TMP}/ok.sh"
+    printf '#!/usr/bin/env bash\nprintf "bad\\n"\nexit 1\n' > "${TMP}/bad.sh"
+    chmod +x "${TMP}/ok.sh" "${TMP}/bad.sh"
 }
 
 teardown() {
     [ -n "${TMP:-}" ] && rm -rf "${TMP}"
+}
+
+# mkcheck <name> <exit-code> — write an executable check beside the plan, which is what a
+# `how: command` criterion must now name. An inline command is refused by design.
+mkcheck() {
+    local name=$1 code=${2:-0}
+    printf '#!/usr/bin/env bash\nprintf "%s ran\\n"\nexit %s\n' "${name}" "${code}" > "${TMP}/${name}"
+    chmod +x "${TMP}/${name}"
 }
 
 # mkplan <name> <frontmatter-extra> <criteria-rows...>
@@ -71,7 +82,7 @@ mkplan() {
 @test "criteria refuses when no criterion runs the real system" {
     local f
     f=$(mkplan no_e2e "" \
-        '| SC-1 | WHEN the parser runs THE SYSTEM SHALL accept the row | unit | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN the parser runs THE SYSTEM SHALL accept the row | unit | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"kind 'delivery'"* ]]
@@ -81,7 +92,7 @@ mkplan() {
 @test "criteria accepts a plan with no delivery row when it declares no-runtime" {
     local f
     f=$(mkplan no_runtime "no-runtime: documentation only, nothing executes" \
-        '| SC-1 | WHEN the doc is linted THE SYSTEM SHALL exit clean | unit | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN the doc is linted THE SYSTEM SHALL exit clean | unit | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 0 ]
     [[ "$output" == *"no-runtime"* ]]
@@ -90,7 +101,7 @@ mkplan() {
 @test "criteria accepts a well-formed plan carrying a delivery row" {
     local f
     f=$(mkplan good "" \
-        '| SC-1 | WHEN the pipeline runs THE SYSTEM SHALL emit the file | delivery | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN the pipeline runs THE SYSTEM SHALL emit the file | delivery | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 0 ]
 }
@@ -100,7 +111,7 @@ mkplan() {
 @test "criteria refuses a row with no how" {
     local f
     f=$(mkplan no_how "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery |  | `true` | exit 0 | | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery |  | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"no 'how'"* ]]
@@ -109,19 +120,39 @@ mkplan() {
 @test "criteria refuses an unknown how value" {
     local f
     f=$(mkplan bad_how "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | vibes | `true` | exit 0 | | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | vibes | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"how='vibes'"* ]]
 }
 
-@test "criteria refuses a command row whose check names no command and no path" {
+@test "criteria refuses a command typed into the plan instead of a committed script" {
     local f
-    f=$(mkplan vague "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | it should look right | fine | | |')
+    f=$(mkplan inline "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `pytest -q && echo done` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"names no command and no path"* ]]
+    [[ "$output" == *"not a committed executable"* ]]
+    [[ "$output" == *"authored by the same session"* ]]
+}
+
+@test "criteria refuses a check naming a script that does not exist" {
+    local f
+    f=$(mkplan missing_script "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `checks/absent.sh` | exit 0 | | |')
+    run "${GATE_SH}" criteria "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"not a committed executable"* ]]
+}
+
+@test "criteria refuses a check file that is not executable" {
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${TMP}/inert.sh"
+    local f
+    f=$(mkplan not_exec "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `inert.sh` | exit 0 | | |')
+    run "${GATE_SH}" criteria "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"not a committed executable"* ]]
 }
 
 # ---------------------------------------------------------------- criteria: observed rows
@@ -157,7 +188,7 @@ mkplan() {
 @test "criteria notes a criterion written as a statement but does not refuse it" {
     local f
     f=$(mkplan shape "" \
-        '| SC-1 | the pipeline emits the file | delivery | command | `true` | exit 0 | | |')
+        '| SC-1 | the pipeline emits the file | delivery | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 0 ]
     [[ "$output" == *"reads as a statement"* ]]
@@ -168,7 +199,7 @@ mkplan() {
 @test "verdict refuses a criterion with no verdict" {
     local f
     f=$(mkplan open_verdict "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" verdict "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"no verdict"* ]]
@@ -177,7 +208,7 @@ mkplan() {
 @test "verdict refuses a MET row with no evidence" {
     local f
     f=$(mkplan met_bare "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | MET | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | MET | |')
     run "${GATE_SH}" verdict "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"MET with no evidence"* ]]
@@ -186,7 +217,7 @@ mkplan() {
 @test "verdict refuses evidence that names no command and no path:line" {
     local f
     f=$(mkplan met_prose "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | MET | I checked and it was fine |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | MET | I checked and it was fine |')
     run "${GATE_SH}" verdict "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"names no command and no path:line"* ]]
@@ -195,7 +226,7 @@ mkplan() {
 @test "verdict refuses a NOT MET row" {
     local f
     f=$(mkplan notmet "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | NOT MET | `true` returned 1 |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | NOT MET | `true` returned 1 |')
     run "${GATE_SH}" verdict "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"NOT MET"* ]]
@@ -204,7 +235,7 @@ mkplan() {
 @test "verdict accepts a MET row whose evidence names a command" {
     local f
     f=$(mkplan met_ok "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | MET | `true` exited 0 |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | MET | `ok.sh` exited 0 |')
     run "${GATE_SH}" verdict "${f}"
     [ "$status" -eq 0 ]
 }
@@ -222,7 +253,7 @@ mkplan() {
 @test "verdict --run refuses when the real exit code contradicts a MET verdict" {
     local f
     f=$(mkplan run_lies "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `false` | exit 0 | MET | `false` exited 0 |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `bad.sh` | exit 0 | MET | `bad.sh` exited 0 |')
     run "${GATE_SH}" verdict "${f}" --run
     [ "$status" -eq 1 ]
     [[ "$output" == *"exited 1, expected 0"* ]]
@@ -231,7 +262,7 @@ mkplan() {
 @test "verdict --run accepts when the command really passes" {
     local f
     f=$(mkplan run_true "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | MET | `true` exited 0 |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | MET | `ok.sh` exited 0 |')
     run "${GATE_SH}" verdict "${f}" --run
     [ "$status" -eq 0 ]
 }
@@ -239,18 +270,40 @@ mkplan() {
 @test "verdict --run honours an expected non-zero exit code" {
     local f
     f=$(mkplan run_expect_one "" \
-        '| SC-1 | WHEN the gate refuses THE SYSTEM SHALL exit 1 | delivery | command | `false` | exit 1 | MET | `false` exited 1 |')
+        '| SC-1 | WHEN the gate refuses THE SYSTEM SHALL exit 1 | delivery | command | `bad.sh` | exit 1 | MET | `bad.sh` exited 1 |')
     run "${GATE_SH}" verdict "${f}" --run
     [ "$status" -eq 0 ]
 }
 
-@test "verdict --run refuses a command row the plan marked MET without running clean" {
+@test "verdict --run writes the verdict into a blank cell, so the session never authors it" {
     local f
-    f=$(mkplan run_unmarked "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | | |')
+    f=$(mkplan run_writes "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |')
+    run "${GATE_SH}" verdict "${f}" --run
+    [ "$status" -eq 0 ]
+    grep -q 'MET' "${f}"
+    grep -q 'ok.sh` exited 0' "${f}"
+}
+
+@test "verdict --run overwrites a MET the session wrote when the check really fails" {
+    local f
+    f=$(mkplan run_overwrites "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `bad.sh` | exit 0 | MET | `bad.sh` exited 0 |')
     run "${GATE_SH}" verdict "${f}" --run
     [ "$status" -eq 1 ]
-    [[ "$output" == *"does not say MET"* ]]
+    grep -q 'NOT MET' "${f}"
+    [[ "$output" == *"recorded NOT MET"* ]]
+}
+
+@test "verdict --run captures the check output as the evidence" {
+    printf '#!/usr/bin/env bash\nprintf "saw the thing\\n"\nexit 0\n' > "${TMP}/talky.sh"
+    chmod +x "${TMP}/talky.sh"
+    local f
+    f=$(mkplan run_captures "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `talky.sh` | exit 0 | | |')
+    run "${GATE_SH}" verdict "${f}" --run
+    [ "$status" -eq 0 ]
+    grep -q 'saw the thing' "${f}"
 }
 
 # ---------------------------------------------------------------- failing closed
@@ -285,7 +338,7 @@ mkplan() {
 @test "GATE=off skips every check and exits 0 on a plan that otherwise refuses" {
     local f
     f=$(mkplan escape "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | unit | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | unit | command | `ok.sh` | exit 0 | | |')
     GATE=off run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 0 ]
     run "${GATE_SH}" criteria "${f}"
@@ -297,7 +350,7 @@ mkplan() {
 @test "all --phase close runs both criteria and verdict" {
     local f
     f=$(mkplan phase_close "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" all "${f}" --phase close
     [ "$status" -eq 1 ]
     [[ "$output" == *"no verdict"* ]]
@@ -306,7 +359,7 @@ mkplan() {
 @test "all --phase propose passes a plan whose verdicts are still empty" {
     local f
     f=$(mkplan phase_propose "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" all "${f}" --phase propose
     [ "$status" -eq 0 ]
 }
@@ -314,7 +367,7 @@ mkplan() {
 @test "all rejects an unknown phase" {
     local f
     f=$(mkplan phase_bad "" \
-        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | | |')
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |')
     run "${GATE_SH}" all "${f}" --phase later
     [ "$status" -eq 2 ]
 }
@@ -333,8 +386,8 @@ mkplan_scoped() {
         echo "## Success criteria"; echo
         echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
         echo "|----|-----------|------|-----|-------|--------|---------|----------|"
-        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | MET | `true` exited 0 |'
-        echo '| SC-2 | WHEN phase two lands THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | | |'
+        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | MET | `ok.sh` exited 0 |'
+        echo '| SC-2 | WHEN phase two lands THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
         echo
         echo "## Work items"; echo
         echo "| id | file (exact path) | action | tool | constraint | covers | verification | status |"
@@ -369,7 +422,7 @@ mkplan_scoped() {
         echo "## Success criteria"; echo
         echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
         echo "|----|-----------|------|-----|-------|--------|---------|----------|"
-        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `true` | exit 0 | | |'
+        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
         echo
         echo "## Work items"; echo
         echo "| id | file (exact path) | action | status |"
@@ -380,4 +433,65 @@ mkplan_scoped() {
     run "${GATE_SH}" verdict "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"SC-1 has no verdict"* ]]
+}
+
+# ---------------------------------------------------------------- readers
+#
+# A declared key that nothing reads is worse than one that does not exist: the next session finds
+# it, believes the question is settled, and has no way to discover otherwise. No mainstream tool
+# detects this, so these cases are the whole specification.
+
+mkplan_lifecycle() {
+    local name=$1 artifact=$2
+    local f="${TMP}/${name}.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Artifact lifecycles"; echo
+        echo "| artifact | what requires it | who writes it | who reads it | missing or wrong |"
+        echo "|---|---|---|---|---|"
+        echo "| ${artifact} | a step | this plan | a reader | it fails |"
+        echo
+    } > "${f}"
+    echo "${f}"
+}
+
+@test "readers refuses an identifier no code reads" {
+    local f
+    f=$(mkplan_lifecycle orphan '`effects_duck_under_narration`')
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no code reads it"* ]]
+    [[ "$output" == *"believe the question is settled"* ]]
+}
+
+@test "readers accepts an identifier a file references" {
+    printf 'effects_duck_under_narration = true\n' > "${TMP}/config.toml"
+    local f
+    f=$(mkplan_lifecycle wired '`effects_duck_under_narration`')
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 0 ]
+}
+
+@test "readers ignores markdown, so a key mentioned only in prose still refuses" {
+    printf 'we should add effects_duck_under_narration one day\n' > "${TMP}/notes.md"
+    local f
+    f=$(mkplan_lifecycle prose_only '`effects_duck_under_narration`')
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no code reads it"* ]]
+}
+
+@test "readers notes a declared path that does not exist rather than refusing" {
+    local f
+    f=$(mkplan_lifecycle planned_path '`bin/not-built-yet.sh`')
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"does not exist yet"* ]]
+}
+
+@test "readers passes a plan whose lifecycle row is the none row" {
+    local f
+    f=$(mkplan_lifecycle nothing 'none')
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 0 ]
 }

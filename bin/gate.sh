@@ -11,13 +11,19 @@
 #
 # Usage:  bin/gate.sh criteria <plan>          success criteria exist and can be decided
 #         bin/gate.sh verdict  <plan> [--run]  every criterion is MET with evidence
+#         bin/gate.sh readers  <plan>          every declared identifier has a reader in code
 #         bin/gate.sh all      <plan> --phase <propose|approve|close>
 #         bin/gate.sh --help
 #
-# --run executes each `how: command` criterion's check and compares the real exit code to the
-# verdict the plan claims. It runs commands written in a markdown file, so it is opt-in and prints
-# every command before running it. Without --run, `verdict` only checks that the plan is internally
-# honest: a MET row must carry evidence, and evidence must be a command or a path:line.
+# A `how: command` criterion names a COMMITTED SCRIPT, never a command typed into the plan. The
+# session that writes the work must not also author the thing that grades it, and a script in the
+# repo is reviewable at approval, survives the session, and can be re-run by the operator on a clean
+# checkout. `criteria` refuses a check cell that is not an existing executable file.
+#
+# --run executes each such script, compares its exit code to `expect`, and WRITES the verdict and
+# the captured output back into the plan itself. The session does not author the verdict; this does.
+# Without --run, `verdict` only checks the plan is internally honest: a MET row must carry evidence,
+# and evidence must name a command or a path:line.
 #
 # `expect` is prose and is not parsed, with one exception: `exit N` in an expect cell sets the exit
 # code that counts as met. Everything else treats exit 0 as met.
@@ -149,6 +155,24 @@ backticked() {
     [[ $v =~ \`([^\`]+)\` ]] && printf '%s' "${BASH_REMATCH[1]}"
 }
 
+# The directory a check path resolves against: the git root above the plan, else the working
+# directory. A check named relative to nothing is a check nobody else can run.
+checks_root() {
+    local plan=$1 root
+    root=$(git -C "$(dirname "$plan")" rev-parse --show-toplevel 2>/dev/null) || root=""
+    printf '%s' "${root:-$(cd "$(dirname "$plan")" && pwd)}"
+}
+
+# A committed check: an existing executable file, named as a repo-relative path.
+check_script() {
+    local root=$1 cell=$2 path
+    path=$(backticked "$cell")
+    [ -n "$path" ] || return 1
+    case "$path" in *' '*) return 1 ;; esac        # a path, not a command line
+    [ -f "${root}/${path}" ] && [ -x "${root}/${path}" ] || return 1
+    printf '%s' "$path"
+}
+
 require_plan() {
     [ -n "${1:-}" ] || die "no plan file given"
     [ -r "$1" ]     || die "cannot read plan: $1"
@@ -178,6 +202,7 @@ cmd_criteria() {
     rows=$(table_rows "$plan" '## Success criteria' || true)
     [ -n "$rows" ] || { refuse "'## Success criteria' has no rows — planning may not start without them"; return; }
 
+    local root; root=$(checks_root "$plan")
     local saw_delivery=0 count=0
     while IFS= read -r row; do
         [ -n "$row" ] || continue
@@ -196,9 +221,15 @@ cmd_criteria() {
         [ "$kind" = delivery ] && saw_delivery=1
 
         case "$how" in
-            command|artifact)
+            command)
+                local script
+                if ! script=$(check_script "$root" "$check"); then
+                    refuse "$id is 'command' and its check is not a committed executable. Write the check as a script in the repo and name its path — a command typed into the plan is authored by the same session the check is meant to grade: $check"
+                fi
+                ;;
+            artifact)
                 is_checkable "$check" || \
-                    refuse "$id is '$how' but its check names no command and no path: $check"
+                    refuse "$id is '$how' but its check names no path: $check"
                 ;;
             observed)
                 # A judgement is legal. Closing on "it looked fine" is not.
@@ -229,6 +260,52 @@ cmd_criteria() {
         fi
     fi
     [ "$count" -gt 0 ] || refuse "'## Success criteria' parsed to zero usable rows"
+}
+
+# ---------------------------------------------------------------------------- readers
+
+# Refuse a declared identifier that no code reads.
+#
+# A config key, flag or field that exists with no reader is worse than one that does not exist: the
+# next session finds it, believes the question is settled, and has no way to discover otherwise. One
+# such key sat in a channel config with zero readers while the operator asked repeatedly why the
+# feature did nothing. No mainstream tool detects this — dead-code detectors find unused code paths,
+# which is a different question — so it is built here.
+cmd_readers() {
+    local plan=$1
+    require_plan "$plan"
+    local root; root=$(checks_root "$plan")
+
+    local header rows i_artifact
+    header=$(table_header "$plan" '## Artifact lifecycles' || true)
+    [ -n "$header" ] || { note "no '## Artifact lifecycles' table — nothing to check for readers"; return; }
+    i_artifact=$(col_index "$header" artifact)
+    [ -n "$i_artifact" ] || die "'## Artifact lifecycles' has no 'artifact' column"
+
+    rows=$(table_rows "$plan" '## Artifact lifecycles' || true)
+    while IFS= read -r row; do
+        [ -n "$row" ] || continue
+        local cellv ident
+        cellv=$(cell "$row" "$i_artifact")
+        [ -n "$cellv" ] || continue
+        [ "$cellv" = none ] && continue
+        ident=$(backticked "$cellv")
+        [ -n "$ident" ] || continue
+        # A path is checked for existence; a bare identifier is checked for a reader.
+        case "$ident" in
+            */*|*.sh|*.md|*.json)
+                [ -e "${root}/${ident}" ] || note "$ident is declared and does not exist yet"
+                continue ;;
+        esac
+        # grep exits 1 when it finds nothing, and `set -o pipefail` would abort the whole run on
+        # exactly the case this check exists to report. Guard it.
+        local hits
+        hits=$(grep -rIl --exclude-dir=.git --exclude='*.md' -e "$ident" "$root" 2>/dev/null || true)
+        hits=$(printf '%s' "$hits" | grep -c . || true)
+        if [ "$hits" -eq 0 ]; then
+            refuse "\`$ident\` is declared and no code reads it. A binding nothing reads makes the next session believe the question is settled and gives it no way to find out otherwise"
+        fi
+    done <<<"$rows"
 }
 
 # ---------------------------------------------------------------------------- due-ness
@@ -271,6 +348,39 @@ due_criteria() {
              END { for (c in seen) if (!(c in blocked)) print c }'
 }
 
+# Write the verdict and the evidence into the plan row itself, replacing whatever was there.
+#
+# This is the point of --run. A session that authors its own verdict has verified nothing; a
+# measurement across 1,879 trajectories found 75.8% of failures in self-assessing coding agents
+# reported as success. Here the exit code decides and this function records it, so the two cells
+# are the only part of a plan the session never writes.
+record_verdict() {
+    local plan=$1 id=$2 actual=$3 want=$4 script=$5 captured=$6
+    local verdict evidence
+    if [ "$actual" -eq "$want" ]; then verdict="MET"; else verdict="NOT MET"; fi
+    evidence="\`${script}\` exited ${actual}"
+    if [ -n "$captured" ]; then
+        # A raw pipe in captured output would split the markdown row it lands in.
+        captured=${captured//|/\\|}
+        captured=${captured//$'\n'/ }
+        evidence="${evidence} · ${captured:0:120}"
+    fi
+    python3 - "$plan" "$id" "$verdict" "$evidence" <<'PYEOF'
+import sys, pathlib
+plan, cid, verdict, evidence = sys.argv[1:5]
+p = pathlib.Path(plan); out = []
+for line in p.read_text().split('\n'):
+    if line.startswith(f'| {cid} |') and line.rstrip().endswith('|'):
+        cells = line.split('|')
+        if len(cells) >= 4:
+            cells[-3] = f' {verdict} '
+            cells[-2] = f' {evidence} '
+            line = '|'.join(cells)
+    out.append(line)
+p.write_text('\n'.join(out))
+PYEOF
+}
+
 # ---------------------------------------------------------------------------- verdict
 
 cmd_verdict() {
@@ -295,6 +405,7 @@ cmd_verdict() {
     rows=$(table_rows "$plan" '## Success criteria' || true)
     [ -n "$rows" ] || { refuse "'## Success criteria' has no rows"; return; }
 
+    local root; root=$(checks_root "$plan")
     # Which criteria are due depends on whether every work item covering them is done.
     local due_list scoped=0
     due_list=$(due_criteria "$plan")
@@ -316,24 +427,24 @@ cmd_verdict() {
         fi
 
         if [ "$run" = --run ] && [ "$how" = command ]; then
-            local cmdline want actual
-            cmdline=$(backticked "$check")
-            if [ -z "$cmdline" ]; then
-                refuse "$id is 'command' and its check has no backticked command to run"
+            local script want actual captured
+            if ! script=$(check_script "$root" "$check"); then
+                refuse "$id is 'command' and its check is not a committed executable: $check"
                 continue
             fi
             want=0
             [[ $expect =~ exit[[:space:]]+([0-9]+) ]] && want=${BASH_REMATCH[1]}
-            printf '  running  %s: %s\n' "$id" "$cmdline" >&2
+            printf '  running  %s: %s\n' "$id" "$script" >&2
             set +e
-            bash -c "$cmdline" >/dev/null 2>&1
-            actual=$?
+            captured=$(cd "$root" && "./${script}" 2>&1 | tail -1)
+            actual=${PIPESTATUS[0]}
             set -e
+            # The gate writes the verdict. The session does not get to.
+            record_verdict "$plan" "$id" "$actual" "$want" "$script" "$captured"
             if [ "$actual" -ne "$want" ]; then
-                refuse "$id exited $actual, expected $want — the check disagrees with the plan"
+                refuse "$id exited $actual, expected $want — recorded NOT MET"
                 continue
             fi
-            [ "$verdict" = MET ] || refuse "$id passed its check and the plan does not say MET"
             continue
         fi
 
@@ -372,6 +483,7 @@ main() {
 
     case "$sub" in
         criteria) cmd_criteria "${1:-}" ;;
+        readers)  cmd_readers "${1:-}" ;;
         verdict)  cmd_verdict "${1:-}" "${2:-}" ;;
         all)
             local plan=${1:-} phase=""
@@ -385,7 +497,7 @@ main() {
             case "$phase" in
                 propose) cmd_criteria "$plan" ;;
                 approve) cmd_criteria "$plan" ;;
-                close)   cmd_criteria "$plan"; cmd_verdict "$plan" ;;
+                close)   cmd_criteria "$plan"; cmd_readers "$plan"; cmd_verdict "$plan" ;;
                 *) die "--phase must be propose, approve or close" ;;
             esac
             ;;

@@ -34,15 +34,15 @@ ones. The gate contract is `vault/architecture/session-gates.md`.
 
 | id | criterion | kind | how | check | expect | verdict | evidence |
 |----|-----------|------|-----|-------|--------|---------|----------|
-| SC-1 | WHEN a session tries to end with an unproven completion claim THE SYSTEM SHALL block the end and return the failing check as the next instruction | delivery | command | `./tests/run.sh tests/unit/completion-hook.bats` | exit 0 | MET | `./tests/run.sh tests/unit/completion-hook.bats` printed `ok 1` through `ok 12` with no `not ok`; case 1 asserts exit 2 on a DONE item with no verdict |
-| SC-2 | WHEN a criterion names a check THE SYSTEM SHALL require a committed script and refuse a command written inline in the plan | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
-| SC-3 | WHEN a plan carries no criterion that runs the real system THE SYSTEM SHALL refuse it | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
-| SC-4 | WHEN the gate runs against this repo's own plan THE SYSTEM SHALL execute every committed check and pass only on the real exit codes | delivery | command | `./bin/gate.sh verdict vault/plans/2026-09-04-0900-mechanical-session-gates.md --run` | exit 0 | | |
-| SC-5 | WHEN a check has fired wrongly more than one time in ten THE SYSTEM SHALL report it as over budget | unit | command | `./tests/run.sh tests/unit/gate-budget.bats` | exit 0 | | |
-| SC-6 | WHEN the instruction corpus is counted THE SYSTEM SHALL report fewer rule-lines than the 173 it carries today, and more requirements than prohibitions | delivery | command | `./bin/rule-count.sh --assert` | exit 0 | | |
-| SC-7 | WHEN a repo declares no test, lint and delivery commands THE SYSTEM SHALL refuse at the first step of a session | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
-| SC-8 | WHEN a defect is repaired THE SYSTEM SHALL require a test that failed before the repair | unit | command | `./tests/run.sh tests/unit/gate.bats` | exit 0 | | |
-| SC-9 | WHEN the existing suites run THE SYSTEM SHALL fail no more tests than the four failing today | unit | command | `./bin/regression-count.sh 4` | exit 0 | | |
+| SC-1 | WHEN a session tries to end with an unproven completion claim THE SYSTEM SHALL block the end and return the failing check as the next instruction | delivery | command | `checks/SC-1.sh` | exit 0 | MET | `checks/SC-1.sh` exited 0 · completion-hook.bats: 12 cases, 0 failing |
+| SC-2 | WHEN a criterion names a check THE SYSTEM SHALL require a committed script and refuse a command written inline in the plan | unit | command | `checks/SC-2.sh` | exit 0 | MET | `checks/SC-2.sh` exited 0 · gate.bats: 41 cases, 0 failing |
+| SC-3 | WHEN a plan carries no criterion that runs the real system THE SYSTEM SHALL refuse it | unit | command | `checks/SC-3.sh` | exit 0 | | |
+| SC-4 | WHEN the gate runs against this repo's own plan THE SYSTEM SHALL execute every committed check and pass only on the real exit codes | delivery | command | `checks/SC-4.sh` | exit 0 | MET | `checks/SC-4.sh` exited 0 · criteria accepts this plan and refuses one with no criteria table |
+| SC-5 | WHEN a check has fired wrongly more than one time in ten THE SYSTEM SHALL report it as over budget | unit | command | `checks/SC-5.sh` | exit 0 | | |
+| SC-6 | WHEN the instruction corpus is counted THE SYSTEM SHALL report fewer rule-lines than the 173 it carries today, and more requirements than prohibitions | delivery | command | `checks/SC-6.sh` | exit 0 | | |
+| SC-7 | WHEN a repo declares no test, lint and delivery commands THE SYSTEM SHALL refuse at the first step of a session | unit | command | `checks/SC-7.sh` | exit 0 | | |
+| SC-8 | WHEN a defect is repaired THE SYSTEM SHALL require a test that failed before the repair | unit | command | `checks/SC-8.sh` | exit 0 | | |
+| SC-9 | WHEN the existing suites run THE SYSTEM SHALL fail no more tests than the four failing today | unit | command | `checks/SC-9.sh` | exit 0 | | |
 
 ## Research
 
@@ -107,13 +107,13 @@ scored evaluation sets; any change to persona packs.
 
 | id | file (exact path) | action | tool | constraint | covers | verification | status |
 |----|-------------------|--------|------|------------|--------|--------------|--------|
-| A-01 | `scripts/completion-hook.sh` | create | Write | a `Stop` hook that reads the session's plan, runs every committed check, and exits 2 with the failing check on stderr so it becomes the next instruction. No model call. Honours `stop_hook_active` so it cannot loop | SC-1 | `tests/unit/completion-hook.bats` | TODO |
+| A-01 | `scripts/completion-hook.sh` | create | Write | a `Stop` hook that reads the session's plan, runs every committed check, and exits 2 with the failing check on stderr so it becomes the next instruction. No model call. Honours `stop_hook_active` so it cannot loop | SC-1 | `tests/unit/completion-hook.bats` | DONE |
 | A-02 | `hooks/hooks.json` | modify | Edit | register A-01 on `Stop` beside the existing output-lint entry | SC-1 | same | DONE |
 | A-03 | `tests/unit/completion-hook.bats` | create | Write | one case where a failing check blocks the stop, one where a passing set allows it, one asserting the hook cannot loop | SC-1 | `./tests/run.sh tests/unit/completion-hook.bats` | DONE |
-| B-01 | `bin/gate.sh` | modify | Edit | `criteria` requires each row's `check` to name an existing executable file; an inline command string is refused | SC-2 | `tests/unit/gate.bats` | TODO |
-| B-02 | `bin/gate.sh` | modify | Edit | `verdict --run` executes the named script, compares its exit code to `expect`, and writes the captured output into `evidence` itself | SC-2, SC-4 | same | TODO |
-| B-03 | `templates/check.sh` | create | Write | the skeleton a criterion script starts from: exit 0 when met, 1 when not, and print what it observed | SC-2 | `bash -n templates/check.sh` | TODO |
-| B-04 | `bin/gate.sh` | modify | Edit | `readers`: grep each identifier declared in `## Artifact lifecycles` across the repo, excluding comments and its declaring file; zero readers refuses | SC-2 | same | TODO |
+| B-01 | `bin/gate.sh` | modify | Edit | `criteria` requires each row's `check` to name an existing executable file; an inline command string is refused | SC-2 | `tests/unit/gate.bats` | DONE |
+| B-02 | `bin/gate.sh` | modify | Edit | `verdict --run` executes the named script, compares its exit code to `expect`, and writes the captured output into `evidence` itself | SC-2, SC-4 | same | DONE |
+| B-03 | `templates/check.sh` | create | Write | the skeleton a criterion script starts from: exit 0 when met, 1 when not, and print what it observed | SC-2 | `bash -n templates/check.sh` | DONE |
+| B-04 | `bin/gate.sh` | modify | Edit | `readers`: grep each identifier declared in `## Artifact lifecycles` across the repo, excluding comments and its declaring file; zero readers refuses | SC-2 | same | DONE |
 | C-01 | `bin/gate.sh` | modify | Edit | `criteria` refuses a plan with no row of `kind: delivery`. A delivery row runs the real system and asserts this change appears in what the run produced. A repo with no runtime declares `no-runtime:` in frontmatter | SC-3 | same | TODO |
 | C-02 | `templates/VAULT.md`, `bin/vault-init.sh`, `commands/v-init.md` | modify | Edit | onboarding resolves and writes `dod_profile`, `test_command`, `lint_command` and `delivery_command`; an unresolved command is written `absent: <reason>` and never omitted | SC-7 | `tests/integration/vault-init.bats` | TODO |
 | C-03 | `bin/gate.sh` | modify | Edit | `config <repo>` refuses at ANALYZE when `VAULT.md` declares no such block | SC-7 | `tests/unit/gate.bats` | TODO |
