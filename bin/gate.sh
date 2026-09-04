@@ -12,6 +12,7 @@
 # Usage:  bin/gate.sh criteria <plan>          success criteria exist and can be decided
 #         bin/gate.sh verdict  <plan> [--run]  every criterion is MET with evidence
 #         bin/gate.sh readers  <plan>          every declared identifier has a reader in code
+#         bin/gate.sh config   <repo>          the repo declares how to run its own checks
 #         bin/gate.sh all      <plan> --phase <propose|approve|close>
 #         bin/gate.sh --help
 #
@@ -262,6 +263,40 @@ cmd_criteria() {
     [ "$count" -gt 0 ] || refuse "'## Success criteria' parsed to zero usable rows"
 }
 
+# ---------------------------------------------------------------------------- config
+
+# Refuse a repo that never declared how to run its own checks.
+#
+# Runs at ANALYZE, before anything is loaded, so a repo nobody onboarded fails at the start of a
+# session rather than at its close. An OMITTED key is the refusal; `absent: <reason>` is legal. A
+# missing duplication detector is a fact worth recording; a silently skipped line is how the next
+# session comes to believe a question was settled.
+DOD_KEYS="test_command lint_command delivery_command"
+
+cmd_config() {
+    local repo=${1:-$PWD}
+    [ -d "$repo" ] || die "not a directory: $repo"
+    local vm="${repo}/VAULT.md"
+    if [ ! -r "$vm" ]; then
+        refuse "$repo has no VAULT.md. Run vault-init.sh so this repo declares how to run its own checks"
+        return
+    fi
+    local profile
+    profile=$(sed -n 's/^dod_profile:[[:space:]]*//p' "$vm" | head -1 | tr -d '\r')
+    [ -n "$profile" ] || refuse "VAULT.md declares no dod_profile. One of: code, ai-instructions"
+
+    local key val
+    for key in $DOD_KEYS; do
+        val=$(sed -n "s/^${key}:[[:space:]]*//p" "$vm" | head -1 | tr -d '\r')
+        if [ -z "$val" ]; then
+            refuse "VAULT.md omits ${key}. Give the command, or write 'absent: <reason>' — an omitted key reads as settled and is not"
+        elif [ "${val#absent:}" != "$val" ]; then
+            [ -n "$(printf '%s' "${val#absent:}" | tr -d '[:space:]')" ] || \
+                refuse "${key} is marked absent with no reason"
+        fi
+    done
+}
+
 # ---------------------------------------------------------------------------- readers
 
 # Refuse a declared identifier that no code reads.
@@ -484,6 +519,7 @@ main() {
     case "$sub" in
         criteria) cmd_criteria "${1:-}" ;;
         readers)  cmd_readers "${1:-}" ;;
+        config)   cmd_config "${1:-}" ;;
         verdict)  cmd_verdict "${1:-}" "${2:-}" ;;
         all)
             local plan=${1:-} phase=""

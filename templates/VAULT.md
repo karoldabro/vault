@@ -40,6 +40,18 @@ capture_indications: true              # run the indication-candidate scan at ca
                                        # this code repo — an in-repo vault rides the code commit.
                                        # Set false to keep committing the vault by hand.
 
+## definition of done
+<!-- How this repo runs its own checks, written by bin/vault-init.sh and confirmed by you.
+     `bin/gate.sh config` refuses at the FIRST step of a session when a key is omitted.
+     `absent: <reason>` is legal: a tool this repo does not have is a fact, and recording it is what
+     stops the next session assuming the question was settled.
+     Profiles: `code` (tests, lint, duplication, documented interface) or `ai-instructions`
+     (observable in real output, tooling present, exercised by a real run). -->
+dod_profile: {{dod_profile}}
+test_command: {{test_command}}
+lint_command: {{lint_command}}
+delivery_command: {{delivery_command}}
+
 ## hooks
 <!-- Per-project, per-step instruction (prose only; never run as a shell command, there is no `run:`
      syntax). Both /v-work and /v-team honor them: read once at step 1, carried through the run. The 14

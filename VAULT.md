@@ -31,6 +31,17 @@ optional: [research]                   # standard-optional folder in use: LLM-co
 capture_indications: true              # run the indication-candidate scan at capture time
 # suggest_rename: true                 # step 1 surfaces a `/rename <slug>` for you to paste (default: on)
 
+## definition of done
+<!-- How this repo runs its own checks. `bin/gate.sh config` refuses at the first step of a session
+     when a key is OMITTED. `absent: <reason>` is legal and is the honest answer when a tool does not
+     exist here — a missing duplication detector is a fact worth recording. A silently skipped line is
+     how the next session comes to believe a question was settled.
+     Profiles and what each line means: commands/_shared/definition-of-done.md. -->
+dod_profile: code
+test_command: ./tests/run.sh tests/unit
+lint_command: ./bin/doc-lint.sh --changed
+delivery_command: ./bin/gate.sh all <plan> --phase close --run
+
 ## hooks
 <!-- Per-project, per-step INSTRUCTION (prose only — never run as a shell command). 14 phases:
      on_start · pre_/post_analyze · pre_/post_load_context · pre_/post_propose · pre_/post_execute ·

@@ -199,6 +199,42 @@ if ! grep -qE "^- ${slug}$" "${coupled}" 2>/dev/null; then
     } >> "${coupled}"
 fi
 
+
+#------------------------------------------------------------------------------
+# Definition-of-done commands for the new VAULT.md.
+#
+# `bin/gate.sh config` refuses at the FIRST step of a session when one of these keys is omitted, so
+# every key is always written. A command this cannot resolve is written `absent: <reason>` — never
+# left out. An omitted key is what makes the next session believe a question was settled when
+# nothing decided it.
+#
+# delivery_command is deliberately never guessed: which command runs the real system end to end is
+# the one thing only the operator knows, and a wrong guess here would be believed.
+#------------------------------------------------------------------------------
+detect_dod_commands() {
+    local repo="$1"
+    dod_profile="code"
+    test_command=""; lint_command=""; delivery_command=""
+
+    if   [ -x "${repo}/tests/run.sh" ];               then test_command="./tests/run.sh"
+    elif [ -f "${repo}/composer.json" ];              then test_command="vendor/bin/phpunit"
+    elif [ -f "${repo}/pubspec.yaml" ];               then test_command="flutter test"
+    elif [ -f "${repo}/pyproject.toml" ] || [ -f "${repo}/requirements.txt" ]; then test_command="pytest"
+    elif [ -f "${repo}/package.json" ];               then test_command="npm test"
+    elif grep -qE '^test:' "${repo}/Makefile" 2>/dev/null; then test_command="make test"
+    else test_command="absent: no test runner found in this repo"
+    fi
+
+    if   ls "${repo}"/.eslintrc* "${repo}"/eslint.config.* >/dev/null 2>&1; then lint_command="npx eslint ."
+    elif [ -f "${repo}/pint.json" ];                  then lint_command="vendor/bin/pint --test"
+    elif [ -f "${repo}/ruff.toml" ] || grep -q 'ruff' "${repo}/pyproject.toml" 2>/dev/null; then lint_command="ruff check ."
+    elif [ -f "${repo}/analysis_options.yaml" ];      then lint_command="flutter analyze"
+    else lint_command="absent: no linter configured in this repo"
+    fi
+
+    delivery_command="absent: name the command that runs the real system end to end"
+}
+
 #------------------------------------------------------------------------------
 # VAULT.md in code repo (records where the vault lives + per-repo config)
 #------------------------------------------------------------------------------
@@ -207,9 +243,18 @@ if [ "${no_vault_md}" -eq 0 ]; then
     if [ -f "${vault_md}" ]; then
         echo "  VAULT.md already present — leaving it untouched."
     else
+        detect_dod_commands "${code_repo}"
         sed -e "s|{{slug}}|${slug}|g" \
             -e "s|^vault_path: ./vault|vault_path: ${vault_path_value}|" \
+            -e "s|{{dod_profile}}|${dod_profile}|" \
+            -e "s|{{test_command}}|${test_command}|" \
+            -e "s|{{lint_command}}|${lint_command}|" \
+            -e "s|{{delivery_command}}|${delivery_command}|" \
             "${VAULT_ROOT}/templates/VAULT.md" > "${vault_md}"
+        echo "  VAULT.md definition-of-done, confirm or edit these:"
+        printf '    %-18s %s\n' "test_command" "${test_command}" \
+                                 "lint_command" "${lint_command}" \
+                                 "delivery_command" "${delivery_command}"
     fi
 fi
 

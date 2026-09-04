@@ -73,7 +73,8 @@ This is how the cross-project planning substrate (`/v-pm`) reaches execution. No
 Step 0 entirely (ordinary `/v-team` run).
 
 ## Step 1 — ANALYZE
-Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/01-analyze.md`, then execute.
+Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/01-analyze.md`, then execute. Its §1.1a runs
+`bin/gate.sh config` and stops the session on a nonzero exit — do not skip past it.
 **v-team addendum:** also Read `$VAULT_FRAMEWORK_PATH/personas/_resolution.md`, resolve the persona
 pack, and **select the critics for this change** (§2 there). Append one line to the ANALYZE output:
 `Personas: <pack> → [selected names]   (skipped: ...)`. Mark ANALYZE `completed`.

@@ -8,6 +8,22 @@ Restate the task and detect the project stack before any other work. No source r
 
 Write one sentence capturing exactly what was asked. This is the anchor for the whole session.
 
+## 1.1a Confirm the repo declares how its checks run
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/gate.sh config <repo-root>
+```
+
+A nonzero exit stops the session here. It means `VAULT.md` omits `dod_profile`, `test_command`,
+`lint_command` or `delivery_command`, so nothing later in the lifecycle knows how to run this repo's
+own checks. Run `bin/vault-init.sh`, which writes every key, or add the missing line by hand.
+
+`absent: <reason>` is a legal value and the honest one when a tool does not exist here. An omitted
+key is what makes the next session believe a question was settled when nothing decided it.
+
+This runs first, before Step 2 loads anything, so an un-onboarded repo fails at the start of a
+session rather than at its close.
+
 ## 1.2 Extract keywords
 
 Pull **3–6 keywords** from the restatement — they drive context load (Step 2) and dedupe (Step 3).

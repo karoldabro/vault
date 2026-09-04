@@ -495,3 +495,60 @@ mkplan_lifecycle() {
     run "${GATE_SH}" readers "${f}"
     [ "$status" -eq 0 ]
 }
+
+# ---------------------------------------------------------------- config
+#
+# An OMITTED key is the refusal; `absent: <reason>` is legal. That distinction is the point: a tool
+# this repo does not have is a fact worth recording, and a silently skipped line is how the next
+# session comes to believe a question was settled.
+
+mkrepo() {
+    local body=$1
+    printf '%s\n' "$body" > "${TMP}/VAULT.md"
+    echo "${TMP}"
+}
+
+@test "config refuses a repo with no VAULT.md" {
+    rm -f "${TMP}/VAULT.md"
+    run "${GATE_SH}" config "${TMP}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no VAULT.md"* ]]
+}
+
+@test "config refuses a VAULT.md that omits a done key" {
+    mkrepo 'dod_profile: code
+test_command: pytest
+lint_command: ruff check .' >/dev/null
+    run "${GATE_SH}" config "${TMP}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"omits delivery_command"* ]]
+    [[ "$output" == *"reads as settled"* ]]
+}
+
+@test "config accepts a key marked absent with a reason" {
+    mkrepo 'dod_profile: code
+test_command: pytest
+lint_command: absent: no linter in this repo
+delivery_command: absent: nothing runs end to end yet' >/dev/null
+    run "${GATE_SH}" config "${TMP}"
+    [ "$status" -eq 0 ]
+}
+
+@test "config refuses a key marked absent with no reason" {
+    mkrepo 'dod_profile: code
+test_command: pytest
+lint_command: absent:
+delivery_command: make ship' >/dev/null
+    run "${GATE_SH}" config "${TMP}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"absent with no reason"* ]]
+}
+
+@test "config refuses a VAULT.md with no profile" {
+    mkrepo 'test_command: pytest
+lint_command: ruff check .
+delivery_command: make ship' >/dev/null
+    run "${GATE_SH}" config "${TMP}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no dod_profile"* ]]
+}
