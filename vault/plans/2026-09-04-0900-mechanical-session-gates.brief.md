@@ -22,15 +22,16 @@ file to drift.
 | before any design | `clarify` | a question that would change what gets built is still open, or does not record which vault paths were already searched. Capped at four such questions per session |
 | before work items exist | `criteria` | there are no success criteria, or none of them invokes the real system, or a judgement criterion does not say what would make it fail |
 | before approval | `coverage` | a success criterion no work item advances |
-| after implementation | `verdict --run` | the gate itself runs every criterion's check and compares the real exit code to what the plan claimed. A separate agent judges only the checks a script cannot run, never reading the implementer's report |
+| after each work item | `verdict --run` | the gate runs every criterion's check itself and compares the real exit code to what the plan claimed. No model reports whether the work was done |
 | before commit | `verdict` `dod` `bindings` `decisions` `states` | any criterion unmet, a done-line silently skipped, a setting nothing reads, a decision with no record, a ruling that binds nothing |
 
 The commit block is a Claude Code hook. A hook denies the tool call before the permission check and
 holds even when permission prompting is off; an instruction in a command file does not.
 
 No model reports whether a criterion was met. Where a check is a command, the gate runs it and reads
-the exit code. A judging model can be talked into agreement, and a system optimised against its own
-judge has been measured reporting 94% success at 20% real accuracy.
+the exit code. Asking a model to judge does not work: across five judges and five prompt strategies,
+none exceeded 0.65 at telling a real completion from a false one, and 0.54 on execution traces.
+Judges anchor on confident closing language, which is exactly what a false claim produces.
 
 ## Not every check is a command
 
@@ -61,17 +62,23 @@ in real output, the tooling it needs already present, and one run of the real wo
 Each line reads met, failed, or absent with a stated reason. Silence refuses. A missing tool is
 legal once named; skipping the line is not.
 
-## The change that attacks your biggest loss
+## The delivery check — the change that attacks your biggest loss
 
-Every plan must carry one success criterion that runs the real system end to end. A component
-proven only by its own unit test cannot close. This is what would have caught work that passed its
-tests across several sessions and was never wired into anything.
+Every change carries one check that runs the real system, then looks for **this change** in what the
+run produced. Two parts: the project's existing end-to-end suite catches what you broke; one new
+assertion, written as part of the change, catches what never arrived.
+
+The second part is the one that matters. An existing suite passes green while a new field never
+reaches the output, because the suite was written before the field existed.
+
+The evidence is the artifact the run produced — a manifest, a rendered file, a row in a database.
+The session cannot write it; the run does. It runs after each work item, not once at the end.
 
 ## Sequence
 
 Phase 1 today: the program, two of its checks, the plan template, the wiring into `/v-work`, the
 tests, and one real run of the whole chain against this plan itself.
 
-Phases 2 to 6 later: the remaining seven checks, the done profiles, the verifier contract, the
+Phases 2 to 6 later: the remaining seven checks, the done profiles, the delivery check, the
 wiring into `/v-team` `/v-do` `/v-pm` `/v-cr`, the cross-plan tracker, the defect ledger, the
 commit hook, and the decision record.

@@ -28,6 +28,8 @@ verification, enforcement state.
 | O-4 | `/v-cr` gets evidence-per-finding and enforcement states only. It reviews work it did not plan, so `criteria` and `verdict` have no source there | ACCEPTED |
 | O-5 | Phases 2 to 6 run in later sessions. Phase 1 is done: `bin/gate.sh` refuses and passes, `criteria` and `verdict --run` are built and tested, and the gate ran against this plan | OPEN |
 | O-6 | Seven of the nine criteria are not yet due, so this session proved SC-1, SC-6 and SC-8 only. `gate.sh verdict` prints which, and refuses the moment a covering work item flips to DONE | OPEN |
+| O-6b | The agent verifier is removed. No LLM-judge configuration detects a false completion claim above 0.65 AUROC, and 0.54 on execution traces | REJECTED |
+| O-6c | The "read the communication rules before writing output" gate is removed. An instruction cannot be enforced before the model writes prose; `bin/output-lint.sh` measures the reply instead, which already ships | REJECTED |
 | O-7 | `verdict --run` executes commands written in a markdown file. It is opt-in, prints each command first, and must never run against a plan from an untrusted source | ACCEPTED |
 | O-8 | A raw `\|` inside a `check` cell splits the row. Escape it as `\\|`; the parser restores it. `gate.sh` cannot tell an unescaped pipe from a column break | ACCEPTED |
 
@@ -51,7 +53,7 @@ verification, enforcement state.
 |---|---|---|
 | `https://github.com/github/spec-kit` | phases with checkpoints between them, `[NEEDS CLARIFICATION]` markers in the spec, and checklists that validate requirement completeness | the `## Open questions` table is the same marker, made to refuse rather than to annotate |
 | `https://kiro.dev/docs/specs/feature-specs/requirements-first/` | acceptance criteria in EARS notation, `WHEN <condition> THE SYSTEM SHALL <behaviour>`, written before design starts | the `criterion` cell adopts that shape |
-| `https://arxiv.org/html/2507.11662` | agreement bias is pervasive; failure detection falls to roughly 50%, and binary pass-or-fail framing makes it worse | the verifier pastes the check output before it judges, and runs on a different model |
+| `https://arxiv.org/abs/2606.09863` | 75.8% of failures in self-assessing coding agents are reported as success; no LLM judge exceeds 0.65 AUROC at detecting it, and an independent process checking state drops it from 44–52% to 3% | there is no agent verifier seat; the gate runs the check and the run produces the evidence |
 | `https://www.swebench.com/SWE-bench/guides/evaluation/` | the harness hides the tests, applies the patch in a container and re-runs them; pass or fail is mechanical and no model judges it | `gate.sh verdict --run` executes every runnable `check` itself; an agent judges only the rows a script cannot run |
 | `https://arxiv.org/abs/2607.05904` | a policy optimised against its own judge drove judge-reported success from 0.72 to 0.94 while true accuracy stayed at 0.20 | the same change: the fewer verdicts a model produces, the less there is to game |
 | `https://code.claude.com/docs/en/hooks` | a `PreToolUse` hook denies a tool call before the permission check and holds even when permission prompting is turned off; injected context does not | the close gate is a hook, not an instruction in a command file |
@@ -81,12 +83,11 @@ verification, enforcement state.
 | An observed criterion must name its disconfirming condition and why no detector exists | without both it closes on "it looked fine", and no detector ever gets built | ADR-026 |
 | Onboarding writes every definition-of-done command, including the ones it cannot resolve | an omitted key makes the next session believe the question was settled | ADR-026 |
 | At most four blocking questions per session | agents measurably repeat questions and ask what the prompt already answered; an uncapped gate becomes the checkpoint that stops work over small gaps | ADR-026 |
-| The gate executes every runnable check itself; an agent judges only the rest | a verdict a script produced cannot be talked into existing, and a judge a model can optimise against reports success that is not there | ADR-026 |
+| The gate executes every check itself; no model reports whether a criterion was met | no LLM-judge configuration exceeds 0.65 AUROC at detecting a false completion claim, and 0.54 on execution traces | ADR-026 |
+| Every change carries one check that runs the real system and looks for this change in what it produced | an existing suite passes green while a new field never reaches the output, because the suite predates the field | ADR-026 |
 | At least one success criterion must invoke the real system | components proven in isolation and never integrated is the defect that cost the most | ADR-026 |
-| Verification is a separate agent that never sees the implementer's report | a verifier shown a claim confirms it | ADR-026 |
 | `GATE=off` is whole-run only, with no per-check suppression | a gate silenced one check at a time gets silenced | ADR-026 |
 | `elicitation.md` keeps its anti-stall rule for non-blocking questions | a stringent readiness gate is a documented anti-pattern: items never qualify and value stops shipping | ADR-026 |
-| The verifier runs on a different model from the implementer and pastes output before judging | a model judging its own work agrees with it, and measured failure detection falls to about half | ADR-026 |
 | A success criterion is written as `WHEN <trigger> THE SYSTEM SHALL <observable>` | a criterion with no trigger and no observable cannot be told apart from a preference | ADR-026 |
 
 ## Scope & non-goals
@@ -111,7 +112,6 @@ any change to `/v-capture` beyond the tracker reconciliation.
 | `vault/_open.md` | `bin/gate.sh tracker` and `/v-capture` | EXECUTE and capture | the next session | `tracker` exits 1 naming the plan whose open rows are absent |
 | `vault/defect-ledger.md` | the regression-test rule in `definition-of-done.md` | the session that repairs a defect | the next session repairing the same class | the recurrence measurement has no denominator and reports UNRUN, never clear |
 | `plans/<slug>.brief.md` | the approval gate in all five commands | PROPOSE | the operator, in the terminal | the gate prints the 15-line decision block alone and says the brief is missing |
-| `commands/_shared/verification.md` | `v-team/steps/04-execute-loop.md` §5.3a | this plan | the verification agent | EXECUTE cannot spawn the verifier and the close gate refuses on empty verdicts |
 
 ## Work items
 
@@ -125,7 +125,7 @@ and each row carries its own status.
 | W-02b | `bin/gate.sh` | modify | Edit | `criteria` warns, and does not refuse, when a `criterion` cell carries no `WHEN`/`SHALL` pair — the shape is guidance until the corpus uses it | SC-1 | `tests/unit/gate.bats` shape case | DONE |
 | W-02c | `bin/gate.sh` | modify | Edit | `criteria` accepts three `how` values. `command` and `artifact` are decided by the gate. `observed` is refused unless the row names its disconfirming condition and a `no-command: <reason>` | SC-8 | `tests/unit/gate.bats` observed cases | DONE |
 | W-03 | `bin/gate.sh` | modify | Edit | implement `verdict`: refuse a non-`MET` verdict, a `MET` row with empty evidence, and evidence with no backticked command or `path:line` | SC-1 | `tests/unit/gate.bats` verdict cases | DONE |
-| W-03b | `bin/gate.sh` | modify | Edit | implement `verdict --run`: execute each `check` cell that is a command, compare its exit code to `expect`, write the output into `evidence`, and refuse on disagreement. A check that cannot be executed is left to the agent verifier and marked so | SC-1 | `tests/unit/gate.bats` run-mode cases | DONE |
+| W-03b | `bin/gate.sh` | modify | Edit | implement `verdict --run`: execute each `check` cell that is a command, compare its exit code to `expect`, write the output into `evidence`, and refuse on disagreement. A check that cannot be executed is marked `observed` and decided by the operator | SC-1 | `tests/unit/gate.bats` run-mode cases | DONE |
 | W-04 | `templates/plan.md` | modify | Edit | add `## Open questions`, `## Success criteria`, `## Definition of done`, `## Enforcement states`; make `## Decisions` a table with a `record` column; add `covers` to work items | SC-9 | `bin/doc-lint.sh templates/plan.md` | DONE |
 | W-05 | `commands/v-work/steps/03-propose.md` | modify | Edit | §3a.0a calls `gate.sh clarify`; a new §3a.4a calls `gate.sh criteria` before work items are written; a nonzero exit stops the step | SC-9 | `tests/unit/gate-wiring.bats` greps for both invocations | DONE |
 | W-06 | `commands/v-work/steps/05-commit-capture.md` | modify | Edit | §5.0 calls `gate.sh all <plan> --phase close` before staging; a nonzero exit stops the close | SC-9 | same test file | DONE |
@@ -145,11 +145,9 @@ and each row carries its own status.
 | W-17b | `templates/VAULT.md` | modify | Edit | add a `## definition of done` section: `dod_profile`, `test_command`, `lint_command`, `duplication_command`, `e2e_command`, `interface_doc_path`. Every key is present, holding a command or `absent: <reason>` | SC-7 | `bin/gate.sh config` on a repo built from the template | TODO |
 | W-17c | `bin/vault-init.sh` | modify | Edit | after scaffolding, resolve each command from `scripts/detect-stack.sh`, present them for confirmation, and write the block. An unresolved command is written as `absent: <reason>`, never omitted | SC-7 | `tests/integration/vault-init.bats` | TODO |
 | W-17d | `commands/v-init.md` | modify | Edit | document the new step in "What it does" and name the keys it writes | SC-7 | `bin/doc-lint.sh` on the file | TODO |
-| W-18 | `commands/_shared/verification.md` | create | Write | the verifier receives criteria, diff and repo, never the implementer's report; runs on a different model; pastes each `check` output before judging; names what would have made the row `NOT MET`; two loops then escalate | SC-9 | `bin/doc-lint.sh` on the file | TODO |
 | W-19 | `commands/_shared/elicitation.md` | modify | Edit | the anti-stall rule survives for non-blocking questions; a `blocks: yes` question may never be defaulted and routes to the operator | SC-9 | `bin/doc-lint.sh` on the file | TODO |
 | W-20 | `templates/plan-stub.md` | create | Write | the three-table plan `/v-do` writes | SC-9 | `bin/doc-lint.sh` on the file | TODO |
 | W-21 | `commands/v-team/steps/03-propose-loop.md` | modify | Edit | call `clarify`, `criteria` and `coverage` at the same points `/v-work` does | SC-9 | `tests/unit/gate-wiring.bats` | TODO |
-| W-22 | `commands/v-team/steps/04-execute-loop.md` | modify | Edit | new §5.3a spawns the verifier per `commands/_shared/verification.md` and writes verdicts back | SC-9 | same | TODO |
 | W-23 | `commands/v-do.md` | modify | Edit | write the stub plan, run `criteria` before editing and `verdict` plus `dod` before committing | SC-9 | same | TODO |
 | W-24 | `commands/v-pm/steps/01-intake.md` | modify | Edit | `requirements.md` carries the `## Success criteria` table and `gate.sh criteria` runs on it | SC-9 | same | TODO |
 | W-25 | `commands/v-cr/steps/03-review.md` | modify | Edit | every finding carries the command that produced it; a finding without one is advisory | SC-9 | same | TODO |

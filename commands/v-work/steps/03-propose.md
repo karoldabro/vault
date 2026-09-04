@@ -141,8 +141,7 @@ $VAULT_FRAMEWORK_PATH/bin/gate.sh criteria <plan>
 ```
 
 Each row says what must become true, and who can decide it. `how` is `command` (a shell command the
-gate itself runs), `artifact` (a path and what must appear in it), or `observed` (a named procedure
-a person or the verifying agent follows).
+gate itself runs), `artifact` (a path and what must appear in it), or `observed` (a named procedure the operator follows).
 
 **`observed` is legitimate.** Not every criterion is a command, and forcing one produces a check
 that accepts the cases it should reject. It carries two extra things or the gate refuses it: what an

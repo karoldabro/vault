@@ -23,9 +23,9 @@ itself and compares the real exit code to what the plan claims. **Prefer `--run`
 script produced cannot be talked into existing, and a model asked to judge its own work agrees with
 it — measured failure detection falls to roughly half.
 
-A criterion the gate cannot run is decided by the verifying agent, which never reads the
-implementer's report and runs on a different model. It fills `evidence` before `verdict`, and a
-check it could not run is `NOT MET`, never `MET`.
+A criterion the gate cannot run is decided by you, against the failing condition its row names.
+There is no agent seat: no configuration of an LLM judge exceeds 0.65 AUROC at detecting a false
+completion claim, because judges anchor on confident closing language.
 
 Then read `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md` and work its checklist,
 before §5.1 stages a single file. A gate that runs after the commit blocks nothing.

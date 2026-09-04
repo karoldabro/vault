@@ -78,7 +78,7 @@ empty before execution, then `MET` or `NOT MET`. `evidence` carries the command 
 |---|---|---|
 | `command` | a shell command | `gate.sh verdict --run` executes it and compares the exit code to `expect` |
 | `artifact` | a path, and a pattern that must appear in it | the gate checks both |
-| `observed` | a named procedure: what to look at, and what would make it fail | a person or the agent verifier |
+| `observed` | a named procedure: what to look at, and what would make it fail | the operator |
 
 **Not every criterion can be a command, and forcing one produces a worse check than admitting it.**
 A judgement dressed as a metric is the defect: when several proxies have been tried and all of them
@@ -145,30 +145,46 @@ line, assumes the question was settled, and has no way to find out otherwise. `g
 refuses at ANALYZE when the block is missing, so an un-onboarded repo fails at the start of a
 session instead of at its close.
 
-## Independent verification
+## Verification
 
-**The gate runs the check; an agent judges only what the gate cannot run.** `gate.sh verdict --run`
-executes every `check` cell that is a command and compares its exit code to `expect`. A verdict a
-script produced cannot be talked into existing. Where no LLM judges the outcome, the judge cannot be
-gamed: a policy optimised against its own judge drove judge-reported success from 0.72 to 0.94 while
-true accuracy stayed at 0.20.
+**The gate runs the check. No model reports whether a criterion was met.**
+`gate.sh verdict --run` executes every `check` cell that is a command and compares its exit code to
+`expect`.
 
-`commands/_shared/verification.md` binds the agent verifier, which covers only the rows the gate
-cannot execute — an artifact that must exist and read correctly, a behaviour visible only in output
-a human reads. It receives the `## Success criteria` table, the diff and the repository. It never
-receives the implementer's report, and it runs on a different model from the implementer. Both rules
-answer the same measured failure: a model asked to judge its own output agrees with it, and detection
-of a real failure drops to roughly a coin toss.
+A model asked to judge whether an agent finished cannot do it. Across 5 judges, 5 prompt strategies
+and full task specifications, no configuration exceeded 0.65 AUROC, and 0.54 on execution traces —
+a coin flip. Judges anchor on confident closing language, which is exactly what a false completion
+claim produces. What works instead, by an order of magnitude, is an independent process that reads
+the state: false completion falls from 44–52% to 3%.
 
-Three rules follow from the same measurements:
+### The delivery check
 
-1. **Run the check, paste the output, then judge.** Casting verification as a bare pass-or-fail
-   choice is what makes agreement bias worst. The `evidence` cell is filled before the `verdict`
-   cell, and `gate.sh verdict` refuses evidence that carries no command and no `path:line`.
-2. **Name what would have made this `NOT MET`.** A verifier that cannot state the disconfirming
-   observation did not check anything.
-3. **A criterion the verifier could not run is `NOT MET`, never `MET`.** An unrun check reports that
-   it did not run; it never reads as nothing to check.
+Every change carries one criterion that runs the real system and then looks for **this change** in
+what the run produced.
+
+Two parts, and both are needed:
+
+| part | catches |
+|---|---|
+| the project's existing end-to-end suite, unchanged | what this change broke |
+| one new assertion, written as part of this change | what never arrived |
+
+The second part is the one that catches work built and never wired in. An existing suite passes
+green while a new field never reaches the output, because the suite was written before the field
+existed.
+
+The evidence is the artifact the run produced — a manifest, a rendered file, a database row. The
+session cannot write it; the run does. That is the property that makes this check worth more than
+every other check in this file.
+
+It runs after **each work item**, not once at the close. A check that runs only at the end finds the
+same problem at the point where it costs the most.
+
+### Reading the new thing
+
+A criterion the gate cannot execute is `observed`: a person decides it, against the failing
+condition the row names. There is no agent seat. A judgement dressed as an automated verdict is
+worse than a judgement labelled as one.
 
 A `NOT MET` verdict routes by cause and the session cannot close:
 
