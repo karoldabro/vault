@@ -42,3 +42,4 @@ session to remember, and compliance falls as that count rises.
 |------|-------|--------------|
 | read the communication contract before writing output | `commands/_shared/communication.md` | no hook fires before a model writes prose; `bin/output-lint.sh` measures the reply afterwards instead |
 | a criterion decided by observation | `vault/architecture/session-gates.md` | no artifact carries the signal; the operator decides it against the failing condition the row names |
+| leave pushing to the operator | `commands/v-work/steps/05-commit-capture.md` | unmeasurable as written: a push the operator asked for and a push taken unprompted leave the same trace, so no check can separate them |

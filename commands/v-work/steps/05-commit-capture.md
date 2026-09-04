@@ -51,11 +51,15 @@ git status
 git diff --stat
 ```
 
-Stage **specific files only** — never `git add -A` / `git add .` (avoids `.env`, credentials,
-generated or unrelated files). **Stage the plan artifact too** — `plans/<...>.md` from §3a Layer 2,
-plus its `<...>.trail.md` sidecar when `/v-team` wrote one. A plan left unstaged is a plan the next
-session cannot read. Commit with a conventional message (`feat`/`fix`/`refactor`/`test`/
-`docs`/`chore`, subject ≤50 chars, body only when the "why" isn't obvious). Do not auto-push.
+Name each file you stage. `scripts/staging-hook.sh` refuses a directory-wide add, so this needs no
+rule here beyond the reason: a sweep collects `.env`, credentials, generated files, and the work of
+another session running in the same repo.
+
+**Stage the plan artifact too** — `plans/<...>.md` from §3a Layer 2, plus its `<...>.trail.md`
+sidecar when `/v-team` wrote one. A plan left unstaged is a plan the next session cannot read.
+
+Commit with a conventional message (`feat`/`fix`/`refactor`/`test`/`docs`/`chore`), and add a body
+when the "why" is not obvious. Leave pushing to the operator.
 
 After the commit lands (before `/v-capture`), honor any carried `post_commit` hook — e.g. "remind to
 move the Jira ticket to In Review" (it never transitions anything itself; instruction-only). See
