@@ -190,8 +190,9 @@ build_git_subject() {
 
 build_transcript_cmd() {
     [ -d "${TRANSCRIPTS}" ] || return 0
-    find "${TRANSCRIPTS}" -name '*.jsonl' -exec jq -rc '
-        select(.type=="assistant") as $a
+    find "${TRANSCRIPTS}" -name '*.jsonl' -exec jq -Rrc '
+        fromjson? // empty
+        | select(.type=="assistant") as $a
         | $a.message.content[]?
         | select(.type=="tool_use" and .name=="Bash")
         | [(($a.timestamp // "")[0:7]), (.input.command // "")] | @tsv
@@ -200,8 +201,9 @@ build_transcript_cmd() {
 
 build_reply_text() {
     [ -d "${TRANSCRIPTS}" ] || return 0
-    find "${TRANSCRIPTS}" -name '*.jsonl' -exec jq -rc '
-        select(.type=="assistant" and (.isSidechain != true)) as $a
+    find "${TRANSCRIPTS}" -name '*.jsonl' -exec jq -Rrc '
+        fromjson? // empty
+        | select(.type=="assistant" and (.isSidechain != true)) as $a
         | $a.message.content[]?
         | select(.type=="text")
         | [(($a.timestamp // "")[0:7]), (.text // "")] | @tsv

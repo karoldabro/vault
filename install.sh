@@ -3,7 +3,7 @@
 # ~/.claude/output-styles/.
 # Idempotent. Refuses to overwrite non-symlink files.
 #
-# Usage:  install.sh [--enable-style] [--enable-doc-lint] [--enable-brevity] [--enable-all]
+# Usage:  install.sh [--enable-style] [--enable-doc-lint] [--enable-brevity] [--enable-gate] [--enable-all]
 #
 # Linking a file and switching it on are separate steps, and the default is to link only. The
 # director output style shipped on 2026-08-03 and was active in 0 of 18 projects eighteen days
@@ -16,12 +16,14 @@ VAULT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 enable_style=0
 enable_doclint=0
 enable_brevity=0
+enable_gate=0
 while [ $# -gt 0 ]; do
     case "$1" in
         --enable-style)     enable_style=1; shift ;;
         --enable-doc-lint)  enable_doclint=1; shift ;;
         --enable-brevity)   enable_brevity=1; shift ;;
-        --enable-all)       enable_style=1; enable_doclint=1; enable_brevity=1; shift ;;
+        --enable-gate)      enable_gate=1; shift ;;
+        --enable-all)       enable_style=1; enable_doclint=1; enable_brevity=1; enable_gate=1; shift ;;
         -h|--help)          sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *)                  echo "install.sh: unknown option $1" >&2; exit 2 ;;
     esac
@@ -68,6 +70,7 @@ HOOK_ROWS=(
   "doc-lint-hook.sh;doclint;PostToolUse;Write|Edit|MultiEdit;DOC_LINT;checks every markdown document Claude writes and hands the findings back to it"
   "output-lint-hook.sh;brevity;Stop;;BREVITY;measures the length of every reply and records it"
   "brevity-reminder-hook.sh;brevity;UserPromptSubmit;;BREVITY;says what your previous reply overran, and stays silent when nothing did"
+  "completion-hook.sh;gate;Stop;;COMPLETION;refuses to end a turn that marked work done and recorded no verdict for it"
 )
 
 linked=0
@@ -204,6 +207,7 @@ for _row in "${HOOK_ROWS[@]}"; do
     case "${_flag}" in
         doclint) [ "${enable_doclint}" -eq 1 ] || continue ;;
         brevity) [ "${enable_brevity}" -eq 1 ] || continue ;;
+        gate)    [ "${enable_gate}" -eq 1 ] || continue ;;
         *)       continue ;;
     esac
     [ -f "${VAULT_ROOT}/scripts/${_script}" ] || continue
@@ -246,6 +250,7 @@ for _row in "${HOOK_ROWS[@]}"; do
     case "${_flag}" in
         doclint) _turn_on="install.sh --enable-doc-lint" ;;
         brevity) _turn_on="install.sh --enable-brevity" ;;
+        gate)    _turn_on="install.sh --enable-gate" ;;
         *)       _turn_on="install.sh --enable-all" ;;
     esac
     echo

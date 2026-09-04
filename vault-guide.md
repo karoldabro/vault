@@ -387,6 +387,27 @@ An unset knob takes the default. A cap hit with open blockers escalates to the u
 
 ---
 
+
+## Session gates
+
+`bin/gate.sh` refuses a session that cannot show its work. It runs at three points and a nonzero
+exit stops the lifecycle rather than warning.
+
+| when | subcommand | it refuses |
+|---|---|---|
+| ANALYZE, first thing | `config <repo>` | `VAULT.md` omits `dod_profile`, `test_command`, `lint_command` or `delivery_command`. `absent: <reason>` is legal; an omitted key is not |
+| PROPOSE, before work items | `criteria <plan>` | no success criteria; a criterion whose check is not a committed executable; no criterion of `kind: delivery` |
+| close, before staging | `all <plan> --phase close` | a criterion with no verdict, a declared identifier no code reads, a defect repair with no failing-before test |
+
+**A criterion names a committed script, never a command typed into the plan.** `verdict --run`
+executes it and writes the verdict and the captured output into the plan itself, so those two cells
+are the only part a session never authors. Full contract: `vault/architecture/session-gates.md`.
+Reasoning and the measurements behind it: `vault/decisions/ADR-026-mechanical-session-gates.md`.
+
+`scripts/completion-hook.sh` blocks a turn end when a work item is marked done and its criterion has
+no verdict. Turn it on with `install.sh --enable-gate`; silence it with `COMPLETION=off`.
+`GATE=off` disables every check, whole-run only.
+
 ## 13. Cross-project feature workspaces (`/v-pm`)
 
 `/v-pm` plans a feature **once**, project-agnostically. Each project's `/v-team <feature>` session reads
