@@ -33,6 +33,7 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-06-1053-v-loop-autonomous-campaign]] — /v-loop: an autonomous test-and-fix campaign command that refuses without a disposable stack; also finished the staging guard
 - [[sessions/2026-09-04-1640-session-gates-doc-truth]] — Repair the documents describing bin/gate.sh so they name only the checks that exist
 - [[sessions/2026-09-04-1200-rule-compliance-study]] — Measure which property predicts whether a framework rule is followed
 - [[sessions/2026-09-04-0900-mechanical-session-gates]] — Built bin/gate.sh: a session cannot plan without success criteria or close without verdicts backed by a real run
