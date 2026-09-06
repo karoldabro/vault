@@ -35,6 +35,16 @@ sets `wrong`; a session never scores its own refusal.
 | completion-hook | 0 | 0 | |
 | staging-hook | 0 | 0 | |
 
+## What the checks do not cover
+
+`checks/v-loop-SC-3.sh` matches the shared modules' literal wording. A rule reworded rather than
+copied passes it, so a green run means no verbatim duplicate rather than no duplicate.
+
+`bin/rule-count.sh` counts the `/v-team` corpus. `commands/v-loop.md` and its rules file are counted
+apart, by `checks/v-loop-SC-4.sh`, because a campaign is a separate read set: no session loads both.
+Counting them together would raise a budget that is already over, which hides the overrun instead of
+recording it.
+
 ## Rules kept as prose
 
 Rules with no check behind them. This list stays short: every entry is a rule the framework asks a
@@ -45,3 +55,4 @@ session to remember, and compliance falls as that count rises.
 | read the communication contract before writing output | `commands/_shared/communication.md` | no hook fires before a model writes prose; `bin/output-lint.sh` measures the reply afterwards instead |
 | a criterion decided by observation | `vault/architecture/session-gates.md` | no artifact carries the signal; the operator decides it against the failing condition the row names |
 | leave pushing to the operator | `commands/v-work/steps/05-commit-capture.md` | unmeasurable as written: a push the operator asked for and a push taken unprompted leave the same trace, so no check can separate them |
+| the campaign operating rules | `commands/v-loop/campaign-rules.md` | a campaign runs against a stack that is not this repo, so nothing here can observe whether a rule held. The one rule that needed a counter — a cap on concurrent testers — was reworded to "one tester unless the conflict sets are disjoint", which a session decides from the ledger row it is writing. Revisit when a run violates one |

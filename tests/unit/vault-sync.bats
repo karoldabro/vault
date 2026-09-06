@@ -57,7 +57,8 @@ flat() { tr '\n' ' ' < "$1"; }
         "commands/v-capture.md" \
         "commands/v-do.md" \
         "commands/v-pm/steps/02-load-context.md" \
-        "commands/v-pm/steps/05-capture.md"
+        "commands/v-pm/steps/05-capture.md" \
+        "commands/v-loop.md"
     do
         grep -q "bin/vault-sync.sh" "${VAULT_ROOT}/${f}" \
             || { echo "no vault-sync.sh call in ${f}"; return 1; }

@@ -67,6 +67,7 @@ how you disambiguate when another plugin ships the same name.
 | `/v-team` | The careful version of `/v-work` for big or risky changes. Reviewers critique the plan and the diff. |
 | `/v-pm` | Plan a feature spanning several repos once. Writes a shared plan and contract, so each repo's `/v-team` session coordinates through files instead of through you. |
 | `/v-do` | A small, low-risk change with no approval gate. |
+| `/v-loop` | Test and repair a feature that is already built and running, working alone for hours. Refuses to start until you name a stack you are willing to lose. |
 | `/v-ask` | Ask a question about the project. Read-only, no changes. |
 | `/v-cr` | Review a pull request and post comments back. `--sandbox` runs the PR to verify findings. |
 | `/v-capture` | Save the current session into the vault. |

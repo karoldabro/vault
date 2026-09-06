@@ -139,6 +139,7 @@ Precedence and failure modes — the framework never halts:
 ├── design/                  # Brand, accessibility (optional)
 ├── features/                # Subject-matter dossiers, one per feature/domain
 │   └── <NN>-<slug>.md or <slug>.md
+├── campaigns/               # /v-loop campaign state, one dir per campaign; results/ is .gitignored
 ├── graphify/                # Code graph slices (symlinks; .gitignored)
 ├── guides/                  # Cross-project integration contracts (API shapes, enums, data flow; no impl code)
 ├── indications/             # How to work ON this project: patterns, standards, testing rules
@@ -351,6 +352,7 @@ instead. Decision record: [[ADR-018-decision-communication-contract]] in `vault/
 | `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, claude-mem, Serena, MorphLLM |
 | `/v-ask` | Read-only, vault-aware Q&A. Loads context cheapest-first; no edits, no gate, no capture. Hands off when the answer implies a change. | claude-mem, graphify, Serena |
 | `/v-do` | Small low-risk change, no approval gate. Orient → execute → self-review; capture off by default. Escalates to `/v-work` above ~5 files, `/v-team` for architecture, schema, auth, billing or cross-repo. | claude-mem, Serena, MorphLLM |
+| `/v-loop` | Autonomous test-and-fix campaign against a feature already built and running. Refuses without a disposable stack the operator names; takes every decision in one intake exchange; enumerates a case backlog, runs each case against the real system, files, fixes and retests until every case is terminal or a cap stops it (§11.1). | Agent fan-out, the project's own test runner |
 | `/v-capture` | Capture this session as `sessions/*.md`. Runs the duplicate check, updates indexes, extracts ADR candidates, cross-links Refs. | claude-mem auto-capture (SessionEnd hook) |
 | `/v-link` | Declare two projects coupled, so context loading sweeps both. Updates `~/vault/_global/coupled-groups.md`. | — |
 | `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from a feature. | claude-mem, graphify, MorphLLM |
@@ -387,6 +389,41 @@ An unset knob takes the default. A cap hit with open blockers escalates to the u
 
 ---
 
+
+### 11.1 `/v-loop` campaigns
+
+A campaign verifies and repairs what is already built, by running it. It is not a rung on the
+`/v-do` → `/v-work` → `/v-team` ladder, and neither escalates into the other.
+
+**It refuses without a disposable stack you name in words** — one you are willing to lose. A stack
+inferred from a `docker-compose.yml` is not one anyone agreed to lose, and the campaign's own rules
+allow it to drop and rebuild a database.
+
+Artifacts live in `<project-vault>/campaigns/YYYY-MM-DD-HHMM-<feature-slug>/`:
+
+| file | holds |
+|------|-------|
+| `STATE.md` | the resume point, the retest queue, cases never run, and `rounds_used` — the count that makes the round cap survive a usage limit |
+| `ledger.jsonl` | one append-only JSON line per case; last line per id wins, so a session killed mid-write loses one line rather than the campaign |
+| `results/<case-id>.md` | one per run, ending `VERDICT: PASS \| FAIL \| BLOCKED`. **Gitignored** — this is evidence captured from real data at real volume |
+| `defects.md` | one row per defect and its fix, sharing the `vault/defect-ledger.md` columns so `bin/gate.sh recurrence` grades it |
+| `TESTER-BRIEF.md` | every trap the campaign has already paid for; each agent reads it first |
+
+`/v-loop` appends `campaigns/*/results/` to the project vault's `.gitignore` when it is absent,
+because `templates/vault.gitignore` is copied only at init.
+
+Caps: `loop_max_rounds` (3) and `max_fix_attempts` (3), both settable in the intake exchange. A cap
+hit stops the loop and reports; it never continues past one.
+
+Two shapes. One session when the backlog fits a usage window. A host timer firing a fresh session
+per batch when it does not — and `/v-loop` builds that runner and hands you the commands rather than
+installing it, because the permission classifier refuses `crontab` edits and refuses to spawn
+`claude -p` from Bash.
+
+Rules binding every campaign agent: `commands/v-loop/campaign-rules.md`. Mobile adapter:
+`prompts/on-device-e2e-campaign.md`. Decision: [[ADR-027-autonomous-test-fix-loop]].
+
+---
 
 ## Session gates
 

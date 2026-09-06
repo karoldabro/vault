@@ -62,3 +62,45 @@ fire() { printf '{"tool_name":"Bash","tool_input":{"command":%s}}' "$(printf '%s
     [[ "$output" == *"git add path/one path/two"* ]]
     [[ "$output" == *"git status --short"* ]]
 }
+
+# `git add` was one verb of the action this hook names. `git commit -am` reaches the same outcome —
+# a sibling agent's tracked edits swept into a commit the session did not write — and returned clean
+# until these cases were added. `--amend` and `reset --hard` destroy work already committed.
+
+@test "refuses git commit -a" { run fire 'git commit -a -m x'; [ "$status" -eq 2 ]; }
+@test "refuses git commit -am" { run fire 'git commit -am "x"'; [ "$status" -eq 2 ]; }
+@test "refuses git commit with no pathspec" { run fire 'git commit -m "x"'; [ "$status" -eq 2 ]; }
+@test "refuses git commit --amend" { run fire 'git commit --amend --no-edit'; [ "$status" -eq 2 ]; }
+@test "refuses git reset --hard" { run fire 'git reset --hard origin/main'; [ "$status" -eq 2 ]; }
+
+@test "refuses a commit sweep inside a compound command" {
+    run fire 'cd /repo && git commit -am wip && git push'
+    [ "$status" -eq 2 ]
+}
+
+@test "allows a commit that names its paths" {
+    run fire 'git commit bin/gate.sh tests/unit/gate.bats -m "fix"'
+    [ "$status" -eq 0 ]
+}
+
+@test "allows a commit that names paths after the separator" {
+    run fire 'git commit -m "fix" -- bin/gate.sh'
+    [ "$status" -eq 0 ]
+}
+
+@test "allows a soft or mixed reset" {
+    run fire 'git reset --soft HEAD~1'
+    [ "$status" -eq 0 ]
+    run fire 'git reset HEAD bin/gate.sh'
+    [ "$status" -eq 0 ]
+}
+
+@test "the commit refusal names what to do instead" {
+    run fire 'git commit -am x'
+    [[ "$output" == *"git commit path/one path/two"* ]]
+}
+
+@test "GATE=off disables the commit refusal too" {
+    GATE=off run fire 'git commit -am x'
+    [ "$status" -eq 0 ]
+}

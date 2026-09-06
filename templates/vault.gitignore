@@ -12,6 +12,12 @@ memory/cache/
 # exact path here. Regular feature dossiers are files (features/<slug>.md), so this dir-only glob is safe.
 features/*/
 
+# Campaign per-case evidence (/v-loop). Result files carry output captured from a real system at
+# real data volume, and there are hundreds per campaign. STATE.md, the ledger and defects.md are
+# the resume point and do commit. /v-loop step 1 appends this rule to a vault that predates it,
+# because this template is copied only at init.
+campaigns/*/results/
+
 # Graphify output — lives in the code repo, symlinked here.
 graphify/
 graphify-out/
