@@ -18,7 +18,13 @@ unexamined_paths:       [...]   # cr_coverage: the unexamined rows, verbatim
 coverage_accepted:      <yes|no|n/a>   # operator accepted a stated gap at the §4.1 gate
 changed_lines:          <n>     # from cr_diff_stats
 indication_rows_loaded: <n>     # index rows after the §2.4 surface filter
-indication_bodies_read: <n>     # full rule bodies fetched on demand
+indication_bodies_read: <n>     # the rule bodies the routing selected
+indication_rows_routed: <a>        # cr_rule_route `applies`
+indication_rows_no_match: <m>     # glob-shaped, reached nothing in this diff
+indication_rows_unroutable: <u>   # cell names neither a glob nor a declared surface
+rules_checked: <c>                # cr_rule_coverage `checked`
+rules_n_a: <x>                    # verdicted "never fired"; counted apart from checked
+rules_routed_unchecked: <n>       # the only bucket that gates
 inline_intended:        <n>     # what the run meant to post
 inline_verified:        <n>     # what re-listing the PR returned (step 4.5a)
 summary_verified:       <yes|no>

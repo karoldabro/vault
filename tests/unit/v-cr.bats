@@ -150,7 +150,61 @@ setup() {
 @test "gather step states the indication retrieval rule" {
     grep -qi 'indication retrieval rule' /code/commands/v-cr/steps/02-gather.md
     grep -qi 'Read .indications/_index.md. only' /code/commands/v-cr/steps/02-gather.md
-    grep -qi 'on demand, by slug' /code/commands/v-cr/steps/02-gather.md
+    # Bodies are selected by the router before the panel spawns. Fetching them "on demand, by slug"
+    # made the model's recall the router: it is what let a review cite four rules of a hundred and
+    # forty-nine and report nothing about the rest.
+    grep -qE 'cr_rule_route "\$CR_INDEX" "\$CR_CHANGED_FILES" "\$CR_SCOPES"' /code/commands/v-cr/steps/02-gather.md
+    grep -qi 'before the panel spawns' /code/commands/v-cr/steps/02-gather.md
+    # `! grep` only asserts when it is the last statement of the body, so it silently stops
+    # asserting the moment anything is appended below it.
+    run grep -qi 'on demand, by slug' /code/commands/v-cr/steps/02-gather.md
+    [ "$status" -ne 0 ]
+}
+
+@test "gather step reports the three routing buckets" {
+    grep -q '^Routing: <a> routed' /code/commands/v-cr/steps/02-gather.md
+    grep -qi 'unroutable' /code/commands/v-cr/steps/02-gather.md
+}
+
+@test "review step gates on anchors and rule coverage, not on prose" {
+    # Both receipts, named: pinning only the first argument lets the step silently stop
+    # anchor-checking the rule rows, which leaves the rule gate permanently green.
+    grep -qE 'cr_anchor_check "\$CR_DIFF" "\$CR_RECEIPT" "\$CR_RULES_CHECKED"' /code/commands/v-cr/steps/03-review.md
+    grep -qE 'cr_rule_coverage "\$CR_RULE_ROUTES" "\$CR_RULES_CHECKED" "\$CR_BAD_ANCHORS"' /code/commands/v-cr/steps/03-review.md
+    # Every variable the step names is established by a step, not conjured at the call site.
+    for v in CR_INDEX CR_SCOPES CR_RULE_ROUTES CR_DIFF CR_RULES_CHECKED CR_BAD_ANCHORS; do
+        grep -qE "carry it|is the|are the" /code/commands/v-cr/steps/02-gather.md
+        grep -rqE "\\\$${v}\\b" /code/commands/v-cr/steps/
+    done
+    # The summary line the PR author reads keeps the four buckets apart. Folding them is how a
+    # review reports rule coverage it never had.
+    grep -qi 'routed-unchecked' /code/commands/v-cr/steps/03-review.md
+    grep -qi 'no-match' /code/commands/v-cr/steps/03-review.md
+    # no-match and unroutable are unmeasured, not clean, and the step must say so.
+    grep -qi 'unmeasured, not clean' /code/commands/v-cr/steps/03-review.md
+}
+
+@test "the rule-coverage gate shares one confirmation with the coverage gate" {
+    grep -qi 'cr_rule_coverage' /code/commands/v-cr/steps/04-post.md
+    grep -qi 'one prompt, not two' /code/commands/v-cr/steps/04-post.md
+}
+
+@test "the panel schema defines the rule receipt and all three verdicts" {
+    grep -q 'RULES_CHECKED' /code/commands/_shared/critic-panel.md
+    # Table rows, not bare tokens: `holds` already occurs in this file's prose, so a token grep
+    # passes with the whole verdict table deleted.
+    for v in 'breaks' 'holds' 'n/a'; do
+        grep -qE "^\| \`?${v}\`? \|" /code/commands/_shared/critic-panel.md
+    done
+    # Without a stated trigger, n/a is a free pass and the receipt measures nothing.
+    grep -qi 'trigger clause' /code/commands/_shared/critic-panel.md
+    grep -qi 'never in .checked' /code/commands/_shared/critic-panel.md
+}
+
+@test "each helper the step files call is really defined in the library" {
+    for fn in cr_rule_route cr_anchor_check cr_rule_coverage; do
+        grep -qE "^${fn}\(\)" /code/lib/cr-helpers.sh
+    done
 }
 
 @test "gather step reports how many rules it loaded" {

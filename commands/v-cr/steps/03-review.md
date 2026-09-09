@@ -35,6 +35,13 @@ it goes green:
 - a test that reimplements the algorithm it is testing, so it compares the subject against a copy of
   itself.
 
+**Assign the routed rules.** Step 2.4 wrote `$CR_RULE_ROUTES`. Each `applies` row carries a slug and
+the changed path its glob matched; give that rule to the critic that holds that path, and give a rule
+whose matched path no critic holds — plus every rule routed on the surface channel, whose path column
+is `-` — to the architect seat. Each critic returns one `RULES_CHECKED` row per rule it was given
+(`_shared/critic-panel.md` §(d) defines the row and the three verdicts). A critic is told which paths
+are its own, because a verdict anchored outside them is rejected in §3.6.
+
 **Under `--sandbox`**, also pass the **dynamic-evidence bundle** from step 2.6 as the panel's optional
 input (static analyzers = deterministic precision floor; diff-coverage; test results; runtime
 reproduction). Two specifics:
@@ -99,6 +106,16 @@ preference.
     silence it had not earned. When `<U>` is above zero, name those paths in the summary;
   - **test-posture line (mandatory)** — without `--sandbox`: `Tests: not executed (static review only —
     re-run with --sandbox to gate on tests)`; with `--sandbox`: `Tests: <pass | new-failure | red-unattributed>`;
+  - **rule line (mandatory)** — `Rules: <c> checked · <a> n/a · <n> routed-unchecked · <m> no-match ·
+    <u> unroutable`, from §3.6, naming the routed-unchecked slugs. The first three **must sum to the
+    routed count**; drop the `n/a` bucket and a review whose every routed rule came back `n/a` prints
+    five zeros while the routed set vanishes. Five buckets, five different claims: a rule a critic
+    decided, a rule a critic declared never fired, a rule assigned and left undecided, a rule this
+    diff could not reach, and a rule no diff can reach until the project rewrites its index cell.
+    `no-match` and `unroutable` are **unmeasured, not clean** — say so in the same breath, because a
+    rule about a contract between files names no changed path and lands there every time.
+    On a `Fork/public: yes` target print the counts only and withhold the routed-unchecked slug list:
+    §3.3 permits a slug that justifies a finding, not a roster of the project's private rule index;
   - counts by severity + a files-changed table;
   - task-alignment note (satisfied / gaps vs the ticket);
   - ≤3 advisory (summary-only) bullets — drop the rest, don't pad.
@@ -112,14 +129,29 @@ union **across chunks** so the denominator is the whole changeset rather than on
 
 ```bash
 source "$VAULT_FRAMEWORK_PATH/lib/cr-helpers.sh"
-cr_coverage "$CR_CHANGED_FILES" "$CR_RECEIPT" "$CR_FINDING_PATHS"   # rc 0 all read · 1 gaps · 2 bad input
+cr_coverage "$CR_CHANGED_FILES" "$CR_RECEIPT" "$CR_FINDING_PATHS" "$CR_BAD_ANCHORS"   # rc 0 all read · 1 gaps · 2 bad input
 ```
 `$CR_RECEIPT` is the merged `FILES_EXAMINED` rows written here; `$CR_FINDING_PATHS` is one path per
 line for each file carrying a confirmed finding.
 
-Before merging, **check each `read` row's anchor against the diff already in hand**. A row whose
-quoted token is not on the line it names counts as **not examined** — otherwise a critic that echoes
-the file list back scores perfect coverage.
+Before merging, **verify every anchor against the diff already in hand** — the `read` rows and the
+`RULES_CHECKED` rows both:
+`$CR_DIFF` is the secret-redacted patch from §2.1; `$CR_RECEIPT` and `$CR_RULES_CHECKED` are the two
+merged receipt files written here; `$CR_BAD_ANCHORS` is the output path. Both receipts go into the
+same call — verifying only the file receipt leaves every rule verdict unchecked and the rule gate
+permanently green.
+```bash
+cr_anchor_check "$CR_DIFF" "$CR_RECEIPT" "$CR_RULES_CHECKED" > "$CR_BAD_ANCHORS"   # rc 0 all resolve · 1 some do not
+cr_rule_coverage "$CR_RULE_ROUTES" "$CR_RULES_CHECKED" "$CR_BAD_ANCHORS"   # rc 0 · 1 routed rules undecided
+```
+A row whose named line is not in the diff, or whose quoted token is not on that line, counts as **not
+examined** and its rule as **not checked** — otherwise a critic that echoes its assignment back scores
+perfect coverage on both receipts. That is the whole of what the tool decides: every critic on a
+sub-threshold diff is given the whole changeset, so there is no path-to-critic map and no
+out-of-assignment test to run.
+
+`cr_rule_coverage` returns 1 only for a routed rule nobody decided. `no-match` and `unroutable` print
+and never gate, for the reason `vault/indications/rules-routed-not-recalled.md` states.
 
 `rc 1` is not a failure to hide: carry the unexamined set to step 4, which requires fresh confirmation
 before posting, and name the paths in the summary comment. Report unexamined **test** files as their
@@ -133,6 +165,8 @@ Spawned: [<persona> → <base_agent>, …]   # actual Agent calls — MUST match
 Coverage: <T> changed · <F> with findings · <C> examined clean · <U> NOT EXAMINED   # cr_coverage
 Unexamined: [<paths>]   ·   unexamined test files: <n>
 Tests: <not executed (static review only) | pass | new-failure | red-unattributed>
+Rules: <c> checked · <a> n/a · <n> routed-unchecked · <m> no-match · <u> unroutable   # cr_rule_coverage
+Routed-unchecked: [<slugs>]   ·   bad anchors rejected: <k>
 Confirmed actionable: <n> inline   ·   Advisory (summary-only): <m>
 Suppressed (already posted): <k>
 Task alignment: <satisfied | gaps: …>

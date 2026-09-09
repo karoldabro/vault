@@ -27,6 +27,15 @@ a stated limit — a review that says what it did not read is honest — but tha
 decision they make, not one the tool makes for them by staying quiet. Record it as
 `coverage_accepted` in step 5.
 
+**A nonzero `cr_rule_coverage` exit joins that same confirmation — one prompt, not two.** It fires on
+routed rules nobody decided, so name those slugs in the preview beside the unexamined paths. Two
+prompts in one review is how an operator learns to clear both without reading either. `no-match` and
+`unroutable` counts appear in the preview and never prompt.
+
+When that confirmation fires, add one to the matching `fires` row in the reviewed project's
+`check-budget.md` (`rule-coverage`, `anchor-check`). A row nobody increments stays at 0/0, and the
+one-in-ten rule cannot retire a check whose firings were never counted.
+
 If the user declines → stop; nothing is written. (The review is still captured in step 5.)
 
 ## 4.2 Redact at the write boundary (sec-2 / sec-5)

@@ -66,9 +66,28 @@ budget, so a run cannot have loaded them all and cannot say what it did load.
    **Most indexes have no `scope` column** (a single-surface project does not need one). There, load
    every row and say `scope filter: n/a (single-surface index)`. Never skip the load for want of a
    column — an unrouted index is smaller than a routed one, not more dangerous.
-3. **Fetch a full rule body only on demand, by slug**, when a critic is about to cite that rule.
-4. **Record both counts** — rows loaded after the filter, bodies fetched — in the step output and in
-   the capture block (`05-capture.md` §5.1).
+3. **Route the rows against the changed files, then fetch the bodies the routing selected.**
+   Write each input to a path and carry it, the way §2.1 carries `$CR_CHANGED_FILES`:
+   `$CR_INDEX` is the resolved `indications/_index.md`; `$CR_SCOPES` is the project's `VAULT.md`
+   `indication_scopes` as a comma-separated string, empty when the project declares none;
+   `$CR_RULE_ROUTES` is the output path. A step that names a variable no step sets cannot run.
+   ```bash
+   source "$VAULT_FRAMEWORK_PATH/lib/cr-helpers.sh"
+   cr_rule_route "$CR_INDEX" "$CR_CHANGED_FILES" "$CR_SCOPES" > "$CR_RULE_ROUTES"
+   ```
+   Every
+   `applies` row's body is fetched **before the panel spawns** — it is what step 3 assigns to a
+   critic. Fetching on demand instead makes a rule's arrival a consequence of what a file reminded a
+   critic of, which is how a review comes to cite four rules out of a hundred and forty-nine and
+   report nothing about the rest.
+
+   Rule 2's surface filter and this router are the **two channels of one mechanism**, not
+   alternatives: a cell naming a declared surface routes on the surface channel, a cell naming a file
+   glob routes on the path channel, and a cell naming neither lands in `unroutable`. The cost of the
+   `applies` set is bounded by the diff, not by the rule count, so no cap is needed here.
+4. **Record the counts** — rows loaded after the filter, and the three routing buckets — in the step
+   output and in the capture block (`05-capture.md` §5.1). `unroutable` is a real number about the
+   project's index, not an error: it names rules no review can reach until someone rewrites the cell.
 
 If the index file itself is missing, say so and fall back to reading rule bodies directly, capped at
 the token budget and with the count recorded. An unrecorded partial load is what this rule prevents;
@@ -109,6 +128,7 @@ Diff: <n files, +a/-b, c changed lines>  ·  secrets: <none | N redacted (warned
 Task: <JIRA-KEY / asana:GID / #N "summary"> | none
 Vault: <pack resolved | GENERIC FALLBACK>  ·  layers: [vault-only | + graph/serena/CLAUDE.md]
 Rules: <r> index rows (<scope <surface>+cross-repo | scope filter: n/a>)  ·  <b> bodies fetched
+Routing: <a> routed  ·  <m> no-match  ·  <u> unroutable   # cr_rule_route -> $CR_RULE_ROUTES
 Suppression set: <n prior v-cr fingerprints>  (<m> threads have human replies)
 Sandbox: <off | recipe <source> · test-gate <pass|new-failure|red-unattributed|could-not-provision> · evidence [analyzers/coverage/repro]>
 ```

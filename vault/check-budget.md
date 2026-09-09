@@ -34,11 +34,21 @@ sets `wrong`; a session never scores its own refusal.
 | recurrence | 0 | 0 | |
 | completion-hook | 0 | 0 | |
 | staging-hook | 0 | 0 | |
+| rule-coverage | 0 | 0 | `cr_rule_coverage`; refuses only on a routed rule nobody decided |
+| anchor-check | 0 | 0 | `cr_anchor_check`; refuses a citation whose token is not on the line it names |
 
 ## What the checks do not cover
 
 `checks/v-loop-SC-3.sh` matches the shared modules' literal wording. A rule reworded rather than
 copied passes it, so a green run means no verbatim duplicate rather than no duplicate.
+
+`cr_rule_coverage` measures the rules a changed-file glob could reach. Two buckets are outside it and
+are printed rather than counted as clean: `no-match`, a rule whose globs reached nothing in this diff,
+and `unroutable`, a rule whose index cell is prose no router can read. A rule about a contract between
+files or repos names no changed path and lands in one of them on every diff: 42 of 44 rows
+(`bin/indication-route-audit.sh ~/vault/givore/indications/cross-repo/_index.md`). Nobody verdicts
+those rules, and a summary that folds them into a coverage number reports thoroughness it did not
+have.
 
 `bin/rule-count.sh` counts the `/v-team` corpus. `commands/v-loop.md` and its rules file are counted
 apart, by `checks/v-loop-SC-4.sh`, because a campaign is a separate read set: no session loads both.

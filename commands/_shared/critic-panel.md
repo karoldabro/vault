@@ -89,6 +89,8 @@ FINDINGS:
     recommendation: <concrete change — advisory text only; never auto-applied>
 FILES_EXAMINED:
   - <evidence><TAB><reason><TAB><path>
+RULES_CHECKED:
+  - <verdict><TAB><anchor or trigger><TAB><slug>
 ```
 
 **`FILES_EXAMINED` is mandatory and is the panel's coverage measurement.** One row per changed file
@@ -112,6 +114,23 @@ Two rules make the receipt worth collecting:
 - **A file examined and found clean states what was checked**, in its reason. Silence is a claim, and
   a claim the caller cannot falsify without reopening the file is worth nothing — an assigned critic
   returning empty on a file must be distinguishable from one that checked it.
+
+**`RULES_CHECKED` is mandatory for `/v-cr` step 3**, which routes project rules to critics; `/v-team`
+routes none and omits the block. Naming the callers rather than a condition is deliberate — both
+callers supply a rules digest, so "whenever the caller assigns rules" is a question a critic has no way
+to answer from its own prompt. It is the panel's rule-coverage measurement. One row per assigned indication slug, slug last for the same reason the
+path is last above. The three verdicts are defined here and nowhere else:
+
+| verdict | means | what the row must carry |
+|---|---|---|
+| `breaks` | a changed line violates the rule | `<path>:L<n>:"<token quoted from that line>"`, the path from this critic's own assignment |
+| `holds` | the rule bears on a changed line and that line satisfies it | the same anchor, plus the rule condition the line meets |
+| `n/a` | no changed line meets the rule's trigger | no code anchor — instead the rule body's own trigger clause, and the path shape that would have fired it |
+
+`n/a` is the verdict that decides whether this receipt is worth collecting. It carries no anchor, so
+without a stated trigger a critic can answer `n/a` to its whole assignment, cite one line of the hunk
+for each, and score full coverage — the same unearned silence the receipt exists to end, one level up.
+`cr_rule_coverage` therefore counts `n/a` in its own column and never in `checked`.
 
 Under the caller's chunking each critic receipts **its own chunk**; the caller unions across chunks.
 
@@ -143,6 +162,7 @@ ConfidenceFilter / Sourcery's validation pass all do). Machine-checked, not pros
 Panel: <pack> → [selected critics]   (or: generic fallback)
 Spawned: [<persona> → <base_agent>, …]   # actual Agent calls made — MUST match the selected critics
 Receipt: <path to the merged FILES_EXAMINED rows, strongest-evidence-wins per path>
+Rule receipt: <path to the merged RULES_CHECKED rows>   # omitted when the caller assigned no rules
 Unexamined: [<paths from the changed-file list that no critic read>]
 Confirmed actionable: [findings — file:line · severity · issue · recommendation]
 Advisory (summary-only): [findings]
@@ -158,8 +178,8 @@ is exempt because its execute loop bars panel vocabulary from user-facing output
 panel did not actually run — say so and do not present inlined reasoning as panel output.
 
 **Every critic writes its findings block to a file and reports that absolute path** (`agent-conduct.md`
-§3). A long report is truncated in transit, and a truncated report loses its tail — which is where
-`FILES_EXAMINED` sits. A caller holding only a truncated report has no receipt and cannot compute
-coverage, so it must re-request the file rather than treat the visible part as the whole panel.
+§3). The panel-specific reason: a long report is truncated in transit and loses its tail, which is
+where both receipts sit, so a caller holding a partial report re-requests the file rather than
+computing coverage from the part it can see.
 
 The caller decides what to do with this (post it, fix-and-reloop, etc.). This module never writes.
