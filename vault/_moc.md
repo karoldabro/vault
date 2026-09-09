@@ -33,12 +33,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-09-1204-indication-routing-and-anchor-verification]] — /v-cr routes indications to the diff and verifies every citation
 - [[sessions/2026-09-06-1053-v-loop-autonomous-campaign]] — /v-loop: an autonomous test-and-fix campaign command that refuses without a disposable stack; also finished the staging guard
 - [[sessions/2026-09-04-1640-session-gates-doc-truth]] — Repair the documents describing bin/gate.sh so they name only the checks that exist
 - [[sessions/2026-09-04-1200-rule-compliance-study]] — Measure which property predicts whether a framework rule is followed
 - [[sessions/2026-09-04-0900-mechanical-session-gates]] — Built bin/gate.sh: a session cannot plan without success criteria or close without verdicts backed by a real run
-- [[sessions/2026-09-03-0929-mechanical-brevity-enforcement]] — Measure replies instead of restating the brevity rules: bin/output-lint.sh plus Stop and UserPromptSubmit hooks that name only what a reply overran
-- [[sessions/2026-09-02-2147-consumer-seat-and-artifact-lifecycles]] — Stop the framework producing plans that specify what gets built and never who consumes it
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center for one or more repos: rules REQ-NN with axis tags, a glossary, and decision/state tables. Adds the single-repo `requirements/` category. The id chain reaches the established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)

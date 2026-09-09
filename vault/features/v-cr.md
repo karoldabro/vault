@@ -28,9 +28,13 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 - Task-source contract → `tasks/{jira,asana,forge-issue}.md`.
 - Pure logic: `lib/forge-detect.sh` (URL→platform, host allowlist, `forge_validate_host`),
   `lib/cr-helpers.sh` (`cr_fingerprint`, `cr_code_hash`, `cr_jira_keys`, `cr_asana_gids`,
-  `cr_diff_stats`, `cr_vault_leak_check`, `cr_verify_posted`, `cr_coverage`).
+  `cr_diff_stats`, `cr_vault_leak_check`, `cr_verify_posted`, `cr_coverage`, `cr_rule_route`,
+  `cr_anchor_check`, `cr_rule_coverage`).
+- Indication routing: `bin/indication-route-audit.sh` reports one project index as routable /
+  unroutable; rule: [[../indications/rules-routed-not-recalled]].
 - Persona: `personas/_shared/correctness.md`; selection wired in `personas/_resolution.md` §2.
-- Tests: `tests/unit/forge-detect.bats`, `tests/unit/v-cr.bats`, `tests/unit/cr-coverage.bats`.
+- Tests: `tests/unit/forge-detect.bats`, `tests/unit/v-cr.bats`, `tests/unit/cr-coverage.bats`,
+  `tests/unit/cr-rule-routing.bats`.
 - Config (user/global env): `VCR_HOST_MAP` (self-hosted host→platform), `VCR_JIRA_PROJECTS` (Jira-key
   allowlist), `VCR_MAX_TOKENS`, `--max-comments`, `--post`, `--unpost`.
 - Decision: [[../decisions/ADR-008-v-cr-remote-pr-review]].
@@ -47,8 +51,18 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
   merged receipt against the changed-file list and reports three buckets; edge: a finding list alone
   cannot separate examined-clean from never-opened, which is how a review reported coverage it had
   not earned.
-- A receipt row claims `read` → its reason carries a line anchor the caller checks against the diff;
-  edge: an unverifiable anchor counts as not examined, so echoing the file list back scores nothing.
+- A receipt row claims `read` → `cr_anchor_check` resolves its line anchor against the diff and
+  `cr_coverage`'s fourth input drops the row when it does not; edge: an unverifiable anchor counts as
+  not examined, so echoing the file list back scores nothing.
+- The index rows are routed against the changed files before the panel spawns → each `applies` rule
+  is assigned to a critic and its body fetched; edge: a rule naming neither a file glob nor a declared
+  surface is `unroutable`, printed and never gated, because half the estate's rows are prose.
+- A critic returns one `RULES_CHECKED` row per assigned rule → `breaks` and `holds` carry a line in
+  the diff and a token really on it, `n/a` carries the rule's own trigger clause instead; edge: `n/a`
+  is counted apart from `checked`, so answering `n/a` to everything reports `checked 0`.
+- A routed rule has no usable verdict → `cr_rule_coverage` exits 1 and step 4 folds it into the single
+  coverage confirmation; edge: `no-match` and `unroutable` never gate, so the check cannot fire on
+  every review of a prose-heavy index and lose the operator's attention.
 - The unexamined set is non-empty → step 4's gate demands fresh confirmation and the summary names the
   paths; edge: the operator may accept the gap, recorded as `coverage_accepted`.
 - One testing critic owns every changed test file → its receipt lists each one and §3.6 reports
@@ -78,3 +92,4 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 - [[../sessions/2026-06-19-1605-v-cr-panel-spawn-coverage-brevity]] — enforce real panel spawn, surface coverage + test posture, tighten comments
 - [[../sessions/2026-09-01-1000-vcr-delivery-and-coverage]] — verify comment delivery on the forge, record coverage durably
 - [[../sessions/2026-09-01-1930-vcr-coverage-receipts]] — compute coverage from per-file critic receipts; wire cr_diff_stats
+- [[../sessions/2026-09-09-1204-indication-routing-and-anchor-verification]] — route indications to the diff, verify every citation, print what was checked
