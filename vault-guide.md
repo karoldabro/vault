@@ -353,6 +353,7 @@ instead. Decision record: [[ADR-018-decision-communication-contract]] in `vault/
 | `/v-ask` | Read-only, vault-aware Q&A. Loads context cheapest-first; no edits, no gate, no capture. Hands off when the answer implies a change. | claude-mem, graphify, Serena |
 | `/v-do` | Small low-risk change, no approval gate. Orient → execute → self-review; capture off by default. Escalates to `/v-work` above ~5 files, `/v-team` for architecture, schema, auth, billing or cross-repo. | claude-mem, Serena, MorphLLM |
 | `/v-loop` | Autonomous test-and-fix campaign against a feature already built and running. Refuses without a disposable stack the operator names; takes every decision in one intake exchange; enumerates a case backlog, runs each case against the real system, files, fixes and retests until every case is terminal or a cap stops it (§11.1). | Agent fan-out, the project's own test runner |
+| `/v-method` | Designs the method for one heavy task and runs no stage. Refuses without a written problem statement, an observable criterion, or when the task fits one rung of the ladder. Routes on checkable task properties (`commands/v-method/routing.md`), asks which of budget and criteria is fixed, then writes a method file whose every stage carries a command, seats, tools, exit evidence and a kill criterion naming the field its verdict is read from (§11.2). | `bin/gate.sh verdict --run`, the stage commands themselves |
 | `/v-capture` | Capture this session as `sessions/*.md`. Runs the duplicate check, updates indexes, extracts ADR candidates, cross-links Refs. | claude-mem auto-capture (SessionEnd hook) |
 | `/v-link` | Declare two projects coupled, so context loading sweeps both. Updates `~/vault/_global/coupled-groups.md`. | — |
 | `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from a feature. | claude-mem, graphify, MorphLLM |
@@ -422,6 +423,42 @@ installing it, because the permission classifier refuses `crontab` edits and ref
 
 Rules binding every campaign agent: `commands/v-loop/campaign-rules.md`. Mobile adapter:
 `prompts/on-device-e2e-campaign.md`. Decision: [[ADR-027-autonomous-test-fix-loop]].
+
+### 11.2 `/v-method` method files
+
+`/v-method` answers a different question from the ladder. The ladder says how much ceremony one
+change deserves; this says which stages a heavy task needs at all. It writes the method and runs no
+stage, because a command that both chose the method and executed it would grade its own choice.
+
+**It refuses three ways**, each naming what is missing: no written problem statement saying who the
+output is for, no criterion expressible as `WHEN <trigger> THE SYSTEM SHALL <observable>`, and a task
+that fits one rung of `/v-ask` → `/v-do` → `/v-work` → `/v-team`.
+
+**Intake has one question with no safe default**: is the budget fixed, or are the criteria? A fixed
+budget varies the scope and a fixed set of criteria varies the time, so one task promises one of
+them. The method file records which, and what the other one lost.
+
+**Routing keys on checkable task properties**, fourteen rows in `commands/v-method/routing.md`, each
+carrying its method, that method's artifact and its stopping rule. A task firing no property gets the
+fixed localise-repair-validate pipeline, which is the baseline an agent architecture has to beat. The
+routing is a heuristic — no validated instrument maps a task description to a process — so the method
+file keeps every property answer, including the ones that did not fire, for a later session to score.
+
+**Every stage row carries five filled fields**: the command that runs it, the seats with the
+affordance each owns, the tools that prove it, the exit evidence as a path or a command, and the kill
+criterion naming the exact file and field its verdict is read from. Kill criteria are written before
+the stage runs, and `bin/gate.sh verdict <plan> --run` produces each verdict rather than a model
+judging it.
+
+**The seam with `/v-pm`**: `/v-pm` owns what the product must do and writes the appetite;
+`/v-method` owns how to work on it and consumes that appetite without re-deriving it. A task whose
+business logic is unclear runs `/v-pm` first. Stage rows stay coarser than session rows, and each
+stage's own session splits the work inside it.
+
+Output template: `templates/method.md`, written to `_features/<feature>/method.md` in feature mode,
+else `<project-vault>/plans/*.method.md`. No check reads a written method file yet, so the per-stage
+field rules are prose — recorded in `vault/check-budget.md`. Decision:
+[[ADR-029-methodology-command]].
 
 ---
 

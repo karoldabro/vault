@@ -67,12 +67,16 @@ setup() {
 
 # --- E-6: no rule restated from a shared module ---------------------------------------------
 
-@test "checks/v-loop-SC-3.sh covers every module under commands/_shared" {
+@test "the shared owned-rule list covers every module under commands/_shared" {
+    # The pattern list lives in lib/shared-module-rules.tsv so checks/v-loop-SC-3.sh and
+    # checks/v-method-SC-5.sh read one copy. The check itself names no module any more.
     local check="${VAULT_ROOT}/checks/v-loop-SC-3.sh"
+    local rules="${VAULT_ROOT}/lib/shared-module-rules.tsv"
     [ -x "${check}" ]
+    [ -f "${rules}" ]
     for m in "${VAULT_ROOT}"/commands/_shared/*.md; do
-        grep -q "$(basename "${m}")" "${check}" \
-            || { echo "checks/v-loop-SC-3.sh names no owner in $(basename "${m}")"; return 1; }
+        grep -q "$(basename "${m}")" "${rules}" \
+            || { echo "lib/shared-module-rules.tsv names no owner in $(basename "${m}")"; return 1; }
     done
 }
 
@@ -80,10 +84,12 @@ setup() {
 # points the real check at it. The check resolves its root as `$(dirname $0)/..`.
 scratch_root() {
     local r="${BATS_TEST_TMPDIR}/root"
-    mkdir -p "${r}/checks" "${r}/commands/v-loop" "${r}/commands/_shared"
+    mkdir -p "${r}/checks" "${r}/commands/v-loop" "${r}/commands/_shared" "${r}/lib"
     cp "${VAULT_ROOT}"/checks/v-loop-SC-*.sh "${r}/checks/"
     cp "${RULES}" "${r}/commands/v-loop/campaign-rules.md"
     cp "${VAULT_ROOT}"/commands/_shared/*.md "${r}/commands/_shared/"
+    # The check reads its pattern list from lib/, so the scratch tree carries it too.
+    cp "${VAULT_ROOT}/lib/shared-module-rules.tsv" "${r}/lib/"
     printf '%s' "${r}"
 }
 

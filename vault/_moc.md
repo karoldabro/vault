@@ -24,6 +24,7 @@ tags: [moc]
 <!-- Link to [[features/]] folder. Active features: -->
 - [[features/v-team]] — persona-critique dev lifecycle command
 - [[features/v-loop]] — autonomous test-and-fix campaign command; refuses without a stack the operator names as disposable; see [[decisions/ADR-027-autonomous-test-fix-loop]]
+- [[features/v-method]] — writes the method for one heavy task. Ordered stages, each with its command, seats, tools, exit evidence and a kill criterion. Runs no stage. See [[decisions/ADR-029-methodology-command]]
 - [[features/v-pm]] — cross-project planning + business-logic requirements knowledge center; see [[decisions/ADR-013-v-pm-cross-project-planning]] + [[decisions/ADR-014-vpm-business-knowledge-center]]
 - [[research/llm-collaboration-patterns]] — living, source-cited catalog of LLM collaboration patterns (dev/marketing/sales/planning/support + foundations); evidence reference for panel-mechanism changes (ADR-017). Covers **agent↔agent**.
 - [[research/decision-communication]] — living, source-cited evidence base for how commands write **to the user** (BLUF/Minto/Amazon/SBAR doctrine + cognitive-load, jargon, question-design and human-AI decision research); drives `commands/_shared/communication.md` + `output-styles/director.md` (ADR-018). Covers **agent↔human**.

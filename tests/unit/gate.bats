@@ -460,6 +460,33 @@ mkplan_scoped() {
     [ "$status" -ne 0 ]
 }
 
+@test "coverage reads a covers cell that separates ids by space, comma, or both" {
+    # The masked bug: splitting on the comma alone and deleting spaces welds `SC-1 SC-2` into one
+    # token that matches nothing, which surfaces as an uncovered criterion. It hid because plans
+    # also carry single-id cells, so every criterion happened to appear alone somewhere too.
+    local f="${TMP}/separators.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Success criteria"; echo
+        echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
+        echo "|----|-----------|------|-----|-------|--------|---------|----------|"
+        echo '| SC-1 | WHEN a runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
+        echo '| SC-2 | WHEN b runs THE SYSTEM SHALL work | unit | command | `ok.sh` | exit 0 | | |'
+        echo '| SC-3 | WHEN c runs THE SYSTEM SHALL work | unit | command | `ok.sh` | exit 0 | | |'
+        echo '| SC-4 | WHEN d runs THE SYSTEM SHALL work | unit | command | `ok.sh` | exit 0 | | |'
+        echo
+        echo "## Work items"; echo
+        echo "| id | file (exact path) | action | tool | constraint | covers | verification | status |"
+        echo "|----|-------------------|--------|------|------------|--------|--------------|--------|"
+        # No criterion appears alone anywhere, so a comma-only split refuses all four.
+        echo "| W-01 | \`bin/x.sh\` | create | Write | none | SC-1 SC-2 | none | TODO |"
+        echo "| W-02 | \`bin/y.sh\` | create | Write | none | SC-3, SC-4 | none | TODO |"
+        echo
+    } > "${f}"
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 0 ]
+}
+
 @test "coverage refuses a criterion no work item covers, and names it" {
     local f="${TMP}/uncovered.md"
     {
@@ -656,6 +683,23 @@ mkplan_lifecycle() {
     run "${GATE_SH}" readers "${f}"
     [ "$status" -eq 0 ]
     [[ "$output" == *"does not exist yet"* ]]
+}
+
+@test "readers never exits nonzero without naming what it refused" {
+    # The loop's last statement is a test, so a row whose artifact cell carries no backticked
+    # identifier used to leak its false branch out as an unexplained exit 1. A silent refusal is the
+    # one thing this program may not do: the caller stops the lifecycle and can say nothing about why.
+    local f="${TMP}/no-ident.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Artifact lifecycles"; echo
+        echo "| artifact | what requires it | who writes it | who reads it | missing or wrong |"
+        echo "|---|---|---|---|---|"
+        echo "| the thing itself | a step | a session | the operator | it is absent |"
+        echo
+    } > "${f}"
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 0 ]
 }
 
 @test "readers passes a plan whose lifecycle row is the none row" {

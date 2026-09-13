@@ -37,11 +37,19 @@ sets `wrong`; a session never scores its own refusal.
 | staging-hook | 0 | 0 | |
 | rule-coverage | 0 | 0 | `cr_rule_coverage`; refuses only on a routed rule nobody decided |
 | anchor-check | 0 | 0 | `cr_anchor_check`; refuses a citation whose token is not on the line it names |
+| v-method-SC-3 | 0 | 0 | the routing table: a blank cell, a shifted row, under eight rows, or a judgement-shaped property |
+| v-method-SC-4 | 0 | 0 | prohibitions outnumbering requirements in either `/v-method` file |
+| v-method-SC-5 | 0 | 0 | a `/v-method` file restating a rule `lib/shared-module-rules.tsv` lists |
 
 ## What the checks do not cover
 
-`checks/v-loop-SC-3.sh` matches the shared modules' literal wording. A rule reworded rather than
-copied passes it, so a green run means no verbatim duplicate rather than no duplicate.
+`checks/v-loop-SC-3.sh` and `checks/v-method-SC-5.sh` match the shared modules' literal wording,
+from the list in `lib/shared-module-rules.tsv`. A rule reworded rather than copied passes both, so a
+green run means no verbatim duplicate rather than no duplicate.
+
+No check reads a written method file. `/v-method`'s rules about what every stage row carries — the
+command, the seats, the tools, the exit evidence and a kill criterion naming its field — are prose
+until a method file exists to read. `checks/v-method-SC-1.sh` only confirms the command states them.
 
 `cr_rule_coverage` measures the rules a changed-file glob could reach. Two buckets are outside it and
 are printed rather than counted as clean: `no-match`, a rule whose globs reached nothing in this diff,

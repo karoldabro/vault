@@ -142,10 +142,12 @@ flat() { tr '\n' ' ' < "$1"; }
     [ "${missing}" -eq 0 ]
 }
 
-@test "the Required-output file set is exactly 17 — a new one cannot silently fall out" {
+@test "the Required-output file set is exactly 18 — a new one cannot silently fall out" {
+    # Raise this only alongside a new output-producing command or step file, and only after the
+    # test above proves the new file binds the contract. 18 since /v-method.
     local n
     n="$(grep -rl '^## Required output' "${VAULT_ROOT}/commands" | grep -vc '/attic/')"
-    [ "${n}" -eq 17 ] || { echo "expected 17 Required-output files, found ${n}"; return 1; }
+    [ "${n}" -eq 18 ] || { echo "expected 18 Required-output files, found ${n}"; return 1; }
 }
 
 @test "no brevity rule survives outside the contract, except the forge-comment one" {

@@ -1,0 +1,45 @@
+# Rules that a shared module already owns, and the module that owns it.
+#
+# pattern <TAB> owner.  Read by checks/v-loop-SC-3.sh and checks/v-method-SC-5.sh, which fail when a
+# command file restates a rule listed here instead of referencing its owner. Every prose rule the
+# framework adds spends the same attention as one that matters, and a session does not choose which
+# rules lose.
+#
+# LIMIT: these patterns match the owners' literal wording. A rule reworded rather than copied passes.
+# Recorded in vault/check-budget.md.
+#
+writes? (its|the|every) artifacts? to disk	agent-conduct.md §3
+report is not the deliverable	agent-conduct.md §3
+put what went wrong at the top	agent-conduct.md §2
+lead with (open )?blockers	agent-conduct.md §2
+report what could not be verified	agent-conduct.md §2 + communication.md
+a number carries the command	agent-conduct.md §4
+never state a count you cannot reproduce	agent-conduct.md §4
+measure.{0,20}never hardcode	agent-conduct.md §4
+read the whole source before	agent-conduct.md §1
+the source can be wrong	agent-conduct.md §5
+correct the plan when it is wrong	agent-conduct.md §5
+verify the (claim|filing) against (the )?(live|current) (code|source)	agent-conduct.md §5
+choose the model per agent	agent-conduct.md fan-out
+settle names before spawning	agent-conduct.md fan-out
+slice shared context by what each agent needs	agent-conduct.md fan-out
+prove coverage mechanically	agent-conduct.md fan-out
+report exceptions,? not (status|normality)	communication.md
+answer first	communication.md
+lead with the conclusion	communication.md + document-standard.md rule 2
+current truth only	document-standard.md rule 5
+delete superseded	document-standard.md rule 5
+(met|failed), .*not-applicable	definition-of-done.md
+kills .{0,3}1 seeded mutant	definition-of-done.md §Tests + v-team 04-execute-loop §5.2
+coverage without fault.detection	definition-of-done.md §Tests + v-team 04-execute-loop §5.2
+temporarily break the code and confirm	definition-of-done.md §Tests
+never weaken an assertion	v-team 04-execute-loop.md §5.2
+separate defects from opinions	critic-panel.md §(d) severity + grounding
+ground first	critic-panel.md §(a)
+(default|hard max).{0,20}(3|5).{0,20}(critics|agents)	critic-panel.md §(b)
+ask everything.{0,20}(up front|in the first exchange).{0,40}never	elicitation.md
+do not invent a third	elicitation.md
+leave pushing to the operator	v-work 05-commit-capture.md §5.1
+commit with a pathspec	vault-sync.md §2 + scripts/staging-hook.sh
+never raw git against a vault	vault-sync.md
+declared (values|identifiers) are consumed	bin/gate.sh readers

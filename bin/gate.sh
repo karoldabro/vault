@@ -155,9 +155,13 @@ is_evidence() {
 }
 
 # The first backticked span of a cell, unquoted. Empty when there is none.
+# Print the first backtick-quoted span in $1, or nothing. "Nothing found" is a successful empty
+# result, not a failure: this file runs under `set -e`, so returning 1 here kills the whole program
+# at the caller's assignment, and the caller has no way to report why it stopped.
 backticked() {
     local v=$1
-    [[ $v =~ \`([^\`]+)\` ]] && printf '%s' "${BASH_REMATCH[1]}"
+    if [[ $v =~ \`([^\`]+)\` ]]; then printf '%s' "${BASH_REMATCH[1]}"; fi
+    return 0
 }
 
 # The directory a check path resolves against: the git root above the plan, else the working
@@ -520,7 +524,10 @@ covers_pairs() {
         covers=$(cell "$wrow" "$i_covers")
         status=$(cell "$wrow" "$i_status")
         [ -n "$covers" ] || continue
-        ids=$(tr ',' '\n' <<<"$covers" | tr -d ' ')
+        # A `covers` cell separates ids by comma, by space, or by both. Splitting on the comma alone
+        # and then deleting spaces welds `SC-1 SC-2` into one token that matches no criterion, which
+        # reads as an uncovered criterion rather than as a parse failure.
+        ids=$(tr ',' ' ' <<<"$covers" | tr -s '[:space:]' '\n' | grep . || true)
         while IFS= read -r cid; do
             [ -n "$cid" ] || continue
             if [ "$status" = DONE ]; then printf '%s done\n' "$cid"; else printf '%s open\n' "$cid"; fi
