@@ -27,6 +27,7 @@ sets `wrong`; a session never scores its own refusal.
 | check | fires | wrong | note |
 |-------|-------|-------|------|
 | criteria | 0 | 0 | |
+| coverage | 0 | 0 | `cmd_coverage`; refuses only on a criterion no work item's `covers` cell names |
 | verdict | 0 | 0 | |
 | readers | 0 | 0 | |
 | config | 0 | 0 | |

@@ -8,7 +8,7 @@ tags: [gates, enforcement, backlog]
 
 # Session gates — the checks that are specified and not built
 
-`vault/architecture/session-gates.md` describes the gate that refuses. This file holds the seven
+`vault/architecture/session-gates.md` describes the gate that refuses. This file holds the six
 checks that document specified before they existed. A phase that names one of them runs nothing, and
 a plan relying on one closes ungated.
 
@@ -21,7 +21,6 @@ until the row is deleted here and added to the subcommand table in `session-gate
 | id | check | would refuse when | owner | closes when |
 |----|-------|-------------------|-------|-------------|
 | U-1 | `clarify <plan>` | a `## Open questions` row has `blocks: yes` and `status: open`; a row has an empty `searched` cell; a row has `blocks: yes` and `status: defaulted` | operator | `bin/gate.sh clarify <plan>` exits 1 on a plan with a blocking open question and 0 on one without |
-| U-2 | `coverage <plan>` | a criterion id appears in no work-item `covers` cell | operator | `bin/gate.sh coverage <plan>` exits 1 on a plan whose SC-1 is uncovered |
 | U-3 | `dod <plan>` | a `## Definition of done` row's `state` is not `met`, `failed`, or `absent: <reason>`; any row is `failed` | operator | `bin/gate.sh dod <plan>` exits 1 on a plan with an empty `state` cell |
 | U-4 | `bindings <plan> [root]` | a backticked identifier in `## Artifact lifecycles` has no reader in code outside its declaring file | operator | `bin/gate.sh bindings <plan>` exits 1 on a plan naming an identifier nothing reads. `readers` already does this; U-4 closes by deleting the name or by splitting the two |
 | U-5 | `decisions <plan>` | a `## Decisions` row's `record` cell is neither a repo-relative path nor the literal `local` | operator | `bin/gate.sh decisions <plan>` exits 1 on a plan with an empty `record` cell |

@@ -89,6 +89,22 @@ design/`) to author the Test design dossier + Test backlog (test design is split
 design). Mark PROPOSE `completed`.
 
 ## Step 4 — APPROVAL GATE
+
+**Run the kill criterion first, before the decision is written:**
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/gate.sh coverage <plan>
+```
+
+Exit 1 means a success criterion has no work item aimed at it, so this session has no route to a
+target the operator set. Set the plan's frontmatter `status: failed`, tell the operator which
+criterion nothing reaches, and **stop there** — the approval gate has nothing to offer. Exit 2 means
+the plan's tables were unreadable; stop as an error and say so, since an unreadable plan is a defect
+in the document rather than a verdict on the work.
+
+A gate whose conditions are written after the evidence arrives is a rubber stamp. This one is
+computed from the plan the operator is about to be shown.
+
 **STOP. Present the decision. Do not proceed until the user explicitly approves.** Approval covers
 the whole lifecycle **through capture** (Step 6).
 

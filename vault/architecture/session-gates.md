@@ -29,13 +29,14 @@ second state file exists. `/v-do` writes a stub plan carrying only `## Open ques
 | subcommand | runs before | refuses when |
 |---|---|---|
 | `criteria <plan>` | work items are written | `## Success criteria` has no rows; a row has an empty `check` or `expect`; a row's `how` is not one of `command`, `artifact`, `observed`; an `observed` row names no disconfirming condition or no `no-command:` reason; no row has `kind: delivery` and the plan declares no `no-runtime:` reason |
+| `coverage <plan>` | the approval gate, and nowhere else | a `## Success criteria` id appears in no work item's `covers` cell — exit 1, and the session is FAILED. A plan with no `## Work items` table, no rows, or no `covers` column exits 2 instead: the question cannot be read, so the session stops as an error rather than declaring the work unreachable. It is absent from the close phase on purpose — `verdict` already requires every criterion to be MET there, and `/v-do`'s stub plan carries no work items, so a close-phase run would exit 2 on every `/v-do` session |
 | `verdict <plan> [--run]` | staging | `--run` re-runs every `how: command` check and the exit code disagrees with `expect`; any other row has a `verdict` other than `MET`, empty `evidence`, or `evidence` carrying neither a backticked command nor a `path:line` |
 | `readers <plan>` | staging | a backticked identifier in `## Artifact lifecycles` has no reader in code outside its declaring file |
 | `config <repo>` | ANALYZE, before any context load | `VAULT.md` declares no `dod_profile`, or a profile line has neither a command nor an `absent: <reason>` |
 | `budget [file]` | staging | a row in `vault/check-budget.md` shows a check firing wrongly more than one time in ten |
 | `recurrence [file]` | staging | a `vault/defect-ledger.md` row's `test` cell names no path |
 
-Seven further checks are specified and not built. They live in
+Six further checks are specified and not built. They live in
 `vault/architecture/session-gates-unbuilt.md`, one row each with an owner and the command that
 closes it. A phase that names one of them runs nothing.
 

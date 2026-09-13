@@ -435,6 +435,175 @@ mkplan_scoped() {
     [[ "$output" == *"SC-1 has no verdict"* ]]
 }
 
+# ---------------------------------------------------------------- coverage
+#
+# `criteria` proves a plan states a target. `coverage` proves the plan contains work that reaches it.
+# The two exit codes are load-bearing and must not merge: exit 1 says the plan cannot reach a goal it
+# set, which FAILS the session, and exit 2 says the plan could not be read, which is a document
+# defect. `coverage` and `due_criteria` read the same `covers` column and take a missing one in
+# OPPOSITE directions, so the pair of tests below is what keeps the shared helper honest.
+
+@test "coverage passes when every criterion is named by a work item" {
+    local f
+    f=$(mkplan_scoped covered TODO)
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 0 ]
+}
+
+@test "coverage counts an unfinished work item as covering its criterion" {
+    # Coverage asks whether the work EXISTS, not whether it finished. A TODO row still covers.
+    local f
+    f=$(mkplan_scoped stilltodo TODO)
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 0 ]
+    run grep -q "is named in no work item" <<<"$output"
+    [ "$status" -ne 0 ]
+}
+
+@test "coverage refuses a criterion no work item covers, and names it" {
+    local f="${TMP}/uncovered.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Success criteria"; echo
+        echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
+        echo "|----|-----------|------|-----|-------|--------|---------|----------|"
+        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
+        echo '| SC-9 | WHEN nothing reaches it THE SYSTEM SHALL refuse | unit | command | `ok.sh` | exit 0 | | |'
+        echo
+        echo "## Work items"; echo
+        echo "| id | file (exact path) | action | tool | constraint | covers | verification | status |"
+        echo "|----|-------------------|--------|------|------------|--------|--------------|--------|"
+        echo "| W-01 | \`bin/x.sh\` | create | Write | none | SC-1 | none | TODO |"
+        echo
+    } > "${f}"
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"SC-9"* ]]
+    # SC-1 is covered, so it must NOT appear as a refusal.
+    run grep -q "SC-1 is named in no work item" <<<"$output"
+    [ "$status" -ne 0 ]
+}
+
+@test "coverage exits 2 on a work-items table with no covers column" {
+    # The decorrelated half of "a work-items table with no covers column leaves every criterion due".
+    # `verdict` treats the same plan as all-due; `coverage` refuses to guess.
+    local f="${TMP}/cov-nocovers.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Success criteria"; echo
+        echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
+        echo "|----|-----------|------|-----|-------|--------|---------|----------|"
+        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
+        echo
+        echo "## Work items"; echo
+        echo "| id | file (exact path) | action | status |"
+        echo "|----|-------------------|--------|--------|"
+        echo "| W-01 | \`bin/x.sh\` | create | TODO |"
+        echo
+    } > "${f}"
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 2 ]
+}
+
+@test "coverage exits 2 on a plan with no work-items table at all" {
+    local f="${TMP}/cov-notable.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Success criteria"; echo
+        echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
+        echo "|----|-----------|------|-----|-------|--------|---------|----------|"
+        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
+        echo
+    } > "${f}"
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 2 ]
+}
+
+@test "coverage exits 2 on a plan with no success-criteria table" {
+    local f="${TMP}/cov-nocrit.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Work items"; echo
+        echo "| id | file (exact path) | action | tool | constraint | covers | verification | status |"
+        echo "|----|-------------------|--------|------|------------|--------|--------------|--------|"
+        echo "| W-01 | \`bin/x.sh\` | create | Write | none | SC-1 | none | TODO |"
+        echo
+    } > "${f}"
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 2 ]
+}
+
+@test "the approve phase runs coverage, so an uncovered criterion stops the gate" {
+    # The wiring is the point: cmd_coverage existing while no phase calls it gates nothing.
+    local f="${TMP}/cov-phase.md"
+    {
+        echo "---"; echo "type: plan"; echo "---"; echo
+        echo "## Success criteria"; echo
+        echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
+        echo "|----|-----------|------|-----|-------|--------|---------|----------|"
+        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
+        echo
+        echo "## Work items"; echo
+        echo "| id | file (exact path) | action | tool | constraint | covers | verification | status |"
+        echo "|----|-------------------|--------|------|------------|--------|--------------|--------|"
+        echo "| W-01 | \`bin/x.sh\` | create | Write | none |  | none | TODO |"
+        echo
+    } > "${f}"
+    run "${GATE_SH}" all "${f}" --phase approve
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"SC-1"* ]]
+}
+
+@test "coverage refuses a plan already marked status: failed" {
+    # `status: failed` has exactly one code reader, and this is it. Without it the marker is a note
+    # to a model, and a failed plan passes the approval gate by being run again.
+    local f="${TMP}/already-failed.md"
+    {
+        echo "---"; echo "type: plan"; echo "status: failed"; echo "---"; echo
+        echo "## Success criteria"; echo
+        echo "| id | criterion | kind | how | check | expect | verdict | evidence |"
+        echo "|----|-----------|------|-----|-------|--------|---------|----------|"
+        echo '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |'
+        echo
+        echo "## Work items"; echo
+        echo "| id | file (exact path) | action | tool | constraint | covers | verification | status |"
+        echo "|----|-------------------|--------|------|------------|--------|--------------|--------|"
+        echo "| W-01 | \`bin/x.sh\` | create | Write | none | SC-1 | none | TODO |"
+        echo
+    } > "${f}"
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"status: failed"* ]]
+}
+
+@test "coverage passes the same plan once it is no longer marked failed" {
+    # The planted-violation pair: the refusal above must come from the marker, not the fixture.
+    local f
+    f=$(mkplan_scoped notfailed TODO)
+    run grep -q 'status: failed' "${f}"
+    [ "$status" -ne 0 ]
+    run "${GATE_SH}" coverage "${f}"
+    [ "$status" -eq 0 ]
+}
+
+@test "the close phase does not run coverage, so a plan with no work items still reaches verdict" {
+    # A close-phase coverage run exits 2 on any plan without a `## Work items` table, which is what
+    # /v-do writes. That short-circuits the close and every /v-do session dies at exit 2.
+    local f
+    f=$(mkplan cov_not_at_close "" \
+        '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |')
+    run "${GATE_SH}" all "${f}" --phase close
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no verdict"* ]]
+}
+
+@test "session-gates.md documents coverage and session-gates-unbuilt.md no longer does" {
+    run grep -qE '^\| `coverage <plan>`' "${VAULT_ROOT}/vault/architecture/session-gates.md"
+    [ "$status" -eq 0 ]
+    run grep -qE '^\| U-2 ' "${VAULT_ROOT}/vault/architecture/session-gates-unbuilt.md"
+    [ "$status" -ne 0 ]
+}
+
 # ---------------------------------------------------------------- readers
 #
 # A declared key that nothing reads is worse than one that does not exist: the next session finds

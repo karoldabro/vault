@@ -10,6 +10,8 @@
 # there is no second state file to drift out of sync with the plan nobody updated.
 #
 # Usage:  bin/gate.sh criteria <plan>          success criteria exist and can be decided
+#         bin/gate.sh coverage <plan>          every criterion has work aimed at it; exit 1 when one
+#                                              has none, exit 2 when the plan cannot be read
 #         bin/gate.sh verdict  <plan> [--run]  every criterion is MET with evidence
 #         bin/gate.sh readers  <plan>          every declared identifier has a reader in code
 #         bin/gate.sh config   <repo>          the repo declares how to run its own checks
@@ -288,6 +290,60 @@ cmd_criteria() {
     [ "$count" -gt 0 ] || refuse "'## Success criteria' parsed to zero usable rows"
 }
 
+# ---------------------------------------------------------------------------- coverage
+
+# Refuse a criterion that no work item is aimed at.
+#
+# `criteria` proves the plan states a target and can decide it. This proves the plan contains work
+# that reaches it. Without this, a session writes a goal, plans work that never touches it, passes
+# the approval gate, and closes against whatever it happened to produce — which is the failure the
+# operator asked to be caught before the gate rather than after the commit.
+#
+# Exit 1 and exit 2 mean different things to the caller, so they must not be merged. Exit 1 is the
+# substantive answer: this plan cannot reach a goal it set, and the session is FAILED. Exit 2 is an
+# error: the plan could not be read, and the session stops without claiming anything about the work.
+cmd_coverage() {
+    local plan=$1
+    require_plan "$plan"
+
+    # A plan already marked failed does not get re-approved by re-running the gate. This is the one
+    # code reader of `status: failed`; without it the marker is a note to a model and nothing more.
+    local st
+    st=$(frontmatter_get "$plan" status)
+    if [ "$st" = failed ]; then
+        refuse "$plan is marked 'status: failed' — a session that could not reach its criteria does not pass the approval gate on a re-run. Change the plan, or start a new one"
+        return 0
+    fi
+
+    local header rows i_id
+    header=$(table_header "$plan" '## Success criteria' || true)
+    [ -n "$header" ] || die "no '## Success criteria' table in $plan"
+    i_id=$(col_index "$header" id)
+    [ -n "$i_id" ] || die "'## Success criteria' has no 'id' column"
+    rows=$(table_rows "$plan" '## Success criteria' || true)
+    [ -n "$rows" ] || die "'## Success criteria' has no rows"
+
+    local pairs
+    if ! pairs=$(covers_pairs "$plan"); then
+        die "$plan has no '## Work items' table with a 'covers' column, so nothing says which work reaches which criterion"
+    fi
+
+    # Every id any work item names, done or open. Coverage asks whether work EXISTS, not whether it
+    # finished — an unfinished item still covers its criterion.
+    local covered
+    covered=$(printf '%s\n' "$pairs" | cut -d' ' -f1 | sort -u)
+
+    # `refuse` increments the violation count; main() turns a nonzero count into exit 1.
+    while IFS= read -r row; do
+        [ -n "$row" ] || continue
+        local id
+        id=$(cell "$row" "$i_id")
+        [ -n "$id" ] || continue
+        printf '%s\n' "$covered" | grep -qxF -- "$id" ||
+            refuse "$id is named in no work item's 'covers' cell — nothing in this plan reaches it"
+    done <<<"$rows"
+}
+
 # ---------------------------------------------------------------------------- budget
 
 # Refuse a check that fires wrongly more than one time in ten.
@@ -439,41 +495,52 @@ cmd_readers() {
 
 # ---------------------------------------------------------------------------- due-ness
 
-# Print the criterion ids whose covering work items are ALL done, one per line.
+# Print `<criterion-id> done|open` for every id a work item names in its `covers` cell.
 #
-# A multi-session plan is the tracker for work that spans sessions, so most of its criteria are not
-# yet due. Refusing on those would make the close gate unusable on the first checkpoint, and a gate
-# that is unusable gets switched off. A criterion becomes due when every work item naming it in
-# `covers` has status DONE. A plan whose work-item table has no `covers` column has no way to say
-# this, so every criterion is due — that is the safe direction.
-due_criteria() {
+# Exit 2 when the plan cannot say it at all: no `## Work items` table, no rows, or no `covers`
+# column. The two readers below take that answer in OPPOSITE directions, which is why this returns
+# it rather than deciding. `due_criteria` treats "cannot say" as every criterion being due, because
+# refusing a close on an unsayable question makes the gate unusable. `cmd_coverage` refuses to guess
+# and stops the session as an error instead, because a silent all-covered would defeat the check.
+covers_pairs() {
     local plan=$1
     local wheader wrows i_covers i_status
     wheader=$(table_header "$plan" '## Work items' || true)
-    [ -n "$wheader" ] || return 0
+    [ -n "$wheader" ] || return 2
     i_covers=$(col_index "$wheader" covers)
     i_status=$(col_index "$wheader" status)
-    { [ -n "$i_covers" ] && [ -n "$i_status" ]; } || return 0
+    { [ -n "$i_covers" ] && [ -n "$i_status" ]; } || return 2
 
     wrows=$(table_rows "$plan" '## Work items' || true)
-    [ -n "$wrows" ] || return 0
+    [ -n "$wrows" ] || return 2
 
-    # For each criterion id seen in a covers cell: due only when no covering row is unfinished.
-    {
-        while IFS= read -r wrow; do
-            [ -n "$wrow" ] || continue
-            local covers status
-            covers=$(cell "$wrow" "$i_covers")
-            status=$(cell "$wrow" "$i_status")
-            [ -n "$covers" ] || continue
-            local ids
-            ids=$(tr ',' '\n' <<<"$covers" | tr -d ' ')
-            while IFS= read -r cid; do
-                [ -n "$cid" ] || continue
-                if [ "$status" = DONE ]; then printf '%s done\n' "$cid"; else printf '%s open\n' "$cid"; fi
-            done <<<"$ids"
-        done <<<"$wrows"
-    } | awk '{ seen[$1]=1; if ($2 == "open") blocked[$1]=1 }
+    while IFS= read -r wrow; do
+        [ -n "$wrow" ] || continue
+        local covers status ids
+        covers=$(cell "$wrow" "$i_covers")
+        status=$(cell "$wrow" "$i_status")
+        [ -n "$covers" ] || continue
+        ids=$(tr ',' '\n' <<<"$covers" | tr -d ' ')
+        while IFS= read -r cid; do
+            [ -n "$cid" ] || continue
+            if [ "$status" = DONE ]; then printf '%s done\n' "$cid"; else printf '%s open\n' "$cid"; fi
+        done <<<"$ids"
+    done <<<"$wrows"
+}
+
+# Print the criterion ids whose covering work items are ALL done, one per line.
+#
+# A multi-session plan tracks work spanning sessions, so most of its criteria are not yet due.
+# Refusing on those would make the close gate unusable on the first checkpoint, and a gate that is
+# unusable gets switched off. A criterion becomes due when every work item naming it in `covers`
+# has status DONE.
+due_criteria() {
+    local pairs
+    # "Cannot say" means every criterion is due — the safe direction for a close gate.
+    pairs=$(covers_pairs "$1") || return 0
+    [ -n "$pairs" ] || return 0
+    printf '%s\n' "$pairs" |
+        awk '{ seen[$1]=1; if ($2 == "open") blocked[$1]=1 }
              END { for (c in seen) if (!(c in blocked)) print c }'
 }
 
@@ -612,6 +679,7 @@ main() {
 
     case "$sub" in
         criteria) cmd_criteria "${1:-}" ;;
+        coverage) cmd_coverage "${1:-}" ;;
         readers)  cmd_readers "${1:-}" ;;
         config)   cmd_config "${1:-}" ;;
         budget)   cmd_budget "${1:-}" ;;
@@ -628,7 +696,10 @@ main() {
             done
             case "$phase" in
                 propose) cmd_criteria "$plan" ;;
-                approve) cmd_criteria "$plan" ;;
+                approve) cmd_criteria "$plan"; cmd_coverage "$plan" ;;
+                # `coverage` is deliberately NOT in the close phase. `verdict` already requires every
+                # criterion to be MET with evidence there, and a plan with no `## Work items` table
+                # — which is what `/v-do` writes — would exit 2 and short-circuit the whole close.
                 close)   cmd_criteria "$plan"; cmd_readers "$plan"; cmd_verdict "$plan" ;;
                 *) die "--phase must be propose, approve or close" ;;
             esac
