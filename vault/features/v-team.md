@@ -19,6 +19,13 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 ## Contracts
 - **Command**: `commands/v-team.md` (dispatcher) + `commands/v-team/steps/{03-propose-loop,
   04-execute-loop}.md`. Reuses `/v-work` steps 01/02/05 verbatim → **depends on `/v-work` installed**.
+- **Approval-gate kill criterion**: Step 4 runs `bin/gate.sh coverage <plan>` before the decision is
+  written. Exit 1 means a success criterion is named in no work item's `covers` cell, so the session
+  sets `status: failed`, names the criterion, and opens no approval gate; exit 2 means the plan's
+  tables were unreadable and the session stops as an error. `cmd_coverage` is also the only code
+  reader of `status: failed` — it refuses a plan already carrying it, so a failed session cannot pass
+  by being re-run. Rule: [[../indications/unreadable-is-not-no]]. Contract:
+  [[../architecture/session-gates]]. Tests: `tests/unit/gate.bats`.
 - **Consumer seat**: `personas/_shared/consumer.md` — guaranteed on the PROPOSE panel across all three
   selection regimes (`_resolution.md` §2, §2.1, §2.2), never a relevance pick, never dropped by the cap
   (over cap, raise `team_max_parallel_critics` to 4 rather than drop a triggered lens). It simulates the
@@ -95,3 +102,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-07-20-1027-team-presentation-vault-commands]] — no-pack fallback panel validated on a non-code deliverable
 - [[../sessions/2026-07-10-1740-llm-collaboration-patterns]]
 - [[../sessions/2026-09-02-2147-consumer-seat-and-artifact-lifecycles]] — the consumer seat, the artifact-lifecycle table and PLAN1/PLAN2
+- [[../sessions/2026-09-13-1447-coverage-gate-and-failed-sessions]] — the Step 4 kill criterion; a session that cannot reach its own criteria fails instead of asking for approval
