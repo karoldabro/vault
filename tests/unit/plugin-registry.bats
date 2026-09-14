@@ -419,3 +419,57 @@ run_point() {
     run head -1 "${VAULT_ROOT}/templates/plugin/extend/dod-keys.tsv"
     [ "$output" = "$(printf 'key\twhy')" ]
 }
+
+# --- install: one repo name, the script does the rest -------------------------------------
+
+@test "install refuses a bare name that the marketplace does not list, and clones nothing" {
+    run "${PLUGIN_SH}" install totally-made-up --dir "${TEST_HOME}/plugs"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"cannot resolve"* ]]
+    run test -e "${TEST_HOME}/plugs"
+    [ "$status" -ne 0 ]
+}
+
+@test "install on a path that is not a plugin refuses and writes no registry row" {
+    mkdir -p "${TEST_HOME}/notaplugin"
+    run "${PLUGIN_SH}" install "${TEST_HOME}/notaplugin"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"not a framework plugin"* ]]
+    run test -e "${REGISTRY}"
+    [ "$status" -ne 0 ]
+}
+
+@test "install without a terminal registers nothing unless --yes is given" {
+    local dir; dir=$(make_plugin qg init,dod-keys)
+    # bats gives the test no tty on stdin, which is the piped-run case exactly.
+    run "${PLUGIN_SH}" install "${dir}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no terminal to confirm at"* ]]
+    run test -e "${REGISTRY}"
+    [ "$status" -ne 0 ]
+}
+
+@test "install names the plugin, its path and its points before asking" {
+    local dir; dir=$(make_plugin qg init,dod-keys)
+    run "${PLUGIN_SH}" install "${dir}"
+    [[ "$output" == *"plugin  qg"* ]]
+    [[ "$output" == *"points  init,dod-keys"* ]]
+    [[ "$output" == *"trusts every future commit"* ]]
+}
+
+@test "install --yes on a local path registers it" {
+    local dir; dir=$(make_plugin qg init,dod-keys)
+    run "${PLUGIN_SH}" install "${dir}" --yes
+    [ "$status" -eq 0 ]
+    run grep -c '^qg' "${REGISTRY}"
+    [ "$output" -eq 1 ]
+}
+
+@test "install never pulls a clone it already has" {
+    local dir; dir=$(make_plugin qg init)
+    mkdir -p "${TEST_HOME}/plugs"
+    cp -r "${dir}" "${TEST_HOME}/plugs/qg"
+    run "${PLUGIN_SH}" install "${TEST_HOME}/plugs/qg" --yes
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"cloning"* ]]
+}

@@ -371,8 +371,8 @@ install off a machine, see [docs/removing-openviking.md](docs/removing-openvikin
 A separate repository extends this framework at two points: `init` scaffolds a repo's files during
 `bin/vault-init.sh`, and `dod-keys` declares `VAULT.md` keys `bin/gate.sh config` then requires — only
 in repos whose flat `plugins:` scalar names that plugin. Commands and hooks need no point; ship them
-in the plugin's own `.claude-plugin/plugin.json`. Register with `bin/vault-plugin.sh add <dir>`
-(`list`, `doctor`, `remove`). Nothing is scanned for: you name every path, and registering a plugin
+in the plugin's own `.claude-plugin/plugin.json`. Install with `/v-plugin <repo>` — `owner/repo`, a URL, a path, or a name this
+marketplace lists; it clones, shows what it will trust, and asks (`list`, `doctor`, `remove`). Nothing is scanned for: you name every path, and registering a plugin
 trusts every future commit of that repository. Write one from `templates/plugin/`; contract in
 `vault/architecture/plugin-extension-contract.md`.
 

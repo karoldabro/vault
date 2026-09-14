@@ -3,11 +3,17 @@
 #
 # Contract: vault/architecture/plugin-extension-contract.md.
 #
-# Usage:  bin/vault-plugin.sh add <plugin-dir>     register a plugin the operator names
+# Usage:  bin/vault-plugin.sh install <repo> [--yes] [--dir <path>]
+#                                                  clone a plugin repo and register it
+#         bin/vault-plugin.sh add <plugin-dir>     register a directory already on disk
 #         bin/vault-plugin.sh remove <name>        drop it
 #         bin/vault-plugin.sh list                 one row per registered plugin
 #         bin/vault-plugin.sh doctor               check every registered path still resolves
 #         bin/vault-plugin.sh -h
+#
+# <repo> is `owner/repo`, a git URL, a local path, or a bare name listed in this framework's own
+# .claude-plugin/marketplace.json. A bare name is resolved ONLY from that file: guessing an owner for
+# an unknown name is how a typo installs someone else's code.
 #
 # This is the ONLY writer of the registry. Nothing scans for plugins: a directory the framework
 # discovers on its own is a code-execution surface nobody reviewed. Registering a plugin trusts every
@@ -108,6 +114,109 @@ cmd_add() {
     printf 'registered %s -> %s [%s]\n' "$name" "$dir" "$points"
 }
 
+# ---------------------------------------------------------------------------- install
+
+PLUGIN_DIR_DEFAULT="${VAULT_PLUGIN_DIR:-${HOME}/workspace}"
+
+# resolve_spec <spec> — print the git URL to clone, or the literal path when one exists.
+resolve_spec() {
+    local spec=$1
+
+    # An existing directory wins: nothing is fetched and nothing is guessed.
+    if [ -d "$spec" ]; then printf 'path\t%s\n' "$spec"; return 0; fi
+
+    case "$spec" in
+        http://*|https://*|git@*|ssh://*) printf 'url\t%s\n' "$spec"; return 0 ;;
+        */*) printf 'url\thttps://github.com/%s.git\n' "${spec%.git}"; return 0 ;;
+    esac
+
+    # A bare name is resolved only from this framework's own marketplace. Deriving an owner from a
+    # name nobody listed is how a typo clones somebody else's repository.
+    local mp="${VAULT_ROOT}/.claude-plugin/marketplace.json" url
+    url=$(python3 - "$mp" "$spec" <<'EOF' 2>/dev/null
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(1)
+for p in d.get("plugins", []):
+    if p.get("name") == sys.argv[2]:
+        src = p.get("source")
+        if isinstance(src, dict) and src.get("url"):
+            print(src["url"]); sys.exit(0)
+sys.exit(1)
+EOF
+    ) || return 1
+    [ -n "$url" ] || return 1
+    printf 'url\t%s\n' "$url"
+}
+
+cmd_install() {
+    local spec="" dest_dir="$PLUGIN_DIR_DEFAULT" assume_yes=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --yes|-y) assume_yes=1; shift ;;
+            --dir)    dest_dir=${2:-}; shift 2 ;;
+            -*)       usage >&2; exit 2 ;;
+            *)        [ -z "$spec" ] || { usage >&2; exit 2; }; spec=$1; shift ;;
+        esac
+    done
+    [ -n "$spec" ] || { usage; exit 2; }
+
+    local kind target resolved
+    resolved=$(resolve_spec "$spec") \
+        || refuse "cannot resolve '${spec}'. Give owner/repo, a git URL, a path, or a name listed in .claude-plugin/marketplace.json"
+    IFS=$'\t' read -r kind target <<<"$resolved"
+
+    local dir
+    if [ "$kind" = path ]; then
+        dir=$target
+    else
+        local name; name=$(basename "${target%.git}")
+        dir="${dest_dir}/${name}"
+        if [ -d "$dir" ]; then
+            # Never pull. A silent fast-forward would change what executes without the operator
+            # deciding again, which is the whole point of registering by hand.
+            printf 'already cloned: %s (not updated)\n' "$dir"
+        else
+            command -v git >/dev/null 2>&1 || refuse "git is not installed"
+            printf 'cloning %s -> %s\n' "$target" "$dir"
+            mkdir -p "$dest_dir" || refuse "cannot create ${dest_dir}"
+            git clone --quiet -- "$target" "$dir" || refuse "clone failed: ${target}"
+        fi
+    fi
+
+    [ -r "${dir}/extend/plugin.tsv" ] || refuse "${dir} has no extend/plugin.tsv — it is not a framework plugin"
+
+    # Show what is about to be trusted, then ask. The non-interactive branch is the conservative one:
+    # a piped run registers nothing unless --yes says so.
+    local rows name points
+    rows=$(_vault_plugin_read_tsv "${dir}/extend/plugin.tsv" "$VAULT_PLUGIN_MANIFEST_HEADER") \
+        || refuse "${dir}/extend/plugin.tsv does not start with the header: name<TAB>points"
+    IFS=$'\t' read -r name points <<<"$rows"
+
+    printf '\n  plugin  %s\n  path    %s\n  points  %s\n\n' "$name" "$dir" "$points"
+    printf 'Registering runs this repo'"'"'s scripts during every vault-init from now on,\n'
+    printf 'and trusts every future commit of it — not only the one on disk today.\n\n'
+
+    if [ "$assume_yes" -ne 1 ]; then
+        if [ -t 0 ]; then
+            local reply=""
+            printf 'Register %s? [y/N] ' "$name"
+            read -r reply </dev/tty || reply=""
+            case "$reply" in
+                y|Y|yes|YES) ;;
+                *) printf 'not registered. The clone is left at %s\n' "$dir"; exit 1 ;;
+            esac
+        else
+            printf 'not registered: no terminal to confirm at. Re-run with --yes.\n' >&2
+            exit 1
+        fi
+    fi
+
+    cmd_add "$dir"
+}
+
 # ---------------------------------------------------------------------------- remove
 
 cmd_remove() {
@@ -177,6 +286,7 @@ main() {
     esac
     shift
     case "$sub" in
+        install) cmd_install "$@" ;;
         add)    cmd_add "${1:-}" ;;
         remove) cmd_remove "${1:-}" ;;
         list)   cmd_list ;;
