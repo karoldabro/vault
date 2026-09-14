@@ -78,6 +78,16 @@ if [ -z "${slug}" ]; then
     slug="$(basename "${code_repo}")"
 fi
 
+# The slug reaches a sed replacement below and, once plugins are registered, a plugin's init point.
+# A directory named with a shell metacharacter or a slash breaks the first and is handed unquoted to
+# the second, so it is refused here rather than at either use.
+case "${slug}" in
+    *[!A-Za-z0-9._-]*|'')
+        echo "ERROR: slug '${slug}' is not [A-Za-z0-9._-]+. Pass --slug with a plain name." >&2
+        exit 1
+        ;;
+esac
+
 # Resolve vault dir + the vault_path value recorded in VAULT.md.
 if [ "${in_repo}" -eq 1 ]; then
     vault_dir="${code_repo}/vault"
@@ -255,6 +265,47 @@ if [ "${no_vault_md}" -eq 0 ]; then
         printf '    %-18s %s\n' "test_command" "${test_command}" \
                                  "lint_command" "${lint_command}" \
                                  "delivery_command" "${delivery_command}"
+    fi
+fi
+
+#------------------------------------------------------------------------------
+# Plugin init points
+#------------------------------------------------------------------------------
+# Contract: vault/architecture/plugin-extension-contract.md. A registered plugin scaffolds its own
+# per-repo files here, once VAULT.md exists for it to read and merge into.
+#
+# Every call is status-guarded. This script runs under `set -e`, and gate.sh exits 1 on a repo that
+# refuses — an unguarded call would abort onboarding after the vault directory exists and before the
+# CLAUDE.md snippet, and the re-run is then refused because that directory is already there.
+#
+# gate.sh runs twice: a repo that already refused before any plugin ran is not the plugin's doing,
+# and blaming it would send the operator to the wrong file.
+if [ -r "${VAULT_ROOT}/lib/plugin-registry.sh" ]; then
+    # shellcheck source=../lib/plugin-registry.sh
+    . "${VAULT_ROOT}/lib/plugin-registry.sh"
+
+    plugin_rows=""
+    plugin_rows=$(vault_plugin_list) || plugin_rows=""
+
+    if [ -n "${plugin_rows}" ]; then
+        if [ ! -f "${code_repo}/VAULT.md" ]; then
+            echo "  plugins: skipped — ${code_repo}/VAULT.md does not exist"
+        else
+            config_was_clean=0
+            if "${VAULT_ROOT}/bin/gate.sh" config "${code_repo}" >/dev/null 2>&1; then
+                config_was_clean=1
+            fi
+
+            vault_plugin_run_point init "${code_repo}" "${vault_dir}" "${slug}" || true
+
+            if [ "${config_was_clean}" -eq 1 ]; then
+                config_out=""
+                if ! config_out=$("${VAULT_ROOT}/bin/gate.sh" config "${code_repo}" 2>&1); then
+                    echo "  WARNING: a plugin left ${code_repo}/VAULT.md refusing gate.sh config:" >&2
+                    printf '%s\n' "${config_out}" >&2
+                fi
+            fi
+        fi
     fi
 fi
 

@@ -42,6 +42,15 @@
 
 set -euo pipefail
 
+GATE_VAULT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Guarded, because a caller that lost this library must still run every built-in check. `cmd_config`
+# tests for the function before using it.
+if [ -r "${GATE_VAULT_ROOT}/lib/plugin-registry.sh" ]; then
+    # shellcheck source=../lib/plugin-registry.sh
+    . "${GATE_VAULT_ROOT}/lib/plugin-registry.sh"
+fi
+
 US=$'\037'          # cell separator for parsed rows; never appears in markdown
 violations=0
 notes=0
@@ -448,6 +457,61 @@ cmd_config() {
             [ -n "$(printf '%s' "${val#absent:}" | tr -d '[:space:]')" ] || \
                 refuse "${key} is marked absent with no reason"
         fi
+    done
+
+    plugin_keys "$vm"
+}
+
+# plugin_keys <VAULT.md>
+#
+# Require the keys declared by every plugin this repo opted into. Opting in is the `plugins:` scalar;
+# without it, registering a plugin on the machine would refuse every repo on it.
+#
+# `sed | head -1` reads one line, so a second `plugins:` line would be dropped in silence and that
+# plugin's keys never required. Two lines is therefore a refusal, not a first-wins.
+plugin_keys() {
+    local vm=$1
+    command -v vault_plugin_dod_keys >/dev/null 2>&1 || return 0
+
+    local count
+    count=$(grep -c '^plugins:' "$vm" 2>/dev/null || true)
+    [ "${count:-0}" -gt 0 ] || return 0
+    if [ "$count" -gt 1 ]; then
+        refuse "VAULT.md carries ${count} 'plugins:' lines. Merge them into one — only the first is ever read"
+        return 0
+    fi
+
+    local raw; raw=$(sed -n 's/^plugins:[[:space:]]*//p' "$vm" | head -1 | tr -d '\r')
+    [ -n "$raw" ] || return 0
+
+    local rest=$raw name rows key why val
+    while [ -n "$rest" ]; do
+        case "$rest" in
+            *,*) name=${rest%%,*}; rest=${rest#*,} ;;
+            *)   name=$rest; rest="" ;;
+        esac
+        # Strip the whitespace a human leaves after a comma; without this, ` b` matches no plugin.
+        name=$(printf '%s' "$name" | tr -d '[:space:]')
+        [ -n "$name" ] || continue
+
+        if ! vault_plugin_path "$name" >/dev/null 2>&1; then
+            note "VAULT.md lists plugin '${name}', which is not registered on this machine — none of its keys are required"
+            continue
+        fi
+
+        rows=$(vault_plugin_dod_keys "$name" 2>/dev/null || true)
+        [ -n "$rows" ] || continue
+
+        while IFS=$'\t' read -r key why; do
+            [ -n "$key" ] || continue
+            val=$(sed -n "s/^${key}:[[:space:]]*//p" "$vm" | head -1 | tr -d '\r')
+            if [ -z "$val" ]; then
+                refuse "VAULT.md omits ${key}, required by plugin ${name}: ${why}"
+            elif [ "${val#absent:}" != "$val" ]; then
+                [ -n "$(printf '%s' "${val#absent:}" | tr -d '[:space:]')" ] || \
+                    refuse "${key} is marked absent with no reason"
+            fi
+        done <<<"$rows"
     done
 }
 
