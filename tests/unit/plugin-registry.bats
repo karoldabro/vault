@@ -444,7 +444,9 @@ run_point() {
     # bats gives the test no tty on stdin, which is the piped-run case exactly.
     run "${PLUGIN_SH}" install "${dir}"
     [ "$status" -eq 1 ]
-    [[ "$output" == *"no terminal to confirm at"* ]]
+    [[ "$output" == *"nothing here can answer that question"* ]]
+    # The no-tty reader is an agent. It must be sent to the operator, not to --yes.
+    [[ "$output" == *"Do not add --yes yourself"* ]]
     run test -e "${REGISTRY}"
     [ "$status" -ne 0 ]
 }
@@ -472,4 +474,22 @@ run_point() {
     run "${PLUGIN_SH}" install "${TEST_HOME}/plugs/qg" --yes
     [ "$status" -eq 0 ]
     [[ "$output" != *"cloning"* ]]
+}
+
+@test "an existing clone is reported with the commit it is at, not just as unchanged" {
+    # The reuse branch is reached only when a name resolves to a URL whose destination already
+    # exists. A local path never clones, so it never reaches it. The directory must therefore carry
+    # the name the marketplace URL ends in.
+    local dir; dir=$(make_plugin vault-quality-gates init)
+    ( cd "${dir}" && git init -q && git config user.email t@t && git config user.name t \
+        && git add extend/plugin.tsv extend/init.sh extend/dod-keys.tsv && git commit -q -m init )
+    mkdir -p "${TEST_HOME}/plugs"
+    cp -r "${dir}" "${TEST_HOME}/plugs/vault-quality-gates"
+
+    run "${PLUGIN_SH}" install vault-quality-gates --dir "${TEST_HOME}/plugs" --yes
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"cloning"* ]]
+    # "not updated" alone never says which commit is about to be trusted.
+    [[ "$output" == *"already cloned, not updated"* ]]
+    [[ "$output" == *" at "* ]]
 }

@@ -176,8 +176,14 @@ cmd_install() {
         dir="${dest_dir}/${name}"
         if [ -d "$dir" ]; then
             # Never pull. A silent fast-forward would change what executes without the operator
-            # deciding again, which is the whole point of registering by hand.
-            printf 'already cloned: %s (not updated)\n' "$dir"
+            # deciding again, which is the whole point of registering by hand. Print what is
+            # actually there: "not updated" alone does not say which commit you are about to trust.
+            local head_sha head_date dirty=""
+            head_sha=$(git -C "$dir" rev-parse --short HEAD 2>/dev/null || echo unknown)
+            head_date=$(git -C "$dir" log -1 --format=%cs 2>/dev/null || echo unknown)
+            [ -n "$(git -C "$dir" status --porcelain 2>/dev/null)" ] && dirty=" plus uncommitted changes"
+            printf 'already cloned, not updated: %s\n  at %s (%s)%s\n' \
+                "$dir" "$head_sha" "$head_date" "$dirty"
         else
             command -v git >/dev/null 2>&1 || refuse "git is not installed"
             printf 'cloning %s -> %s\n' "$target" "$dir"
@@ -209,7 +215,14 @@ cmd_install() {
                 *) printf 'not registered. The clone is left at %s\n' "$dir"; exit 1 ;;
             esac
         else
-            printf 'not registered: no terminal to confirm at. Re-run with --yes.\n' >&2
+            # F-3: this branch is reached from a tool call, where the reader is an agent. Telling it
+            # to "re-run with --yes" invites it to bypass the operator's own trust prompt on the
+            # operator's behalf. Tell it to ask instead, and name what it must show.
+            {
+                printf 'not registered: nothing here can answer that question.\n'
+                printf 'Running from an agent? Show the operator the three lines above and ask.\n'
+                printf 'Do not add --yes yourself; it is theirs to give.\n'
+            } >&2
             exit 1
         fi
     fi

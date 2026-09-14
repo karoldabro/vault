@@ -72,6 +72,10 @@ Discover any remaining guidelines/conventions that constrain this task — they 
    **`requirements/`** holds `/v-pm`-authored business-logic specs (single-repo knowledge center — rules
    `REQ-NN`, glossary, variant/state tables); load it first-class — it's what grounds rich tests + product
    understanding, and the established `features/` dossier carries its `REQ-NN` ids after the work ships.
+   **`plans/`** is the other half, and binds the same way: a plan in a repo this session will change is a
+   **build order**, not background. Read it before the first edit — it names every file by exact path, so
+   grep its `## Work items` before writing anything you may be about to duplicate. `status: proposed` means
+   unbuilt, never unavailable. Rule + the session it cost: `vault/indications/plans-are-build-orders.md`.
 2. Read every match (conventions, patterns, gotchas).
 3. Expected docs by topic: api/endpoint→API conventions · queue/job→queue architecture ·
    model/migration→model/DB patterns · frontend/component→frontend patterns ·
@@ -112,6 +116,25 @@ move on rather than reporting it missing. §4 of the playbook for full rules.
 
 Last 3 sessions by mtime: `ls -t <project-vault>/sessions/*.md | head -3`. ADRs touching the topic.
 
+### 2.6a — Open handoffs + open reports
+
+A session that already stopped mid-task left its direction in `handoffs/`, and a problem somebody
+found and could not fix is in `reports/`. Both must be read before the first edit, or this session
+re-derives what one of them already holds and re-finds what the other already named.
+
+```bash
+grep -l 'status: open' <project-vault>/handoffs/*.md <project-vault>/reports/*.md 2>/dev/null
+```
+
+1. **Handoffs.** Take the newest file whose frontmatter reads `status: open`. Read its `## Left to
+   do`, `## Do not touch` and `## Unverified` sections in full and treat all three as binding for
+   this session. When the task in front of you is that work, run `/v-handoff resume` instead of
+   starting over.
+2. **Reports.** List every `status: open` report whose `files:` key names a path this task will
+   touch, or whose keywords match the Step-1 keywords. A report naming a file you are about to edit
+   is read before you edit it.
+3. Neither folder present means neither has anything open. Say nothing; do not warn.
+
 ### 2.7 — CLAUDE.md
 
 Read project `CLAUDE.md` if present. Its instructions override all defaults.
@@ -135,6 +158,8 @@ MOC: [skimmed]
 Indications: [working rules loaded from indications/ — or "none matched"]
 Guidelines: [docs read from features/·processes/·architecture/ — or "none matched"]
 Sessions: [top 3 mtime, brief topic each]
+Handoffs: [the newest open handoff — its slug, what it leaves to do, and anything it says not to touch]
+Reports: [open reports naming a file this task touches — slug + severity + the one sentence each]
 ADRs: [relevant IDs]
 Graph: [used — key findings — or "not available"]
 Serena: [used — symbols found — or "not applicable"]
