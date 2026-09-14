@@ -67,6 +67,11 @@ Rule for anyone editing the call sites: `vault/indications/plugin-extension-neve
 
 `bin/vault-plugin.sh`: 0 done · 1 refused · 2 usage. `vault_plugin_run_point` always returns 0.
 
+## Sessions
+
+- [[../sessions/2026-09-14-1433-plugin-extension-points]] — built both points, the registry, the CLI
+  and the skeleton; cut two designed points on evidence.
+
 ## Not covered
 
 Machine-level prerequisite installation, command and hook registration (Claude Code's own), and any
