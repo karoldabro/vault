@@ -37,14 +37,21 @@ teardown() {
     [ "$(jq -r '.plugins[0].version // "unset"' "${VAULT_ROOT}/.claude-plugin/marketplace.json")" = "unset" ]
 }
 
-@test "marketplace.json is valid JSON with an owner and one plugin entry" {
+@test "marketplace.json is valid JSON whose first entry is this repo itself" {
     local m="${VAULT_ROOT}/.claude-plugin/marketplace.json"
     run jq -e . "${m}"
     [ "$status" -eq 0 ]
     [ "$(jq -r '.owner.name' "${m}")" != "null" ]
-    [ "$(jq -r '.plugins | length' "${m}")" -eq 1 ]
-    # source "./" means the marketplace repo IS the plugin — one repo, one clone.
+    [ "$(jq -r '.plugins | length' "${m}")" -ge 1 ]
+    # source "./" means the marketplace repo IS this plugin — one repo, one clone.
     [ "$(jq -r '.plugins[0].source' "${m}")" = "./" ]
+}
+
+@test "every marketplace entry after the first names another repo by url" {
+    local m="${VAULT_ROOT}/.claude-plugin/marketplace.json"
+    # A second "./" entry would install this repo twice under two names.
+    run jq -e '([.plugins[1:][] | select(.source.source == "url" and (.source.url | type) == "string")] | length) == ((.plugins | length) - 1)' "${m}"
+    [ "$status" -eq 0 ]
 }
 
 @test "the marketplace entry names the same plugin as plugin.json" {

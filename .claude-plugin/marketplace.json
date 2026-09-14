@@ -12,7 +12,27 @@
       "name": "vault",
       "source": "./",
       "category": "workflow",
-      "tags": ["vault", "lifecycle", "code-review", "memory"]
+      "tags": [
+        "vault",
+        "lifecycle",
+        "code-review",
+        "memory"
+      ]
+    },
+    {
+      "name": "vault-quality-gates",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/karoldabro/vault-quality-gates.git",
+        "ref": "main"
+      },
+      "category": "workflow",
+      "tags": [
+        "quality",
+        "coverage",
+        "mutation-testing",
+        "git-hooks"
+      ]
     }
   ]
 }

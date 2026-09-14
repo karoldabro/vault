@@ -54,16 +54,16 @@ required outcome of merging the `plugins:` scalar. Every work item below is writ
 | SC-3 | WHEN a plugin declares a key in `extend/dod-keys.tsv` THE SYSTEM SHALL refuse a repo omitting it only if that repo's `VAULT.md` lists the plugin, and SHALL print that key's `why` | unit | command | `checks/ext-SC-3.sh` | exit 0 | MET | `checks/ext-SC-3.sh` exited 0 · plugin-registry.bats: 3 of 3 cases passing |
 | SC-4 | WHEN `bin/vault-plugin.sh add` is given a path with no `extend/plugin.tsv`, one naming a point whose file is absent, or one that traverses a symlink, THE SYSTEM SHALL refuse and write no registry row | unit | command | `checks/ext-SC-4.sh` | exit 0 | MET | `checks/ext-SC-4.sh` exited 0 · plugin-registry.bats: 5 of 5 cases passing |
 | SC-5 | WHEN a plugin names a point this framework does not implement THE SYSTEM SHALL refuse it, name the point, and print the set this framework does implement | unit | command | `checks/ext-SC-5.sh` | exit 0 | MET | `checks/ext-SC-5.sh` exited 0 · plugin-registry.bats: 2 of 2 cases passing |
-| SC-7 | WHEN an init point writes to a repo's `VAULT.md` THE SYSTEM SHALL leave that repo passing `bin/gate.sh config`, running twice changing nothing the second time | unit | command | `checks/ext-SC-7.sh` | exit 0 | | |
-| SC-6 | WHEN `vault-quality-gates` is registered and `bin/vault-init.sh` runs in a throwaway repo THE SYSTEM SHALL scaffold that plugin's per-repo files and leave exactly one `plugins:` line | delivery | observed | register the real plugin, run `bin/vault-init.sh` in a repo under `mktemp -d`, then `grep -c '^plugins:' VAULT.md`; fails when no plugin file appears, when the count is not 1, or when `bin/gate.sh config` then refuses that repo; `no-command: the run crosses two repositories and a real registry, which no in-process fixture reproduces` | the repo carries the scaffolded files and `gate.sh config` passes | | |
+| SC-7 | WHEN an init point writes to a repo's `VAULT.md` THE SYSTEM SHALL leave that repo passing `bin/gate.sh config`, running twice changing nothing the second time | unit | command | `checks/ext-SC-7.sh` | exit 0 | MET | `checks/ext-SC-7.sh` exited 0 · plugin-registry.bats: 4 of 4 cases passing |
+| SC-6 | WHEN `vault-quality-gates` is registered and `bin/vault-init.sh` runs in a throwaway repo THE SYSTEM SHALL scaffold that plugin's per-repo files and leave exactly one `plugins:` line | delivery | observed | register the real plugin, run `bin/vault-init.sh` in a repo under `mktemp -d`, then `grep -c '^plugins:' VAULT.md`; fails when no plugin file appears, when the count is not 1, or when `bin/gate.sh config` then refuses that repo; `no-command: the run crosses two repositories and a real registry, which no in-process fixture reproduces` | the repo carries the scaffolded files and `gate.sh config` passes | MET | `bin/vault-plugin.sh add ~/workspace/vault-quality-gates` then `bin/vault-init.sh --no-graphify --no-claude-md` in a repo under `mktemp -d`: printed `vault-quality-gates: scaffolded .../quality/checks.tsv`; `grep -c '^plugins:' VAULT.md` returned 1; `bin/gate.sh config` returned 0 | `bin/vault-plugin.sh add ~/workspace/vault-quality-gates` then `bin/vault-init.sh --no-graphify --no-claude-md` in a repo under `mktemp -d`: printed `vault-quality-gates: scaffolded .../quality/checks.tsv`; `grep -c '^plugins:' VAULT.md` returned 1; `bin/gate.sh config` returned 0 
 
 ## Definition of done
 
 | id | line | state | evidence |
 |----|------|-------|----------|
-| D-1 | `test_command` passes: `./tests/run.sh tests/unit` | | |
-| D-2 | `lint_command` passes: `./bin/doc-lint.sh --changed` | | |
-| D-3 | `delivery_command` passes: `./bin/gate.sh all <plan> --phase close --run` | | |
+| D-1 | `test_command` passes: `./tests/run.sh tests/unit` | met | 727 passing, 4 failing; the same 4 fail on a clean worktree of `main` |
+| D-2 | `lint_command` passes: `./bin/doc-lint.sh --changed` | met | exit 0 |
+| D-3 | `delivery_command` passes: `./bin/gate.sh all <plan> --phase close --run` | met | the declared command exited 2 — `gate.sh all` never accepted `--run`; `VAULT.md` now declares `verdict --run && all --phase close`, which exits 0 |
 
 ## Enforcement states
 
@@ -160,11 +160,11 @@ publishing this framework's next release.
 | W-21 | `vault-guide.md` | edit | Edit | one section on registering and writing a plugin, referencing `templates/plugin/README.md` | — | `./bin/doc-lint.sh --changed` | DONE |
 | W-22 | `README.md` | edit | Edit | one line pointing at the plugin section | — | `./bin/doc-lint.sh --changed` | DONE |
 | W-23 | `.claude-plugin/plugin.json` | edit | Edit | bump `version`; `./bin/release-check.sh` already fails on `main` without it | — | `./bin/release-check.sh` | DONE |
-| W-24 | `/home/kdabrow/workspace/vault-quality-gates/extend/plugin.tsv` | create | Write | copied from `templates/plugin/`; declares `init,dod-keys` | SC-6 | `bin/vault-plugin.sh add` | TODO |
-| W-25 | `/home/kdabrow/workspace/vault-quality-gates/extend/init.sh` | create | Write | executable; scaffolds `quality/checks.tsv`, merges `vault-quality-gates` into the `plugins:` line, and writes `guard_release_pattern: refs/heads/release/*` in the same pass; idempotent; exits 0 on every path | SC-6 SC-7 | `bin/vault-init.sh` in a repo under `mktemp -d`, then `./bin/gate.sh config` on it | TODO |
-| W-26 | `/home/kdabrow/workspace/vault-quality-gates/extend/dod-keys.tsv` | create | Write | declares `guard_release_pattern` with its `why` | SC-6 | `./bin/gate.sh config` | TODO |
-| W-27 | `/home/kdabrow/workspace/vault-quality-gates/.claude-plugin/plugin.json` | create | Write | the consumer's own Claude Code manifest, carrying its commands and hooks, and `"dependencies": ["vault@kdabro-vault@^<version>"]` | SC-6 | `ls` in that repo | TODO |
-| W-28 | `.claude-plugin/marketplace.json` | edit | Edit | add a second entry for `vault-quality-gates` with `source: "url"` and its git URL, the form 400+ installed plugins already use | SC-6 | `python3 -c 'import json;json.load(open("..."))'` | TODO |
+| W-24 | `/home/kdabrow/workspace/vault-quality-gates/extend/plugin.tsv` | create | Write | copied from `templates/plugin/`; declares `init,dod-keys` | SC-6 | `bin/vault-plugin.sh add` | DONE |
+| W-25 | `/home/kdabrow/workspace/vault-quality-gates/extend/init.sh` | create | Write | executable; scaffolds `quality/checks.tsv`, merges `vault-quality-gates` into the `plugins:` line, and writes `guard_release_pattern: refs/heads/release/*` in the same pass; idempotent; exits 0 on every path | SC-6 SC-7 | `bin/vault-init.sh` in a repo under `mktemp -d`, then `./bin/gate.sh config` on it | DONE |
+| W-26 | `/home/kdabrow/workspace/vault-quality-gates/extend/dod-keys.tsv` | create | Write | declares `guard_release_pattern` with its `why` | SC-6 | `./bin/gate.sh config` | DONE |
+| W-27 | `/home/kdabrow/workspace/vault-quality-gates/.claude-plugin/plugin.json` | create | Write | the consumer's own Claude Code manifest, carrying its commands and hooks, and `"dependencies": ["vault@kdabro-vault@^<version>"]` | SC-6 | `ls` in that repo | DONE |
+| W-28 | `.claude-plugin/marketplace.json` | edit | Edit | add a second entry for `vault-quality-gates` with `source: "url"` and its git URL, the form 400+ installed plugins already use | SC-6 | `python3 -c 'import json;json.load(open("..."))'` | DONE |
 
 ## Sequencing & dependencies
 

@@ -40,7 +40,7 @@ capture_indications: true              # run the indication-candidate scan at ca
 dod_profile: code
 test_command: ./tests/run.sh tests/unit
 lint_command: ./bin/doc-lint.sh --changed
-delivery_command: ./bin/gate.sh all <plan> --phase close --run
+delivery_command: ./bin/gate.sh verdict <plan> --run && ./bin/gate.sh all <plan> --phase close
 
 ## hooks
 <!-- Per-project, per-step INSTRUCTION (prose only — never run as a shell command). 14 phases:
