@@ -18,7 +18,6 @@ tags: [handoff]
 |---|--------|-------------------|-----------|
 | 1 | Run `/v-handoff resume` in a session with no memory of this one, and record whether it states the next command without asking anything this file already answers | `vault/plans/2026-09-14-1642-handoff-and-report-commands.md` | the SC-5 row's `verdict` cell reads `MET` with the observation as evidence, or `NOT MET` with what it asked for |
 | 2 | Run `./bin/gate.sh all vault/plans/2026-09-14-1642-handoff-and-report-commands.md --phase close` | `vault/plans/2026-09-14-1642-handoff-and-report-commands.md` | it exits 0; today it refuses on SC-5 alone |
-| 3 | Decide whether the four pre-existing test failures get `/v-report` files or are left alone | `vault/reports/` | each of the four is either a report file or a stated decision not to write one |
 
 ## Do not touch
 
@@ -102,6 +101,11 @@ through SC-4 are `MET` with the gate's own evidence; SC-5 has no verdict.
   load. A folder the lifecycle reads unconditionally has to exist unconditionally.
 
 ## Notes
+
+Four open reports sit in `vault/reports/`, one per pre-existing test failure. They are not repeated
+here: `commands/v-work/steps/02-load-context.md` §2.6a lists them at the start of any session that
+touches the files they name, and duplicating open work across two surfaces is how one of them stops
+being read.
 
 `./bin/rule-count.sh` reports 177 instruction lines against a budget of 173; this work added two.
 Nothing calls that script, so it refuses nothing. Both added lines are requirements rather than
