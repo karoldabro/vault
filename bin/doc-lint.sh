@@ -70,6 +70,8 @@ cap_for_type() {
         feature)            echo 200 ;;
         architecture)       echo 200 ;;
         process)            echo 250 ;;
+        handoff)            echo 150 ;;
+        report)             echo 120 ;;
         guide)              echo 600 ;;
         requirement)        echo 400 ;;
         integration-guide)  echo 400 ;;
@@ -94,6 +96,8 @@ singularize_type() {
         requirements)  echo requirement ;;
         runbooks)      echo runbook ;;
         sessions)      echo session ;;
+        handoffs)      echo handoff ;;
+        reports)       echo report ;;
         trails)        echo trail ;;
         changelogs)    echo changelog ;;
         logs)          echo log ;;
@@ -107,7 +111,8 @@ is_document_folder() {
     case "$(dirname "$1")" in
         */plans|*/plans/*|*/features|*/features/*|*/decisions|*/decisions/*|*/indications|*/indications/*|\
         */sessions|*/sessions/*|*/architecture|*/architecture/*|*/processes|*/processes/*|\
-        */requirements|*/requirements/*|*/runbooks|*/runbooks/*) return 0 ;;
+        */requirements|*/requirements/*|*/runbooks|*/runbooks/*|\
+        */handoffs|*/handoffs/*|*/reports|*/reports/*) return 0 ;;
     esac
     return 1
 }
@@ -123,7 +128,8 @@ is_instruction_type() {
 is_known_type() {
     case "$1" in
         plan|decision|adr|indication|feature|architecture|process|guide|requirement|\
-        integration-guide|instruction|session|research|trail|changelog|log|planning-session) return 0 ;;
+        integration-guide|instruction|session|research|trail|changelog|log|planning-session|\
+        handoff|report) return 0 ;;
     esac
     return 1
 }
@@ -340,7 +346,10 @@ while [ $# -gt 0 ]; do
         --changed)    changed=1; shift ;;
         --cap)        cap_override="$2"; shift 2 ;;
         --class)      class_override="$2"; shift 2 ;;
-        --list-caps)  for t in plan decision indication feature architecture process requirement; do
+        --list-caps)  # Every type cap_for_type names. Adding a cap there without adding it here
+                      # produces a listing that hides the type most likely to need one.
+                      for t in plan decision indication feature architecture process handoff \
+                               report guide requirement integration-guide instruction; do
                           printf '%-20s %s\n' "$t" "$(cap_for_type "$t")"
                       done
                       exit 0 ;;

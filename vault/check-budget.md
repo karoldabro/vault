@@ -47,6 +47,10 @@ sets `wrong`; a session never scores its own refusal.
 | plugin-duplicate-name | 0 | 0 | `vault_plugin_list`; refuses a registry holding two rows with one name |
 | plugins-two-lines | 0 | 0 | `plugin_keys`; refuses a `VAULT.md` carrying more than one `plugins:` line |
 | plugin-dod-key | 0 | 0 | `plugin_keys`; refuses a key a listed plugin declares and the repo omits |
+| handoff-SC-1 | 0 | 0 | refuses `/v-handoff` missing a core section, a mode, a refusal, or a template that puts an optional section above a core one |
+| handoff-SC-2 | 0 | 0 | refuses `/v-report` missing a field or a mode, and a report template naming the finder in its body |
+| handoff-SC-3 | 0 | 0 | refuses when the context load, the vault scaffold, a `vault-guide.md` section, the README or this file does not name both commands |
+| handoff-SC-4 | 0 | 0 | refuses a `handoff` or `report` type unregistered in `cap_for_type`, `is_known_type`, `is_document_folder`, `singularize_type` or `--list-caps` |
 
 ## How a guard row is counted
 

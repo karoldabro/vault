@@ -77,6 +77,8 @@ Install one with `/v-plugin <repo>` — a repo name is enough; write one from `t
 | `/v-ask` | Ask a question about the project. Read-only, no changes. |
 | `/v-cr` | Review a pull request and post comments back. `--sandbox` runs the PR to verify findings. |
 | `/v-capture` | Save the current session into the vault. |
+| `/v-handoff` | Stop a long or late session without losing it. Writes what is left, what not to touch, what was never verified, and the exact command to run first. `/v-handoff resume` reads it back the next day. |
+| `/v-report` | Note a problem you found while doing something else, so it gets fixed later instead of derailing today. Records what is wrong, which files, what it breaks, the cause and the repair. |
 | `/v-init` | Set up a vault for the current repo. |
 | `/v-link` | Link two projects so context loading sweeps both. |
 | `/v-guide` | Generate a cross-project integration guide from a feature. |

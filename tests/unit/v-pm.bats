@@ -104,7 +104,8 @@ teardown() {
     grep -qi 'knowledge center'             "${VAULT_ROOT}/vault-guide.md"
     grep -qi 'requirements/'                "${VAULT_ROOT}/vault-guide.md"
     grep -qi 'REQ-'                         "${VAULT_ROOT}/vault-guide.md"
-    grep -qi 'spec.*established\|established.*spec' "${VAULT_ROOT}/vault-guide.md"
+    # The spec→established lifecycle moved with §13 into its own file; the guide keeps the pointer.
+    grep -qi 'spec.*established\|established.*spec' "${VAULT_ROOT}/docs/cross-project-workspaces.md"
     [ -f "${VAULT_ROOT}/vault/decisions/ADR-014-vpm-business-knowledge-center.md" ]
     grep -q  'ADR-014'                      "${VAULT_ROOT}/vault/decisions/_inventory.md"
 }
@@ -241,10 +242,12 @@ teardown() {
 }
 
 @test "vault-guide documents the _features workspace (§13) and README carries a one-line entry" {
+    # §13 is a pointer in the guide; the protocol itself lives in docs/cross-project-workspaces.md.
     grep -qi '## 13'                        "${VAULT_ROOT}/vault-guide.md"
     grep -qi '_features'                     "${VAULT_ROOT}/vault-guide.md"
-    grep -qi 'derived view'                  "${VAULT_ROOT}/vault-guide.md"
-    grep -qi 'latency contract'              "${VAULT_ROOT}/vault-guide.md"
+    grep -qF 'docs/cross-project-workspaces.md' "${VAULT_ROOT}/vault-guide.md"
+    grep -qi 'derived view'                  "${VAULT_ROOT}/docs/cross-project-workspaces.md"
+    grep -qi 'latency contract'              "${VAULT_ROOT}/docs/cross-project-workspaces.md"
     grep -q  '/v-pm'                         "${VAULT_ROOT}/README.md"
     grep -q  'v-pm.md'                       "${VAULT_ROOT}/docs/commands.md"
 }

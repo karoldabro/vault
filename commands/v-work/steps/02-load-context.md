@@ -123,8 +123,13 @@ found and could not fix is in `reports/`. Both must be read before the first edi
 re-derives what one of them already holds and re-finds what the other already named.
 
 ```bash
-grep -l 'status: open' <project-vault>/handoffs/*.md <project-vault>/reports/*.md 2>/dev/null
+find <project-vault>/handoffs <project-vault>/reports -name '*.md' \
+     -exec grep -l 'status: open' {} + 2>/dev/null
 ```
+
+`find`, not a `*.md` glob: an empty folder makes zsh abort the whole command line rather than pass
+the pattern through, so the walk would report nothing open on the very repos that have neither
+folder yet.
 
 1. **Handoffs.** Take the newest file whose frontmatter reads `status: open`. Read its `## Left to
    do`, `## Do not touch` and `## Unverified` sections in full and treat all three as binding for

@@ -54,7 +54,7 @@ teardown() {
 @test "scaffolds the expected folder layout" {
     cd "${CODE_REPO}"
     "${VAULT_ROOT}/bin/vault-init.sh" --yes >/dev/null
-    for sub in sessions decisions features indications processes architecture; do
+    for sub in sessions decisions features indications processes architecture handoffs reports; do
         [ -d "${VAULT_HOME}/myproject/${sub}" ]
     done
     [ -f "${VAULT_HOME}/myproject/_moc.md" ]

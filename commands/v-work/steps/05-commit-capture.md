@@ -85,6 +85,14 @@ to the remote; this step covers the vault docs written during EXECUTE.
 
 No action — claude-mem auto-captures via its SessionEnd hook. `mcp-search` is read-only.
 
+## 5.3a Problems found and left unfixed
+
+A failing, stale or plainly wrong thing this session found **outside the scope of the work it was
+doing** shall be offered to the user as one line before the close: `Found outside this task's scope:
+<one sentence>. File it as a report? (y/N)`. On a yes, `/v-report` writes it to `<vault>/reports/`;
+on a no, drop it and never write. A problem inside the plan's own scope stays in that plan's
+`## Open & deferred` section instead.
+
 ## 5.4 Capture session (mandatory)
 
 Honor any carried `pre_capture` hook, then invoke `/v-capture` to write the session log — it dedupes vs

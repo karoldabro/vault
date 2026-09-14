@@ -124,7 +124,9 @@ fi
 #------------------------------------------------------------------------------
 # Scaffold folders + placeholders
 #------------------------------------------------------------------------------
-for sub in sessions decisions features indications processes architecture; do
+# handoffs and reports are not optional the way plans/ is: /v-work reads both on every context load,
+# so a folder the lifecycle reads unconditionally has to exist unconditionally.
+for sub in sessions decisions features indications processes architecture handoffs reports; do
     mkdir -p "${vault_dir}/${sub}"
     # .gitkeep so empty dirs survive initial commit
     : > "${vault_dir}/${sub}/.gitkeep"

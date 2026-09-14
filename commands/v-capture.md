@@ -147,6 +147,10 @@ Captured: <vault>/sessions/<filename>.md
   Sync: <only when it did NOT push — not a git repo / no upstream / push failed>
 ```
 
+**When work is left unfinished**, offer `/v-handoff` in one line after the capture and drop it on a
+no. The capture records what happened; the handoff records what the next session must carry on, and
+only one of the two survives a fresh context window.
+
 Omit the `Sync` line entirely on a clean push; a vault that reached its remote is the expected
 outcome. One line per item; no further commentary unless asked. Re-runs are safe: same-minute slug overwrites
 in place, the script's index/dedupe steps are idempotent, already-promoted candidates are not re-offered,
