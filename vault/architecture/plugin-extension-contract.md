@@ -49,7 +49,7 @@ naming a point this framework does not implement, one naming a point whose file 
 whose point file is not executable.
 
 **This file carries no version.** Claude Code already owns install-time compatibility: a plugin
-declares `"dependencies": ["vault@kdabro-vault@^1.5.0"]` in its own `.claude-plugin/plugin.json`,
+declares `"dependencies": ["vault@kdabro-vault@^1.6.0"]` in its own `.claude-plugin/plugin.json`,
 which the manifest schema defines as "Plugins that must be enabled for this plugin to function" and
 whose name pattern accepts an `@^` version constraint. The `points` probe answers the different
 question this framework owns — whether a named extension point exists in the installed copy — and it
