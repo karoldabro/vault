@@ -48,6 +48,12 @@ delivery_command: ./bin/gate.sh all <plan> --phase close --run
      pre_/post_commit · pre_/post_capture · on_end. Contract + precedence: vault-guide.md §1.1.
      This framework repo declares none (no external tracker); examples are commented in templates/VAULT.md. -->
 
+## plugins
+<!-- Framework plugins this repo opts into: one flat scalar, comma-separated, ONE line only. A
+     plugin's keys are required here and nowhere else. A plugin's init point writes this line during
+     vault-init; edit it by hand only to opt out. See vault/architecture/plugin-extension-contract.md.
+     This repo opts into none — it is the framework, not a consumer of one. -->
+
 ## tools
 <!-- Per-project tool guidance (task-tracker MCP, etc.). Suggestion, not a gate. See tool-playbook.md §6.
      This repo declares none — it has no external task tracker. -->

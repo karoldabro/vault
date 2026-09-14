@@ -390,3 +390,32 @@ run_point() {
     [[ "$output" != *"short"* ]]
     [[ "$output" == *"qg"* ]]
 }
+
+# --- the shipped skeleton -----------------------------------------------------------------
+
+@test "the shipped plugin template registers and runs without edits beyond its example rows" {
+    cp -r "${VAULT_ROOT}/templates/plugin" "${TEST_HOME}/tmpl"
+    chmod +x "${TEST_HOME}/tmpl/extend/init.sh"
+    # The template ships its rows commented; a real plugin uncomments them.
+    sed -i 's/^# my-plugin\t/my-plugin\t/' "${TEST_HOME}/tmpl/extend/plugin.tsv"
+    sed -i 's/^# my_setting\t/my_setting\t/' "${TEST_HOME}/tmpl/extend/dod-keys.tsv"
+
+    run "${PLUGIN_SH}" add "${TEST_HOME}/tmpl"
+    [ "$status" -eq 0 ]
+
+    local repo; repo=$(make_repo tmpl)
+    run_point init "${repo}" /v testrepo
+    run_point init "${repo}" /v testrepo
+
+    run grep -c '^plugins:' "${repo}/VAULT.md"
+    [ "$output" -eq 1 ]
+    run "${GATE_SH}" config "${repo}"
+    [ "$status" -eq 0 ]
+}
+
+@test "the template's headers are exactly what the parser binds" {
+    run head -1 "${VAULT_ROOT}/templates/plugin/extend/plugin.tsv"
+    [ "$output" = "$(printf 'name\tpoints')" ]
+    run head -1 "${VAULT_ROOT}/templates/plugin/extend/dod-keys.tsv"
+    [ "$output" = "$(printf 'key\twhy')" ]
+}

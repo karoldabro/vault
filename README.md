@@ -69,6 +69,10 @@ how you disambiguate when another plugin ships the same name.
 | `/v-do` | A small, low-risk change with no approval gate. |
 | `/v-loop` | Test and repair a feature that is already built and running, working alone for hours. Refuses to start until you name a stack you are willing to lose. |
 | `/v-method` | Work out how to tackle one big task you do not yet know how to drive the AI on. Writes the stages, who works each one, which tools prove it, and what should stop it. Writes the method; runs none of it. |
+
+**Plugins.** A separate repo can extend the framework at per-repo onboarding and at the config gate.
+Register one with `bin/vault-plugin.sh add <dir>`; write one from `templates/plugin/`. See
+`vault-guide.md` §11b.
 | `/v-ask` | Ask a question about the project. Read-only, no changes. |
 | `/v-cr` | Review a pull request and post comments back. `--sandbox` runs the PR to verify findings. |
 | `/v-capture` | Save the current session into the vault. |

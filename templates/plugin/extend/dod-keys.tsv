@@ -1,0 +1,4 @@
+key	why
+# One row per VAULT.md key your plugin needs. `why` is printed in the refusal, so write the
+# sentence you want the operator to read when their repo is missing it.
+# my_setting	which branch the gate refuses on

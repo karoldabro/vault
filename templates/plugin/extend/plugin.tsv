@@ -1,0 +1,4 @@
+name	points
+# Your plugin, one row. Tabs between cells, never spaces.
+# points: a comma-separated subset of init,dod-keys — ship the file for every one you name.
+# my-plugin	init,dod-keys

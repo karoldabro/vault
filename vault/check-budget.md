@@ -40,6 +40,23 @@ sets `wrong`; a session never scores its own refusal.
 | v-method-SC-3 | 0 | 0 | the routing table: a blank cell, a shifted row, under eight rows, or a judgement-shaped property |
 | v-method-SC-4 | 0 | 0 | prohibitions outnumbering requirements in either `/v-method` file |
 | v-method-SC-5 | 0 | 0 | a `/v-method` file restating a rule `lib/shared-module-rules.tsv` lists |
+| plugin-manifest | 0 | 0 | `cmd_add`; refuses a directory with no `extend/plugin.tsv` |
+| plugin-point-file | 0 | 0 | `cmd_add`; refuses a declared point whose file is absent or not executable |
+| plugin-point-unknown | 0 | 0 | `vault_plugin_check_points`; refuses a point this framework does not implement |
+| plugin-symlink | 0 | 0 | `assert_no_symlink`; refuses a path that resolves through a symlink |
+| plugin-duplicate-name | 0 | 0 | `vault_plugin_list`; refuses a registry holding two rows with one name |
+| plugins-two-lines | 0 | 0 | `plugin_keys`; refuses a `VAULT.md` carrying more than one `plugins:` line |
+| plugin-dod-key | 0 | 0 | `plugin_keys`; refuses a key a listed plugin declares and the repo omits |
+
+## How a guard row is counted
+
+The seven `plugin-*` and `plugins-*` rows above are incremented by the refusing function itself, not
+by the operator. Every other row here follows the rule at the top of this file, where a session
+observes the refusal and the operator judges it. These refuse inside `bin/vault-plugin.sh` and
+`bin/gate.sh config`, which a plugin author runs directly, so nobody is watching to score them.
+
+**Until that counter is written, these rows stay at zero and the one-in-ten rule does not reach
+them.** A row that cannot move is a row nobody can act on.
 
 ## What the checks do not cover
 

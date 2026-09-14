@@ -61,6 +61,16 @@ delivery_command: {{delivery_command}}
 # on_start: "This repo tracks work in Jira (project VAULT). If the task names a ticket, fetch it via the Jira MCP first."
 # post_commit: "Remind me to move the Jira ticket to In Review (don't transition it automatically)."
 
+## plugins
+<!-- Framework plugins this repo opts into: one flat scalar, comma-separated, ONE line only. A
+     plugin's own required keys are enforced here and nowhere else, so registering a plugin on the
+     machine never refuses a repo that did not ask for it.
+     Whitespace after a comma is fine. A SECOND `plugins:` line is refused — only the first is read,
+     so a second one would drop that plugin's keys in silence.
+     A plugin's init point writes this line itself during vault-init; edit it by hand only to opt out.
+     Contract: vault/architecture/plugin-extension-contract.md. -->
+# plugins: vault-quality-gates, some-other-plugin
+
 ## tools
 <!-- Per-project tool guidance (suggestion, not a gate). Lets the lifecycle fetch ticket context from
      the tracker this repo actually uses. See tool-playbook.md §6. -->
