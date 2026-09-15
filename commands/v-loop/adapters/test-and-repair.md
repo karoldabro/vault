@@ -47,7 +47,8 @@ The test is a command, but **the judgement of whether a red case means a broken 
 is a model's**, so verification of a fix is a separate spawn with the failing case and the fix commit.
 
 **Discriminator: an injection per case** — a contrary condition that must produce a *different*
-outcome, written before the case runs. When the injected condition gives the same result as the
+outcome, written before the case runs. The test-quality gate asks afterwards whether a test
+discriminates; this asks it **before the case runs**, as part of designing it. When the injected condition gives the same result as the
 normal one, the case proves nothing and its verdict is `BLOCKED`.
 
 An injection case must prove the app degrades correctly: it stays on the right screen, it tells the user,
@@ -79,7 +80,7 @@ A stack the operator named as disposable, with the command that rebuilds it.
 4. **Tear down on the full case id** (`LIKE 'QA <case-id>%'`). One truncated wildcard destroyed two
    other cases' fixtures and turned passing cases red.
 5. **An asset rebuild waits until no tester is running.** A spec failing against a half-written
-   bundle wastes the round.
+   bundle wastes the round. The builder asks, and the orchestrator answers when the stack is clear.
 
 ## When a case goes red
 

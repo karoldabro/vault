@@ -45,7 +45,8 @@ anything they work on. The session stops until it has **two facts**, and refuses
    files and leaves every untracked file behind; the arena still carries the last run's output.
 
 Neither is a judgement the session can reason its way past, which is the point. "Is this
-destructive?" is a question a session talks itself out of at hour four.
+destructive?" is a question a session talks itself out of at hour four. This is the line that keeps a
+campaign's destructive commands away from a working database.
 
 A session that finds no arena **must** say so and stop, naming which of the two is missing.
 
