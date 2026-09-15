@@ -5,7 +5,7 @@ against the real system, files what fails, fixes it, and retests. The rules belo
 two campaigns on different stacks: a Laravel feature under Playwright and PHPUnit, and a Flutter app
 on a real phone over adb.
 
-A campaign against a phone or a device also reads `prompts/on-device-e2e-campaign.md`, which carries
+A campaign against a phone or a device also reads `$VAULT_FRAMEWORK_PATH/prompts/on-device-e2e-campaign.md`, which carries
 the traps that adapter has already paid for.
 
 **What this file leaves to others.** The slots it fills and the verification rule it inherits are
@@ -128,3 +128,4 @@ The defects that matter most live here. Look for them deliberately.
   holds 768 of 793, the feature is empty for almost everyone, and that is a launch decision.
 - **Does the action reach the engine?** A setting written through a cache with no expiry changes
   nothing. Prove the write moves behaviour rather than the row.
+- **Are declared values read?** Run `bin/gate.sh readers` rather than judging it by eye.

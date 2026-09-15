@@ -76,8 +76,8 @@ health-check, warn once, fall back. Full rules: `$VAULT_FRAMEWORK_PATH/tool-play
 
 **Resume first.** Scan `<project-vault>/campaigns/` for a `STATE.md` whose retest queue or never-run
 list is non-empty. Finding one, read it, read `rounds_used` from its frontmatter, and continue that
-campaign. The campaign directory is named `YYYY-MM-DD-HHMM-<slug>`. A resumed session **must** carry
-the round count forward rather than starting at zero.
+campaign. The campaign directory is named `YYYY-MM-DD-HHMM-<slug>`, matching the plan filenames. A
+resumed session **must** carry the round count forward rather than starting at zero.
 
 **Otherwise run intake.** Ask everything the operator decides, **in one exchange**, and work alone
 afterwards. Elicitation rules: `$VAULT_FRAMEWORK_PATH/commands/_shared/elicitation.md`.
@@ -103,7 +103,8 @@ Caps carry defaults the operator may change in the same exchange:
 from memory.
 
 **Then scaffold.** Create `<project-vault>/campaigns/<slug>/` from `$VAULT_FRAMEWORK_PATH/templates/campaign/`:
-`STATE.md`, `ledger.md`, `result.md`, `defects.md` and `AGENT-BRIEF.md`. Create `campaigns/` and warn
+`templates/campaign/STATE.md`, `templates/campaign/ledger.md`, `templates/campaign/result.md`,
+`templates/campaign/defects.md` and `templates/campaign/AGENT-BRIEF.md`. Create `campaigns/` and warn
 once when it is absent.
 
 **Append the ignore rule before the first result file is written.** When the project vault's

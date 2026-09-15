@@ -30,7 +30,7 @@ does not apply yet.
 | `surface` | the screen, endpoint or job the case exercises |
 | `kind` | the adapter's case kinds; `document-corpus` uses `repair` and `control`, `test-and-repair` uses `happy` and `injection` |
 | `title` | what the case proves, as an outcome the user sees |
-| `discriminator` | how this row proves it can fail — the adapter's failure shape. `""` when the adapter proves it with separate control rows instead |
+| `discriminator` | how this row proves it can fail — the adapter's failure shape. A `test-and-repair` campaign puts its **injection** here: the contrary condition that must produce a different outcome, `""` on a `happy` case. A `document-corpus` campaign leaves it `""` and proves failure with separate control rows |
 | `conflicts_on` | **every path this unit of work writes**, not just the one the case is named for. A case that creates a sidecar names both |
 | `check` | the command that produces this row's verdict, at its exact path |
 | `status` | `planned`, `authored`, `pass`, `fail`, `blocked` or `flaky` |

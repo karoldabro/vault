@@ -23,8 +23,8 @@ already binding and are named once:
 ## Evidence
 
 **Every verdict must rest on the running system.** The adapter names what produces it — a command's
-exit code, a request, a click, a query. Reading source is how you form a hypothesis, and it is the one
-thing that closes no case.
+exit code, a request, a click, a query. Whatever demonstrates a defect must reverse to prove the fix.
+Reading source is how you form a hypothesis, and it is the one thing that closes no case.
 
 **A defect must survive a check against current source before it is filed.** In one campaign six of
 seventy-three filings were disproved this way, several written by the orchestrator itself.
