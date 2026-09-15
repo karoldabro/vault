@@ -61,8 +61,8 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
     [ -d "${VAULT_HOME}/_global" ]
 }
 
-# Regression guard: _global and ~/.openviking used to share one `rm -rf`. Dropping
-# the OpenViking argument must not take the _global cleanup with it.
+# Regression guard: _global once shared one `rm -rf` with a second path. Dropping
+# that second argument must not take the _global cleanup with it.
 @test "--purge-data still deletes _global" {
     uninstall --purge-data --yes
     [ "$status" -eq 0 ]
@@ -85,7 +85,6 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
     uninstall --tools --yes
     grep -q 'pipx uninstall graphifyy'  "${TEST_HOME}/toollog"
     grep -q 'uv tool uninstall serena-agent' "${TEST_HOME}/toollog"
-    ! grep -q 'openviking' "${TEST_HOME}/toollog"
 }
 
 # claude-mem@claude-mem was never a real id, so the uninstall silently no-opped

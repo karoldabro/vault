@@ -11,9 +11,6 @@
 #   --purge-data   also delete $VAULT_HOME/_global — DESTRUCTIVE.
 #   --all          --tools + --purge-data.
 #
-# OpenViking is no longer part of this framework. To remove an install that
-# predates that change, use bin/remove-openviking.sh (see docs/removing-openviking.md).
-#
 # Safety: destructive actions need consent. Without --yes (and without a TTY to
 # confirm on) this only PRINTS the plan and changes nothing. Project vaults
 # (~/vault/<slug>/, in-repo vault/) and your repos are never touched.
@@ -50,9 +47,6 @@ the claude-mem Claude Code plugin.
   --dry-run      echo every action instead of running it
   --yes, -y      consent non-interactively
   -h, --help     this text
-
-OpenViking is no longer part of this framework. To remove an install that
-predates that change, use bin/remove-openviking.sh.
 
 Project vaults (~/vault/<slug>/, in-repo vault/) and your repos are never touched.
 EOF

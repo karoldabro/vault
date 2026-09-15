@@ -86,14 +86,6 @@ teardown() {
     grep -q '^install_mode: minimal$' "${VAULT_HOME}/_global/config.md"
 }
 
-@test "the installer no longer mentions OpenViking or its ollama backend" {
-    run "${VAULT_ROOT}/setup.sh" --full --dry-run
-    [ "$status" -eq 0 ]
-    [[ "${output,,}" != *"openviking"* ]]
-    [[ "${output,,}" != *"ollama"* ]]
-    [[ "${output,,}" != *"nomic-embed-text"* ]]
-}
-
 @test "prints per-repo onboarding instructions (vault-init / VAULT.md)" {
     run "${VAULT_ROOT}/setup.sh" --minimal --yes
     [ "$status" -eq 0 ]

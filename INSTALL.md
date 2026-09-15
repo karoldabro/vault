@@ -85,9 +85,6 @@ exec $SHELL -l
 
 `./setup.sh --doctor` reports what actually landed, at any time.
 
-**OpenViking is no longer part of this stack.** To take an install predating that change off your
-machine, see [removing-openviking.md](docs/removing-openviking.md).
-
 ## Consent and safety
 
 Auto-install asks before it touches anything, prints every remote URL it runs, and is safe to run twice.
@@ -229,9 +226,6 @@ By default it removes only the wiring: the command symlinks and the claude-mem p
 
 Without `--yes` and with no terminal attached, it prints the plan and stops. It never touches your
 project vaults or your code repos.
-
-`./bin/remove-openviking.sh` removes an OpenViking install predating its removal from the stack — see
-[removing-openviking.md](docs/removing-openviking.md).
 
 ## Tests
 

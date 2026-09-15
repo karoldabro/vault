@@ -378,8 +378,6 @@ instead. Decision record: [[ADR-018-decision-communication-contract]] in `vault/
 | `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | Agent |
 
 `attic/` holds `/v-migrate`, whose one-shot migration finished; `bin/vault-migrate.sh` still works.
-OpenViking is no longer a dependency, and `/v-sync` and `/v-backfill` went with it; to take an older
-install off a machine, see [docs/removing-openviking.md](docs/removing-openviking.md).
 
 ---
 

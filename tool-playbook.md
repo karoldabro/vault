@@ -16,8 +16,7 @@ query a few hundred, and reading 40 source files about 20k.
 > stay firm.
 
 **Section numbering starts at 2 and never changes** — a dozen files under `commands/` and `vault/` cite
-these sections by number. Section 1 held OpenViking, which the framework dropped;
-`docs/removing-openviking.md` takes an old install off a machine.
+these sections by number. Section 1 held a tool the framework dropped.
 
 ---
 

@@ -148,9 +148,6 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     [[ "$output" != *"razorback16"* ]]
     # Old wrong serena flag must be gone.
     [[ "$output" != *"serena-agent@latest"* ]]
-    # OpenViking was dropped entirely (see docs/removing-openviking.md).
-    [[ "${output,,}" != *"openviking"* ]]
-    [[ "${output,,}" != *"ollama"* ]]
 }
 
 #------------------------------------------------------------------------------

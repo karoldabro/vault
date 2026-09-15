@@ -256,7 +256,7 @@ install_claude_mem_plugin() {
 
 #------------------------------------------------------------------------------
 # Consent gate — shared by every removal script (bin/vault-uninstall.sh,
-# bin/remove-openviking.sh). One implementation of "ask before destroying".
+# One implementation of "ask before destroying".
 #------------------------------------------------------------------------------
 # consent_gate <what-will-be-removed> <dry_run> <assume_yes>
 #
