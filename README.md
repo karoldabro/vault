@@ -1,108 +1,103 @@
-# vault — a knowledge framework for your projects
+<h1 align="center">vault</h1>
 
-The vault stores what you learn about a project as plain Markdown that you and Claude can both search:
-decisions, features, session notes, and the rules for working on the code. Obsidian reads it and git
-tracks it.
+<p align="center"><b>Your project's memory, in plain Markdown — and the commands that use it.</b></p>
 
-You install the framework once per machine. Each project then points at that one install and gets its
-own vault, either beside your code or inside the repo.
+<p align="center">
+<img alt="version" src="https://img.shields.io/badge/version-1.8.0-6b4fbb?style=flat-square">
+<img alt="Claude Code plugin" src="https://img.shields.io/badge/Claude%20Code-plugin-d97757?style=flat-square">
+<img alt="built with" src="https://img.shields.io/badge/built%20with-markdown%20%2B%20bash-2b7489?style=flat-square">
+<img alt="tests" src="https://img.shields.io/badge/tests-bats%20in%20docker-0db7ed?style=flat-square">
+</p>
 
-## Install once per machine
+---
 
-You need Linux, git, Python 3.10 or newer, and Claude Code. Ubuntu is the tested path; on a Mac the tool
-installer prints the commands for you to run by hand. [INSTALL.md](INSTALL.md) carries the flags, the
-uninstall, and the tests.
+A vault holds what you learn about a project: the decisions, the features, the session notes, the
+rules for working on the code. Git tracks it. Obsidian reads it. Claude searches it before it
+touches your code.
+
+- **Plain Markdown.** Nothing to host. Nothing to lock you in.
+- **Install once per machine.** Every repo points at the same copy.
+- **A vault per project.** Next to your code, or inside the repo.
+- **17 commands.** They plan, build, review and remember, so you don't repeat yourself.
+
+## Install
 
 ```
 /plugin marketplace add karoldabro/vault
 /plugin install vault@kdabro-vault
 ```
 
-Restart Claude Code, then run `/v-setup` once. It installs the helper tools and creates the machine-level
-config, because installing a plugin never runs an installer on your machine. It prints every command
-before it runs it.
+Restart Claude Code, then run `/v-setup` once. It installs the helper tools and writes the machine
+config. It prints every command before it runs it, and asks first.
 
-**Take the symlink install instead if you edit the framework itself.** The plugin copies the files into a
-versioned cache that each update replaces, so edits made there do not survive.
+[INSTALL.md](INSTALL.md) has the rest: the other install mode, every flag, the uninstall, the tests.
 
-```bash
-git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh
+## Give a repo a vault
+
+```
+cd ~/workspace/<your-repo>
+/v-init
 ```
 
-`setup.sh` asks which install you want. Choose the light one unless you write code with these commands;
-the developer install adds Serena and Graphify, which need uv, pipx and Python 3.10 or newer. Switch
-later with `./setup.sh --full`.
+`/v-init` creates the vault, writes a `VAULT.md` at the repo root, and points the repo's `CLAUDE.md`
+at it. After that, `/v-work` does the work and `/v-capture` saves what happened.
 
-Run `setup.sh` as your normal user, never with `sudo`. When it finishes, open a fresh shell with
-`exec $SHELL -l` and restart Claude Code.
+## Commands
 
-**Install the plugin or the symlinks, never both.** With both active every command exists twice, under
-two names, reading two different copies of the files. `install.sh` refuses to run when it finds the
-plugin already installed.
+Type them in Claude Code. Each one also answers to `/vault:v-work`, which you need only when another
+plugin uses the same name.
 
-## Add a vault to a project
+### Build something
 
-```bash
-cd ~/workspace/<your-code-repo>
-~/workspace/vault/bin/vault-init.sh            # vault lives in ~/vault/<project>/
-~/workspace/vault/bin/vault-init.sh --in-repo  # vault lives inside the repo
-```
+| Command | What it does | Use it when |
+|---|---|---|
+| `/v-work` | Proposes a plan, waits for your yes, then builds it | Most work. Start here |
+| `/v-do` | Makes one small change, with no approval step | The change is small and obvious |
+| `/v-team` | Puts reviewers on the plan and on the diff | A wrong decision is expensive to undo |
+| `/v-loop` | Works alone for hours, until every case has a verdict | You want to hand the job over and leave |
+| `/v-pm` | Plans one feature across several repos at once | The feature crosses repo boundaries |
+| `/v-method` | Writes the stages, the tools, and what should stop them | The task is big and you don't know how to start |
 
-`vault-init.sh` creates the vault, scaffolds its folders and index files, writes a `VAULT.md` at your
-repo root recording where the vault lives, and adds a short note to your repo's `CLAUDE.md`. After that,
-run `/v-work` to do work and `/v-capture` to save what happened.
+### Look at it
 
-`~/workspace/vault/bin/vault-migrate.sh` converts an older vault that still carries a `_process/`
-submodule.
+| Command | What it does | Use it when |
+|---|---|---|
+| `/v-ask` | Answers a question about the project, changing nothing | You want to know, not change |
+| `/v-cr` | Reviews a pull request and posts the comments back | A PR is waiting for you |
 
-## The commands
+### Keep what you learned
 
-Type them in Claude Code. A plugin install also exposes each one as `/vault:v-work` and so on, which is
-how you disambiguate when another plugin ships the same name.
+| Command | What it does | Use it when |
+|---|---|---|
+| `/v-capture` | Saves this session into the vault | The work is finished |
+| `/v-handoff` | Writes what is left, what to avoid, what is unproven | You are stopping in the middle |
+| `/v-report` | Files a problem so a later session fixes it | You found something broken, off today's topic |
+| `/v-reconcile` | Rewrites an old document to the writing rules | A document has grown long and vague |
 
-| Command | What it's for |
-|---------|---------------|
-| `/v-setup` | Install or repair the helper tools and the machine-level config. Run once per machine. |
-| `/v-work` | The main loop: load context, propose a plan, get your approval, do the work, save it. |
-| `/v-team` | The careful version of `/v-work` for big or risky changes. Reviewers critique the plan and the diff. |
-| `/v-pm` | Plan a feature spanning several repos once. Writes a shared plan and contract, so each repo's `/v-team` session coordinates through files instead of through you. |
-| `/v-do` | A small, low-risk change with no approval gate. |
-| `/v-loop` | Test and repair a feature that is already built and running, working alone for hours. Refuses to start until you name a stack you are willing to lose. |
-| `/v-method` | Work out how to tackle one big task you do not yet know how to drive the AI on. Writes the stages, who works each one, which tools prove it, and what should stop it. Writes the method; runs none of it. |
-| `/v-plugin` | Install a framework plugin from a repo name. Clones it, shows what registering will trust, and asks before it does. Also `list`, `remove`, `doctor`. |
+### Set it up
 
-**Plugins.** A separate repo can extend the framework at per-repo onboarding and at the config gate.
-Install one with `/v-plugin <repo>` — a repo name is enough; write one from `templates/plugin/`. See
-`vault-guide.md` §11b.
-| `/v-ask` | Ask a question about the project. Read-only, no changes. |
-| `/v-cr` | Review a pull request and post comments back. `--sandbox` runs the PR to verify findings. |
-| `/v-capture` | Save the current session into the vault. |
-| `/v-handoff` | Stop a long or late session without losing it. Writes what is left, what not to touch, what was never verified, and the exact command to run first. `/v-handoff resume` reads it back the next day. |
-| `/v-report` | Note a problem you found while doing something else, so it gets fixed later instead of derailing today. Records what is wrong, which files, what it breaks, the cause and the repair. |
-| `/v-init` | Set up a vault for the current repo. |
-| `/v-link` | Link two projects so context loading sweeps both. |
-| `/v-guide` | Generate a cross-project integration guide from a feature. |
-| `/v-reconcile` | Rewrite an existing document to the writing standard, keeping every constraint. |
+| Command | What it does | Use it when |
+|---|---|---|
+| `/v-setup` | Installs or repairs the helper tools | Once per machine |
+| `/v-init` | Gives the current repo a vault | Once per repo |
+| `/v-link` | Links two repos, so loading one loads both | Two repos always change together |
+| `/v-guide` | Turns a finished feature into an integration guide | Another team has to build against it |
+| `/v-plugin` | Adds, lists or removes a framework plugin | You want what a plugin adds |
 
-[attic/](attic/) holds `/v-migrate`, whose migration finished. `bin/vault-migrate.sh` still works.
+## Plugins
 
-## Reviewer packs for /v-team
+| Plugin | What it adds | Install |
+|---|---|---|
+| [`vault`](https://github.com/karoldabro/vault) | Every command above | `/plugin install vault@kdabro-vault` |
+| [`vault-quality-gates`](https://github.com/karoldabro/vault-quality-gates) | Blocks a push to a release branch when a measured number got worse | `/v-plugin vault-quality-gates` |
 
-`/v-team` draws its reviewers from packs in [personas/](personas/): the development stacks
-`api-laravel`, `nuxt` and `flutter`, and the business family `marketing`, `sales`, `seo`, `support`,
-`business` and `startup-eval`. Reviewers used by several packs live once in `personas/_shared/`,
-including the `_shared/testing` group that critiques AI-written tests and the `_shared/business` group
-that critiques numeric evidence.
+Write your own from [templates/plugin/](templates/plugin/). The rules a plugin must follow are in
+[vault/architecture/plugin-extension-contract.md](vault/architecture/plugin-extension-contract.md).
 
-A repo opts into a business pack through its `VAULT.md`, using `project_type` or `personas.use`; the
-second key also accepts a list, which seats several packs at once. `personas/_resolution.md` holds the
-selection rules.
+## Read more
 
-## Where to read more
-
-- [vault-guide.md](vault-guide.md) — the vault layout and the lifecycle. Read this to understand the
-  framework.
-- [tool-playbook.md](tool-playbook.md) — the helper tools and when to reach for each.
-- [INSTALL.md](INSTALL.md) — install options, uninstall, and tests.
-- [docs/removing-openviking.md](docs/removing-openviking.md) — takes an OpenViking install off a machine
-  that still has one.
+- [vault-guide.md](vault-guide.md) — what a vault holds and how the lifecycle runs.
+- [INSTALL.md](INSTALL.md) — install modes, flags, uninstall, tests.
+- [docs/commands.md](docs/commands.md) — how the command files are put together.
+- [docs/reviewer-packs.md](docs/reviewer-packs.md) — which reviewers `/v-team` seats, and how to choose.
+- [tool-playbook.md](tool-playbook.md) — the helper tools and when each one pays off.

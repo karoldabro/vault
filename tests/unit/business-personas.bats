@@ -150,8 +150,8 @@ setup() {
     grep -q 'business packs' "${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
 }
 
-@test "business family is indexed in README and indications" {
-    grep -q '_shared/business'          "${VAULT_ROOT}/README.md"
+@test "business family is indexed in docs/reviewer-packs.md and indications" {
+    grep -q '_shared/business'          "${VAULT_ROOT}/docs/reviewer-packs.md"
     grep -q 'business-persona-family'   "${VAULT_ROOT}/vault/indications/_index.md"
     [ -f "${VAULT_ROOT}/vault/indications/business-persona-family.md" ]
 }

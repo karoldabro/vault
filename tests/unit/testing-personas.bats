@@ -83,8 +83,8 @@ setup() {
     done
 }
 
-@test "testing group is indexed in README and indications" {
-    grep -q '_shared/testing'        "${VAULT_ROOT}/README.md"
+@test "testing group is indexed in docs/reviewer-packs.md and indications" {
+    grep -q '_shared/testing'        "${VAULT_ROOT}/docs/reviewer-packs.md"
     grep -q 'testing-persona-group'  "${VAULT_ROOT}/vault/indications/_index.md"
     [ -f "${VAULT_ROOT}/vault/indications/testing-persona-group.md" ]
 }
