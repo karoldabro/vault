@@ -12,11 +12,12 @@ tags: [session, v-team, testing, lifecycle]
 # split-test-planning-step
 
 ## Goal
-Split test design out of solution design in `/v-team` into a generative fan-out (adversarial + business-logic + boundary agents) and add a system-expert critic seat — run via `/v-team` on the framework itself.
+Split test design out of solution design in `/v-team` into a generative fan-out: adversarial, business-logic and boundary agents. Add a system-expert critic seat. Run via `/v-team` on the framework itself.
 
 ## Did
 - Ran the full `/v-team` lifecycle (2 PROPOSE rounds + 1 EXECUTE diff-review round) on the framework repo.
-- Researched the named techniques behind the user's asks: fault-based / mutation-guided test gen (Meta arXiv 2501.12862), metamorphic relations (arXiv 2406.05397), decision-table / cause-effect / state-transition (the business-logic techniques), characterization tests.
+- Researched the named techniques behind the user's asks: fault-based / mutation-guided test gen (Meta arXiv 2501.12862) and metamorphic relations (arXiv 2406.05397).
+- Researched the business-logic techniques too: decision-table, cause-effect, state-transition, plus characterization tests.
 - Added PROPOSE sub-phase **(f2)** to [[../../commands/v-team/steps/03-propose-loop]] — a generation-only fan-out; sole authoritative writer of the Proposed test backlog; design-critic `PROPOSED_TESTS` demoted to advisory hints; fail-open gating.
 - Created the generator group `personas/_shared/testing/design/`: `fault-relation-prospector`, `business-logic-cartographer`, `boundary-property-explorer` + README (generator↔critic contract, routing table, traceability).
 - Created [[../../personas/_shared/testing/system-domain-expert]] critic (two-stage analyzer: grep rule in `indications/`+`features/`, confirm absence via branch coverage), seated in EXECUTE §5.3.
@@ -25,8 +26,8 @@ Split test design out of solution design in `/v-team` into a generative fan-out 
 - Committed `27469d4` on `feat/split-test-planning-step`.
 
 ## Learned
-- The framework already had a 6-lens **critic** testing group; the user's ask was really for a **generative** counterpart, so the design split generation (PROPOSE) from critique (EXECUTE) rather than duplicating lenses.
-- The decisive round-2 catch: a generate→confirm loop is unexecutable if generation happens *after* panel convergence but the confirmer votes *during* the panel — confirmation must live in EXECUTE, not PROPOSE. This re-aligned the design to its own pre-impl/post-impl axis.
+- The framework already had a 6-lens **critic** testing group; the user's ask was really for a **generative** counterpart. The design therefore splits generation (PROPOSE) from critique (EXECUTE) rather than duplicating lenses.
+- A generate→confirm loop is unexecutable if generation happens *after* panel convergence but the confirmer votes *during* the panel. Confirmation must live in EXECUTE, not PROPOSE. Round 2 caught this and re-aligned the design to its own pre-impl/post-impl axis.
 - "Mutation-guided" is wrong for a plan-time generator: mutation mutates code, owned by `assertion-auditor` post-impl. Generators hypothesize faults; critics kill mutants.
 - The existing `testing-personas.bats` iterates a hardcoded six-critic list requiring a bound analyzer, so analyzer-less generators must live in a separate `design/` group with their own BATS file.
 - Markdown line-wrap can split a grep'd phrase across lines and fail a contract test — keep asserted phrases on one line.

@@ -3,9 +3,7 @@ type: plan
 project: vault
 slug: business-persona-packs
 status: executed   # proposed | approved | executed | superseded
-personas: [fallback-panel (skeptic, quality, conventions-architect)]
-rounds: 2
-convergence: capped-round-2-fixes-applied-unverified   # cap hit; round-2 findings fixed in v2, no round 3 ran
+process_record: 2026-07-10-1620-business-persona-packs.trail.md
 tags: [plan, team, personas, business, sales, seo, support]
 ---
 
@@ -50,7 +48,7 @@ startup-eval, agency.
 - **Per-pack evidence appendices**: in the six drafts (session scratchpad `draft-*.md`), every claim
   graded solid/moderate/thin + URL; ungradeable claims discarded.
 
-## Converged plan (v2 — after Round 2 synthesis)
+## Plan
 
 ### Persona files
 
@@ -105,9 +103,15 @@ startup-eval, agency.
    - Keyword→lens table with **one trigger → one lens**: proposal-instance→Proposal & Pricing;
      pricing-model/tiers→Unit Economics & Pricing; sequence→Outreach & Sequencing; go-no-go/
      sizing→startup-eval lenses; KB/deflection→KB & Deflection; escalation→Churn & Escalation;
-     content-brief→Content & E-E-A-T; audit→Technical SEO; AI-visibility→GEO [quality-7c].
+     content-brief→Content & E-E-A-T; audit→Technical SEO; AI-visibility→GEO [quality-7c]. The
+     landed table also covers every pre-existing marketing lens; `personas/_resolution.md` §2.2
+     holds its authoritative form and this plan must not restate it.
+   - **No-match fallthrough**: a deliverable matching no trigger falls through to a relevance pick.
+     The guarantee still holds — seat the most relevant domain lens, never zero [quality-10].
    - **Cross-pack suppression rule**: a declared-overlap lens is suppressed when the deep pack is
-     seated (marketing SEO & Discoverability suppressed when seo.md seated) [quality-7c].
+     seated (marketing SEO & Discoverability suppressed when seo.md seated) [quality-7c]. Paid Media
+     cedes the spend-math **recompute** to `business/data-evidence` when a business pack is
+     co-seated, keeping bid-strategy, incrementality and ad-policy judgement [quality-11].
 
 ### Docs, tooling, tests
 
@@ -147,11 +151,7 @@ Framework repo — bats in Docker. Item 14 is the authoritative backlog. Existin
 ## Test Design Dossier
 
 Docs-only diff → (f2) generative fan-out **skipped** (per §f2 gating; surfaced here for the gate).
-The proposed-test backlog below is populated from the panel's PROPOSED_TESTS instead.
-
-### Advisory test hints
-- skeptic-t1 (cross-pack deference grep guard) — superseded by multi-pack §1; folded into t2.
-- skeptic-t4 (selection dry-run) — manual at EXECUTE self-review (LLM-side logic, not bats-able).
+`## Proposed test backlog` below is the authoritative list.
 
 ## Proposed test backlog
 
@@ -173,74 +173,26 @@ The proposed-test backlog below is populated from the panel's PROPOSED_TESTS ins
 
 ## Open trade-offs / escalations (for the approval gate)
 
-1. **CONVERGENCE: capped at round 2.** Round 2 raised 1 new confirmed BLOCKER (skeptic-8) +
-   5 confirmed MAJORs; all fixes are applied in v2 **but no round 3 verified them** (hard cap).
-   Residual risk concentrates in the multi-pack seating semantics (§1 list + union dedup + §2.2
-   priority order) — the manual dry-run s4 at EXECUTE is the mitigation.
+1. **Residual risk: multi-pack seating semantics** (§1 list + union dedup + §2.2 priority order).
+   The design fixes in this area were applied but never independently re-verified. **Failure mode:**
+   a multi-pack seating that silently drops a seated pack's binding, or exceeds the hard max of 5
+   seats. **Mitigation:** the manual dry-run s4 at EXECUTE, which must run before this plan closes.
 2. **startup-eval as a standing pack** [skeptic-6]: 2 of 3 lenses overlap business.md. Kept per
    user opt-in, mitigated by Demand Signal re-scope + boundaries. Alternative: fold into business
    + `personas.add`. User decides.
-3. **Resolved critic conflict** [skeptic-11 vs quality-8]: data-evidence kept merged (6 numeric
-   facets) with explicit waiver + documented split trigger — quality's position adopted via
-   skeptic's own fallback clause; seat-math favored it. Flagging because the synthesizer picked
-   a side between two critics.
+3. **data-evidence kept merged** (6 numeric facets) with an explicit waiver + a documented split
+   trigger: a 7th numeric concern splits the group into measurement-validity vs decision-honesty.
+   Seat math favored the merge. Two opposed positions were reconciled here, so the approval gate
+   should confirm it rather than inherit it.
 4. **dev+business pack mixing disallowed** [skeptic-10]: simplest safe rule; a mixed repo runs
    separate sessions per deliverable type. Alternative (cross-regime precedence) deemed YAGNI.
 5. **GEO confirmed-bar posture**: without a wired SoV tracker, competitive GEO findings stay
    advisory by design.
 6. Boilerplate repetition accepted per marketing.md self-containment convention [quality-3/6].
 
-## Critique trail
+## Refs
 
-### Round 1 — panel: skeptic, quality, conventions-architect. 3× REQUEST_CHANGES.
-16 findings: 2 BLOCKER (conf), 8 MAJOR (conf), 7 MINOR, 2 NIT. All confirmed BLOCKER/MAJOR applied
-in v1; skeptic-6 deferred to gate; quality-3/6 accepted per convention. (Full table in git history
-of this file; key: skeptic-1 multi-pack, skeptic-2 cap eviction, skeptic-3/4 SoV/method ownership,
-skeptic-5 health checks, arch-1/2/3 resolution contract, quality-1 overlay dual-truth, quality-2
-Market Skeptic double-vote.)
-
-### Round 2 — same panel re-verified v1. 3× REQUEST_CHANGES.
-All 16 round-1 findings verified resolved as written. 12 NEW: 1 BLOCKER (conf), 5 MAJOR (conf),
-4 MINOR, 2 NIT — all confirmed findings applied in v2:
-
-| finding | sev | disposition |
-|---------|-----|-------------|
-| skeptic-8 §1×§2.2 unsatisfiable under multi-pack | BLOCKER | applied — one-architect seat, family-wide guarantee, N≥2 cap 5, drop order (item 9) |
-| skeptic-9 dedup semantics undefined | MAJOR | applied — union composition (item 8) |
-| skeptic-10 dev+business mixing unspecified | MAJOR | applied — disallowed + documented (item 8) |
-| skeptic-11 data-evidence god-critic | MAJOR | resolved vs quality-8 — merged + waiver + split trigger (items 1-2); escalation #3 |
-| skeptic-12 health rows need real commands | MINOR | applied (item 12) |
-| quality-7 cross-pack pricing double-vote | MAJOR | applied — deal-vs-model boundary, single owner, 1-trigger-1-lens, suppression rule (items 3, 9) |
-| quality-8 data-evidence at god-ceiling | MINOR | applied — waiver + split trigger (item 2) |
-| quality-9 Demand Evidence name near-collision | NIT | applied — renamed Demand Signal (item 6) |
-| arch-8 cap-4 under-propagated (6 locations) | MAJOR | applied (item 10) |
-| arch-9 personas.use list undocumented in template | MAJOR | applied (item 11) |
-| arch-10 project_type enum stale | MINOR | applied (item 11) |
-| arch-11 ANALYZE record single-pack | MINOR | applied (item 8) |
-
-Metrics: R1 16 findings (13 conf/3 adv) → R2 12 new (10 conf/2 adv). Overlap: the multi-pack fix
-drew findings from all three critics (skeptic-8, quality-7, arch-9/11) — clustered into items 8-9.
-Convergence: **capped-with-fixes-applied-unverified** (cap 2; new confirmed blocker in final round).
-
-### Diff-review loop (EXECUTE §5.3) — same panel, review posture, on the staged branch
-
-**Round 1.** Verdicts: skeptic REQUEST_CHANGES · quality APPROVE_WITH_NITS · architect
-APPROVE_WITH_NITS. All 28 design-round findings verified honored in the real files; the panel's must-
-tests confirmed present in `tests/unit/business-personas.bats`. New findings (5):
-
-| finding | sev | disposition |
-|---------|-----|-------------|
-| skeptic-13 "primary pack" double-defined; guaranteed lens wrongly bound to primary pack (dry-run self-contradiction — cap-eviction bug resurfacing) | MAJOR conf | applied — single first-entry definition; lens trigger-chosen across ALL seated packs; bats guard added |
-| quality-10 four pre-existing marketing lenses missing from §2.2 trigger table | MINOR conf | applied — 4 triggers + no-match fallthrough sentence + bats guard |
-| quality-11 Paid Media ↔ data-evidence spend-math double-vote reachable under [sales, marketing] co-seating | MINOR conf | applied — conditional cede in Paid Media + suppression-list entry + bats guard |
-| arch-12 knob-comment ordering diverged template vs repo VAULT.md | NIT conf | applied — repo reordered to match template |
-| arch-13 "primary" ambiguity (same as skeptic-13) | MINOR adv | applied via skeptic-13 fix (first-entry kept; relevance gloss deleted) |
-
-Also verified by architect: the `test-hooks-tools-rename.bats:29` wording fix aligns the test to the
-doc's longstanding phrasing (pre-existing failure on main), correct direction.
-
-**Round 2 (scoped verification).** skeptic verdict: **APPROVE** — skeptic-13 closed (both
-contradictions removed; the dry-run now provable from the text); the quality-10/11 + fallthrough +
-suppression edits checked: no new confirmed BLOCKER/MAJOR ("closes a gap, not opens one"). One NIT
-(skeptic-14: this plan doc's item 9 carried the pre-fix wording) — synced.
-Review convergence: **clean** (no new confirmed BLOCKER/MAJOR in the final round).
+- Process record: `vault/plans/2026-07-10-1620-business-persona-packs.trail.md` — the findings,
+  dispositions and rejected options behind this plan.
+- `personas/_resolution.md` §1 and §2.2 — the seating contract this plan writes.
+- `commands/_shared/critic-panel.md` — the generic panel contract the cap-4 rule must not contradict.

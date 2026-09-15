@@ -21,7 +21,7 @@ Make `/v-capture` record modest business-logic / behavioral context in sessions 
 ## Did
 - Ran `/v-team` (panel-critique lifecycle). Persona resolution found no app pack for this framework repo → degraded to v-work-with-a-panel; selected 3 decorrelated critics: Architect/Structure, Quality/anti-bloat, Test-enablement.
 - PROPOSE loop (1 round): drafted plan v0, ran the 3 critics in parallel (read-only, tool-grounded). All returned APPROVE_WITH_NITS. Synthesized + applied; converged clean. Plan: [[../plans/2026-06-20-1900-v-capture-business-logic]].
-- EXECUTE: added a `## Behaviors & rules` section to `templates/session.md` (after `## Learned`) and `templates/feature.md` (after `## Contracts`); wired prompts into `commands/v-capture.md` Step 3 (session fill list), Step 5b (feature-gate UPDATE trigger + populate instruction), Step 4b (one-line escalation pointer: recurring behaviors → indications).
+- EXECUTE: added a `## Behaviors & rules` section to `templates/session.md` (after `## Learned`) and `templates/feature.md` (after `## Contracts`). Wired three prompts into `commands/v-capture.md`. Step 3 took the session fill list. Step 5b took the feature-gate UPDATE trigger and the populate instruction. Step 4b took a one-line escalation pointer: recurring behaviors → indications.
 - Added `tests/unit/capture-templates.bats` (3 tests) guarding the two template headers + the v-capture wiring against drift.
 - Diff-review loop (1 round): Architect CLEAN, Quality APPROVE, Test-enablement verified-by-diff. Full unit suite **102 ok / 0 fail** (was 99). Committed `48494de`.
 
@@ -29,7 +29,7 @@ Make `/v-capture` record modest business-logic / behavioral context in sessions 
 - This framework repo has **no persona pack** (no composer/nuxt/pubspec marker), so `/v-team` correctly degrades to a generic panel per `personas/_resolution.md` §1.4 — the lifecycle still runs, just without stack-specific critics.
 - The pre-existing templates were **process-/implementation-oriented** (session: Goal/Did/Learned/Next; feature: Scope/Contracts/Coupling/Gotchas). None captured *what the system should do* in an assertable form — that was the real gap for test enablement.
 - Behavior content has a **natural home split**: durable rules belong in the feature dossier (reusable across tests), point-in-time deltas in the session. Putting durable rules only in sessions would scatter them.
-- The Docker bats harness mounts the repo read-only at `/code` = `VAULT_ROOT`; a structural test that greps `templates/*.md` is safe and cannot enforce empty sections in *captured* docs (only template files), which is why it doesn't reintroduce ceremony.
+- The Docker bats harness mounts the repo read-only at `/code` = `VAULT_ROOT`. A structural test that greps `templates/*.md` is safe under that mount. It cannot enforce empty sections in *captured* docs, only in template files. That limit is why it doesn't reintroduce ceremony.
 - A transient platform classifier outage blocked re-spawning one review agent; verified its checklist directly from the diff via read-only Read (classifier-free) rather than skip the lens.
 
 ## Behaviors & rules

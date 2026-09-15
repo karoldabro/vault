@@ -3,9 +3,7 @@ type: plan
 project: vault
 slug: vpm-business-knowledge-center
 status: executed   # draft | proposed | approved | executed | superseded
-personas: [degraded-general-panel]   # no stack pack resolves (markdown/process framework repo)
-rounds: 2
-convergence: capped-at-round-2-findings-applied   # 0 open blockers after applying round-2 MAJOR placement fixes
+process_record: 2026-07-03-1510-vpm-business-knowledge-center.trail.md
 tags: [plan, team, v-pm, requirements, business-knowledge]
 ---
 
@@ -23,8 +21,9 @@ Keywords: v-pm, business-logic, requirements-docs, vault-categories, knowledge-c
 
 ## Front gates
 **Clarify (§3a.0a):** the one real fork (vault reach) was posed via AskUserQuestion; user away →
-proceeded on defaults, then **the panel redesigned the reach entirely** (see below), removing the
-risky action. Re-surfaced at the approval gate.
+proceeded on defaults. `## Reach model` in this file then resolved the fork: `requirements.md` is
+written into the neutral `_features/` workspace, never into a participant repo. That removes the
+risky cross-repo action the default would have taken. Re-surfaced at the approval gate.
 **Research (§3a.0b):** grounded in established prior art (no live search — conceptual design; repo's own
 ADR-013 already cites the lineage): **BMAD-METHOD** (shard a PRD + architecture doc into self-contained
 downstream context — requirements.md is the missing "PRD" half), **Spec-Kit** (spec→plan→tasks with a
@@ -42,7 +41,7 @@ participant feature dossier. The project's own `/v-team`+`/v-capture` is the sol
 **established** Behaviors into that project's `features/`, carrying each rule's `id` forward. Spec lives
 in one place; established form lives in the project; no cross-repo write, no aspirational clutter.
 
-## Reach model (Round-1 redesign — replaces the participant-vault stub)
+## Reach model
 The user's ask ("reach into all categories of the specific vault") is met **without** v-pm dirtying a
 sibling repo:
 - `requirements.md` is written into `_features/<feature>/`, which is **already symlinked into every
@@ -54,7 +53,7 @@ sibling repo:
   (`features/`, `architecture/`, ADRs) into that project's own vault, at capture, id-carried. v-pm never
   reaches across the repo boundary. This is BMAD sharding + ownership-respecting.
 
-## Converged plan (v1 — after Round 1)
+## Plan
 _Dependency-ordered. File · Action · Pattern._
 
 1. **`templates/_features/requirements.md`** · CREATE · The project-agnostic business knowledge center.
@@ -121,10 +120,11 @@ _Dependency-ordered. File · Action · Pattern._
      `## Variant & state rules` + `## Business rules`) as an **explicit input in the LOAD-CONTEXT digest**
      handed to the f2 generators/`business-logic-cartographer`; the backlog `source` column echoes the
      originating `REQ-NN`. This is the file that actually feeds the cartographer.
-   - **`commands/v-team/steps/04-execute-loop.md`** tail / the `/v-capture` hand-off · when the project's
-     `features/<feature>` dossier `## Behaviors & rules` is written, it carries the `REQ-NN` id inline and
-     records only **established** (built) rules. Closes id(spec) → id(dossier) → backlog-row at the moment
-     the dossier is actually authored.
+   - **`commands/v-capture.md`** Step 4d · the single canonical carry, shared by `/v-team` and `/v-work`.
+     When the project's `features/<feature>` dossier `## Behaviors & rules` is written, each bullet carries
+     its `REQ-NN` id inline and records only **established** (built) rules. Closes id(spec) → id(dossier) →
+     backlog-row at the moment the dossier is actually authored.
+     `commands/v-team/steps/04-execute-loop.md` §5.4a defers here and must not carry the id itself.
 
 7. **`vault-guide.md`** · UPDATE · §13: add requirements.md to the workspace layout + a "business
    knowledge center" subsection (spec→shard→established lifecycle + the id-traceability seam + the reach
@@ -199,74 +199,30 @@ Approved to execute through capture. User resolved both escalations:
   `requirements/` category documented + scaffolded; load-context reads it.
 - **Principle check:** stays inside the panel's established rules — spec/established separation
   (`requirements/` = spec, `features/` = established, /v-team validates at capture, id-carried); v-pm
-  writes only into a vault it plans for (the project's own, single-repo = no cross-repo footgun). Added
-  post-cap per user direction; guarded by extra care in EXECUTE self-review since the panel didn't see it.
+  writes only into a vault it plans for (the project's own, single-repo = no cross-repo footgun).
+
+## Mode-branch guards
+Every line below is a point where single-repo and multi-repo diverge. Each names the failure that
+follows from missing the branch.
+
+- **`commands/v-capture.md` Step 4d** — the `REQ-NN` → dossier carry is defined here once, shared by
+  `/v-team` and `/v-work`. Define it in `commands/v-team/steps/04-execute-loop.md` instead and the
+  single-repo `/v-work` chain never closes.
+- **`commands/v-pm/steps/01-intake.md` §1.4** — the slug-collision check must branch by mode. Multi-repo
+  checks `_features/<feature>/`; single-repo checks `<project-vault>/requirements/<feature>.md`. Checking
+  `_features/` alone lets a single-repo run overwrite an existing spec.
+- **`commands/v-pm/steps/01-intake.md` §1.3.4** — points at `/v-capture` Step 4d rather than restating the
+  carry, so the two cannot drift apart.
+- **`requirements/_index.md`** — needs a `vault-guide.md` §3 maintenance row and a `_moc` trigger. Without
+  them the index rots as specs accumulate.
+- **`commands/v-pm/steps/05-capture.md`** — the Required-output block must branch for single-repo.
+  Unbranched, it reports a `_features/` commit that single-repo mode never made.
+- **`vault-guide.md` §6** — the decision tree lists four categories, not three.
 
 ## Open trade-offs / deferrals
 - **Section modesty** — every ❖ section is omit-when-none so a light feature stays light (skep-6).
 - **`requirements/` is optional/on-demand** — v-init scaffolds it for new vaults; existing vaults get it
   created on first single-repo `/v-pm` run with a one-line note (no forced migration).
-
-## Critique trail
-
-### Round 0 — draft
-v0: requirements.md + per-project stub write into participant vaults + `_feature-index` append.
-
-### Round 1 — findings + dispositions
-| persona | id | severity | grounding | issue | disposition |
-|---------|----|----------|-----------|-------|-------------|
-| Skeptic | skep-1 | BLOCKER | confirmed | participant stub collides with existing symlink | **applied** — dropped participant-vault write; reach via workspace symlink + shard |
-| Architect | arch-1/2/4 | MAJOR | confirmed | cross-repo tracked/uncommitted write = footgun the symlink avoids | **applied** — same redesign (step 4b) |
-| Skeptic | skep-2/5 | MAJOR/MINOR | confirmed | uncommitted stub dirties committed sibling repo; §9 sweep doesn't cover | **applied** — no cross-repo write |
-| Requirements | req-1 | MAJOR | confirmed | two isomorphic test shapes (G/W/T + P→E); G/W/T inert | **applied** — unify on canonical P→E; stories ref rule ids (step 1) |
-| Requirements | req-2 | MAJOR | confirmed | id traceability has no consumer (cartographer reads project vault, not requirements.md) | **applied** — step 6: feature-pickup routes requirements.md into f2 digest + carries id to backlog |
-| Requirements | req-3 | MAJOR | confirmed | missing decision-table/state-transition the cartographer consumes | **applied** — `## Variant & state rules` (step 1) |
-| Architect/Req | arch-3/req-4 | MAJOR | confirmed | `Business context` dup of generic-plan `Problem & outcome` | **applied** — requirements = single source of why; generic-plan back-refs (steps 2,3) |
-| Skeptic | skep-4 | BLOCKER | confirmed | riskiest fork proceeded-on by default | **disposed** — risky action removed (no cross-repo write); residual reach is neutral-only + low-risk; still surfaced at approval gate |
-| Requirements | req-5 | MINOR | advisory | authz/error/nfr rules have no home | **applied** — axis tags on `## Business rules` (step 1) |
-| Skeptic | skep-6/7 | MINOR | advisory | earns-its-keep / triple-duplication | **applied (partial)** — single-source-by-id + omit-when-none; single-repo deferred with rationale |
-| Architect | arch-5 | MINOR | confirmed | spec-derived marker convention | **resolved by redesign** — no spec rules written to project dossier; /v-team writes established+id only |
-| Architect | arch-6 | NIT | confirmed | template count test goes stale | **applied** — update bats to seven templates |
-
-_Metrics: round 1 — findings: 15 (4 MAJOR-clusters + 2 BLOCKER + minors) · confirmed: 11 · advisory: 4 ·
-new confirmed blockers applied/disposed: 2 · per-persona overlap: high on the cross-repo-write cluster
-(3/3) → strong signal. All confirmed BLOCKER/MAJOR applied or disposed by design change._
-
-### Round 2 — findings + dispositions (re-spawned on v1; hit `team_max_rounds` cap)
-All Round-1 findings verified **resolved, no regression** by all three critics against the real files.
-Four NEW confirmed MAJORs — all narrow placement/ownership-contract gaps in the revised seams, applied:
-
-| persona | id | severity | grounding | issue | disposition |
-|---------|----|----------|-----------|-------|-------------|
-| Skeptic / Architect | skep-8 / arch-7 | MAJOR | confirmed | v-pm enriching `projects/<proj>/plan.md` clashes with shard single-writer (/v-team) ownership → clobber risk | **applied** — step 3b: dedicated v-pm-owned `## Business rules to satisfy` section + ownership carve-out + merge-not-overwrite |
-| Architect / Requirements | arch-9 / req-6 | MAJOR | confirmed | id-traceability seam wired into wrong file (00-feature-pickup is pre-ANALYZE; f2 digest assembled later) → seam may never fire | **applied** — step 6 split across 00-feature-pickup (read) + 03-propose-loop (digest+backlog source) + 04-execute-loop (established dossier id) |
-| Requirements | req-6 (part) | MAJOR | confirmed | step-5 record omits variant/state tables (cartographer's primary food) | **applied** — step 5 pushes variant/state tables too |
-| Architect | arch-8 | NIT | confirmed | 03-plan-panel §(a) prose still says generic-plan owns problem/outcome | **applied** — step 2 rewrites §(a) line 12 |
-| Requirements | req-7 | NIT | advisory | unifying on `precondition → expected` folds the BDD "When" trigger implicit | **applied (cheap)** — step 1: add one template example rule with an explicit action-trigger (`; edge: when X then Y`) |
-
-_Metrics: round 2 — new confirmed: 3 MAJOR + 1 NIT · new advisory: 1 · per-persona overlap: 2/3 on both
-new clusters (shard-ownership: skep+arch; seam-placement: arch+req) → strong signal, not noise ·
-regressions: 0. **Convergence: capped at round 2 (hard ceiling). All round-2 findings are precise
-relocations with concrete non-conflicting fixes — applied into v2. 0 open blockers.** Panel does not
-loop past the cap (per §f).
-
-## Diff-review loop (EXECUTE §5.3) — implemented diff, 1 round
-Two reviewers resumed on the real diff (architect + skeptic), focused on cross-file seam coherence + the
-**post-panel single-repo extension** (unreviewed in PROPOSE). Both verified the id-seam holds end-to-end
-and the Round-2 fixes landed correctly. Findings on the implemented diff:
-
-| persona | id | severity | grounding | issue | disposition |
-|---------|----|----------|-----------|-------|-------------|
-| Skeptic | skep-9 | MAJOR | confirmed | single-repo promised the id chain closes via `/v-work` too, but the `REQ-NN`→dossier carry lived only in v-team's execute-loop | **applied** — moved the canonical carry to **shared `/v-capture` Step 5b** (fires for both lifecycles); v-team §5.4a defers to it; intake §1.3.4 points to it. Test 8 locks it. |
-| Skeptic | skep-10 | MINOR | confirmed | §1.4 slug-collision only checked `_features/`, not single-repo `requirements/` | **applied** — §1.4 branches the check by mode |
-| Skeptic | skep-11 | MINOR | confirmed | `requirements/_index.md` had no §3 maintenance contract → rot | **applied** — §3 row + `_moc` trigger |
-| Skeptic | skep-12 | NIT | confirmed | §1.3 step-number parentheticals conflicted with file titles | **applied** — reference by filename |
-| Architect | arch-11 | NIT | confirmed | 05-capture Required-output/closing was multi-repo-only (would report a `_features/` commit single-repo never made) | **applied** — branched output block for single-repo |
-| Architect | arch-10 | NIT | confirmed | §6 said "trio" but now lists four categories | **applied** — "four categories" |
-
-_Diff-review metrics: 1 round · new confirmed: 1 MAJOR + 5 minor/nit · regressions: 0 · all applied +
-locked with bats contracts (tests 8/9/10) · convergence: clean (no open blockers). Architect verdict
-APPROVE_WITH_NITS; skeptic REQUEST_CHANGES → all changes applied._
 
 ## Test triage / result
 (f2) fan-out skipped (docs/contract diff) — backlog realised as bats file-contracts. **28 v-pm tests
@@ -276,6 +232,7 @@ assert strings in `vault-guide` §1.1 hooks / `README.md` testing-group that thi
 here; left out of scope (clean-scope discipline).
 
 ## Refs
+- Process record: `vault/plans/2026-07-03-1510-vpm-business-knowledge-center.trail.md`
 - [[../decisions/ADR-013-v-pm-cross-project-planning]]
 - [[../indications/capture-behaviors-test-shaped]]
 - [[../indications/cross-project-conversation-workspace]]

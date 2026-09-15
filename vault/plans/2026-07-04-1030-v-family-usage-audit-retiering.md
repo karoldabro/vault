@@ -4,8 +4,7 @@ project: vault
 date: 2026-07-04-1030
 topic: v-family-usage-audit-retiering
 status: executed
-rounds: 1 (analyst panel: command-auditor · usage-analyst · online-researcher, single-pass)
-convergence: clean
+process_record: 2026-07-04-1030-v-family-usage-audit-retiering.trail.md
 tags: [plan, meta, tiering, capture, token-economy, observability]
 ---
 
@@ -47,5 +46,8 @@ tags: [plan, meta, tiering, capture, token-economy, observability]
 - Deferred to later: effort/model tiers per command; /code-review for GitHub path of /v-cr;
   MCP/skill security vetting cadence; Stop hook `--add-chat` transcript embedding (main residual DB driver).
 
-Refs: [[../sessions/2026-07-04-1115-v-family-usage-audit-retiering]] ·
-[[../decisions/ADR-015-retier-lifecycle-lite-critic-fast-path]]
+## Refs
+
+- Session: [[../sessions/2026-07-04-1115-v-family-usage-audit-retiering]]
+- Decision: [[../decisions/ADR-015-retier-lifecycle-lite-critic-fast-path]]
+- Process record: `vault/plans/2026-07-04-1030-v-family-usage-audit-retiering.trail.md`

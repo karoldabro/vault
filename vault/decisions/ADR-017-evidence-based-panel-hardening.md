@@ -36,11 +36,12 @@ skeptic, quality; 30 findings, 7 confirmed MAJORs) shaped what was adopted vs. r
    quantified pre-mortem benefit (~30% better risk identification, Klein) is *human-team* psychology;
    no LLM-context replication is known. A future substitute seat (never co-seated with skeptic) would
    supersede the technique line, and only if LLM-context evidence emerges.
-3. **Dissent surface + critic-owned grounding.** In `03-propose-loop.md` §(e): a critic-assigned
-   `grounding: confirmed` BLOCKER/MAJOR dispositioned anything other than *applied* surfaces at the
-   approval gate as a **minority flag**, regardless of relabeling; `grounding` is critic-owned — the
-   synthesizer may not re-grade it downward to alter blocking status (closes the re-grade escape
-   hatch); round metrics gain *previously-confirmed findings dropped this round* (sycophancy flag).
+3. **Dissent surface + critic-owned grounding.** In `commands/v-team/steps/03-propose-loop.md`
+   §(e): a critic-assigned `grounding: confirmed` BLOCKER/MAJOR dispositioned anything other than
+   *applied* surfaces at the approval gate as a **minority flag**, regardless of relabeling.
+   `grounding` is critic-owned: the synthesizer may not re-grade it downward to alter blocking
+   status, which closes the re-grade escape hatch. The metrics block each round emits gains the
+   field `previously-confirmed findings dropped this round (sycophancy flag)`.
 
 ## Consequences
 

@@ -16,8 +16,8 @@ domain rules (pure infra/refactor/config). Keep each rule in one section (Behavi
 Gotchas if it is also a trap), ~3–7 bullets.
 
 ## Rationale
-Sessions/features used to be process-oriented (Did/Learned, Contracts/Gotchas) and carried no assertable
-statement of *what the system should do*, so they couldn't seed business/feature/integration/UI tests.
+A session or feature written only as process (Did/Learned, Contracts/Gotchas) carries no assertable
+statement of *what the system should do*, so it cannot seed business/feature/integration/UI tests.
 Test-shaped behavior bullets turn capture into source material for those tests without re-reading source.
 The "omit when none" + "established, not aspirational" guards keep it modest — empty ceremony in the
 infra/refactor majority is exactly what kills capture adoption.
