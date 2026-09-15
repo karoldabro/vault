@@ -24,3 +24,6 @@ graphify-out/
 tests/tmp/
 tests/.bats-cache/
 tests/fixtures/**/.git/
+
+# Tool caches
+.serena/
