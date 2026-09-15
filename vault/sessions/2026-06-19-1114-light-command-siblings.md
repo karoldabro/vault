@@ -16,7 +16,7 @@ answers and small low-risk jobs.
 
 ## Did
 - Built two single-file commands (no step subdirs — "light" = whole file loads at once):
-  - [[../../commands/v-ask]] — read-only vault Q&A. Cheapest-first context load (OV → claude-mem →
+  - [[../../commands/v-ask]] — read-only vault Q&A. Cheapest-first context load (claude-mem →
     indications/MOC → graph → Serena → grep), cites sources, **never edits**; hands off to `/v-do`
     or `/v-work` when the answer implies a change.
   - [[../../commands/v-do]] — small change, no propose loop / no approval gate. A scope **guardrail**

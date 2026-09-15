@@ -56,8 +56,6 @@ planning, and customer support, and adopt the evidence-backed patterns into the 
   placement/duplication lenses waved through.
 - Pre-mortem's quantified benefit (~30%, Klein) is human-team psychology — no LLM-context replication
   exists; adopted at technique level only, seat deferred pending evidence.
-- OV `memory_store` still returns 0 extractions on dense structured text (known, embedding-only mode);
-  push succeeded, recall stays routed via `ov find`.
 
 ## Behaviors & rules
 
@@ -82,8 +80,7 @@ planning, and customer support, and adopt the evidence-backed patterns into the 
 - Tier-3: replay/regression corpus of past panel decisions, Ralph-loop overnight mode, forecaster
   lens, architect/editor model split in EXECUTE.
 - Repo-wide ADR frontmatter drift (template `scope:`/`tags:` vs recent practice) — separate cleanup.
-- Merge `feat/llm-collaboration-patterns` to main after user review; `/v-sync` to re-ingest catalog +
-  ADR-017 into OV.
+- Merge `feat/llm-collaboration-patterns` to main after user review.
 
 ## Refs
 

@@ -13,9 +13,8 @@ tags: [adr, install, setup, onboarding, security]
 The original `setup.sh` deliberately **never executed** network installs: it detected what was missing
 and printed the command to run, to avoid surprise `curl | bash` and stay test-friendly (header comment,
 old lines 18–20). In practice this meant "the installer doesn't install" — every tool (ollama,
-OpenViking, Graphify, Serena, the Claude plugins/MCPs) was a manual copy-paste, and the printed hints
-had drifted wrong (e.g. `/plugin install openviking` — the real plugin is
-`claude-code-memory-plugin@openviking-plugin`). The goal is a smooth one-command install on Ubuntu.
+Graphify, Serena, the Claude plugins/MCPs) was a manual copy-paste, and the printed hints had drifted
+wrong. The goal is a smooth one-command install on Ubuntu.
 
 The `/v-team` panel (architect + security + skeptic) flagged that reversing the no-auto-exec stance is a
 real safety decision, not a refactor: it adds `curl|sh` supply-chain exposure, `sudo apt`, and
@@ -47,10 +46,10 @@ Morph Fast Apply was **dropped** from the installer (it needs a paid API key; ou
   orchestrates; `install.sh` (symlinks) is unchanged.
 - Removing `--with-morph` is a clean break (no deprecation stub) — it is now an unknown flag.
 - Supply-chain trust is explicit: the user consents to vendor `curl|sh` scripts and two third-party
-  marketplaces (`Castor6/openviking-plugins`, `thedotmack/claude-mem`), printed for an audit trail.
+  marketplaces (`thedotmack/claude-mem`), printed for an audit trail.
 
 ### Follow-up (2026-06-19) — privilege model correction
-Real-world onboarding exposed a deadlock: the installer is **per-user** (uv/bun/plugins/`ov.conf` in
+Real-world onboarding exposed a deadlock: the installer is **per-user** (uv, bun and plugins in
 `$HOME`), yet (a) the auto path was gated on *passwordless* sudo, so a normal user got hint-only, and
 (b) running it under `sudo` flipped `$HOME` to `/root`, stranding every artifact and hiding `claude`.
 Resolved (`98ac293`): run **as the user, escalate internally for apt only**, accept **interactive**

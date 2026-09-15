@@ -11,7 +11,7 @@ tags: [moc]
 
 ## Decisions
 <!-- Auto: link to [[decisions/]] folder. Notable ADRs: -->
-- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]] · [[decisions/ADR-006-testing-critic-group]] · [[decisions/ADR-008-v-cr-remote-pr-review]] · [[decisions/ADR-016-business-persona-family]] · [[decisions/ADR-017-evidence-based-panel-hardening]] · [[decisions/ADR-018-decision-communication-contract]] · [[decisions/ADR-019-drop-openviking-dependency]] · [[decisions/ADR-026-mechanical-session-gates]] · [[decisions/ADR-030-framework-extension-points]]
+- [[decisions/ADR-001-panel-loop-over-peer-debate]] · [[decisions/ADR-002-no-stop-on-approval-alone]] · [[decisions/ADR-003-tool-grounded-findings]] · [[decisions/ADR-004-generic-packs-specifics-in-indications]] · [[decisions/ADR-005-installer-auto-exec]] · [[decisions/ADR-006-testing-critic-group]] · [[decisions/ADR-008-v-cr-remote-pr-review]] · [[decisions/ADR-016-business-persona-family]] · [[decisions/ADR-017-evidence-based-panel-hardening]] · [[decisions/ADR-018-decision-communication-contract]] · [[decisions/ADR-026-mechanical-session-gates]] · [[decisions/ADR-030-framework-extension-points]]
 
 ## Architecture
 
@@ -37,7 +37,7 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
-- [[sessions/2026-09-15-0939-readme-rewrite-and-openviking-removal]] — Rewrite README.md for a human reader and delete every live trace of the dropped dependency
+- [[sessions/2026-09-15-0939-readme-rewrite-and-docs-cleanup]] — Rewrite README.md for a human reader and erase the retired memory dependency from the repo
 - [[sessions/2026-09-14-1904-handoff-and-report-commands]] — Two commands so a session can hand its direction to the next one, and a problem found mid-task can be filed instead of derailing the work
 - [[sessions/2026-09-14-1433-plugin-extension-points]] — Two framework extension points, and the code-quality gate split into its own repo as their first consumer
 - [[sessions/2026-09-13-1447-coverage-gate-and-failed-sessions]] — coverage gate: a session that cannot reach its own success criteria fails instead of asking for approval; claim ledger and methodology command designed and deferred

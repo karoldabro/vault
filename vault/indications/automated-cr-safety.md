@@ -23,7 +23,7 @@ base URLs come from user/global config, never repo files); (4) gate the **first 
 The PR/diff/ticket are attacker-authorable, so prose-driven verdicts are a prompt-injection foothold and
 LLM message text is non-deterministic (breaks dedup → double-posts). Credentialed writes derived from a
 repo-controlled remote/config are an SSRF/credential-harvest path. Captured sessions are git-tracked and
-OV-indexed — a durable secret sink. Posting wrong comments to a real PR is high-cost and slow to undo, so
+committed — a durable secret sink. Posting wrong comments to a real PR is high-cost and slow to undo, so
 the human gate + `--unpost` are the blast-radius net. These came out of the `/v-cr` design panel as 3
 BLOCKER + several MAJOR findings ([[../decisions/ADR-008-v-cr-remote-pr-review]]).
 

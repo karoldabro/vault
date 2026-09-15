@@ -47,8 +47,8 @@ still holds: updates are automatic, gated on the `version` string. Nothing to sp
   wiring. Full offline suite 348 green, `make validate-plugin` clean.
 - Bumped `plugin.json` to **1.2.0** and pushed `main` to origin (`951d7ef..66fb784`).
 
-Also committed two pre-existing uncommitted change sets so the tree is clean: the OpenViking removal
-script hardening plus its tests, and the intro deck refresh.
+Also committed two pre-existing uncommitted change sets so the tree is clean: a teardown script
+hardening plus its tests, and the intro deck refresh.
 
 ## Learned
 

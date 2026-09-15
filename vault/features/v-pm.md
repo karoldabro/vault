@@ -18,8 +18,8 @@ through file-based conversation threads instead of the human relaying context. N
 ## Contracts
 - **Command**: `/v-pm <necessity>` (plan) · `/v-pm reconcile <feature>` · `/v-pm status`. Dispatcher
   `commands/v-pm.md` (with a tool health-check/fallback table) + steps `01-intake` · `02-load-context`
-  (vault-first, OV-first, across every participant vault + `_global` + `_features`) · `03-plan-panel` ·
-  `04-seed-workspace` · `05-capture` (planning-session record + cross-project ADRs + OV push + commit) ·
+  (vault-first, across every participant vault + `_global` + `_features`) · `03-plan-panel` ·
+  `04-seed-workspace` · `05-capture` (planning-session record + cross-project ADRs + commit) ·
   `06-reconcile` (captures at end) · `07-status`.
 - **Workspace** `~/vault/_features/<feature>/`: `requirements.md` (knowledge center — rules `REQ-NN`,
   glossary, decision/state tables; only v-pm writes) · `header.md` · `generic-plan.md` (only v-pm writes;

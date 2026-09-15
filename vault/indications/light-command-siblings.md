@@ -23,7 +23,7 @@ cheap; the escalation ladder is what keeps them *safe* without a gate. Collapsin
 both purposes.
 
 ## Examples
-- Do: `/v-ask "where is the persona pack resolved?"` → answer from OV/graph, cite `personas/_resolution.md`, stop.
+- Do: `/v-ask "where is the persona pack resolved?"` → answer from the vault and the graph, cite `personas/_resolution.md`, stop.
 - Do: `/v-do "rename this flag"` → edit, run tests on the changed surface, offer capture if notable.
 - Don't: use `/v-do` for a schema migration or cross-repo contract change — escalate to `/v-team`.
 - Don't: add a `commands/v-ask/steps/` subdir — light commands stay single-file.

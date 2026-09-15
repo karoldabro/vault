@@ -26,7 +26,7 @@ Build a short, simple-language, humanized presentation introducing the vault mem
 - Diff-review round 1: all three critics APPROVE_WITH_NITS, zero blockers; applied 3 nits (single
   sourced reading-savings claim, fast-path aside reframed as a decision aid, worked example rescaled
   to CSV-vs-Excel).
-- Committed deck + plan as 7ae69b9; pushed session summary to OV.
+- Committed deck + plan as 7ae69b9; pushed the session summary to the vault.
 
 ## Learned
 - The critic-panel pattern transfers cleanly to non-code deliverables: the accuracy critic verified
@@ -36,8 +36,6 @@ Build a short, simple-language, humanized presentation introducing the vault mem
 - Presentation framings that survived critique: two-question command picker ("Just asking? / Making
   a change?") instead of a size axis; a cross-session example ("Tuesday decides. Thursday remembers.")
   to make recall visible; one habit-swap CTA ("next time, type /v-ask").
-- OV memory_store still returns 0 extractions on dense summaries (embedding-only mode persists);
-  recall stays routed via `ov find`.
 
 ## Behaviors & rules
 - Coworker-facing vault material → no source-doc jargon on slides (tokens, lifecycle, approval gate,
@@ -50,7 +48,6 @@ Build a short, simple-language, humanized presentation introducing the vault mem
 
 ## Next
 - Present the deck; iterate wording after real audience questions.
-- Optional: /v-sync to re-ingest this session + plan into OV.
 
 ## Refs
 - [[../plans/2026-07-20-1030-team-presentation-vault-commands]]

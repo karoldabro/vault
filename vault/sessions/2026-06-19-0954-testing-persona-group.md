@@ -54,8 +54,6 @@ personas — so AI-written tests get the same panel-critique rigor as production
   touching those packs.
 - Consider a `team_max_parallel_critics` note for mixed prod+test diffs (one testing critic added
   within the cap).
-- OV `memory_store` reported "extraction returned 0 memories" (raw text still stored) — watch if it
-  recurs.
 
 ## Refs
 - [[plans/2026-06-19-0954-testing-persona-pack]]

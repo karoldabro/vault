@@ -35,7 +35,7 @@ an isolated task with known files. Agents return conclusions; you keep the conte
 
 ### 2.1 — claude-mem (project history — always first)
 
-<!-- §2.2 held a memory tool that was dropped (ADR-019). The numbering gap is
+<!-- §2.2 held a memory tool that was dropped. The numbering gap is
      deliberate — other files cite §2.3a/§2.3b/§2.3c by number. -->
 
 `search(query=<keywords>, limit=20)` → compact ID index (~100 tok). Climb to `timeline(anchor=<id>)`

@@ -11,8 +11,7 @@ own `/v-capture`, scoped to the feature workspace and cross-project. Runs after 
 mode) and at the end of `reconcile`.
 
 **Single-repo mode (1 participant):** capture against the **project vault**, not `_features/` — write the
-planning-session into `<project-vault>/sessions/`, push the requirements.md glossary + rules to OV, and
-commit the **project vault** (which now holds `requirements/<feature>.md`). Skip the ADR-into-neutral-
+planning-session into `<project-vault>/sessions/`, and commit the **project vault** (which now holds `requirements/<feature>.md`). Skip the ADR-into-neutral-
 workspace default (§5.2) — any ADR is this one project's, so it lands in `<project-vault>/decisions/`.
 Then tell the user to run `/v-team`/`/v-work` in that repo. The rest below is the multi-repo path.
 

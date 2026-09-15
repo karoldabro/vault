@@ -18,13 +18,12 @@ auto-installer + onboarder for the whole tool stack, run via `/v-team`.
 - Ran `/v-team`: ANALYZE → LOAD CONTEXT → PROPOSE panel (generic Software-Architect + security + skeptic,
   no stack pack resolves for a bash repo) → approval gate → EXECUTE with a diff-review panel.
 - Grounded every tool's install command against its GitHub/official source (researcher agent). Corrected
-  the repo's wrong hints: OV plugin is `claude-code-memory-plugin@openviking-plugin` (not `openviking`),
-  serena is `uv tool install -p 3.13 serena-agent`, morph is `@morphllm/morphmcp`, bun is `bun.com` + needs `unzip`.
+  the repo's wrong hints: serena is `uv tool install -p 3.13 serena-agent`, morph is `@morphllm/morphmcp`, bun is `bun.com` + needs `unzip`.
 - Extracted per-tool `install_<tool>`/`check_<tool>` into [[../../lib/installers.sh]] behind a `run()`
   dry-run seam (`VAULT_SETUP_DRY_RUN=1` / `--dry-run`) with secret redaction + continue-on-error; doctor
   pass owns the exit code.
 - Rewrote [[../../setup.sh]]: Ubuntu (apt+sudo) auto-installs ollama+nomic / uv+Serena / bun+claude-mem /
-  pipx+Graphify + the OV & claude-mem Claude plugins via the scriptable `claude` CLI; consent prompt or
+  pipx+Graphify + the claude-mem Claude plugin via the scriptable `claude` CLI; consent prompt or
   `--yes`; degrades to hints on non-apt; added `--dry-run`/`--doctor`; dropped Morph (`--with-morph` removed).
 - Tests: new offline dry-run unit suite `tests/unit/setup-autoinstall.bats` (16 tests — transcript,
   redaction, sudo-scoping, idempotency, degrade, partial-failure) + an opt-in real-Ubuntu e2e harness
@@ -39,8 +38,8 @@ auto-installer + onboarder for the whole tool stack, run via `/v-team`.
 ## Learned
 - The `claude` CLI is scriptable: `claude plugin marketplace add <repo>`, `claude plugin install
   <id>@<marketplace> --scope user`, `claude mcp add` — so Claude plugins/MCPs CAN be installed from a
-  shell script (the previous "manual `/plugin install`" hint was unnecessary). Real marketplace sources:
-  OV = `Castor6/openviking-plugins`, claude-mem = `thedotmack/claude-mem`.
+  shell script (the previous "manual `/plugin install`" hint was unnecessary). Real marketplace source:
+  claude-mem = `thedotmack/claude-mem`.
 - Test-harness tension: the offline bats image is **alpine, read-only mount, no network/sudo**. Solution
   was a `run()` dry-run seam (offline-testable transcript) + a **separate** Ubuntu e2e runner with
   `--network`/root — the offline `tests/run.sh` cannot host real installs. The alpine suite naturally

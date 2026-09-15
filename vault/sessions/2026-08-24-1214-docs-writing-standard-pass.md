@@ -3,7 +3,7 @@ type: session
 project: vault
 date: 2026-08-24
 topic: docs-writing-standard-pass
-files_touched: [README.md, INSTALL.md, vault-guide.md, tool-playbook.md, _moc.md, docs/commands.md, docs/removing-openviking.md]
+files_touched: [README.md, INSTALL.md, vault-guide.md, tool-playbook.md, _moc.md, docs/commands.md]
 decisions: []
 tags: [session, docs, writing-standard]
 ---
@@ -16,17 +16,15 @@ Rewrite the vault framework's seven reader-facing documents to `commands/_shared
 
 ## Did
 - Rewrote `README.md`, `INSTALL.md`, `vault-guide.md`, `tool-playbook.md`, `_moc.md`,
-  `docs/commands.md` and `docs/removing-openviking.md`. Committed as `6e88195` on branch
+  and `docs/commands.md`. Committed as `6e88195` on branch
   `docs/writing-standard-pass`.
 - Fixed `_moc.md`, which linked `commands/v-migrate` and
   `sessions/2026-06-29-1233-humanize-docs` — neither file exists — and omitted `/v-setup`,
   `/v-pm` and `/v-reconcile`. It now lists every live command and points at `vault/_moc.md` for this
   repo's own project vault.
-- Cut the measurement story from `docs/removing-openviking.md`, which
-  `vault/decisions/ADR-019-drop-openviking-dependency.md` already holds, and led with the remover.
 - Verified every phrase the bats suite greps for in `INSTALL.md`, `vault-guide.md` and
   `tool-playbook.md` survived the rewrite.
-- Ran `bin/doc-lint.sh --compare <before> <after>` on all seven files; the two real drops it found
+- Ran `bin/doc-lint.sh --compare <before> <after>` on all six files; the two real drops it found
   (`~/workspace/vault/bin/vault-migrate.sh` in `README.md`, `/v-work` and `/v-team` in
   `tool-playbook.md`) were restored.
 
@@ -54,7 +52,6 @@ Rewrite the vault framework's seven reader-facing documents to `commands/_shared
 
 ## Refs
 - [[../decisions/ADR-018-decision-communication-contract]]
-- [[../decisions/ADR-019-drop-openviking-dependency]]
 - [[2026-08-21-1015-document-writing-standard]]
 - [[2026-08-21-1422-doc-lint-skip-and-type]]
 - [[2026-08-03-1045-decision-communication-contract]]

@@ -56,8 +56,8 @@ teardown() {
     grep -q "USER CONTENT" "${VAULT_HOME}/_global/coupled-groups.md"
 }
 
-# --minimal must beat any tool flag. This case used to be parameterised on
-# --with-ov; keeping the invariant covered after that flag was removed.
+# --minimal must beat any tool flag. This case used to be parameterised on a
+# memory-tool flag; keeping the invariant covered after that flag was removed.
 @test "--minimal beats a tool flag (--with-graphify does nothing)" {
     run "${VAULT_ROOT}/setup.sh" --with-graphify --minimal --yes
     [ "$status" -eq 0 ]

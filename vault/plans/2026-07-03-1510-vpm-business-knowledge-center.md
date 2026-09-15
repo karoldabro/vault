@@ -47,7 +47,7 @@ The user's ask ("reach into all categories of the specific vault") is met **with
 sibling repo:
 - `requirements.md` is written into `_features/<feature>/`, which is **already symlinked into every
   participant vault** (`<proj>/features/<feature>` → workspace) — so the knowledge center is visible in
-  each project's feature index and OV-recallable **the moment planning finishes**, zero cross-repo write.
+  each project's feature index and recallable **the moment planning finishes**, zero cross-repo write.
 - The per-project `projects/<proj>/plan.md` **shard** (neutral workspace, committed there) carries the
   project-relevant rule ids the project must satisfy.
 - When `/v-team <feature>` runs in a project, **it** writes the established per-category docs
@@ -109,7 +109,7 @@ _Dependency-ordered. File · Action · Pattern._
 
 5. **`commands/v-pm/steps/05-capture.md`** · UPDATE · Reference requirements.md as the knowledge center
    in the planning-session record; push its **glossary + business rules + `## Variant & state rules`
-   tables** to OV (`memory_store`) **[R2/req-6: include the variant/state tables — the cartographer's
+   tables** into the record **[R2/req-6: include the variant/state tables — the cartographer's
    primary input, not just glossary+rules]** so each project's `/v-team` LOAD CONTEXT recalls the product
    knowledge even via the fallback recall path.
 
@@ -163,7 +163,7 @@ Every backlog row is a bats `grep`-contract assertion on the doc surface, run in
 | T5 | arch-t6,req-t3 | unit | generic-plan.md + 03-plan-panel | single-source-of-why: requirements owns why; generic-plan `## Problem & outcome` back-refs; 03-plan-panel §(a) prose no longer claims generic-plan owns problem/outcome | should |
 | T6 | req-t2 | unit | requirements.md template | ONE canonical test shape — no Given/When/Then vs `precondition → expected` duplication | should |
 | T7 | skep-t2 | unit | requirements.md + feature dossier | established-only guard: spec rules live in requirements.md; project dossier `## Behaviors & rules` not pre-filled with unvalidated rules | should |
-| T8 | (synth) | unit | 05-capture | references requirements.md + OV push includes glossary + business rules + variant/state tables | should |
+| T8 | (synth) | unit | 05-capture | references requirements.md + the record includes glossary + business rules + variant/state tables | should |
 | T9 | (synth) | unit | vault-guide | §13 documents requirements.md + knowledge-center lifecycle + id seam; §6 places requirements(spec) vs features(established) | should |
 | T10 | (synth) | unit | ADR-014 | ADR-014 file exists + `decisions/_inventory.md` row | should |
 
@@ -181,7 +181,7 @@ Approved to execute through capture. User resolved both escalations:
   bare-hands-off. Instead: run the plan panel + author `requirements.md` into the **project's OWN vault**
   at `<proj-vault>/requirements/<feature>.md`, **skip** the coordination machinery (no `_features/`
   workspace, `conversation/`, `contracts.md`, symlinks, shards), run CAPTURE against the project vault
-  (OV push + commit there), then hand execution to `/v-team`/`/v-work`. 2+ participants → unchanged.
+  (commit there), then hand execution to `/v-team`/`/v-work`. 2+ participants → unchanged.
 - **S2 · new project-vault category `requirements/`** — the spec-stage home (aspirational-by-design),
   kept distinct from `features/` (established) — mirrors how the neutral workspace keeps requirements.md
   separate from the eventual dossier. Add to `vault-guide.md` §2 folder map (optional) + `v-init` scaffold
@@ -240,7 +240,7 @@ Four NEW confirmed MAJORs — all narrow placement/ownership-contract gaps in th
 |---------|----|----------|-----------|-------|-------------|
 | Skeptic / Architect | skep-8 / arch-7 | MAJOR | confirmed | v-pm enriching `projects/<proj>/plan.md` clashes with shard single-writer (/v-team) ownership → clobber risk | **applied** — step 3b: dedicated v-pm-owned `## Business rules to satisfy` section + ownership carve-out + merge-not-overwrite |
 | Architect / Requirements | arch-9 / req-6 | MAJOR | confirmed | id-traceability seam wired into wrong file (00-feature-pickup is pre-ANALYZE; f2 digest assembled later) → seam may never fire | **applied** — step 6 split across 00-feature-pickup (read) + 03-propose-loop (digest+backlog source) + 04-execute-loop (established dossier id) |
-| Requirements | req-6 (part) | MAJOR | confirmed | step-5 OV push omits variant/state tables (cartographer's primary food) | **applied** — step 5 pushes variant/state tables too |
+| Requirements | req-6 (part) | MAJOR | confirmed | step-5 record omits variant/state tables (cartographer's primary food) | **applied** — step 5 pushes variant/state tables too |
 | Architect | arch-8 | NIT | confirmed | 03-plan-panel §(a) prose still says generic-plan owns problem/outcome | **applied** — step 2 rewrites §(a) line 12 |
 | Requirements | req-7 | NIT | advisory | unifying on `precondition → expected` folds the BDD "When" trigger implicit | **applied (cheap)** — step 1: add one template example rule with an explicit action-trigger (`; edge: when X then Y`) |
 

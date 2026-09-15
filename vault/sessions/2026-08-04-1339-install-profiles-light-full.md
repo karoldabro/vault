@@ -60,10 +60,8 @@ ask whether the user wants the full (developer) or light (normal) install.
 ## Next
 - The e2e Ubuntu container (`VAULT_E2E=1 make test-e2e`) still exercises `--full`; a light-profile e2e
   case would cover the new default on a real box. Not run this session.
-- Four files unrelated to this work are still uncommitted in the tree: `bin/remove-openviking.sh`,
-  `docs/removing-openviking.md`, `docs/vault-intro-deck.html`,
-  `tests/integration/remove-openviking.bats`, plus an untracked
-  `vault/plans/2026-08-04-vault-git-autosync.md`.
+- Two files unrelated to this work are still uncommitted in the tree: `docs/vault-intro-deck.html`,
+  plus an untracked `vault/plans/2026-08-04-vault-git-autosync.md`.
 
 ## Refs
 - [[../decisions/ADR-021-install-profiles]]

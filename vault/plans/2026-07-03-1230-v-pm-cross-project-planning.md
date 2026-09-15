@@ -94,7 +94,7 @@ Dockerized bats file-contract tests (agent-loop behavior validated by manual dry
 ## Open trade-offs / deferrals
 - **⚠️ ESCALATION — `_features/` git ownership (architect-5, needs user decision).** It holds the durable
   source-of-truth (`generic-plan.md`, `contracts.md`) but sits parallel to the never-committed `_global/`,
-  so no repo versions or OV-syncs it. Options: **(a)** its own committed vault wired into `v-sync`;
+  so no repo versions or syncs it. Options: **(a)** its own committed vault wired into `v-sync`;
   **(b)** hosted under the coupled-group's lead-project vault. Must be decided before EXECUTE.
 - **Resolved conflict — contracts.md separate+structured (skeptic-4) vs merged-for-fewer-concepts (dx-1).**
   Chose **structured-separate**: the api↔frontend seam is the user's actual pain, and a separate parseable

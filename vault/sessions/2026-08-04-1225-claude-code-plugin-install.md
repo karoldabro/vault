@@ -96,5 +96,4 @@ Make the vault framework installable through Claude Code's plugin system, alongs
 ## Refs
 - [[../decisions/ADR-020-claude-code-plugin-distribution]]
 - [[../decisions/ADR-005-installer-auto-exec]]
-- [[2026-08-03-1300-drop-openviking-dependency]]
 - [[2026-08-03-1045-decision-communication-contract]]

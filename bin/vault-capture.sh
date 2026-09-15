@@ -3,7 +3,7 @@
 #
 # /v-capture used to carry all of this as in-prompt bash/regex instructions (~900 words re-loaded on
 # every /v-work and /v-team run). This script owns the mechanical parts; the command markdown keeps
-# only judgment (metadata extraction, candidate approval, feature CREATE/UPDATE/SKIP, OV push).
+# only judgment (metadata extraction, candidate approval, feature CREATE/UPDATE/SKIP).
 #
 # Subcommands:
 #   dedupe       --vault PATH --keywords "kw1 kw2 ..."       overlap % vs last 10 sessions

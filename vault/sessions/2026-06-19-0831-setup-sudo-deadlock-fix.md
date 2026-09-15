@@ -18,7 +18,7 @@ real onboarding on another machine): `sudo ./setup.sh` strands everything in `/r
 
 ## Did
 - Diagnosed the deadlock from [[setup.sh]] + [[lib/installers.sh]]:
-  - `sudo ./setup.sh` → `$HOME=/root` → uv/bun/plugins/`ov.conf` land in root's home (invisible to
+  - `sudo ./setup.sh` → `$HOME=/root` → uv, bun, plugins and tool config land in root's home (invisible to
     the user); `claude` not on root's PATH → `claude_cli_ok` false → plugin auto-install skipped →
     user installed plugins by hand.
   - `./setup.sh` as the user → `sudo_available()` required **passwordless** sudo (`sudo -n true`),
@@ -30,22 +30,21 @@ real onboarding on another machine): `sudo ./setup.sh` strands everything in `/r
   `VAULT_ALLOW_SUDO=1`); genuine container/CI root has no `$SUDO_USER`, so e2e is untouched.
 - Pre-warm `sudo -v` once in the AUTO branch (single password prompt; skipped under dry-run/root/
   passwordless).
-- Done-section messaging: reload shell (`exec $SHELL -l`) for PATH; clarify there is **no `ov`
-  CLI** — OpenViking is the MCP plugin + ollama backend, health via `--doctor`.
+- Done-section messaging: reload shell (`exec $SHELL -l`) for PATH; clarify the memory stack ships
+  **no CLI** — it is an MCP plugin with an ollama backend, health via `--doctor`.
 - Added 3 offline tests to [[tests/unit/setup-autoinstall.bats]] (guard fires / override bypasses /
   `sudo_available` privilege model). Updated [[README.md]] install section.
 - Offline suite green (37 unit + 35 integration = 72, 0 fail). Committed `98ac293`, pushed to main.
 
 ## Learned
-- The plugin install was **already** programmatic (`install_openviking_plugin` /
-  `install_claude_mem_plugin` run `claude plugin marketplace add` + `install --scope user`). It only
+- The plugin install was **already** programmatic (the per-plugin install functions run
+  `claude plugin marketplace add` + `install --scope user`). It only
   appeared "manual" because `sudo` hid `claude` from root's PATH — the fix is the privilege model,
   not the plugin code.
 - `$SUDO_USER` is the clean signal to distinguish a human `sudo` invocation (set) from genuine root
   in a container/CI (unset) — lets the guard fire for the footgun without breaking the e2e/root path.
 - The whole installer is per-user by design: `_priv()` already scopes `sudo` to apt only. The right
   pattern is "run as yourself, escalate internally," not "wrap the installer in sudo."
-- `ov: command not found` is expected — the stack ships no `ov` binary.
 
 ## Next
 - Optional: pre-authenticate cleanup / consider `apt-get -o` quiet flags for the single-prompt UX.

@@ -3,7 +3,7 @@ type: plan
 project: vault
 slug: setup-auto-install
 status: executed   # proposed | approved | executed | superseded
-# Gate decisions (2026-06-18): implement all · auto-install default on Ubuntu (consent-gated, T1) · Morph MCP DROPPED entirely (T3) · keep ollama+nomic for OV (T2).
+# Gate decisions (2026-06-18): implement all · auto-install default on Ubuntu (consent-gated, T1) · Morph MCP DROPPED entirely (T3) · keep ollama+nomic for the memory plugin (T2).
 personas: [generic: software-architect, security, skeptic]
 rounds: 1 propose + 1 diff-review
 convergence: clean   # all confirmed BLOCKER/MAJOR applied in both loops; no open blockers
@@ -16,9 +16,9 @@ Rework `setup.sh` from a "detect-and-print-a-hint" advisor into a real, Ubuntu-f
 onboarder** for the whole vault tool stack, with a Docker-based e2e harness that actually runs it.
 
 ## Task
-Make `setup.sh` install all dependencies + tools automatically on Ubuntu (ollama, OpenViking, Graphify,
+Make `setup.sh` install all dependencies + tools automatically on Ubuntu (ollama, Graphify,
 Claude plugins + MCPs) and onboard them, for a smooth one-command experience.
-Keywords: setup.sh · ubuntu-apt · auto-install · ollama · openviking · graphify · claude-plugins · mcp · onboarding · idempotent.
+Keywords: setup.sh · ubuntu-apt · auto-install · ollama · graphify · claude-plugins · mcp · onboarding · idempotent.
 
 ## Converged plan (v1)
 
@@ -27,7 +27,7 @@ Dependency-ordered. File · action · key detail.
 1. **`setup.sh` → `run()` executor + dry-run seam.** `run <cmd...>` executes; under `VAULT_SETUP_DRY_RUN=1`
    it echoes `[dry-run] <cmd>` and returns 0. Redacts secret-shaped args (`MORPH_API_KEY=…` → `***`).
    **Scope = network/privileged side-effects only** (apt, `curl|sh`, ollama pull, claude CLI, uv/bun/pipx
-   installers). Pure-local scaffold (mkdir, heredocs, ov.conf, calling install.sh) stays a **direct** call
+   installers). Pure-local scaffold (mkdir, heredocs, tool config, calling install.sh) stays a **direct** call
    so existing offline alpine bats stay green. [arch-3, skep-6, sec-5]
 2. **`lib/installers.sh` — extract `install_<tool>` + `check_<tool>` pairs**, sourced by setup.sh. Each
    `install_X`: `check_X` (idempotent guard: `command -v` **plus** known-path probe `~/.local/bin`,
@@ -53,14 +53,12 @@ Dependency-ordered. File · action · key detail.
    `serena-agent@latest --prerelease=allow` (not the current upstream command). [researcher]
 9. **Claude plugins / MCPs (new capability).** Probe `command -v claude` + a version floor; absent/old →
    degrade this section to hints. Else, each step guarded for idempotency under `set -e`:
-   - `claude plugin marketplace list | grep -q openviking || claude plugin marketplace add Castor6/openviking-plugins`,
-     then `claude plugin install claude-code-memory-plugin@openviking-plugin --scope user` (guard: `claude plugin list | grep -q`).
    - `… thedotmack/claude-mem` → `claude plugin install claude-mem@claude-mem --scope user` (fallback `claude plugin install claude-mem`).
    - **Morph MCP only if `$MORPH_API_KEY` is set** (never prompt under `--yes`; pass env **by reference**, never the literal key in a logged string; redact in transcript):
      `claude mcp add filesystem-with-morph --scope user -e MORPH_API_KEY -- npx --prefer-offline -y @morphllm/morphmcp`
      (guard: `claude mcp list | grep -q`). Package **CORRECTED** to `@morphllm/morphmcp`. [researcher, skep-3, skep-7, sec-1, sec-5]
-10. **Secret-bearing config files** (ov.conf + anything holding a key): write under `( umask 077; … )` →
-    `0600`; `chmod 700` `~/.openviking` and `~/.claude`. [sec-4]
+10. **Secret-bearing config files** (anything holding a key): write under `( umask 077; … )` →
+    `0600`; `chmod 700` `~/.claude`. [sec-4]
 11. **Doctor pass** (`setup.sh --doctor`, also auto-run at end): per tool check presence/health via absolute
     path or a **fresh** `claude` invocation (not the live session); print a ✓/✗ table; exit non-zero only if a
     *required* tool failed; print "restart Claude Code to load new plugins/MCPs". Never prints secrets.
@@ -88,7 +86,6 @@ Dependency-ordered. File · action · key detail.
 | tool | install | verify | idempotency guard |
 |------|---------|--------|-------------------|
 | ollama | `curl -fsSL https://ollama.com/install.sh \| sh` + `ollama pull nomic-embed-text` | `ollama --version` | `ollama list \| grep -q '^nomic-embed-text'` |
-| OpenViking plugin | `claude plugin marketplace add Castor6/openviking-plugins` + `claude plugin install claude-code-memory-plugin@openviking-plugin` | `claude plugin list \| grep -q claude-code-memory-plugin` | same |
 | graphify | `pipx install graphifyy` | `graphify --version` | `pipx list \| grep -q graphifyy` |
 | claude-mem | `claude plugin marketplace add thedotmack/claude-mem` + `claude plugin install claude-mem` (bun auto-installed) | `claude plugin list \| grep -q claude-mem` | same |
 | serena | `uv tool install -p 3.13 serena-agent` | `serena --help` | `uv tool list \| grep -q serena-agent` |
@@ -110,7 +107,7 @@ Corrections vs v0 draft: **serena** = `-p 3.13 serena-agent` (no `@latest`/`--pr
 | arch-t6 | architect | e2e | Ubuntu+network `--full --yes` → doctor all-present, exit 0 | the "does it install" gate | should | |
 | arch-t7 | architect | e2e | e2e runner refuses without VAULT_E2E=1 | keep net installs off PR path | nice | |
 | sec-t1 | security | unit | Morph dry-run transcript has no raw key | secret never echoed | must | |
-| sec-t2 | security | integration | ov.conf + secret files are 0600, dirs not world-readable | secret-at-rest perms | must | |
+| sec-t2 | security | integration | secret files are 0600, dirs not world-readable | secret-at-rest perms | must | |
 | sec-t3 | security | unit | URL/source printed before each curl\|sh + marketplace add | consent/audit trail even under --yes | should | |
 | sec-t4 | security | unit | only apt prefixed with sudo; absent sudo → hint path | sudo scoping | should | |
 | sec-t5 | security | unit | doctor with key configured prints no key value | doctor never leaks secret | should | |
@@ -125,10 +122,9 @@ Corrections vs v0 draft: **serena** = `-p 3.13 serena-agent` (no `@latest`/`--pr
   hints with an opt-in `--auto`. I resolved **toward auto-install-as-default on Ubuntu** because that's the
   explicit ask ("smooth experience"). Mitigations adopted: every remote URL/source printed, consent prompt
   unless `--yes`, degrade-on-non-apt, ADR-005. **→ Confirm you want auto-install to be the default (consent-gated), not a separate opt-in flag.**
-- **T2 — OpenViking embedding backend.** The researcher notes the OV *plugin* uses its own providers, while
-  our current `ov.conf` points at ollama + `nomic-embed-text` (matches the working vault stack). Plan keeps
-  ollama+nomic; full OV-server bootstrap (`pip install openviking` + `openviking-server`) left as an advisory
-  note, not auto-run. **→ OK to keep ollama+nomic and not auto-bootstrap the OV server?**
+- **T2 — embedding backend.** The memory plugin ships its own providers, while our current config points
+  at ollama + `nomic-embed-text`, matching the working vault stack. The plan keeps ollama+nomic and leaves
+  the server bootstrap as an advisory note, not auto-run. **→ OK to keep ollama+nomic?**
 - **T3 — Morph needs a paid API key.** Skipped unless `$MORPH_API_KEY` is in the environment (never prompted).
   **→ OK to skip Morph silently-with-a-note when the key is absent?**
 - **Deferred (recorded, non-blocking):** sec-7 hostile-path hardening (NIT), skep-4 restart-race (doctor uses

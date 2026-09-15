@@ -23,7 +23,7 @@ That generate-then-verify panel is essentially what `/v-team`'s diff-review loop
 v-team's loop *fixes code and re-rounds*, which is incoherent against a static remote PR the reviewer
 does not own. A 3-critic design panel (Architect, Skeptic, Security) reviewed the v-cr design; Security
 returned BLOCK with three confirmed blockers (prompt injection, secret leakage into the committed +
-OV-indexed session, SSRF/credential-harvest), and Architect+Skeptic returned REQUEST_CHANGES (false loop
+committed session, SSRF/credential-harvest), and Architect+Skeptic returned REQUEST_CHANGES (false loop
 reuse, local-checkout assumption, message-keyed fingerprint, task-regex false positives, single coarse
 gate). See `vault/plans/2026-06-19-1106-v-cr-command.md` for the full critique trail.
 
@@ -41,7 +41,7 @@ Build `/v-cr` as a thin dispatcher + 5 steps (DETECT → GATHER → REVIEW → P
    instructions; the verdict and post/no-post decision come from the machine-checked grounding gate,
    never agent prose.
 4. **Secret redaction at both boundaries.** Scan + redact the diff before it enters any model context,
-   and comment bodies + the captured session before write/OV-push. Never persist tokens, headers, or raw
+   and comment bodies + the captured session before it is written. Never persist tokens, headers, or raw
    diff hunks.
 5. **Host-scoped credentials.** A token goes only to an exact-match-allowlisted host (self-hosted needs
    one-time confirmation); Jira/Asana base config comes from user/global config, never repo files.

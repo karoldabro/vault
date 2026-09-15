@@ -30,7 +30,7 @@ explicit **SPEC** (aspirational by design), kept distinct from the *established*
 
 - **Reach without a cross-repo write.** `/v-pm` never writes into a *participant* vault it doesn't own.
   For 2+ repos, `requirements.md` lives in the neutral `_features/<feature>/` (already symlinked into each
-  project → visible + OV-recallable immediately); each project's own `/v-team` writes the established
+  project → visible + recallable immediately); each project's own `/v-team` writes the established
   per-category docs at capture. The rejected alternative — seeding `status: stub` dossiers into sibling
   repos — reintroduced the footgun the gitignored workspace symlink exists to avoid (panel-confirmed 3/3).
 - **Decoupled from the coordination machinery.** The knowledge center is worth authoring for **any**

@@ -17,9 +17,9 @@ online-researcher), then execute the approved 4-phase overhaul.
 ## Did
 - **Audit findings**: /v-team = 40% of 462 lifecycle runs, rising to 78% in early July, at ~2× cost with
   the same ~79% completion rate as /v-work; /v-do starved (8 uses); 2 breakages; v-capture.md (1,625 w)
-  auto-loaded every run; "0 memories" noise in 77% of sessions traced to **OpenViking missing its `vlm`
-  config** (not claude-mem); `events.db` 31.6 GB unbounded; Pre/PostToolUse = 87% of ~9.2k daily hook spawns.
-- **Phase 0** `04a6f2f`: fixed `memory_store(content=,tags=)` → `(text=,role=)` in v-guide; v-capture
+  auto-loaded every run; "0 memories" noise in 77% of sessions traced to **the memory plugin missing its
+  extraction config** (not claude-mem); `events.db` 31.6 GB unbounded; Pre/PostToolUse = 87% of ~9.2k daily hook spawns.
+- **Phase 0** `04a6f2f`: fixed a wrong memory API call in v-guide; v-capture
   header contradiction; stale `_resolution.md §1.4` ref; documented `team_max_*` knobs (vault-guide §12.1).
 - **Phase 1** `9eabac4`: new [[../../bin/vault-capture.sh]] (dedupe / scan-adr / scan-ind / refs /
   next-adr / index-moc); v-capture.md halved; canonical tool table moved to tool-playbook; hooks
@@ -36,9 +36,9 @@ online-researcher), then execute the approved 4-phase overhaul.
 ## Learned
 - Transcript archaeology beats intuition: v-team "felt" safer (v-work ESC'd 20% vs v-team 13%) but bought
   zero completion-rate gain — the tiering was a routing problem, not a rigor problem.
-- The "extraction returned 0 memories" message names claude-mem in perception but is emitted by the OV
-  bridge; OV ran 6 weeks as embedding-only recall and nobody noticed — extraction is enrichment, not
-  load-bearing.
+- The "extraction returned 0 memories" message names claude-mem in perception but is emitted by the
+  memory plugin's bridge; it ran 6 weeks as embedding-only recall and nobody noticed — extraction is
+  enrichment, not load-bearing.
 - `install.sh` symlinks every commands/ subdir — an attic/ dir would have shipped without the skip.
 - Bash arithmetic reads zero-padded numbers as octal; `10#` prefix required when parsing ADR ids.
 - Community consensus 2026: single-pass parallel review for routine, loops only for expensive-to-reverse;
@@ -53,17 +53,17 @@ online-researcher), then execute the approved 4-phase overhaul.
 - `vault-capture.sh next-adr` returns max(inventory, files)+1 in base 10; edge: zero-padded ids must
   not be octal-parsed.
 - install.sh: `commands/attic/` is never symlinked; stale symlinks pointing into commands/ are pruned.
-- v-capture pushes: OV/claude-mem down → surface + skip that push, never halt, never skip silently.
+- v-capture pushes: the memory tools down → surface + skip that push, never halt, never skip silently.
 
-## Continuation 2026-07-04-1230 — OV extraction resolved
+## Continuation 2026-07-04-1230 — extraction resolved
 
 - **Local extraction: failed and reverted.** qwen2.5:7b + qwen3:8b (litellm→ollama) never produced a
   valid extraction operation (schema misses / prose instead of tool calls) and pinned the GPU at 100%,
-  blocking other sessions. `vlm` section removed from `ov.conf`; embedding-only is the supported state;
+  blocking other sessions. the extraction section was removed from the tool config; embedding-only is the supported state;
   models deleted from ollama. Cloud (e.g. Haiku) is the only viable `vlm` route if ever wanted.
-- **Key discovery:** MCP `memory_recall` searches only the extraction-populated
-  `viking://user|agent/.../memories` namespace → on this install it only ever returned empty-directory
-  stubs. Real vault knowledge lives in `viking://resources/`, reachable via **`ov find` (CLI)**.
+- **Key discovery:** the MCP recall call searched only the extraction-populated namespace → on this
+  install it only ever returned empty stubs. Real vault knowledge was reachable only through that
+  tool's own CLI search.
   Commands repointed (`68d6463`): tool-playbook §1, load-context §2.1, v-do orient, v-ask precedence.
 - Hooks restored in full (user preference: dashboard granularity > latency); events.db pruned to 60
   days; retention script staged at `~/.claude/observability/maintenance/prune-events.sh` (not scheduled).

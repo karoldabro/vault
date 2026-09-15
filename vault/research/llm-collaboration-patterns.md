@@ -195,7 +195,7 @@ deterministic (caps), not model-decided.
 
 **D-14 — Context engineering: compaction + progressive disclosure + agentic memory.** Token budget as
 the constraint; lightweight identifiers, fetch on demand, clear when done; notes persisted outside
-context (Anthropic). *Production-proven.* **Fit:** the vault + OV + cheapest-first LOAD CONTEXT stack
+context (Anthropic). *Production-proven.* **Fit:** the vault + cheapest-first LOAD CONTEXT stack
 is this discipline; formalized in the search-precedence rule.
 
 **D-15 — Eval-driven development, inverted.** Hamel Husain: write evaluators for errors you DISCOVER
@@ -462,7 +462,7 @@ personas run — pre-mortem's seat-vs-technique decision (ADR-017) is the preced
 | F-13/F-14 read-fan-out, single writer | panel reads in parallel, one synthesizer, one implementer |
 | F-15 orchestration hygiene | hard round caps, task-list enforcement |
 | D-08 spec as contract | plan artifact + /v-pm REQ-NN id chain |
-| D-14 context engineering | vault + OV cheapest-first LOAD CONTEXT |
+| D-14 context engineering | vault + cheapest-first LOAD CONTEXT |
 | C-06 supervisor model ≈99% | the panel thesis itself |
 
 **Adopted this cycle (ADR-017):** verifier tool-asymmetry (F-04) · method-enforcer persona framing

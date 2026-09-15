@@ -17,12 +17,12 @@ tags: [plan, meta, tiering, capture, token-economy, observability]
   /v-ask 18 · /v-capture 9 · /v-do 8 · /v-cr 4; v-migrate/v-resume ≈ 0. v-team costs ~2.1× per run
   (median 1.76 MB vs 0.83 MB parent transcript; 4.9 vs 2.3 agent spawns) with the **same ~79% completion
   rate** as v-work. ~1 in 5 lifecycle runs abandoned before commit/capture, flat across commands.
-- **Audit**: two breakages (v-guide `memory_store(content=,tags=)` never existed; v-capture header
+- **Audit**: two breakages (v-guide called a memory API that never existed; v-capture header
   contradicted its own skip-if-down rule); v-capture.md (1,625 w) auto-loaded on all ~478 runs;
   tool-table × 5 + hooks boilerplate × 8 duplicated; do/work/team ladder conflates **trust** (gate) with
   **rigor** (critics) — the only route to any adversarial review was the full panel.
-- **Diagnostics**: the "extraction returned 0 memories" noise (77% of sessions) is **OpenViking's** —
-  no `vlm` section in `~/.openviking/ov.conf` (16,382 errors); claude-mem separately missing
+- **Diagnostics**: the "extraction returned 0 memories" noise (77% of sessions) came from the memory
+  plugin's missing extraction config (16,382 errors); claude-mem separately missing
   `pending_messages.retry_count` (migration bug); observability hook = 12 events × `uv run` subprocess,
   Pre/PostToolUse = 87% of ~9.2k daily spawns; `events.db` 31.6 GB, unbounded.
 - **Community (2026)**: consensus is anti-bloat — heavy methodology only when a wrong decision is
@@ -44,8 +44,6 @@ tags: [plan, meta, tiering, capture, token-economy, observability]
 
 ## Open at plan close
 
-- OV `vlm` extraction fix — user deciding local (ollama qwen2.5:7b fits GTX 1070 8GB) vs Anthropic Haiku
-  vs leave-as-is (embedding-only recall worked fine for 6 weeks without extraction).
 - Deferred to later: effort/model tiers per command; /code-review for GitHub path of /v-cr;
   MCP/skill security vetting cadence; Stop hook `--add-chat` transcript embedding (main residual DB driver).
 
