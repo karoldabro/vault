@@ -234,7 +234,7 @@ index_scope_vocabulary() {
                 | tr ',' '\n' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$'
             return 0
         fi
-        [ -d "${dir}/.git" ] && return 0
+        [ -e "${dir}/.git" ] && return 0
         dir="$(dirname "$dir")"
     done
 }
@@ -388,7 +388,7 @@ load_skip_file() {
             done < "${dir}/.doc-lint"
             return 0
         fi
-        [ -d "${dir}/.git" ] && return 0
+        [ -e "${dir}/.git" ] && return 0
         dir="$(dirname "$dir")"
     done
 }

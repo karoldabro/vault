@@ -3,7 +3,7 @@ type: report
 project: vault
 slug: doclint-exempts-a-code-that-does-not-exist
 date: 2026-09-15
-status: open
+status: fixed
 severity: minor
 found_by: 2026-09-15-0933-doc-corpus campaign, case DOC-01
 found_in: repairing vault/decisions/ADR-017-evidence-based-panel-hardening.md

@@ -740,3 +740,57 @@ CREATE_ITEM='| 1 | `lib/x.sh` | create |'
     run bash -c "${LINT} ${VAULT_ROOT}/vault/decisions/*.md ${VAULT_ROOT}/vault/indications/*.md 2>&1 | grep -cE '^  [A-Z]' || true"
     [ "${output:-0}" -le 5 ]
 }
+
+# --- the config walk stops at the repository, whatever shape .git has ---------
+#
+# A worktree, a submodule and a `git init --separate-git-dir` checkout all carry `.git` as a FILE.
+# A boundary test asking whether `.git` is a DIRECTORY is false for all three, so the walk climbs
+# past the repository root and grades the document against exemptions its repo never declared.
+# Under /tmp that hands the decision to any process on the machine.
+
+@test "the skip-file walk stops at a repository whose .git is a file" {
+    mkdir -p "${TMP}/outer/repo"
+    printf 'HIST7\n' > "${TMP}/outer/.doc-lint"
+    printf -- '---\ntype: instruction\ntags: [t]\n---\n\n# t\n\nSessions used to be process-oriented and carried no assertable statement.\n' \
+        > "${TMP}/outer/repo/d.md"
+    printf 'gitdir: /nowhere\n' > "${TMP}/outer/repo/.git"
+
+    run "$LINT" "${TMP}/outer/repo/d.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *HIST7* ]]
+}
+
+@test "the skip-file walk stops at a repository whose .git is a directory" {
+    mkdir -p "${TMP}/outer/repo/.git"
+    printf 'HIST7\n' > "${TMP}/outer/.doc-lint"
+    printf -- '---\ntype: instruction\ntags: [t]\n---\n\n# t\n\nSessions used to be process-oriented and carried no assertable statement.\n' \
+        > "${TMP}/outer/repo/d.md"
+
+    run "$LINT" "${TMP}/outer/repo/d.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *HIST7* ]]
+}
+
+@test "a .doc-lint inside the repository is still honoured" {
+    mkdir -p "${TMP}/outer/repo/.git"
+    printf 'HIST7\n' > "${TMP}/outer/repo/.doc-lint"
+    printf -- '---\ntype: instruction\ntags: [t]\n---\n\n# t\n\nSessions used to be process-oriented and carried no assertable statement.\n' \
+        > "${TMP}/outer/repo/d.md"
+
+    run "$LINT" "${TMP}/outer/repo/d.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "this repo exempts no check code the linter cannot emit" {
+    run bash -c "
+        set -euo pipefail
+        codes=\$(awk '{print \$1}' '${VAULT_ROOT}/lib/doc-lint-patterns.tsv' | grep -v '^#' | grep -v '^\$')
+        missing=0
+        while read -r code _rest; do
+            case \"\$code\" in ''|'#'*) continue ;; esac
+            grep -qx \"\$code\" <<< \"\$codes\" || { echo \"exempts \$code, which nothing emits\"; missing=1; }
+        done < '${VAULT_ROOT}/.doc-lint'
+        [ \"\$missing\" -eq 0 ]
+    "
+    [ "$status" -eq 0 ]
+}

@@ -3,7 +3,7 @@ type: report
 project: vault
 slug: doclint-skip-walk-escapes-a-worktree
 date: 2026-09-15
-status: open
+status: fixed
 severity: major
 found_by: 2026-09-15-0933-doc-corpus campaign, case DOC-03
 found_in: linting documents inside a git worktree
