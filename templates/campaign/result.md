@@ -12,12 +12,16 @@ whether the loop ends, so the last line's shape is a contract.
 
 ## What was run
 
-The exact command, and what it returned. A number here must carry the command that produced it.
+The exact command, and what it returned, before and after. A number here must carry the command that
+produced it.
 
-## What the injection changed
+State any clause of this case's definition of done that the verifier cannot detect, and how it was
+checked instead. A green verdict must not imply work nothing measured.
 
-The contrary condition, and the outcome it produced. When the injected condition gives the same
-result as the normal one, the case discriminates nothing and its verdict is `BLOCKED`.
+## What proved this case can fail
+
+The adapter's failure shape, and what it produced. A case whose contrary condition gives the same
+result as the normal one discriminates nothing, and its verdict is `BLOCKED`.
 
 ## What was observed
 

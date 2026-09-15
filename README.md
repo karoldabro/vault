@@ -54,7 +54,7 @@ plugin uses the same name.
 | `/v-work` | Proposes a plan, waits for your yes, then builds it | Most work. Start here |
 | `/v-do` | Makes one small change, with no approval step | The change is small and obvious |
 | `/v-team` | Puts reviewers on the plan and on the diff | A wrong decision is expensive to undo |
-| `/v-loop` | Works alone for hours, until every case has a verdict | You want to hand the job over and leave |
+| `/v-loop` | Works alone for hours, until every case has a verdict | You want to hand a long job over and leave |
 | `/v-pm` | Plans one feature across several repos at once | The feature crosses repo boundaries |
 | `/v-method` | Writes the stages, the tools, and what should stop them | The task is big and you don't know how to start |
 

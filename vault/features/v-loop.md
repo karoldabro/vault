@@ -10,31 +10,45 @@ tags: [feature, command, campaign, qa]
 # v-loop
 
 ## Scope
-`/v-loop` — an autonomous test-and-fix campaign against a feature already built and running. It
-takes every operator decision in one opening exchange, enumerates a case backlog, turns each case
-into an executable test in the project's own framework, runs it against a disposable stack, files
-what fails, fixes it, and hands the retest to a different agent. Non-goals: it builds nothing (that
-is the `/v-do` → `/v-work` → `/v-team` ladder), it installs no unattended runner, and it starts
-against no stack the operator has not named as disposable.
+`/v-loop` — an autonomous campaign engine against a system that already runs. It takes every operator
+decision in one opening exchange, then enumerates a backlog, works each case, takes a verdict from a
+verifier, repairs what failed and verifies again, until every case is terminal or a cap stops it.
+
+**The loop is the command; the task is an adapter.** Two ship: `test-and-repair` for a feature
+already built and running, `document-corpus` for rewriting a body of documents until each passes the
+project's document check.
+
+Non-goals: it builds nothing (that is the `/v-do` → `/v-work` → `/v-team` ladder), it installs no
+unattended runner, and it starts against no arena the operator has not named.
 
 ## Contracts
-- **Command**: `commands/v-loop.md` (dispatcher, precondition, intake, resume, both shapes) +
-  `commands/v-loop/campaign-rules.md` (the rules binding every spawned agent). Linked by
-  `link_tree` at `install.sh:106`, which globs `commands/*.md` and every immediate subdirectory.
-- **Precondition**: a disposable stack the operator names in words. A session that has no such name
-  stops and says what is missing. Rule: [[../indications/campaign-evidence-from-the-running-system]].
-- **Templates**: `templates/campaign/{STATE,ledger,result,defects,TESTER-BRIEF}.md`, instantiated
-  into `<project-vault>/campaigns/YYYY-MM-DD-HHMM-<feature-slug>/`. `STATE.md` carries `rounds_used`,
-  which is what makes the round cap survive a usage limit.
+- **Command**: `commands/v-loop.md` (the loop, both refusals, intake, resume, both shapes) +
+  `commands/v-loop/campaign-rules.md` (what binds every spawned agent whatever the adapter). Linked
+  by `link_tree` at `install.sh:106`, which globs `commands/*.md` and every immediate subdirectory.
+- **Adapter contract**: `commands/v-loop/adapters.md` — six slots (`## Unit of work`, `## Backlog`,
+  `## Actor`, `## Verifier`, `## Caps`, `## Stop rule`), the conditional verification rule, and the
+  requirement that a campaign be able to fail.
+- **Adapters**: `commands/v-loop/adapters/test-and-repair.md` and
+  `commands/v-loop/adapters/document-corpus.md`. `prompts/on-device-e2e-campaign.md` is read by the
+  testing adapter for a campaign against a device.
+- **Precondition**: two facts, refused separately — an arena the operator names in words, and a
+  restore command the session runs at intake and proves by re-reading the arena. Rule:
+  [[../indications/campaign-evidence-from-the-running-system]].
+- **Templates**: `templates/campaign/{STATE,ledger,result,defects,AGENT-BRIEF}.md`, instantiated into
+  `<project-vault>/campaigns/YYYY-MM-DD-HHMM-<slug>/`. `STATE.md` carries `rounds_used`, which is
+  what makes the round cap survive a usage limit, plus the adapter's six slots copied at intake.
 - **Ledger**: `ledger.jsonl`, append-only, last line per id wins. Fields `id`, `surface`, `kind`,
-  `title`, `injection`, `conflicts_on`, `file`, `status`, `reason`, `run_at`, `evidence`. Terminal
-  statuses `pass`, `fail`, `blocked`; a `blocked` row carries the exact unblock action.
+  `title`, `discriminator`, `conflicts_on`, `check`, `status`, `reason`, `run_at`, `evidence`.
+  Terminal statuses `pass`, `fail`, `blocked`; a `blocked` row carries the exact unblock action.
+  `conflicts_on` names every path the unit of work writes, not only the one the case is named for.
 - **Caps**: `loop_max_rounds` (3) and `max_fix_attempts` (3), both stated in the intake exchange.
-- **Adapters**: `prompts/on-device-e2e-campaign.md` for a campaign against a device.
-- **Checks**: `checks/v-loop-SC-1.sh` (precondition, intake, caps, resume, envelope, templates
-  exist), `SC-2` (doc-lint over every shipped file), `SC-3` (no rule restated from any of the seven
-  `commands/_shared/` modules), `SC-4` (requirements outnumber prohibitions), `SC-5` (all twelve
-  safety rules survive), `SC-6` (the staging guard). Tests: `tests/unit/v-loop.bats`.
+- **Checks**: `checks/v-loop-SC-1.sh` (both refusals, intake, caps, resume, envelope, adapters named,
+  no task vocabulary in the engine), `SC-2` (doc-lint over every shipped file), `SC-3` (no rule
+  restated from any `commands/_shared/` module, across the engine and every adapter), `SC-4`
+  (requirements outnumber prohibitions in all five prose files), `SC-5` (every safety rule survives
+  its move, searched across the engine and every adapter), `SC-6` (the staging guard),
+  `checks/v-loop-adapter-slots.sh` (two adapters minimum, all six slots each, verifying in more than
+  one way). Tests: `tests/unit/v-loop.bats`.
 - **Staging guard**: `scripts/staging-hook.sh` denies `git add -A`, `git add .`, `git commit -a`,
   `git commit -am`, a pathspec-less `git commit`, `git commit --amend` and `git reset --hard`.
   Registered as a `PreToolUse` entry on `Bash`. Tests: `tests/unit/staging-hook.bats`.
@@ -78,4 +92,8 @@ against no stack the operator has not named as disposable.
   passes. A green run is not proof of no duplication.
 
 ## Sessions
+- [[../decisions/ADR-030-task-agnostic-campaign-engine]] — the engine/adapter split and the five
+  rules the document campaign changed.
+- `vault/campaigns/2026-09-15-0933-doc-corpus/` — the campaign that proved the loop runs a
+  non-testing task; `slots.md` and `engine-rules.md` hold what it needed.
 - [[../sessions/2026-09-06-1053-v-loop-autonomous-campaign]]

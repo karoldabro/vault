@@ -21,18 +21,28 @@ setup() {
 
 @test "campaign-rules requires evidence from the running system" {
     grep -qi 'running system' "${RULES}"
-    grep -qi 'reading code' "${RULES}"
+    grep -qiE 'reading (code|source)' "${RULES}"
 }
 
-@test "campaign-rules requires an injection designed before the case runs" {
-    grep -qi 'injection' "${RULES}"
-    grep -qi 'before the case runs' "${RULES}"
-    grep -q 'BLOCKED' "${RULES}"
+@test "every case must carry a failure shape, and the testing adapter still designs it up front" {
+    # The shared rules demand that a case be able to fail; HOW is the adapter's answer.
+    grep -qi 'failure shape' "${RULES}"
+    ADAPTER="${VAULT_ROOT}/commands/v-loop/adapters/test-and-repair.md"
+    grep -qi 'injection' "${ADAPTER}"
+    grep -qi 'before the case runs' "${ADAPTER}"
+    grep -q 'BLOCKED' "${ADAPTER}"
+    # and the other adapter proves it a different way, or the split demonstrates nothing
+    grep -qi 'control' "${VAULT_ROOT}/commands/v-loop/adapters/document-corpus.md"
 }
 
-@test "campaign-rules sends the retest to an agent other than the fixer" {
-    grep -qi 'must hand its retest to a different agent' "${RULES}"
-    grep -qi 'skews positive' "${RULES}"
+@test "a model verifier always uses a second agent, and a command verifier need not" {
+    CONTRACT="${VAULT_ROOT}/commands/v-loop/adapters.md"
+    # the phrase wraps, so read the file as one line before matching it
+    tr '\n' ' ' < "${CONTRACT}" | grep -qi 'skews *positive'
+    grep -qi 'separate spawn' "${CONTRACT}"
+    # the conditional is the point: a deterministic verifier spawns nobody
+    grep -qi 'most deterministic thing available' "${CONTRACT}"
+    grep -qi 'different agents' "${VAULT_ROOT}/commands/v-loop/adapters/test-and-repair.md"
 }
 
 @test "campaign-rules requires a defect to survive a check before it is filed" {
@@ -84,9 +94,13 @@ setup() {
 # points the real check at it. The check resolves its root as `$(dirname $0)/..`.
 scratch_root() {
     local r="${BATS_TEST_TMPDIR}/root"
-    mkdir -p "${r}/checks" "${r}/commands/v-loop" "${r}/commands/_shared" "${r}/lib"
-    cp "${VAULT_ROOT}"/checks/v-loop-SC-*.sh "${r}/checks/"
+    mkdir -p "${r}/checks" "${r}/commands/v-loop/adapters" "${r}/commands/_shared" "${r}/lib"
+    cp "${VAULT_ROOT}"/checks/v-loop-SC-*.sh "${VAULT_ROOT}/checks/v-loop-adapter-slots.sh" "${r}/checks/"
     cp "${RULES}" "${r}/commands/v-loop/campaign-rules.md"
+    # The checks now cover the whole read set an agent receives, so the scratch tree carries it.
+    cp "${CMD}" "${r}/commands/v-loop.md"
+    cp "${VAULT_ROOT}/commands/v-loop/adapters.md" "${r}/commands/v-loop/"
+    cp "${VAULT_ROOT}"/commands/v-loop/adapters/*.md "${r}/commands/v-loop/adapters/"
     cp "${VAULT_ROOT}"/commands/_shared/*.md "${r}/commands/_shared/"
     # The check reads its pattern list from lib/, so the scratch tree carries it too.
     cp "${VAULT_ROOT}/lib/shared-module-rules.tsv" "${r}/lib/"
@@ -131,9 +145,10 @@ scratch_root() {
 
 # --- the precondition, the intake, and the routing --------------------------------------------
 
-@test "the command refuses without a stack the operator names as disposable" {
-    grep -qi 'disposable' "${CMD}"
-    grep -qi 'operator names the stack' "${CMD}"
+@test "the command refuses without an arena the operator names as disposable" {
+    grep -qiE 'disposable|willing to lose' "${CMD}"
+    grep -qi 'arena' "${CMD}"
+    grep -qiE 'operator|in words' "${CMD}"
 }
 
 @test "the command asks all six intake questions" {
@@ -161,7 +176,7 @@ scratch_root() {
 @test "the spawn envelope carries the rules, the brief and the conflict scope" {
     grep -qi 'envelope' "${CMD}"
     grep -q 'campaign-rules.md' "${CMD}"
-    grep -q 'TESTER-BRIEF' "${CMD}"
+    grep -q 'AGENT-BRIEF' "${CMD}"
     grep -q 'conflicts_on' "${CMD}"
 }
 
@@ -213,4 +228,47 @@ scratch_root() {
     assert_symlink_to "${HOME}/.claude/commands/v-loop.md" "${VAULT_ROOT}/commands/v-loop.md"
     assert_symlink_to "${HOME}/.claude/commands/v-loop"    "${VAULT_ROOT}/commands/v-loop"
     cleanup_test_home
+}
+
+# --- the engine is the loop; the task is an adapter ---------------------------
+#
+# The command was welded to testing in four places. These prove it is not any more, and that the
+# adapter layer is a real extension point rather than a rename.
+
+@test "the engine names no task vocabulary of its own" {
+    ! grep -qiE 'executable test|(^|[^-])tester|browser' "${CMD}"
+}
+
+@test "the engine names its adapter contract and both shipped adapters" {
+    grep -q 'commands/v-loop/adapters.md' "${CMD}"
+    grep -q 'adapters/test-and-repair' "${CMD}"
+    grep -q 'adapters/document-corpus' "${CMD}"
+}
+
+@test "both refusals are stated separately, and the restore is run rather than collected" {
+    grep -qiE 'runs? (it )?once at intake|run once at intake' "${CMD}"
+    grep -qiE 're-read|re.read the arena' "${CMD}"
+    grep -qi 'untracked' "${CMD}"
+}
+
+@test "every adapter fills all six slots and two adapters exist" {
+    run "${VAULT_ROOT}/checks/v-loop-adapter-slots.sh"
+    [ "$status" -eq 0 ]
+}
+
+@test "the slot check refuses a single adapter" {
+    tmp="$(mktemp -d)"
+    cp -r "${VAULT_ROOT}" "${tmp}/repo" 2>/dev/null || skip "cannot copy the repo"
+    rm -f "${tmp}/repo/commands/v-loop/adapters/document-corpus.md"
+    run "${tmp}/repo/checks/v-loop-adapter-slots.sh"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"two is the floor"* ]]
+}
+
+@test "the task-specific rules survive in the testing adapter, not in the shared rules" {
+    ADAPTER="${VAULT_ROOT}/commands/v-loop/adapters/test-and-repair.md"
+    grep -qi 'executable test' "${ADAPTER}"
+    grep -qi 'textContent' "${ADAPTER}"
+    grep -qi 'queue' "${ADAPTER}"
+    ! grep -qi 'textContent' "${RULES}"
 }

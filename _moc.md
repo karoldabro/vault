@@ -66,7 +66,8 @@ in `personas/_resolution.md`.
 Reusable, vault-agnostic procedures. Paste one into a session and fill the variables.
 
 - [[prompts/consolidate-into-indications]] — sweep a vault's scattered guidelines into `indications/`
-- [[prompts/on-device-e2e-campaign]] — the mobile adapter for `/v-loop`: standing up an on-device end-to-end campaign against a real phone, read by a campaign that targets a device
+- [[commands/v-loop/adapters]] — the contract every `/v-loop` adapter fills: six slots, the conditional verification rule, and how a campaign proves it can fail
+- [[prompts/on-device-e2e-campaign]] — read by `/v-loop`'s testing adapter for a campaign against a real phone over adb
 
 ## Sessions
 

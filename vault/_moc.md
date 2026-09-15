@@ -26,7 +26,7 @@ tags: [moc]
 - [[features/session-continuity]] — `/v-handoff` writes what the next session continues into `handoffs/`; `/v-report` files a problem found during other work into `reports/`. Both are read by `commands/v-work/steps/02-load-context.md` §2.6a before the first edit
 - [[features/plugin-extensions]] — two points so a separate repo extends this framework: `init` at per-repo onboarding, `dod-keys` at the config gate; see [[decisions/ADR-030-framework-extension-points]]
 - [[features/v-team]] — persona-critique dev lifecycle command
-- [[features/v-loop]] — autonomous test-and-fix campaign command; refuses without a stack the operator names as disposable; see [[decisions/ADR-027-autonomous-test-fix-loop]]
+- [[features/v-loop]] — autonomous campaign engine. The loop is the command; the task is an adapter. See [[decisions/ADR-030-task-agnostic-campaign-engine]]
 - [[features/v-method]] — writes the method for one heavy task. Ordered stages, each with its command, seats, tools, exit evidence and a kill criterion. Runs no stage. See [[decisions/ADR-029-methodology-command]]
 - [[features/v-pm]] — cross-project planning + business-logic requirements knowledge center; see [[decisions/ADR-013-v-pm-cross-project-planning]] + [[decisions/ADR-014-vpm-business-knowledge-center]]
 - [[research/llm-collaboration-patterns]] — living, source-cited catalog of LLM collaboration patterns (dev/marketing/sales/planning/support + foundations); evidence reference for panel-mechanism changes (ADR-017). Covers **agent↔agent**.

@@ -2,7 +2,8 @@
 type: instruction
 campaign: {{slug}}
 feature: {{feature}}
-stack: {{disposable-stack-name}}
+adapter: {{adapter-name}}
+arena: {{arena-name}}
 rounds_used: 0
 tags: [campaign, state]
 ---
@@ -12,18 +13,40 @@ tags: [campaign, state]
 The first file a resuming session reads. It holds where the campaign stopped and what it owes.
 The case ledger holds the cases; this holds only what the ledger cannot answer.
 
-## Stack
+## Arena
 
-The disposable stack this campaign runs against, and the command that rebuilds it. A session that
-finds this blank stops and asks, because the precondition is the operator naming a stack they are
-willing to lose.
+The arena this campaign runs against, and the command that restores it. A session that finds either
+blank stops and asks: the precondition is the operator naming an arena they are willing to lose, and
+a restore command the session has actually run.
 
 | field | value |
 |-------|-------|
-| stack name | {{disposable-stack-name}} |
-| rebuild command | {{restore-command}} |
-| test command | {{test-command}} |
-| browser harness | {{browser-harness}} |
+| arena name | {{arena-name}} |
+| restore command | {{restore-command}} |
+| restore proven at intake | {{yes, and what re-reading the arena showed}} |
+
+## The adapter's slots
+
+Copied from `commands/v-loop/adapters/{{adapter-name}}.md` at intake, so no later session fills one
+from memory.
+
+| slot | this campaign's answer |
+|------|-----------------------|
+| unit of work | {{what one case is, and every path it writes}} |
+| backlog | {{the command that enumerates it}} |
+| actor | {{who works a case, and what it reads first}} |
+| verifier | {{the command or model that produces a verdict}} |
+| caps | {{rounds}} rounds, {{attempts}} attempts per case |
+| stop rule | {{the observable condition that ends this}} |
+
+## Clauses the verifier cannot detect
+
+Each names the written rule it cites. A clause resting on judgement belongs in Deferred decisions
+below, not here.
+
+| clause | rule it cites | how a case checks it |
+|--------|---------------|----------------------|
+|        |               |                      |
 
 ## Rounds
 
@@ -36,10 +59,10 @@ what makes the cap survive a usage limit.
 | rounds used | 0 |
 | round cap | {{loop_max_rounds}} |
 
-## Retest queue
+## Re-verify queue
 
-Cases with a `fail` verdict whose fix has landed and whose retest has not run. A session works this
-before it takes new cases.
+Cases whose repair has landed and whose re-verification has not run, plus any case whose files
+changed after its verdict. A session works this before it takes new cases.
 
 | case id | defect id | fix commit | waiting since |
 |---------|-----------|------------|---------------|

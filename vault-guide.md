@@ -367,7 +367,7 @@ instead. Decision record: [[ADR-018-decision-communication-contract]] in `vault/
 | `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, claude-mem, Serena, MorphLLM |
 | `/v-ask` | Read-only, vault-aware Q&A. Loads context cheapest-first; no edits, no gate, no capture. Hands off when the answer implies a change. | claude-mem, graphify, Serena |
 | `/v-do` | Small low-risk change, no approval gate. Orient → execute → self-review; capture off by default. Escalates to `/v-work` above ~5 files, `/v-team` for architecture, schema, auth, billing or cross-repo. | claude-mem, Serena, MorphLLM |
-| `/v-loop` | Autonomous test-and-fix campaign against a feature already built and running. Refuses without a disposable stack the operator names; takes every decision in one intake exchange; enumerates a case backlog, runs each case against the real system, files, fixes and retests until every case is terminal or a cap stops it (§11.1). | Agent fan-out, the project's own test runner |
+| `/v-loop` | Autonomous campaign engine against a real system. Picks an adapter, refuses without an arena the operator names and a restore command it runs at intake, takes every decision in one exchange, then enumerates a backlog and works each case until every one is terminal or a cap stops it (§11.1). | Agent fan-out, whatever the adapter's verifier is |
 | `/v-method` | Designs the method for one heavy task and runs no stage. Refuses without a written problem statement, an observable criterion, or when the task fits one rung of the ladder. Routes on checkable task properties (`commands/v-method/routing.md`), asks which of budget and criteria is fixed, then writes a method file whose every stage carries a command, seats, tools, exit evidence and a kill criterion naming the field its verdict is read from (§11.2). | `bin/gate.sh verdict --run`, the stage commands themselves |
 | `/v-handoff` | Write what the next session carries on, into `handoffs/`: what is left, what not to touch, what is unverified, and the exact next command. `resume` reads the newest open one back, follows its `continues` chain, and marks it resumed; `list` shows them. Refuses when nothing is left to do, and names `/v-capture` instead. | `bin/doc-lint.sh` |
 | `/v-report` | File a problem found during other work into `reports/`: what is wrong, which files, the consequence, the cause, how to see it, the repair and what closes it. `list` orders by severity; `close` marks it fixed or rejected. Only for a problem outside the scope of the work that found it. | `bin/doc-lint.sh` |
@@ -418,22 +418,30 @@ An unset knob takes the default. A cap hit with open blockers escalates to the u
 
 ### 11.1 `/v-loop` campaigns
 
-A campaign verifies and repairs what is already built, by running it. It is not a rung on the
-`/v-do` → `/v-work` → `/v-team` ladder, and neither escalates into the other.
+A campaign works a backlog against a system that already runs: enumerate, work a case, take a
+verdict from a verifier, repair, verify again, stop at a cap. It is not a rung on the `/v-do` →
+`/v-work` → `/v-team` ladder, and neither escalates into the other.
 
-**It refuses without a disposable stack you name in words** — one you are willing to lose. A stack
-inferred from a `docker-compose.yml` is not one anyone agreed to lose, and the campaign's own rules
-allow it to drop and rebuild a database.
+**The loop is the command; the task is an adapter.** Two ship — `adapters/test-and-repair.md` for a
+feature already built and running, and `adapters/document-corpus.md` for rewriting a body of
+documents until each passes the project's document check. Each fills six slots: unit of work,
+backlog, actor, verifier, caps, stop rule. Contract for a third: `commands/v-loop/adapters.md`.
 
-Artifacts live in `<project-vault>/campaigns/YYYY-MM-DD-HHMM-<feature-slug>/`:
+**It refuses on two facts, and each separately.** You name the **arena** in words — a copy of the
+system you are willing to lose — and you give the **command that restores it**, which the session
+runs at intake and proves by re-reading the arena. Neither is a judgement a session can talk itself
+out of at hour four. `git checkout -- <path>` leaves every untracked file in place, so a restore
+nobody has run is a guess.
+
+Artifacts live in `<project-vault>/campaigns/YYYY-MM-DD-HHMM-<slug>/`:
 
 | file | holds |
 |------|-------|
 | `STATE.md` | the resume point, the retest queue, cases never run, and `rounds_used` — the count that makes the round cap survive a usage limit |
 | `ledger.jsonl` | one append-only JSON line per case; last line per id wins, so a session killed mid-write loses one line rather than the campaign |
 | `results/<case-id>.md` | one per run, ending `VERDICT: PASS \| FAIL \| BLOCKED`. **Gitignored** — this is evidence captured from real data at real volume |
-| `defects.md` | one row per defect and its fix, sharing the `vault/defect-ledger.md` columns so `bin/gate.sh recurrence` grades it |
-| `TESTER-BRIEF.md` | every trap the campaign has already paid for; each agent reads it first |
+| `defects.md` | one row per defect and its fix, sharing the `vault/defect-ledger.md` columns so `bin/gate.sh recurrence` grades it. The `test` column keeps that literal name whatever the adapter calls its check |
+| `AGENT-BRIEF.md` | every trap the campaign has already paid for, plus the recipe for the shape most cases share; each agent reads it first |
 
 `/v-loop` appends `campaigns/*/results/` to the project vault's `.gitignore` when it is absent,
 because `templates/vault.gitignore` is copied only at init.
@@ -446,8 +454,20 @@ per batch when it does not — and `/v-loop` builds that runner and hands you th
 installing it, because the permission classifier refuses `crontab` edits and refuses to spawn
 `claude -p` from Bash.
 
-Rules binding every campaign agent: `commands/v-loop/campaign-rules.md`. Mobile adapter:
-`prompts/on-device-e2e-campaign.md`. Decision: [[ADR-027-autonomous-test-fix-loop]].
+**A case is done when the verifier passes and when the work the verifier cannot see is finished.**
+A verifier reads what it reads: `bin/doc-lint.sh` never sees frontmatter, so a document defect there
+produces no finding. Each such clause of the definition of done names the written rule it cites, and
+that also binds enumeration — a backlog built from the verifier alone answers how much the tool can
+see, not how much work there is.
+
+**Who verifies depends on what the verifier is.** A command may be re-run by the agent that did the
+work, with the orchestrator re-running it too and the two agreeing. A model always verifies in a
+separate spawn, because a model grading its own work skews positive.
+
+Rules binding every campaign agent whatever the adapter: `commands/v-loop/campaign-rules.md`. Device
+adapter for a testing campaign: `prompts/on-device-e2e-campaign.md`. Decisions:
+[[ADR-030-task-agnostic-campaign-engine]], and [[ADR-027-autonomous-test-fix-loop]] for the rules it
+still owns. Worked example: `vault/campaigns/2026-09-15-0933-doc-corpus/`.
 
 ### 11.2 `/v-method` method files
 

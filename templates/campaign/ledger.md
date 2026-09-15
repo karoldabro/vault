@@ -16,6 +16,9 @@ everything and takes one writer at a time.
 
 **The last line for an id wins.** A case that runs twice appends twice, and the reader folds by id.
 
+**A verdict expires when its case changes.** An agent that reworks a case after reporting appends a
+new row rather than editing the old one, and the orchestrator re-runs the verifier before it stands.
+
 ## The row
 
 One JSON object per line. Every field is required; an empty string is the honest value for one that
@@ -25,13 +28,13 @@ does not apply yet.
 |-------|---------|
 | `id` | the case id, stable for the life of the campaign |
 | `surface` | the screen, endpoint or job the case exercises |
-| `kind` | `happy` or `injection` |
+| `kind` | the adapter's case kinds; `document-corpus` uses `repair` and `control`, `test-and-repair` uses `happy` and `injection` |
 | `title` | what the case proves, as an outcome the user sees |
-| `injection` | the contrary condition that must produce a different outcome; `""` on a `happy` case |
-| `conflicts_on` | what the case touches that another case could also touch |
-| `file` | the executable test, at its exact path |
+| `discriminator` | how this row proves it can fail — the adapter's failure shape. `""` when the adapter proves it with separate control rows instead |
+| `conflicts_on` | **every path this unit of work writes**, not just the one the case is named for. A case that creates a sidecar names both |
+| `check` | the command that produces this row's verdict, at its exact path |
 | `status` | `planned`, `authored`, `pass`, `fail`, `blocked` or `flaky` |
-| `reason` | why, on `fail` and `blocked`; on `blocked` it must state the exact unblock action |
+| `reason` | the verifier's **own message text**, never a rule code expanded from memory; on `blocked` it must state the exact unblock action |
 | `run_at` | ISO timestamp of the run that produced this status |
 | `evidence` | path to the result file |
 
@@ -45,7 +48,7 @@ mean nothing, which is the number the campaign exists to produce.
 
 ## Conflict scopes
 
-`conflicts_on` is how the orchestrator decides which cases may run together. Two testers run at the
+`conflicts_on` is how the orchestrator decides which cases may run together. Two agents run at the
 same time only when their scopes are disjoint. A scope of `global` runs alone.
 
 | scope | what it means |
@@ -55,3 +58,6 @@ same time only when their scopes are disjoint. A scope of `global` runs alone.
 | `none` | reads only, and shares nothing another case writes |
 
 The axes are the project's own. A session reads them from the repo rather than assuming them.
+
+A scope keyed on anything but a path is a defect: two documents sharing a slug are two units of work,
+and a scope naming the slug would fence them as one.

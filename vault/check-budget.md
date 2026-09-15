@@ -80,10 +80,30 @@ files or repos names no changed path and lands in one of them on every diff: 42 
 those rules, and a summary that folds them into a coverage number reports thoroughness it did not
 have.
 
-`bin/rule-count.sh` counts the `/v-team` corpus. `commands/v-loop.md` and its rules file are counted
-apart, by `checks/v-loop-SC-4.sh`, because a campaign is a separate read set: no session loads both.
+`bin/rule-count.sh` counts the `/v-team` corpus. The campaign files — `commands/v-loop.md`, its rules
+file, the adapter contract and every adapter — are counted apart, by `checks/v-loop-SC-4.sh`, because
+a campaign is a separate read set: no session loads both, and a session loads one adapter rather than
+all of them.
 Counting them together would raise a budget that is already over, which hides the overrun instead of
 recording it.
+
+## The /v-loop gates
+
+Counted here because the budget tracks what a session pays for, and these run on every campaign
+change. Six existed and went unregistered; the seventh ships with the engine/adapter split.
+
+| check | what it refuses | why it is not prose |
+|-------|-----------------|---------------------|
+| `checks/v-loop-SC-1.sh` | an engine missing either refusal, the intake, a cap, resume, the envelope, or its adapters — and any task vocabulary leaking back into it | 34 assertions over one file, all greppable |
+| `checks/v-loop-SC-2.sh` | a shipped campaign file that fails `bin/doc-lint.sh` | the linter already exists |
+| `checks/v-loop-SC-3.sh` | a rule restated from a `commands/_shared/` module, across the engine, the contract and every adapter; and an adapter deferring to nothing | patterns live in `lib/shared-module-rules.tsv`, shared with `checks/v-method-SC-5.sh` |
+| `checks/v-loop-SC-4.sh` | prohibitions outnumbering requirements in any of the five prose files | same grammar as `bin/rule-count.sh` |
+| `checks/v-loop-SC-5.sh` | a safety rule that survives nowhere after its move to an adapter | searches the whole read set, so a rule that moved still counts |
+| `checks/v-loop-SC-6.sh` | a staging guard that denies one verb of an action and not its siblings | wraps `tests/unit/staging-hook.bats` |
+| `checks/v-loop-adapter-slots.sh` | fewer than two adapters, an adapter missing any of the six slots, a slot filled with nothing, and two adapters verifying the same way | the slot headings are the contract, so reading them back is exact |
+
+`checks/v-loop-SC-3.sh` and `checks/v-method-SC-5.sh` match the shared modules' literal wording, so a
+rule reworded rather than copied passes both.
 
 ## Rules kept as prose
 
@@ -95,4 +115,4 @@ session to remember, and compliance falls as that count rises.
 | read the communication contract before writing output | `commands/_shared/communication.md` | no hook fires before a model writes prose; `bin/output-lint.sh` measures the reply afterwards instead |
 | a criterion decided by observation | `vault/architecture/session-gates.md` | no artifact carries the signal; the operator decides it against the failing condition the row names |
 | leave pushing to the operator | `commands/v-work/steps/05-commit-capture.md` | unmeasurable as written: a push the operator asked for and a push taken unprompted leave the same trace, so no check can separate them |
-| the campaign operating rules | `commands/v-loop/campaign-rules.md` | a campaign runs against a stack that is not this repo, so nothing here can observe whether a rule held. The one rule that needed a counter — a cap on concurrent testers — was reworded to "one tester unless the conflict sets are disjoint", which a session decides from the ledger row it is writing. Revisit when a run violates one |
+| the campaign operating rules | `commands/v-loop/campaign-rules.md` and `commands/v-loop/adapters/*.md` | a campaign runs against an arena that is not this repo, so nothing here can observe whether a rule held. The one rule that needed a counter — a cap on concurrent agents — was reworded to "two agents together only when the conflict sets are disjoint", which a session decides from the ledger row it is writing. Revisit when a run violates one |

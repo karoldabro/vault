@@ -13,7 +13,8 @@ PROHIBIT='(^|[^a-z])(never|do not|don.t|must not|cannot|may not|refuses? to)([^a
 REQUIRE='(^|[^a-z])(must|shall|always|is required|are required)([^a-z]|$)'
 
 fail=0
-for f in commands/v-loop.md commands/v-loop/campaign-rules.md; do
+for f in commands/v-loop.md commands/v-loop/campaign-rules.md commands/v-loop/adapters.md \
+         $(cd "$root" && find commands/v-loop/adapters -maxdepth 1 -name '*.md' | sort); do
   if [ ! -f "$root/$f" ]; then
     printf '  MISSING  %s\n' "$f"; fail=1; continue
   fi

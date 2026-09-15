@@ -11,7 +11,7 @@ files=(
   templates/campaign/defects.md
   templates/campaign/ledger.md
   templates/campaign/result.md
-  templates/campaign/TESTER-BRIEF.md
+  templates/campaign/AGENT-BRIEF.md
 
   vault/decisions/ADR-027-autonomous-test-fix-loop.md
   vault/indications/campaign-evidence-from-the-running-system.md

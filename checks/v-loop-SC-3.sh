@@ -13,6 +13,13 @@ root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 f="$root/commands/v-loop/campaign-rules.md"
 [ -f "$f" ] || { printf '  MISSING  %s does not exist\n' "$f"; exit 1; }
 
+# Three prose files replaced one, so the restatement surface tripled. Every adapter is checked too.
+mapfile -t prose < <(
+  { printf '%s\n' "$f" "$root/commands/v-loop/adapters.md"
+    find "$root/commands/v-loop/adapters" -maxdepth 1 -name '*.md' 2>/dev/null | sort
+  } | while read -r c; do [ -f "$c" ] && printf '%s\n' "$c"; done
+)
+
 rules="$root/lib/shared-module-rules.tsv"
 [ -f "$rules" ] || { printf '  MISSING  %s does not exist\n' "$rules"; exit 1; }
 owned=$(grep -v '^[[:space:]]*#' "$rules" | grep .)
@@ -21,7 +28,7 @@ owned=$(grep -v '^[[:space:]]*#' "$rules" | grep .)
 fail=0
 while IFS=$'\t' read -r pat owner; do
   [ -n "$pat" ] || continue
-  if hit=$(grep -inE "$pat" "$f"); then
+  if hit=$(grep -inE "$pat" "${prose[@]}"); then
     printf '  RESTATED  %s owns this; reference it instead:\n%s\n' "$owner" "$hit"; fail=1
   fi
 done <<<"$owned"
@@ -35,5 +42,12 @@ done
 
 grep -q 'agent-conduct.md' "$f" || { printf '  MISSING  the file defers to no shared module\n'; fail=1; }
 
-[ "$fail" -eq 0 ] && printf '  OK  campaign-rules.md restates no shared-module rule; all _shared modules covered\n'
+# an adapter that names no owner has started restating instead of deferring
+for a in "$root"/commands/v-loop/adapters/*.md; do
+  [ -f "$a" ] || continue
+  grep -qE 'campaign-rules\.md|adapters\.md|commands/_shared/' "$a" \
+    || { printf '  MISSING  %s defers to nothing; it will drift into a second rules file\n' "commands/v-loop/adapters/$(basename "$a")"; fail=1; }
+done
+
+[ "$fail" -eq 0 ] && printf '  OK  %s prose files restate no shared-module rule; all _shared modules covered\n' "${#prose[@]}"
 exit "$fail"
