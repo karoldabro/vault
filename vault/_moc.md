@@ -37,11 +37,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-15-0939-readme-rewrite-and-openviking-removal]] — Rewrite README.md for a human reader and delete every live trace of the dropped dependency
 - [[sessions/2026-09-14-1904-handoff-and-report-commands]] — Two commands so a session can hand its direction to the next one, and a problem found mid-task can be filed instead of derailing the work
 - [[sessions/2026-09-14-1433-plugin-extension-points]] — Two framework extension points, and the code-quality gate split into its own repo as their first consumer
 - [[sessions/2026-09-13-1447-coverage-gate-and-failed-sessions]] — coverage gate: a session that cannot reach its own success criteria fails instead of asking for approval; claim ledger and methodology command designed and deferred
 - [[sessions/2026-09-09-1204-indication-routing-and-anchor-verification]] — /v-cr routes indications to the diff and verifies every citation
-- [[sessions/2026-09-06-1053-v-loop-autonomous-campaign]] — /v-loop: an autonomous test-and-fix campaign command that refuses without a disposable stack; also finished the staging guard
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center for one or more repos: rules REQ-NN with axis tags, a glossary, and decision/state tables. Adds the single-repo `requirements/` category. The id chain reaches the established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)
