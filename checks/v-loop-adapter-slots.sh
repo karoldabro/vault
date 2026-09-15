@@ -41,16 +41,25 @@ for a in "${adapters[@]}"; do
     body=$(awk -v h="$s" 'index($0,h)==1{f=1;next} f&&/^## /{exit} f&&NF{c++} END{print c+0}' "$a")
     [ "${body:-0}" -ge 1 ] || { printf '  EMPTY    %s fills %s with nothing\n' "$rel" "$s"; fail=1; }
   done
-  # the verifier slot must say what produces the verdict
-  if awk 'index($0,"## Verifier")==1{f=1;next} f&&/^## /{exit} f' "$a" | grep -qiE 'exit code|command|a run of|hash'; then
-    verifier_kinds+=("$(awk 'index($0,"## Verifier")==1{f=1;next} f&&/^## /{exit} f' "$a" | grep -qiE 'exit code|hash' && echo command || echo run)")
+  # The verifier slot must say what produces the verdict.
+  #
+  # Read the slot into a variable before matching it. Piping awk into `grep -q` lets grep close the
+  # pipe on its first match, which SIGPIPEs awk; under `pipefail` the pipeline status is then 141 or
+  # 0 depending on who finished first, so the kind below was detected nondeterministically.
+  vslot=$(awk 'index($0,"## Verifier")==1{f=1;next} f&&/^## /{exit} f' "$a")
+  if printf '%s' "$vslot" | grep -qiE 'exit code|command|a run of|hash'; then
+    if printf '%s' "$vslot" | grep -qiE 'exit code|hash'; then
+      verifier_kinds+=(command)
+    else
+      verifier_kinds+=(run)
+    fi
   else
     printf '  VAGUE    %s names no concrete verifier under ## Verifier\n' "$rel"; fail=1
   fi
 done
 
 # two adapters naming the same verifier kind prove nothing about generality
-if [ "$n" -ge 2 ]; then
+if [ "$n" -ge 2 ] && [ "${#verifier_kinds[@]}" -ge 2 ]; then
   uniq_kinds=$(printf '%s\n' "${verifier_kinds[@]}" | sort -u | wc -l)
   [ "$uniq_kinds" -ge 2 ] || {
     printf '  REFUSED  every adapter verifies the same way; the split demonstrates nothing\n'; fail=1; }

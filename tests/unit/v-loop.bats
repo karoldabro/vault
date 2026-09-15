@@ -256,13 +256,38 @@ scratch_root() {
     [ "$status" -eq 0 ]
 }
 
+# A minimal tree, not a copy of the repo: copying the whole checkout including .git on every run is
+# slow enough to be a flake source, and the check reads only these three paths.
+slot_fixture() {
+    local r="${BATS_TEST_TMPDIR}/slots"
+    mkdir -p "${r}/checks" "${r}/commands/v-loop/adapters"
+    cp "${VAULT_ROOT}/checks/v-loop-adapter-slots.sh" "${r}/checks/"
+    cp "${VAULT_ROOT}/commands/v-loop/adapters.md" "${r}/commands/v-loop/"
+    cp "${VAULT_ROOT}"/commands/v-loop/adapters/*.md "${r}/commands/v-loop/adapters/"
+    printf '%s' "${r}"
+}
+
+@test "the slot check passes on a faithful copy of the shipped tree" {
+    local r; r="$(slot_fixture)"
+    run "${r}/checks/v-loop-adapter-slots.sh"
+    [ "$status" -eq 0 ]
+}
+
 @test "the slot check refuses a single adapter" {
-    tmp="$(mktemp -d)"
-    cp -r "${VAULT_ROOT}" "${tmp}/repo" 2>/dev/null || skip "cannot copy the repo"
-    rm -f "${tmp}/repo/commands/v-loop/adapters/document-corpus.md"
-    run "${tmp}/repo/checks/v-loop-adapter-slots.sh"
+    local r; r="$(slot_fixture)"
+    rm -f "${r}/commands/v-loop/adapters/document-corpus.md"
+    run "${r}/checks/v-loop-adapter-slots.sh"
     [ "$status" -eq 1 ]
     [[ "$output" == *"two is the floor"* ]]
+}
+
+@test "the slot check refuses an adapter missing a slot" {
+    local r; r="$(slot_fixture)"
+    grep -v '^## Caps$' "${VAULT_ROOT}/commands/v-loop/adapters/document-corpus.md" \
+        > "${r}/commands/v-loop/adapters/document-corpus.md"
+    run "${r}/checks/v-loop-adapter-slots.sh"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"has no ## Caps"* ]]
 }
 
 @test "the task-specific rules survive in the testing adapter, not in the shared rules" {
