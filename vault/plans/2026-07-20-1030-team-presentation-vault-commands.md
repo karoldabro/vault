@@ -13,15 +13,9 @@ Deliverable: a short, simple-language, humanized slide deck introducing the vaul
 coworkers who use Claude Code but haven't seen it. It is implemented at
 `docs/vault-intro-deck.html` and published as a private Artifact link.
 
-## Open & deferred
-
-- **Open — the slide count does not match the deliverable.** `docs/vault-intro-deck.html` carries 8
-  slides; Test-plan check 4 below requires 7, so that check fails as written. Decide which number
-  binds, then correct the other. Nothing else in this plan depends on the answer.
-
 ## Format
 
-- **7-slide HTML deck**, published as a private Artifact link (presentable + shareable), source
+- **8-slide HTML deck**, published as a private Artifact link (presentable + shareable), source
   committed to this repo at `docs/vault-intro-deck.html`.
 - Voice rules (binding): no source-doc jargon on any slide — lifecycle, capture, approval gate,
   context, tokens, convergence, ADR, dedupe, MOC, orchestration, persona-critique. Use the glossary
@@ -65,7 +59,7 @@ dedupe→"checks it hasn't already written it down" · MOC→"index".
 1. Jargon sweep: none of the banned words appear in slide text.
 2. Accuracy spot-check: slide 4 claims match commands/v-{ask,do,work}.md + v-team.md.
 3. Deck is self-contained (no external assets), renders in light + dark.
-4. Slide count = 7; every slide ≤ ~40 words of body text.
+4. Slide count = 8; every slide ≤ ~40 words of body text.
 
 ## Refs
 
