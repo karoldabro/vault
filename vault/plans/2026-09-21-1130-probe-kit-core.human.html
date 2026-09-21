@@ -1,0 +1,319 @@
+<title>probe-kit-core — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+</style>
+
+<main>
+<h1>probe-kit-core — plan</h1>
+<h2>Check these yourself</h2>
+<ul>
+<li>Does each file have one purpose, and is any file doing two jobs?</li>
+<li>Is anything loaded every time that could load only when needed?</li>
+<li>Do the size budgets fit what each file must hold?</li>
+<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
+<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
+</ul>
+<h2>Task</h2>
+<p>Session S4 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Build the probe kit core. It is <code>bin/probe.sh</code> with <code>list</code>, <code>detect</code>, <code>run &lt;stage&gt;</code>, <code>diff</code> and <code>scale</code>, and <code>probes/registry.tsv</code>. It ships harness probes run on this repo, three schema probes (duplicate columns, foreign-key indexes, naming), a similar-symbol probe and the verified tool list. Keywords: probe, registry, finding row, absent tool, executes-repo-code, scale, harness, sql schema.</p>
+<h2>Open &amp; deferred</h2>
+<ul>
+<li>deferred: rows for tools whose output this session cannot capture on this machine (PHPArkitect, PMD CPD, tbls, DCM, Qlty, Semgrep). Session S9 adds each with a captured fixture.</li>
+<li>deferred: complexity gating and Laravel migration probes. A PHP migration is not SQL, so S9 feeds <code>php artisan migrate --pretend</code> output into the SQL probes.</li>
+<li>deferred: Dart symbols in the similar-symbol probe; a regex for Dart method names produces mostly false matches.</li>
+<li>deferred: SQL that drops or renames a column across migrations. The SQL probes read CREATE TABLE, CREATE INDEX and ALTER TABLE ADD only, so a schema built from many migrations can report <code>column-drift</code> for a column that was later dropped.</li>
+<li>deferred: one shared markdown table reader. <code>bin/gate.sh</code>, the renderer and the similar-symbol probe each read tables; extract <code>lib/md-table.sh</code> when a fourth reader appears.</li>
+<li>deferred: <code>bin/release-check.sh</code> and <code>bin/doc-lint.sh</code> each list changed and untracked files; point them at <code>lib/probe-scope.sh</code> in a later session.</li>
+<li>deferred: a scrubbed environment (<code>env -i</code> with an allowlist) for every cell, and a memory limit. Cells run with a CPU limit of twice the timeout, an output limit and a process-group kill, and no memory limit.</li>
+<li>accepted limit: <code>similar-symbols</code> and the SQL probes are text scans. A symbol built by a macro, or SQL written by a tool at run time, is invisible to them. A SQL column named <code>key</code> or <code>period</code>, <code>CREATE TABLE ... AS SELECT</code>, and a backslash-escaped quote in a string are not read correctly.</li>
+<li>accepted limit: the kit runs a repo's own tool directories (<code>.venv-probes/bin</code>, <code>node_modules/.bin</code>) for a <code>yes</code> row unless the caller passes <code>--no-repo-code</code>. With <code>--allow-repo-registry</code> it prints a repo row's install text, with control bytes removed and at most 300 bytes. Session S7 decides who passes the flags.</li>
+<li>accepted limit: <code>md-links</code> costs about 20 ms per markdown file, so it is rated <code>M</code>, and 6000 files reach the 120 second timeout. <code>dead-files</code> counts a file-name stem as a mention, so common words hide unused files. Bytes 0x80 to 0x9f pass the control-byte filter, because stripping them would damage UTF-8 text.</li>
+<li>accepted limit: the cost thresholds behind <code>scale</code> (2000 and 10000 tracked files) are unmeasured defaults. Session S5 measures them (D-10 of the master plan).</li>
+<li>accepted limit: <code>parse_claude_validate</code> and <code>parse_typos_json</code> need <code>jq</code>; a machine without it gets <code>absent: jq</code>.</li>
+<li>known noise: <code>claude plugin validate</code> warns that every command step file lacks frontmatter, so this repo yields about 44 warnings from that one probe. <code>bin/probe.sh run plan</code> on this repo exits 1 with findings.</li>
+</ul>
+<h2>Success criteria</h2>
+<p>&lt;!-- Checks are written before the work and exit 2 with "not written yet" until the file they grade exists. --&gt;</p>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+</thead>
+<tbody>
+<tr><td>SC-1</td><td>WHEN <code>bin/probe.sh list</code> and <code>detect</code> run on a fixture repo THE SYSTEM SHALL print one line per registry row with <code>ok</code> or <code>absent: &lt;install&gt;</code>, and <code>detect</code> SHALL name only the probes whose stack is present</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-2</td><td>WHEN a probe finds a defect THE SYSTEM SHALL print one six-field tab row to stdout and exit 1, exit 0 when clean, and exit 2 when a probe fails or prints a malformed row, and SHALL print one <code>ran:</code> line per probe it ran</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-3</td><td>WHEN a registry row names a tool that is not installed THE SYSTEM SHALL print <code>absent: &lt;id&gt;: &lt;install command&gt;</code> to stderr, exit 2, run no install command, and create no file</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-4</td><td>WHEN <code>bin/probe.sh run plan</code> runs on this repo THE SYSTEM SHALL run the harness probes, print only valid six-field rows and exit 0 or 1</td><td>delivery</td><td>command</td></tr>
+<tr><td>SC-5</td><td>WHEN a schema holds a duplicated column set, a foreign key without an index, a duplicate column in one table or a name outside snake case THE SYSTEM SHALL emit <code>dup-column-set</code>, <code>fk-no-index</code>, <code>dup-column-in-table</code> and <code>naming-snake-case</code> rows naming the file and line, and a clean schema SHALL emit none</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-6</td><td>WHEN a spec's Reuse map holds a <code>new</code> row whose need shares a token with an existing function name THE SYSTEM SHALL emit a <code>similar-symbol</code> row naming that function's file and line</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-7</td><td>WHEN <code>bin/probe.sh scale</code> runs THE SYSTEM SHALL print the tracked file count and a <code>max-cost</code> line, and <code>run --max-cost S</code> SHALL skip every probe of cost <code>M</code> or <code>L</code> and say so on stderr</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-8</td><td>WHEN a repo carries its own registry THE SYSTEM SHALL ignore it unless <code>--allow-repo-registry</code> is passed, SHALL skip its rows under <code>--no-repo-code</code> even when they claim <code>no</code>, SHALL skip framework rows marked <code>yes</code> under <code>--no-repo-code</code>, and SHALL still run framework rows marked <code>no</code></td><td>functional</td><td>command</td></tr>
+<tr><td>SC-9</td><td>WHEN a registry row runs a tool THE SYSTEM SHALL have that tool's verdict, source URL and date in <code>vault/research/probe-tool-verification.md</code>, and the parsers for <code>lizard</code>, <code>typos</code> and <code>claude plugin validate</code> SHALL turn a captured real output into rows</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-10</td><td>WHEN <code>diff</code> runs in a git repo with one changed file THE SYSTEM SHALL report only findings in that file and in untracked files, SHALL run no command from the repo's git configuration, and SHALL exit 2 outside a git repo</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-11</td><td>WHEN a repo holds a symlink to a file outside it, a file name with a tab or newline, or a path holding shell syntax THE SYSTEM SHALL leak no content of the link target, print no forged row, and run no command from the path</td><td>functional</td><td>command</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Decisions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>D-1 A registry row is <code>id stack stage detect run parser cost executes-repo-code install</code> in this order (the order of contract C-3), tab separated. <code>parser</code> is <code>native</code> or the name of a function in <code>lib/probe-parsers.sh</code>. The pair <code>id</code>+<code>stage</code> is unique</td><td>C-3 fixes the columns; a name in <code>parser</code> says how output becomes rows</td></tr>
+<tr><td>D-2 <code>plan</code> rows run on the whole tree under <code>run plan</code> and on changed files under <code>diff</code>. <code>diff</code> rows run only under <code>diff</code>. <code>review</code> rows run under <code>run review</code> and under <code>diff</code>. <code>run</code> rejects the stage <code>diff</code>. <code>diff</code> runs every row of the three stages and keeps the findings whose file changed</td><td>one script needs one row, and C-3 names three stages without saying when each runs</td></tr>
+<tr><td>D-3 A finding is <code>probe file line severity rule message</code>. <code>lib/probe-emit.sh</code> is the only place that builds one, and the core rewrites field 1 to the registry id, strips control bytes from fields 2 to 6, caps the message, and refuses an absolute or <code>..</code> file. The core buffers a probe's rows and prints none of them when that probe failed</td><td>six writers of a row drift, and a file name or message can carry a second row</td></tr>
+<tr><td>D-4 Exit 2 when any applicable probe is absent, failed, timed out, over its output cap or printed a malformed row. Else exit 1 when any finding exists. Else exit 0. Findings go to stdout and status lines to stderr. Every probe that ran prints <code>ran: &lt;id&gt;: &lt;n&gt;</code></td><td>a missing tool must never read as a clean run, and a clean run must be told from a probe that never loaded</td></tr>
+<tr><td>D-5 No code path runs an <code>install</code> cell. An absent tool prints <code>absent: &lt;id&gt;: &lt;install&gt;</code> with control bytes removed</td><td>consent for package changes belongs to the operator</td></tr>
+<tr><td>D-6 A repo's own registry is read only under <code>--allow-repo-registry</code>. Its rows count as <code>executes-repo-code: yes</code> whatever the cell says. A repeated <code>id</code>+<code>stage</code> across origins exits 2. <code>--no-repo-code</code> skips every <code>yes</code> row and every repo row. A repo registry identical to the framework registry loads once as framework origin. <code>list</code> runs no cell. <code>detect</code> runs a repo-origin <code>detect</code> cell only under <code>--allow-repo-registry</code> and never under <code>--no-repo-code</code></td><td>a pull request under review can add a row, and the default must refuse</td></tr>
+<tr><td>D-7 <code>scale</code> prints <code>files</code>, <code>lines</code> and <code>max-cost</code> (<code>L</code> up to <code>PROBE_SCALE_L</code> tracked files, <code>M</code> up to <code>PROBE_SCALE_M</code>, <code>S</code> beyond); <code>run --max-cost</code> skips costlier rows</td><td>D-10 of the master plan bounds cost, and the thresholds are unmeasured defaults</td></tr>
+<tr><td>D-8 A native probe is a bash script that prints rows through <code>probe_finding</code>, uses POSIX <code>awk</code> under <code>LC_ALL=C</code>, and reads only the files that <code>probe_files</code> lists. <code>probe_files</code> prints NUL-separated regular files with no symlink in the path, skips any name holding a control byte, and says how many it skipped on stderr</td><td>the container runs BusyBox <code>awk</code>, and awk and grep follow a symlink to a host file</td></tr>
+<tr><td>D-9 A registry row exists only for a tool whose flag the verification file marks verified or partly verified and whose real output a parser test consumes</td><td>an unverified flag or an untested parser produces false grounding</td></tr>
+<tr><td>D-10 A <code>detect</code> or <code>run</code> cell runs with <code>bash -c</code>, working directory the target repo, and the exported variables <code>PROBE_REPO</code>, <code>PROBE_FRAMEWORK</code>, <code>PROBE_FILES</code> (the path of a NUL-separated list file that the core writes to a temp directory outside the repo) and <code>PROBE_SPEC</code>. A probe reads that list with <code>read -r -d ''</code> and gives awk one file at a time. A cell reads them as <code>"$PROBE_REPO"</code>; the core never substitutes text into a cell. A native probe row is <code>"$PROBE_FRAMEWORK/probes/harness.sh" --check md-links</code>. A cell prints a variable only as <code>printf '%s' "$VAR"</code></td><td>text substituted into a shell string runs a path such as <code>r$(touch x)</code></td></tr>
+<tr><td>D-11 Every child process runs as a <code>set -m</code> job that a core-owned watchdog stops after <code>PROBE_TIMEOUT</code> seconds with TERM, then KILL to its process group after 2 seconds. The core kills what is left of the group after every run, and a signal to <code>bin/probe.sh</code> stops the running group. Its stdout goes to a private temp file under <code>ulimit -f</code> for <code>PROBE_OUT_MAX</code> bytes, and the core reads the job's exit code apart from that file. Every git call uses <code>-c core.fsmonitor=false -c core.hooksPath=/dev/null</code>, <code>GIT_CONFIG_GLOBAL=/dev/null</code> and <code>GIT_CONFIG_NOSYSTEM=1</code>; <code>probe_changed</code> uses only <code>diff --name-only -z --relative</code> and <code>ls-files -z -o</code>, and returns 2 when git fails. Git also runs with <code>GIT_NO_LAZY_FETCH=1</code>, and every <code>filter.&lt;name&gt;.clean</code>, <code>smudge</code> and <code>process</code> of the repo's config is overridden. <code>bin/probe.sh</code> keeps only absolute <code>PATH</code> entries and unsets <code>BASH_ENV</code> and the <code>GIT_DIR</code> family. The core resolves <code>git</code>, <code>awk</code>, <code>jq</code> and <code>timeout</code> to absolute paths at start and appends repo tool directories to <code>PATH</code> only for <code>yes</code> rows. <code>--only</code> matches <code>^[a-z0-9-]+$</code> and <code>--base</code> passes <code>rev-parse --verify --end-of-options</code></td><td>a repo's git config, <code>PATH</code> and process tree run code of the person who reads the repo, and BusyBox <code>timeout</code> kills only the direct child</td></tr>
+<tr><td>D-12 A tool row's own exit code is ignored while its parser exits 0, except 124, 126, 127 and above 127, which mean failed. A native row fails on exit 2 or above</td><td>lizard exits 1 and typos exits 2 on findings</td></tr>
+<tr><td>D-13 The similar-symbol probe matches a planned need to a symbol when they share one non-stop token or a prefix of four characters. The stop tokens are <code>get set is has a an the of to and for new</code></td><td>the overlap rule decides SC-6, and a stated rule is testable</td></tr>
+<tr><td>D-14 A row's tool is the first word of its <code>run</code> cell. A word that starts with <code>"$PROBE_FRAMEWORK/</code> is present when that file is executable. Any other word is present when <code>command -v -- &lt;word&gt;</code> finds it. The core never runs <code>eval</code> on a cell. <code>probe_tool_present</code> in <code>lib/probe-registry.sh</code> does this for <code>list</code>, <code>detect</code> and <code>run</code></td><td>native rows would otherwise read as absent, and <code>eval</code> would run repo text in <code>list</code></td></tr>
+<tr><td>D-15 A <code>plan</code> row's <code>detect</code> cell is <code>true</code> when the repo holds any file the probe reads: a <code>.md</code> file for <code>md-links</code>, <code>dead-files</code> and <code>token-size</code>, a <code>.sql</code> file for the three SQL rows, a source file for <code>similar-symbols</code></td><td>SC-4 and SC-8 need the harness rows to load in a repo with one markdown file</td></tr>
+</tbody>
+</table>
+</div>
+<h2>File tree</h2>
+<pre><code>
+bin/probe.sh                          new, argument parsing and dispatch of the five commands
+lib/probe-emit.sh                     new, the one place a finding row is built and cleaned
+lib/probe-scope.sh                    new, the file list, changed files, scale and hardened git calls
+lib/probe-registry.sh                 new, reads, validates and merges registries, detect, tool lookup
+lib/probe-run.sh                      new, runs one row with limits and checks its rows
+lib/probe-parsers.sh                  new, turns lizard, typos and claude validate output into finding rows
+lib/probe-sql.sh                      new, runs the SQL reader and returns its facts
+lib/probe-sql.awk                     new, the awk program that reads SQL text into table, column and key facts
+probes/registry.tsv                   new, one row per probe and stage
+probes/harness.sh                     new, links, unreferenced files, file size
+probes/sql-schema.sh                  new, duplicate columns, foreign key indexes, naming
+probes/similar-symbols.sh             new, existing symbols that overlap a planned one
+commands/_shared/probe-kit.md         new, the contract of the kit
+lib/shared-module-rules.tsv           gains one owned-rule row
+vault/research/probe-tool-verification.md   new, the verdict on each tool claim
+tests/unit/probe.bats                 new
+tests/fixtures/probe/                 new, captured tool outputs and two schemas
+checks/probe-SC-1.sh to probe-SC-11.sh   new, decide the eleven criteria
+</code></pre>
+<h2>Files</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
+</thead>
+<tbody>
+<tr><td>bin/probe.sh</td><td>yes</td><td>runs, lists and sizes the probes of a repo</td><td>on-demand</td></tr>
+<tr><td>lib/probe-emit.sh</td><td>yes</td><td>builds and cleans a finding row and parses probe options</td><td>on-demand</td></tr>
+<tr><td>lib/probe-scope.sh</td><td>yes</td><td>lists files, changed files and repo size, and runs git safely</td><td>on-demand</td></tr>
+<tr><td>lib/probe-registry.sh</td><td>yes</td><td>reads, validates and merges registries and detects stacks</td><td>on-demand</td></tr>
+<tr><td>lib/probe-run.sh</td><td>yes</td><td>runs one registry row inside its limits and evaluates detect cells</td><td>on-demand</td></tr>
+<tr><td>lib/probe-parsers.sh</td><td>yes</td><td>converts tool output into finding rows</td><td>on-demand</td></tr>
+<tr><td>lib/probe-sql.sh</td><td>yes</td><td>runs the SQL reader on one file</td><td>on-demand</td></tr>
+<tr><td>lib/probe-sql.awk</td><td>yes</td><td>extracts tables, columns and keys from SQL text</td><td>on-demand</td></tr>
+<tr><td>probes/registry.tsv</td><td>yes</td><td>lists every probe with its stage, cost and install command</td><td>on-demand</td></tr>
+<tr><td>probes/harness.sh</td><td>yes</td><td>checks links, references and size of instruction files</td><td>on-demand</td></tr>
+<tr><td>probes/sql-schema.sh</td><td>yes</td><td>checks a SQL schema for duplicate columns, unindexed keys and bad names</td><td>on-demand</td></tr>
+<tr><td>probes/similar-symbols.sh</td><td>yes</td><td>finds existing functions whose names overlap a planned one</td><td>on-demand</td></tr>
+<tr><td>commands/_shared/probe-kit.md</td><td>yes</td><td>states the registry, finding row, commands and exit codes</td><td>on-demand</td></tr>
+<tr><td>lib/shared-module-rules.tsv</td><td>no</td><td>lists the rules each shared module owns</td><td>never-by-agent</td></tr>
+<tr><td>vault/research/probe-tool-verification.md</td><td>yes</td><td>records what each tool claim turned out to be</td><td>on-demand</td></tr>
+<tr><td>vault/decisions/ADR-031-architecture-first-planning.md</td><td>no</td><td>records the structural decisions</td><td>on-demand</td></tr>
+<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.md</td><td>no</td><td>the master plan this session belongs to</td><td>on-demand</td></tr>
+<tr><td>vault/features/architecture-spec.md</td><td>no</td><td>the feature dossier for the spec and probes</td><td>on-demand</td></tr>
+<tr><td>tests/unit/probe.bats</td><td>yes</td><td>tests the kit in the container</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/probe/lizard.csv</td><td>yes</td><td>a captured lizard output</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/probe/typos.jsonl</td><td>yes</td><td>a captured typos output</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/probe/claude-validate.json</td><td>yes</td><td>a captured plugin validate output</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/probe/schema-bad.sql</td><td>yes</td><td>a schema with one defect of each kind</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/probe/schema-clean.sql</td><td>yes</td><td>a schema with no defect</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-1.sh</td><td>yes</td><td>decides success criterion SC-1</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-2.sh</td><td>yes</td><td>decides success criterion SC-2</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-3.sh</td><td>yes</td><td>decides success criterion SC-3</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-4.sh</td><td>yes</td><td>decides success criterion SC-4</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-5.sh</td><td>yes</td><td>decides success criterion SC-5</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-6.sh</td><td>yes</td><td>decides success criterion SC-6</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-7.sh</td><td>yes</td><td>decides success criterion SC-7</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-8.sh</td><td>yes</td><td>decides success criterion SC-8</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-9.sh</td><td>yes</td><td>decides success criterion SC-9</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-10.sh</td><td>yes</td><td>decides success criterion SC-10</td><td>never-by-agent</td></tr>
+<tr><td>checks/probe-SC-11.sh</td><td>yes</td><td>decides success criterion SC-11</td><td>never-by-agent</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    A["session or operator"] -->|"stage: string, repo: path"| B["bin/probe.sh"]
+    B -->|"repo: path, flag: string"| C["lib/probe-registry.sh"]
+    C -->|"rows: tsv"| D["lib/probe-run.sh"]
+    D -->|"repo: path, files: path, spec: path"| E["probes/*.sh"]
+    D -->|"tool output: text"| F["lib/probe-parsers.sh"]
+    E -->|"rows: tsv"| G["lib/probe-emit.sh"]
+    F -->|"rows: tsv"| G
+    G -->|"clean rows: tsv"| D
+    B -->|"repo: path"| H["lib/probe-scope.sh"]
+    H -->|"file list: nul"| D
+    D -->|"finding rows: tsv, status lines, exit code"| A
+</pre>
+<h2>Interfaces</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
+</thead>
+<tbody>
+<tr><td>probe.sh</td><td>list</td><td>repo: path</td><td>one line per row, ok or absent</td><td>exit 2</td><td>cli</td></tr>
+<tr><td>probe.sh</td><td>detect</td><td>repo: path</td><td>probe ids whose stack is present</td><td>exit 2</td><td>cli</td></tr>
+<tr><td>probe.sh</td><td>run</td><td>stage: string, repo: path, spec: path, max_cost: string, no_repo_code: flag, allow_repo_registry: flag, only: string</td><td>finding rows and exit code 0, 1 or 2</td><td>exit 2</td><td>cli</td></tr>
+<tr><td>probe.sh</td><td>diff</td><td>repo: path, base: string</td><td>finding rows in changed files</td><td>exit 2</td><td>cli</td></tr>
+<tr><td>probe.sh</td><td>scale</td><td>repo: path</td><td>files, lines and max-cost lines</td><td>exit 2</td><td>cli</td></tr>
+<tr><td>probe-registry.sh</td><td>probe_registry</td><td>repo: path, allow: int</td><td>registry lines with an origin column</td><td>exit 2</td><td>function</td></tr>
+<tr><td>probe-registry.sh</td><td>probe_tool_present</td><td>run: string, trust: string, repo: path</td><td>exit code 0 or 1</td><td>-</td><td>function</td></tr>
+<tr><td>probe-run.sh</td><td>probe_detect</td><td>cell: string, trust: string, repo: path</td><td>exit code 0 or 1</td><td>-</td><td>function</td></tr>
+<tr><td>probe-run.sh</td><td>probe_run_row</td><td>origin: string, id: string, stack: string, stage: string, detect: string, run: string, parser: string, cost: string, trust: string, install: string</td><td>finding rows on stdout</td><td>status line</td><td>function</td></tr>
+<tr><td>probe-run.sh</td><td>probe_exec</td><td>cwd: path, trust: string, cell: string, out: path, err: path</td><td>PROBE_RC</td><td>-</td><td>function</td></tr>
+<tr><td>probe-run.sh</td><td>probe_abort</td><td>-</td><td>-</td><td>-</td><td>function</td></tr>
+<tr><td>probe-scope.sh</td><td>probe_files</td><td>repo: path, out: path</td><td>NUL-separated regular files</td><td>-</td><td>function</td></tr>
+<tr><td>probe-scope.sh</td><td>probe_changed</td><td>repo: path, base: string, out: path</td><td>NUL-separated changed and untracked files</td><td>exit code 2</td><td>function</td></tr>
+<tr><td>probe-scope.sh</td><td>probe_scale</td><td>repo: path, list: path</td><td>files, lines and max-cost lines</td><td>-</td><td>function</td></tr>
+<tr><td>probe-scope.sh</td><td>probe_git</td><td>repo: path, args: string</td><td>git output</td><td>-</td><td>function</td></tr>
+<tr><td>probe-scope.sh</td><td>probe_safe_file</td><td>repo: path, rel: string</td><td>exit code 0 or 1</td><td>-</td><td>function</td></tr>
+<tr><td>probe-scope.sh</td><td>probe_normalize</td><td>rel: string</td><td>normalized path</td><td>exit code 1</td><td>function</td></tr>
+<tr><td>probe-emit.sh</td><td>probe_finding</td><td>probe: string, file: path, line: int, severity: string, rule: string, message: string</td><td>one clean six-field row</td><td>-</td><td>function</td></tr>
+<tr><td>probe-emit.sh</td><td>probe_sanitize</td><td>text: string</td><td>text without control bytes</td><td>-</td><td>function</td></tr>
+<tr><td>probe-emit.sh</td><td>probe_args</td><td>argv: string</td><td>option variables set</td><td>exit 2</td><td>function</td></tr>
+<tr><td>probe-emit.sh</td><td>probe_native_init</td><td>argv: string</td><td>repo, TMP and LIST set</td><td>exit 2</td><td>function</td></tr>
+<tr><td>probe-emit.sh</td><td>probe_emit_sorted</td><td>check: string</td><td>sorted finding rows from stdin</td><td>exit code 1</td><td>function</td></tr>
+<tr><td>probe-parsers.sh</td><td>parse_lizard_csv</td><td>id: string, repo: path</td><td>finding rows read from stdin</td><td>-</td><td>function</td></tr>
+<tr><td>probe-parsers.sh</td><td>parse_typos_json</td><td>id: string, repo: path</td><td>finding rows read from stdin</td><td>exit code 3</td><td>function</td></tr>
+<tr><td>probe-parsers.sh</td><td>parse_claude_validate</td><td>id: string, repo: path</td><td>finding rows read from stdin</td><td>exit code 3</td><td>function</td></tr>
+<tr><td>probe-sql.sh</td><td>sql_facts</td><td>label: string, path: path</td><td>T, C and K fact lines</td><td>-</td><td>function</td></tr>
+<tr><td>harness.sh</td><td>check</td><td>name: string, repo: path</td><td>finding rows</td><td>exit 2</td><td>cli</td></tr>
+<tr><td>sql-schema.sh</td><td>check</td><td>name: string, repo: path</td><td>finding rows</td><td>exit 2</td><td>cli</td></tr>
+<tr><td>similar-symbols.sh</td><td>check</td><td>repo: path, spec: path, names: string</td><td>finding rows</td><td>exit 2</td><td>cli</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Load order</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
+</thead>
+<tbody>
+<tr><td>a session adds a probe row or reads a finding</td><td>commands/_shared/probe-kit.md</td><td>1500</td></tr>
+<tr><td>bin/probe.sh runs</td><td>lib/probe-emit.sh, lib/probe-scope.sh, lib/probe-registry.sh, lib/probe-run.sh</td><td>0</td></tr>
+<tr><td>a registry row names a parser</td><td>lib/probe-parsers.sh</td><td>0</td></tr>
+<tr><td>a schema probe runs</td><td>lib/probe-sql.sh</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Reuse map</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>read the rows of a spec table</td><td>bin/gate.sh table_rows</td><td>new</td><td>sourcing gate.sh brings <code>set -e</code>, the <code>gate:</code> message prefix and global variables into each probe; a 15-line awk reads two columns of one table</td></tr>
+<tr><td>find the framework root</td><td>lib/arch-check.sh arch_profile_file</td><td>new</td><td>it returns the first hit, and the registry needs the framework file and the repo file together</td></tr>
+<tr><td>argument parsing with --repo</td><td>bin/render-human.sh</td><td>new</td><td>the parser there is inline; native probes run as separate processes, so <code>probe_args</code> in lib/probe-emit.sh is shared by them and by bin/probe.sh</td></tr>
+<tr><td>list changed and untracked files</td><td>bin/release-check.sh line 78</td><td>new</td><td>searched bin and lib; two scripts each hold a private copy tied to their own output, so a hardened shared function is written once here</td></tr>
+<tr><td>a registry of checks with a cost column</td><td>quality/checks.tsv of the vault-quality-gates plugin</td><td>new</td><td>it runs at push time against a baseline; this registry runs while a session plans; ADR-031 rejects sharing it</td></tr>
+<tr><td>link checking</td><td>-</td><td>new</td><td>searched bin, lib and scripts for a link resolver; only doc-lint's DUP1 exists and it checks repeated lines</td></tr>
+<tr><td>SQL text parsing</td><td>-</td><td>new</td><td>searched bin and lib for a SQL reader; none exists</td></tr>
+<tr><td>symbol name extraction</td><td>graphify-out/graph.json</td><td>new</td><td>the graph is built by a global tool and absent on a light install; a regex reads the source with no install</td></tr>
+<tr><td>complexity, spelling and manifest checks</td><td>-</td><td>new</td><td>wrappers for lizard, typos and claude plugin validate; none exists</td></tr>
+<tr><td>timeouts</td><td>-</td><td>new</td><td>searched bin, lib and scripts for <code>timeout</code>; none exists</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Size budgets</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>path</th><th>max lines</th></tr>
+</thead>
+<tbody>
+<tr><td>bin/probe.sh</td><td>140</td></tr>
+<tr><td>lib/probe-emit.sh</td><td>90</td></tr>
+<tr><td>lib/probe-scope.sh</td><td>140</td></tr>
+<tr><td>lib/probe-registry.sh</td><td>160</td></tr>
+<tr><td>lib/probe-run.sh</td><td>220</td></tr>
+<tr><td>lib/probe-parsers.sh</td><td>160</td></tr>
+<tr><td>lib/probe-sql.sh</td><td>30</td></tr>
+<tr><td>lib/probe-sql.awk</td><td>130</td></tr>
+<tr><td>probes/harness.sh</td><td>260</td></tr>
+<tr><td>probes/sql-schema.sh</td><td>200</td></tr>
+<tr><td>probes/similar-symbols.sh</td><td>200</td></tr>
+<tr><td>commands/_shared/probe-kit.md</td><td>150</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Config points</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>key</th><th>file</th><th>default</th></tr>
+</thead>
+<tbody>
+<tr><td>PROBE_TIMEOUT</td><td>environment</td><td>120</td></tr>
+<tr><td>PROBE_SCALE_L</td><td>environment</td><td>2000</td></tr>
+<tr><td>PROBE_SCALE_M</td><td>environment</td><td>10000</td></tr>
+<tr><td>PROBE_TOKEN_MAX</td><td>environment</td><td>6000</td></tr>
+<tr><td>PROBE_OUT_MAX</td><td>environment</td><td>5000000</td></tr>
+<tr><td>PROBE_FILE_MAX</td><td>environment</td><td>2097152</td></tr>
+<tr><td>PROBE_NLOC</td><td>environment</td><td>60</td></tr>
+<tr><td>PROBE_PARAMS</td><td>environment</td><td>5</td></tr>
+<tr><td>PROBE_CCN</td><td>environment</td><td>10</td></tr>
+<tr><td>PROBE_DEAD_DIRS</td><td>environment</td><td>commands lib bin templates personas arch-profiles hooks scripts checks</td></tr>
+<tr><td>PROBE_SQL</td><td>environment</td><td>discovered under database, migrations, db and schema</td></tr>
+<tr><td>glossary, columns banned and preferred</td><td>probes/glossary.tsv of the repo</td><td>no glossary findings</td></tr>
+<tr><td>registry</td><td>probes/registry.tsv of the repo</td><td>no repo rows</td></tr>
+</tbody>
+</table>
+</div>
+</main>

@@ -27,10 +27,6 @@ columns, check order, messages) is `commands/_shared/architecture-spec.md`.
 ## Open & deferred
 - needs the operator: approve S1 and S2 as this session's scope, and S3 to S9 as later sessions.
 - deferred: S3 to S9, one session row each below.
-- unverified: 12 tool claims in the probe catalog carry `(?)` (Atlas lint licence tier, DCM licence and
-  JSON flag, `phparkitect --format=json`, `tbls lint --format json`, PHPMD empty-catch rule name,
-  Semgrep and ast-grep Dart and Vue support, lizard `--json`, PMD 7 CPD flags, typos on PyPI, Qlty
-  offline claim, `claude plugin validate`). S4 verifies each before a row enters `probes/registry.tsv`.
 - unverified: most research figures came through a summarising fetch tool. W-1 re-opens each URL before
   its figure is written into a shipped document.
 - unverified: publishing an Artifact from a subagent. Publishing from the main session works (this plan's page). S3 tests the subagent path.
@@ -189,7 +185,7 @@ does not redefine it. The producing session may add columns, never rename or dro
 | S1 | research doc, ADR-031, indication | /v-work | done | | 2026-09-21 | `checks/arch-SC-1.sh` exits 0; `vault/decisions/ADR-031-architecture-first-planning.md` written |
 | S2 | arch spec contract, `gate.sh arch`, PROPOSE and approval wiring | /v-team | done | S1 | 2026-09-21 | `checks/arch-SC-2.sh` to `-6.sh` exit 0; `./tests/run.sh tests/unit/gate.bats` 93 of 93 |
 | S3 | human plan page: `bin/render-human.sh`, `gate.sh human`, the `human_plan` link and its `file:` fallback, wired into `/v-team`; the master page regenerated | /v-team | done | S2 | 2026-09-21 | the ten human-page checks exit 0; `./tests/run.sh tests/unit/human-plan.bats` 22 of 22 |
-| S4 | probe kit core: `bin/probe.sh`, `probes/registry.tsv`, harness probes, `probe.sh scale`, schema duplicate-column, index and naming probes, similar-method probe, verified tool list | /v-team | todo | S1 | 2026-09-21 | |
+| S4 | probe kit core: `bin/probe.sh`, `probes/registry.tsv`, harness probes, `probe.sh scale`, schema duplicate-column, index and naming probes, similar-method probe, verified tool list | /v-team | done | S1 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1130-probe-kit-core.md` reports SC-1 to SC-11 MET; `./tests/run.sh tests/unit/probe.bats` 40 of 40 |
 | S5 | plan-time probes: auditor agents, longer planning stage, cost delta per D-10 | /v-team | todo | S3, S4 | 2026-09-21 | |
 | S6 | master plan template with a required `## Cross-session contracts` table and its artifact, `gate.sh master` (D-15, E-3), `/v-pm` and `(f3)` in `commands/v-team/steps/03-propose-loop.md` write and read it, sub-plan ordering gate | /v-team | todo | S2, S3 | 2026-09-21 | |
 | S7 | probe results as a panel input: `commands/_shared/critic-panel.md` runs `bin/probe.sh diff` in its ground-first stage; `/v-team` execute, `/v-cr` review (D-14) and `/v-work` review read it; each indication names its probe | /v-team | todo | S4 | 2026-09-21 | |

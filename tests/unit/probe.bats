@@ -259,6 +259,65 @@ rrun() { pr run plan --repo "${REPO}" --allow-repo-registry --only "$1"; }
     [ ! -e "${TMP}/evaluated" ]
 }
 
+# schema <sql text> — writes database/schema.sql in the repo.
+schema() { mkdir -p "${REPO}/database"; printf '%s\n' "$1" > "${REPO}/database/schema.sql"; }
+
+@test "T-11: sql_facts reads inline and table-level keys, quoted names, IF NOT EXISTS, comments and CRLF" {
+    printf 'CREATE TABLE IF NOT EXISTS `users` (\r\n  id BIGINT UNSIGNED NOT NULL PRIMARY KEY, -- pk\r\n  team_id int(11) NOT NULL,\r\n  /* c */ name varchar(9),\r\n  CONSTRAINT fk FOREIGN KEY (team_id) REFERENCES teams (id),\r\n  KEY i (name)\r\n);\r\nCREATE UNIQUE INDEX ux ON "public"."users" (name, id);\r\n' > "${TMP}/s.sql"
+    run bash -c '. "$1/lib/probe-sql.sh"; sql_facts f.sql "$2"' _ "${VAULT_ROOT}" "${TMP}/s.sql"
+    [ "$status" -eq 0 ]
+    [[ $output == *"T${TAB}f.sql${TAB}users${TAB}1${TAB}-${TAB}-${TAB}-"* ]]
+    [[ $output == *"C${TAB}f.sql${TAB}users${TAB}2${TAB}id${TAB}bigint unsigned${TAB}1"* ]]
+    [[ $output == *"K${TAB}f.sql${TAB}users${TAB}2${TAB}id${TAB}PK"* ]]
+    [[ $output == *"C${TAB}f.sql${TAB}users${TAB}3${TAB}team_id${TAB}int${TAB}1"* ]]
+    [[ $output == *"C${TAB}f.sql${TAB}users${TAB}4${TAB}name${TAB}varchar(9)${TAB}0"* ]]
+    [[ $output == *"K${TAB}f.sql${TAB}users${TAB}5${TAB}team_id${TAB}FK${TAB}teams.id"* ]]
+    [[ $output == *"K${TAB}f.sql${TAB}users${TAB}6${TAB}name${TAB}IX"* ]]
+    [[ $output == *"K${TAB}f.sql${TAB}users${TAB}8${TAB}name${TAB}UQ"* ]]
+}
+
+@test "T-12: a foreign key is covered by a primary key, a unique key or a leading index column, not a second column" {
+    schema 'CREATE TABLE t1 (a INT NOT NULL, PRIMARY KEY (a), FOREIGN KEY (a) REFERENCES p (id));
+CREATE TABLE t2 (b INT, UNIQUE KEY u (b), FOREIGN KEY (b) REFERENCES p (id));
+CREATE TABLE t3 (c INT, d INT, KEY i (c, d), FOREIGN KEY (c) REFERENCES p (id));
+CREATE TABLE t4 (e INT, f INT, KEY i (e, f), FOREIGN KEY (f) REFERENCES p (id));'
+    pr run plan --repo "${REPO}" --only sql-fk-index
+    [ "$status" -eq 1 ]
+    [ "$(printf '%s\n' "$output" | grep -c fk-no-index)" -eq 1 ]
+    [[ $output == *"foreign key t4.f has no index"* ]]
+}
+
+@test "T-13: dup-column-set needs four columns on both tables and 80 percent overlap" {
+    schema 'CREATE TABLE ta (id INT PRIMARY KEY, c1 INT, c2 INT, c3 INT, c4 INT, c5 INT);
+CREATE TABLE tb (id INT PRIMARY KEY, c1 INT, c2 INT, c3 INT, c4 INT, c5 INT);
+CREATE TABLE tc (id INT PRIMARY KEY, c1 INT, c2 INT, c3 INT);
+CREATE TABLE td (id INT PRIMARY KEY, c1 INT, c2 INT, c3 INT, c4 INT, x1 INT, x2 INT);'
+    pr run plan --repo "${REPO}" --only sql-dup-columns
+    [ "$status" -eq 1 ]
+    [ "$(printf '%s\n' "$output" | grep -c dup-column-set)" -eq 1 ]
+    [[ $output == *"tables ta and tb share 5 of 5"* ]]
+}
+
+@test "T-14: naming-glossary flags a banned word and names the preferred one" {
+    printf '# banned\tpreferred\nclient\tcustomer\n' > "${REPO}/probes/glossary.tsv"
+    schema 'CREATE TABLE client_orders (id INT PRIMARY KEY, total INT);'
+    pr run plan --repo "${REPO}" --only sql-naming
+    [ "$status" -eq 1 ]
+    [[ $output == *"naming-glossary${TAB}table client_orders uses \"client\"; the glossary prefers \"customer\""* ]]
+}
+
+@test "T-15: names tokenise alike in camelCase and snake_case, stop words do not match, and a prefix does" {
+    mkdir -p "${REPO}/lib"
+    printf 'fetch_user_name() { :; }\nslugify_title() { :; }\nget_items() { :; }\n' > "${REPO}/lib/a.sh"
+    printf 'function fetchUserName() { return 1 }\n' > "${REPO}/lib/b.js"
+    pr run plan --repo "${REPO}" --only similar-symbols
+    [ "$status" -eq 1 ]; [[ $output == *"duplicate-symbol-tokens"*"fetchUserName is made of the same words as fetch_user_name"* ]]
+    run "${VAULT_ROOT}/probes/similar-symbols.sh" --check similar-symbols --repo "${REPO}" --names "get the of, is a"
+    [ "$status" -eq 0 ]; [ -z "$output" ]
+    run "${VAULT_ROOT}/probes/similar-symbols.sh" --check similar-symbols --repo "${REPO}" --names "build a slug"
+    [ "$status" -eq 1 ]; [[ $output == *"slugify_title"* ]]
+}
+
 @test "T-29: diff runs no filter command that the repo's config defines" {
     g() { git -C "${REPO}" -c user.email=t@t -c user.name=t "$@"; }
     g init -q; printf 'a\n' > "${REPO}/a.md"; printf '*.md filter=evil\n' > "${REPO}/.gitattributes"
@@ -326,12 +385,32 @@ rrun() { pr run plan --repo "${REPO}" --allow-repo-registry --only "$1"; }
     [ -z "$(ls "${TMP}/tmpdir")" ]
 }
 
+@test "T-36: columns re-added by a later migration are not duplicates, and a big INSERT is skipped" {
+    schema 'CREATE TABLE users (id INT PRIMARY KEY, email TEXT);
+ALTER TABLE users DROP COLUMN email;
+ALTER TABLE users ADD COLUMN email TEXT;
+CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY, email TEXT);'
+    { printf 'INSERT INTO t VALUES '; for i in $(seq 1 3000); do printf "(%s,'value with ; and (paren',%s)," "$i" "$i"; done; printf "(0,'x',0);\n"; } >> "${REPO}/database/schema.sql"
+    pr run plan --repo "${REPO}" --only sql-dup-columns
+    [ "$status" -eq 0 ]; [[ $output != *"dup-column-in-table"* ]]
+}
+
 @test "T-37: md-links skips inline code, keeps parenthesised urls whole and resolves wikilinks from the root" {
     mkdir -p "${REPO}/docs" "${REPO}/notes"; printf 'x\n' > "${REPO}/docs/x_(1).md"; printf 'x\n' > "${REPO}/notes/idea.md"
     printf 'see `[[../nowhere/x]]` and [a](docs/x_(1).md) and [[notes/idea]] and [[notes/missing]]\n' > "${REPO}/doc.md"
     pr run plan --repo "${REPO}" --only md-links
     [ "$status" -eq 1 ]; [[ $output != *"nowhere"* ]]; [[ $output != *"x_(1)"* ]]; [[ $output != *"notes/idea"* ]]
     [[ $output == *"wikilink target not found: notes/missing"* ]]
+}
+
+@test "T-38: a CREATE TABLE after many comment lines is read, and one table in two files is not a duplicate" {
+    mkdir -p "${REPO}/database"
+    { for i in $(seq 1 60); do printf -- '-- comment %s\n' "$i"; done; printf 'CREATE TABLE t (id int, id int);\n'; } > "${REPO}/database/a.sql"
+    printf 'CREATE TABLE u (id int, name text);\n' > "${REPO}/database/b.sql"
+    printf 'CREATE TABLE u (id int, name text);\n' > "${REPO}/database/c.sql"
+    pr run plan --repo "${REPO}" --only sql-dup-columns
+    [ "$status" -eq 1 ]; [[ $output == *"a.sql${TAB}61${TAB}error${TAB}dup-column-in-table"* ]]
+    [ "$(printf '%s\n' "$output" | grep -c dup-column-in-table)" -eq 1 ]
 }
 
 @test "T-39: a tool row that exits nonzero with no output fails instead of reporting clean" {

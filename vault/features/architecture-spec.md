@@ -16,7 +16,7 @@ Built: the spec contract, the gate, the two templates and the propose and approv
 
 Not built. Each item is a session in `vault/plans/2026-09-21-0900-architecture-first-planning.md`:
 - the human page renderer and its gate;
-- the probe kit and plan-time auditors;
+- plan-time auditors that run the probe kit;
 - master plans with cross-session contracts;
 - probe results in review panels, `/v-rule`, and stack probe packs.
 
@@ -28,6 +28,7 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 - `arch_profile: <name>|none` in `VAULT.md`; absent means `none`. `<name>` is a profile in `arch-profiles/`, the repo's own first and then the framework's; `code` and `harness` ship. A new project type is a `<name>.tsv` and `<name>.md` pair. `arch_spec: <slug>.arch.md` and `human_plan: <url>` in plan frontmatter.
 - `bin/render-human.sh <plan>` writes `<plan>.human.html` from the plan and its spec, and `bin/gate.sh human <plan>` checks it; `all --phase approve` runs the check after `arch`. The rules are in `commands/_shared/human-plan.md`.
 - A profile's `.tsv` may carry `@review<TAB>sentence` lines; the page lists them under "Check these yourself". `templates/human-plan-sections.tsv` lists the plan sections and columns the page shows.
+- `bin/probe.sh list|detect|run <plan|review>|diff|scale` runs the deterministic probes of `probes/registry.tsv` on a repo and prints six-field findings; `probes/harness.sh`, `probes/sql-schema.sh` and `probes/similar-symbols.sh` are the native probes. The contract is `commands/_shared/probe-kit.md`, and what each tool claim turned out to be is in `vault/research/probe-tool-verification.md`.
 - doc-lint type `arch-spec`, cap 300 lines. Decision record: `vault/decisions/ADR-031-architecture-first-planning.md`.
 
 ## Behaviors & rules

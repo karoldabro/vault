@@ -45,9 +45,11 @@ that run while an agent plans and reviews answer a different question at a diffe
    re-renders the page and compares it byte for byte with the file on disk, so one check proves the page
    is present, current and untampered. The page shows only what a person reads at approval, so a status
    flip or a written verdict never makes it stale.
-5. **The probe kit lives in this framework**: `bin/probe.sh` and `probes/registry.tsv`, built in a later
-   session and not yet present. A probe never
-   installs a tool. A missing tool reports `absent: <project-scope install command>` and waits.
+5. **The probe kit lives in this framework**: `bin/probe.sh` and `probes/registry.tsv`, with the contract in
+   `commands/_shared/probe-kit.md`. A probe never installs a tool. A missing tool reports
+   `absent: <id>: <project-scope install command>` and the run exits 2. A registry row names a tool only when
+   `vault/research/probe-tool-verification.md` marks its flag verified and a parser test consumes its real
+   output. A repo's own registry is read only when the caller passes `--allow-repo-registry`.
 6. **A spec is document type `arch-spec` with a 300-line cap.** A 10-table feature estimates at 190 to
    230 lines, and the spec sits beside a 300-line plan.
 7. **Every master plan carries a `## Cross-session contracts` table.** A later gate refuses a master plan
