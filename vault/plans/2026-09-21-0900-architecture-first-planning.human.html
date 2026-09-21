@@ -1,0 +1,329 @@
+<title>Architecture-first planning</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --warn: #9a4b08;
+  --warn-soft: #fdeed9;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --warn: #f0a55a; --warn-soft: #362413; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --warn: #f0a55a; --warn-soft: #362413; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 36px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 10px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 0 0 12px; font-weight: 600; text-wrap: balance; }
+h3 { font-size: 0.78rem; margin: 0 0 6px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+p { margin: 0 0 10px; max-width: 68ch; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
+.lede { font-size: 1.08rem; color: var(--muted); max-width: 62ch; }
+.ask { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; padding: 16px 18px; }
+.ask h2 { color: var(--accent); }
+.ask ul { margin: 0; padding-left: 20px; }
+.ask li { margin-bottom: 6px; max-width: 70ch; }
+.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); padding: 12px 16px; border-radius: 0 6px 6px 0; }
+.warn h3 { color: var(--warn); }
+.warn ul { margin: 0; padding-left: 20px; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+figure { margin: 0; }
+figcaption { color: var(--muted); font-size: 0.88rem; margin-top: 8px; max-width: 70ch; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+td code { white-space: nowrap; }
+.tag { display: inline-block; font-family: var(--mono); font-size: 0.78rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--code-bg); }
+.tag.now { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.pane { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.pane ul { margin: 0; padding-left: 18px; }
+.pane li { margin-bottom: 5px; }
+pre.mermaid { margin: 0; background: transparent; }
+pre.tree { margin: 0; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; white-space: pre; }
+</style>
+
+<main>
+  <header>
+    <h1>Architecture-first planning</h1>
+    <p class="lede">Every <code>/v-team</code> and <code>/v-pm</code> plan will carry a checked architecture spec and a picture-first summary like this page, so you judge the design before any code exists.</p>
+  </header>
+
+  <section class="ask" aria-labelledby="ask">
+    <h2 id="ask">What you are asked to approve</h2>
+    <ul>
+      <li><b>This session builds S1 and S2 only</b>: the research write-up and the architecture-spec contract with its gate (26 files, all additive, 22 planned test cases).</li>
+      <li><b>S3 to S9 are later sessions</b>, each with its own plan: human artifact renderer, probe kit, plan-time auditors, master plans, probe results in every review panel, an on-demand comment-to-rule skill, per-stack probe packs.</li>
+      <li><b>No tool is installed anywhere.</b> A missing probe reports the project-scope install command and waits for you.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="flow">
+    <h2 id="flow">How a plan is produced after this work</h2>
+    <figure>
+      <div class="scroll">
+<pre class="mermaid">
+flowchart TB
+    A["Clarify and research (today)"] --> B["Baseline probes on the existing code (S4, S5)"]
+    B --> C["Draft the architecture spec (S2)"]
+    C --> D{"gate.sh arch passes? (S2)"}
+    D -- "no: fix the spec" --> C
+    D -- "yes" --> E["Independent auditors run probes on the spec (S5)"]
+    E --> F["Reviewer panel (today)"]
+    F --> G["Human plan artifact, generated and verified (S3)"]
+    G --> H(["You approve"])
+    H --> I["Implement (today)"]
+    I --> J["Probes run on the diff, results go to the panel (S7)"]
+    J --> K["Review panel, first round already partly fixed (today)"]
+</pre>
+      </div>
+      <figcaption>Steps marked "today" exist now. Each S-number is the session that builds the step. The review panel step exists three times and stays three commands: <code>/v-team</code>, <code>/v-work</code> and <code>/v-cr</code>. Each reads the same probe results.</figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="asks">
+    <h2 id="asks">Your seven asks and where each lands</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Ask</th><th>Delivered by</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>1. Human-readable plan with schema graph, data-flow graph, interface signatures</td><td><span class="tag now">S2</span> <span class="tag">S3</span></td><td>S2 defines the checked data; S3 renders it as this kind of page</td></tr>
+          <tr><td>2. Master plan with a plan per sub-step, ordered across repos</td><td><span class="tag">S6</span></td><td>Every master plan must carry a table of the shapes one session hands to the next; a gate refuses one without it</td></tr>
+          <tr><td>3. Deterministic probes run by independent agents before the plan is shown</td><td><span class="tag">S4</span> <span class="tag">S5</span> <span class="tag">S9</span></td><td>Duplicate columns, missing indexes, similar methods, naming, complexity</td></tr>
+          <tr><td>4. Longer planning so execution needs less attention</td><td><span class="tag now">S2</span> <span class="tag">S5</span></td><td>Spec becomes a required gate; cost capped at +50% of PROPOSE</td></tr>
+          <tr><td>5. Probes after execution, and review comments become rules</td><td><span class="tag">S7</span> <span class="tag">S8</span></td><td>S7: probe results reach every panel. S8: <code>/v-rule</code>, on demand, turns your comments into rules</td></tr>
+          <tr><td>6. Human plan is an Artifact linked from the AI plan</td><td><span class="tag">S3</span></td><td><code>human_plan</code> key already reserved in the plan frontmatter</td></tr>
+          <tr><td>7. Works for non-code work such as AI harness repos</td><td><span class="tag now">S2</span> <span class="tag">S4</span></td><td>Second spec profile: file tree, load order, size budgets, config points</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="road">
+    <h2 id="road">Session order</h2>
+    <figure>
+      <div class="scroll">
+<pre class="mermaid">
+flowchart LR
+    S1["S1 Research, ADR, rule"] --> S2["S2 Spec contract and gate"]
+    S2 --> S3["S3 Human plan artifact"]
+    S1 --> S4["S4 Probe kit core"]
+    S3 --> S5["S5 Plan-time auditors"]
+    S4 --> S5
+    S2 --> S6["S6 Master plan and v-pm"]
+    S3 --> S6
+    S4 --> S7["S7 Probe results in panels"]
+    S4 --> S8["S8 /v-rule skill"]
+    S7 --> S8
+    S4 --> S9["S9 Stack packs"]
+    S5 --> S9
+</pre>
+      </div>
+      <figcaption>S1 and S2 run in this session. An arrow means the target reads what the source produces.</figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="contracts">
+    <h2 id="contracts">Cross-session contracts: part of the framework, not only this plan</h2>
+    <p>From S6 on, every master plan must have this table. A dependency between two sessions with no contract row is refused by a gate, because the consuming session would otherwise invent the shape it receives. The table below is this plan's own. Each later session runs <code>/v-team</code> on its own row, reads this plan, and writes its own spec, work items and success criteria for you to approve. The master plan holds no file-level tasks on purpose. What it does fix are the shapes one session hands to the next.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Contract</th><th>Made by</th><th>Used by</th><th>Shape</th></tr></thead>
+        <tbody>
+          <tr><td>Spec format</td><td>S2</td><td>S3, S5, S6</td><td>One shared document</td></tr>
+          <tr><td>Probe finding row</td><td>S4</td><td>S5, S7, S8</td><td><code>probe file line severity rule message</code>; exit 0 clean, 1 findings, 2 could not run</td></tr>
+          <tr><td>Probe registry</td><td>S4</td><td>S5, S7, S8, S9</td><td>Per-probe stack, stage, command, cost, whether it executes repo code, install command</td></tr>
+          <tr><td>Probe commands</td><td>S4</td><td>S5, S7</td><td><code>list</code>, <code>detect</code>, <code>run</code>, <code>diff</code>, <code>scale</code></td></tr>
+          <tr><td>Indication-to-probe link</td><td>S7</td><td>S8</td><td>Optional <code>probe:</code> key in an indication</td></tr>
+          <tr><td>Rule file location</td><td>S8</td><td>S7, S9</td><td><code>probes/rules/</code> in the target repo plus one registry row</td></tr>
+          <tr><td>Human page check</td><td>S3</td><td>S5, S6</td><td>A gate that finds every spec element in the page</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="spec">
+    <h2 id="spec">What a spec looks like, for a code feature</h2>
+    <p>This is the example the gate is tested against. The same content is what future plans will show you as pictures and signature tables.</p>
+    <div class="cols">
+      <figure class="pane">
+        <h3>Database schema</h3>
+<pre class="mermaid">
+erDiagram
+    orders ||--o{ order_lines : has
+    orders {
+        uuid id PK
+        text status
+    }
+    order_lines {
+        uuid id PK
+        uuid order_id FK
+        int qty
+    }
+</pre>
+        <figcaption>The gate refuses a table with no primary key and a foreign key with no index.</figcaption>
+      </figure>
+      <figure class="pane">
+        <h3>Data flow with interface parameters</h3>
+<pre class="mermaid">
+flowchart TB
+    A["OrderController.store(request: StoreOrderRequest)"] -->|"StoreOrderRequest"| B["OrderService.place(orderId: string, qty: int)"]
+    B -->|"Order"| C["OrderRepository.save(order: Order)"]
+</pre>
+        <figcaption>Every arrow carries the type that crosses it.</figcaption>
+      </figure>
+    </div>
+    <div class="scroll" style="margin-top:16px">
+      <table>
+        <thead><tr><th>Interface</th><th>Method</th><th>Params</th><th>Returns</th><th>Throws</th><th>Layer</th></tr></thead>
+        <tbody>
+          <tr><td>OrderController</td><td>store</td><td><code>request: StoreOrderRequest</code></td><td>JsonResponse</td><td>-</td><td>http</td></tr>
+          <tr><td>OrderService</td><td>place</td><td><code>orderId: string, qty: int</code></td><td>Order</td><td>OutOfStock</td><td>service</td></tr>
+          <tr><td>OrderRepository</td><td>save</td><td><code>order: Order</code></td><td>void</td><td>-</td><td>data</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:10px">The spec also holds a reuse map (which existing symbol each need extends, or what was searched before writing something new) and size budgets per file.</p>
+  </section>
+
+  <section aria-labelledby="s2">
+    <h2 id="s2">S2 in this repo: the gate and where it plugs in</h2>
+    <figure>
+      <div class="scroll">
+<pre class="mermaid">
+flowchart LR
+    A["PROPOSE step (a)"] -->|"template: path"| B["templates/arch.md or arch-harness.md"]
+    B -->|"draft spec"| C["plans/slug.arch.md"]
+    C -->|"file: path, repo: path"| D["gate.sh arch"]
+    D -->|"exit code, refusal text"| E["PROPOSE step (g)"]
+    E -->|"file: path, repo: path"| F["approval gate"]
+    G["VAULT.md arch_profile"] -->|"key: string"| D
+</pre>
+      </div>
+      <figcaption>The gate runs twice: when the plan is finalised and again at the approval gate, so a session cannot skip it by omitting the spec.</figcaption>
+    </figure>
+    <div class="cols" style="margin-top:16px">
+      <div class="pane">
+        <h3>Code profile sections</h3>
+        <ul><li>Data model</li><li>Data flow</li><li>Interfaces</li><li>Layers and placement</li><li>Reuse map</li><li>Size budgets</li></ul>
+      </div>
+      <div class="pane">
+        <h3>Harness profile sections</h3>
+        <ul><li>File tree</li><li>Files</li><li>Data flow</li><li>Interfaces</li><li>Load order</li><li>Reuse map</li><li>Size budgets</li><li>Config points</li></ul>
+      </div>
+      <div class="pane">
+        <h3>Profile source</h3>
+        <p><code>arch_profile: code | harness | none</code> in the repo's <code>VAULT.md</code>. Absent means <code>none</code>, so no existing repo is refused. This repo declares <code>harness</code>.</p>
+      </div>
+    </div>
+    <h3 style="margin-top:18px">Files changed or created</h3>
+    <div class="scroll">
+<pre class="tree">bin/gate.sh                                   + arch subcommand, called from all --phase propose|approve
+bin/doc-lint.sh                               + type arch-spec, cap 300 lines
+commands/_shared/architecture-spec.md         new: owns sections, columns, rules
+commands/v-team.md                            approval gate runs gate.sh arch
+commands/v-team/steps/03-propose-loop.md      drafts the spec in (a), gates it in (g)
+templates/arch.md, templates/arch-harness.md  new: the two profiles
+templates/plan.md, templates/VAULT.md         + arch_spec, human_plan, arch_profile keys
+VAULT.md                                      arch_profile: harness
+tests/unit/gate.bats                          one case per refusal
+tests/fixtures/arch/                          two complete specs
+vault/research/ai-code-slop.md                new: eight mechanisms, each with a source
+vault/decisions/ADR-031-...                   new: records the structural decisions
+vault/indications/architecture-before-code.md new: the working rule</pre>
+    </div>
+  </section>
+
+  <section aria-labelledby="rule">
+    <h2 id="rule">Your review comments become rules, on demand (S8)</h2>
+    <figure>
+      <div class="scroll">
+<pre class="mermaid">
+flowchart LR
+    A["You comment on a pull request or in a session"] --> B["/v-rule, when you call it"]
+    B --> C{"Can a tool decide it?"}
+    C -- "yes" --> D["Indication in the project vault plus a rule file plus a firing and a silent example"]
+    C -- "no" --> E["Indication text only, or dropped with the reason"]
+    D --> F["Repo ruleset"]
+    F --> G["Probes run it on every later diff (S7)"]
+</pre>
+      </div>
+      <figcaption>Nothing calls <code>/v-rule</code> by default. It reads only comments from your own account, because anyone can comment on a public pull request. A rule is accepted only if its bad example fires, its good example stays silent, and its finding count on the current repo is recorded.</figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="human">
+    <h2 id="human">What you check yourself, and what machines check</h2>
+    <div class="cols">
+      <div class="pane">
+        <h3>You, on the plan page</h3>
+        <ul>
+          <li>Does this solve the right problem, and is anything in scope that should not be?</li>
+          <li>Does the data model fit the domain: tables, keys, ownership of each field?</li>
+          <li>Does each piece of logic sit in the right layer?</li>
+          <li>Is each new abstraction earned, and does the reuse map name what already exists?</li>
+          <li>Which paths touch security or money?</li>
+        </ul>
+      </div>
+      <div class="pane">
+        <h3>Probes, before you see the plan</h3>
+        <ul>
+          <li>Spec completeness, typed parameters, keys and indexes (S2)</li>
+          <li>Duplicate columns, duplicate methods, naming (S4, S5)</li>
+          <li>Complexity, layering rules, dead code (S4, S8)</li>
+          <li>Passing tests do not prove coherence: in one study 97.0% of structural failures evaded type checking and 100% evaded tests and static security scans</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="warn" aria-labelledby="risk">
+    <h3 id="risk">Open points and unverified claims</h3>
+    <ul>
+      <li>Longer planning reducing rework has no controlled study behind it. The plan targets reuse, layering and data model, where agents fail most, and caps the added cost at 50% of PROPOSE.</li>
+      <li>Twelve probe-tool claims (licences, JSON flags, Dart and Vue support) are unverified. S4 checks each before a probe is registered.</li>
+      <li>Most research figures came through a summarising tool. S1 re-opens each source before quoting it.</li>
+      <li>Publishing an Artifact from a subagent is untested. S3 tests it and falls back to a local HTML file.</li>
+      <li>Two decision records already share the number ADR-030. This is an existing defect, not caused by this plan.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="dec">
+    <h2 id="dec">Decisions this plan records</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Decision</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td>A plan is four files: agent plan, architecture spec, process record, this human artifact</td><td>Probes need structured input; the human page renders from it</td></tr>
+          <tr><td>Profile comes from a new <code>arch_profile</code> key, absent means none</td><td><code>dod_profile</code> is <code>code</code> in all 13 repos, this harness repo included</td></tr>
+          <tr><td>Human page is generated from a template and verified by a gate</td><td>Hand-written pages omit diagrams silently</td></tr>
+          <tr><td>Probe kit lives in this framework, not in <code>vault-quality-gates</code></td><td>Probes run while planning and reviewing; that plugin runs at push time</td></tr>
+          <tr><td>A probe never installs a tool</td><td>Global installs and package changes need your consent</td></tr>
+          <tr><td>Every master plan carries a cross-session contracts table, checked by a gate</td><td>A session that consumes another's output must not redefine its shape</td></tr>
+          <tr><td>Only a tool-produced finding blocks</td><td>Existing rule: model-only observations stay advisory</td></tr>
+          <tr><td>Spec and plan-time stages belong to <code>/v-team</code> and <code>/v-pm</code>; the three review panels stay separate commands</td><td>You keep three flows, and <code>/v-work</code> stays the cheap default</td></tr>
+          <tr><td>Rules from review comments need a firing and a silent fixture</td><td>Prevents rules that never fire or fire everywhere</td></tr>
+          <tr><td>A repo's ruleset is its <code>indications/</code> plus rule files</td><td>The framework's rule inventory scores this framework only</td></tr>
+          <tr><td><code>/v-rule</code> is an on-demand skill and reads only your comments</td><td>Not always needed; a public commenter must not be able to add a rule</td></tr>
+          <tr><td><code>/v-cr</code> outside <code>--sandbox</code> runs only probes that do not execute repo code</td><td>It never runs pull-request code today</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

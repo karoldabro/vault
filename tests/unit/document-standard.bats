@@ -334,6 +334,32 @@ doc() {  # doc <name> <type> <body...>
     [[ "$output" == *indication* ]]
 }
 
+@test "arch-spec: listed at 300 lines, 300 passes, 301 fails naming the cap, and it is a contract type" {
+    run "${LINT}" --list-caps
+    [[ "$output" =~ arch-spec\ +300 ]]
+    local n
+    for n in 299 300; do
+        { printf -- '---\ntype: arch-spec\nprofile: code\nplan: x\n---\n'; for i in $(seq 6 "$n"); do echo "line $i"; done; } > "${TMP}/s.arch.md"
+        [ "$(wc -l < "${TMP}/s.arch.md" | tr -d ' ')" -eq "$n" ]
+        run "${LINT}" "${TMP}/s.arch.md"
+        [ "$status" -eq 0 ]
+    done
+    { printf -- '---\ntype: arch-spec\nprofile: code\nplan: x\n---\n'; for i in $(seq 6 301); do echo "line $i"; done; } > "${TMP}/s.arch.md"
+    run "${LINT}" "${TMP}/s.arch.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *SIZE1* ]]
+    [[ "$output" == *300* ]]
+    [[ "$output" != *"unknown type"* ]]
+}
+
+@test "arch-spec: a spec file with no type in its frontmatter is still typed by its .arch.md name" {
+    mkdir -p "${TMP}/plans"
+    { printf -- '---\ntags: [x]\n---\n'; for i in $(seq 1 305); do echo "line $i"; done; } > "${TMP}/plans/z.arch.md"
+    run "${LINT}" "${TMP}/plans/z.arch.md"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *SIZE1* ]]
+}
+
 @test "the script is syntactically valid and executable" {
     [ -x "${LINT}" ]
     run bash -n "${LINT}"

@@ -84,6 +84,28 @@ teardown() {
     grep -q 'trail.md' "${VAULT_ROOT}/commands/v-team.md"
 }
 
+# The architecture spec gate is wired in three places. Deleting any one leaves a session that
+# believes the spec was checked, so each has its own guard.
+
+@test "the approval gate runs the architecture spec check" {
+    grep -q 'gate.sh arch' "${VAULT_ROOT}/commands/v-team.md"
+}
+
+@test "the propose loop instantiates the spec from the shared contract and gates it at finalise" {
+    local f="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -q 'architecture-spec.md' "${f}"
+    grep -q 'templates/arch.md' "${f}"
+    grep -q 'gate.sh arch' "${f}"
+    grep -q 'arch_spec: <same-slug>.arch.md' "${f}"
+}
+
+@test "the architecture spec contract and both templates exist" {
+    [ -f "${VAULT_ROOT}/commands/_shared/architecture-spec.md" ]
+    [ -f "${VAULT_ROOT}/templates/arch.md" ]
+    [ -f "${VAULT_ROOT}/templates/arch-harness.md" ]
+    grep -q '^arch_spec:' "${VAULT_ROOT}/templates/plan.md"
+}
+
 @test "each shared persona declares type: persona and a base_agent" {
     for p in security performance quality skeptic; do
         local f="${VAULT_ROOT}/personas/_shared/${p}.md"

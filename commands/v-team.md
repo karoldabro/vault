@@ -102,6 +102,10 @@ criterion nothing reaches, and **stop there** — the approval gate has nothing 
 the plan's tables were unreadable; stop as an error and say so, since an unreadable plan is a defect
 in the document rather than a verdict on the work.
 
+**Then check the architecture spec:** `$VAULT_FRAMEWORK_PATH/bin/gate.sh arch <plan>`. Exit 1 means the
+spec is missing or breaks its contract: fix it, then present. Exit 2 means a file could not be read:
+stop as an error. The check passes silently in a repo whose `VAULT.md` declares no `arch_profile`.
+
 A gate whose conditions are written after the evidence arrives is a rubber stamp. This one is
 computed from the plan the operator is about to be shown.
 

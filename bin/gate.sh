@@ -17,7 +17,9 @@
 #         bin/gate.sh config   <repo>          the repo declares how to run its own checks
 #         bin/gate.sh budget   [file]          no check fires wrongly more than one time in ten
 #         bin/gate.sh recurrence [file]        every defect repair has a test that failed before it
-#         bin/gate.sh all      <plan> --phase <propose|approve|close>
+#         bin/gate.sh arch     <file> [--repo <root>]   the architecture spec is complete; the
+#                                              contract is commands/_shared/architecture-spec.md
+#         bin/gate.sh all      <plan> --phase <propose|approve|close> [--repo <root>]
 #         bin/gate.sh --help
 #
 # A `how: command` criterion names a COMMITTED SCRIPT, never a command typed into the plan. The
@@ -51,6 +53,12 @@ if [ -r "${GATE_VAULT_ROOT}/lib/plugin-registry.sh" ]; then
     . "${GATE_VAULT_ROOT}/lib/plugin-registry.sh"
 fi
 
+# `cmd_arch` and the checks under it. Sourced here and called later, so it may use every helper below.
+if [ -r "${GATE_VAULT_ROOT}/lib/arch-check.sh" ]; then
+    # shellcheck source=../lib/arch-check.sh
+    . "${GATE_VAULT_ROOT}/lib/arch-check.sh"
+fi
+
 US=$'\037'          # cell separator for parsed rows; never appears in markdown
 violations=0
 notes=0
@@ -62,7 +70,7 @@ note()   { printf '  note     %s\n' "$*" >&2; notes=$((notes + 1)); }
 die()    { printf 'gate: %s\n' "$*" >&2; exit 2; }
 
 usage() {
-    sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 # ---------------------------------------------------------------------------- parsing
@@ -91,7 +99,7 @@ table_rows() {
         in_sec && /^## /   { exit }
         !in_sec            { next }
         !/^\|/             { next }
-        /^\|[- |:]*\|$/    { seen_sep = 1; next }
+        /^\|[- |:]*\|$/ && !seen_sep { seen_sep = 1; next }     # the separator is the first such line only
         !seen_sep          { next }
         {
             line = $0
@@ -193,7 +201,7 @@ check_is_claimed_elsewhere() {
     for other in "$dir"/*.md; do
         [ -f "$other" ] || continue
         [ "$other" -ef "$plan" ] && continue
-        case "$other" in *.trail.md|*.brief.md) continue ;; esac
+        case "$other" in *.trail.md|*.brief.md|*.arch.md) continue ;; esac
         if grep -qF "\`${path}\`" "$other" 2>/dev/null; then
             printf '%s' "$(basename "$other")"
             return 0
@@ -756,18 +764,20 @@ main() {
         budget)   cmd_budget "${1:-}" ;;
         recurrence) cmd_recurrence "${1:-}" ;;
         verdict)  cmd_verdict "${1:-}" "${2:-}" ;;
+        arch)     cmd_arch "$@" ;;
         all)
-            local plan=${1:-} phase=""
+            local plan=${1:-} phase="" archargs=()
             shift || true
             while [ $# -gt 0 ]; do
                 case "$1" in
-                    --phase) phase=${2:-}; shift 2 ;;
+                    --phase) [ $# -ge 2 ] || die "--phase needs a value"; phase=$2; shift 2 ;;
+                    --repo)  [ $# -ge 2 ] || die "--repo needs a directory"; archargs=(--repo "$2"); shift 2 ;;
                     *) die "unknown option: $1" ;;
                 esac
             done
             case "$phase" in
-                propose) cmd_criteria "$plan" ;;
-                approve) cmd_criteria "$plan"; cmd_coverage "$plan" ;;
+                propose) cmd_criteria "$plan"; cmd_arch "$plan" ${archargs[@]+"${archargs[@]}"} ;;
+                approve) cmd_criteria "$plan"; cmd_arch "$plan" ${archargs[@]+"${archargs[@]}"}; cmd_coverage "$plan" ;;
                 # `coverage` is deliberately NOT in the close phase. `verdict` already requires every
                 # criterion to be MET with evidence there, and a plan with no `## Work items` table
                 # — which is what `/v-do` writes — would exit 2 and short-circuit the whole close.

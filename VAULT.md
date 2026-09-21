@@ -41,6 +41,9 @@ dod_profile: code
 test_command: ./tests/run.sh tests/unit
 lint_command: ./bin/doc-lint.sh --changed
 delivery_command: ./bin/gate.sh verdict <plan> --run && ./bin/gate.sh all <plan> --phase close
+# The product of this repo is instructions and scripts, so its plans carry the harness spec
+# (contract: commands/_shared/architecture-spec.md).
+arch_profile: harness
 
 ## hooks
 <!-- Per-project, per-step INSTRUCTION (prose only — never run as a shell command). 14 phases:

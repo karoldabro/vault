@@ -5,6 +5,8 @@ slug: {{slug}}
 repos: [{{repos}}]                   # blast radius — every repo this touches
 status: proposed                     # proposed | approved | executed | superseded
 process_record: {{slug}}.trail.md    # sibling record file: findings, dispositions, rejected options
+arch_spec:                           # file name only, <slug>.arch.md, set when the repo declares arch_profile; empty otherwise
+human_plan:                          # URL of the human-readable Artifact; nothing reads it until the human-page gate exists
 session: {{session}}                 # the session that executed this, once it has
 tags: [plan]
 ---

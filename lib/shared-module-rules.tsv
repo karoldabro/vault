@@ -43,3 +43,4 @@ leave pushing to the operator	v-work 05-commit-capture.md §5.1
 commit with a pathspec	vault-sync.md §2 + scripts/staging-hook.sh
 never raw git against a vault	vault-sync.md
 declared (values|identifiers) are consumed	bin/gate.sh readers
+each table has at least one .?PK.? row	architecture-spec.md Rules per section

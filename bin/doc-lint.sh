@@ -69,6 +69,7 @@ cap_for_type() {
         indication)         echo 80  ;;
         feature)            echo 200 ;;
         architecture)       echo 200 ;;
+        arch-spec)          echo 300 ;;
         process)            echo 250 ;;
         handoff)            echo 150 ;;
         report)             echo 120 ;;
@@ -127,7 +128,7 @@ is_instruction_type() {
 
 is_known_type() {
     case "$1" in
-        plan|decision|adr|indication|feature|architecture|process|guide|requirement|\
+        plan|decision|adr|indication|feature|architecture|arch-spec|process|guide|requirement|\
         integration-guide|instruction|session|research|trail|changelog|log|planning-session|\
         handoff|report) return 0 ;;
     esac
@@ -348,7 +349,7 @@ while [ $# -gt 0 ]; do
         --class)      class_override="$2"; shift 2 ;;
         --list-caps)  # Every type cap_for_type names. Adding a cap there without adding it here
                       # produces a listing that hides the type most likely to need one.
-                      for t in plan decision indication feature architecture process handoff \
+                      for t in plan decision indication feature architecture arch-spec process handoff \
                                report guide requirement integration-guide instruction; do
                           printf '%-20s %s\n' "$t" "$(cap_for_type "$t")"
                       done
@@ -593,7 +594,10 @@ for file in "${files[@]}"; do
     has_type=1
     [ -z "$doc_type" ] && { has_type=0; doc_type="$(basename "$(dirname "$file")")"; }
     doc_type="$(singularize_type "$doc_type")"
-    case "$file" in *.trail.md) doc_type="trail" ;; esac
+    case "$file" in
+        *.trail.md) doc_type="trail" ;;
+        *.arch.md)  [ "$has_type" = 1 ] || doc_type="arch-spec" ;;
+    esac
 
     # Scope. The standard governs vault DOCUMENTS, not command instructions, READMEs or generated
     # output. A file that declares no `type:` and sits in no document folder is not a document, and

@@ -37,6 +37,14 @@ marker or a revision log. The trail carries everything about how the design got 
 doesn't exist, create it (warn once; add `add_folders: [plans]` to `VAULT.md` so it's recognised) —
 don't halt.
 
+**Architecture spec.** When the repo's `VAULT.md` declares `arch_profile: code` or `harness`, read
+`$VAULT_FRAMEWORK_PATH/commands/_shared/architecture-spec.md`, instantiate
+`$VAULT_FRAMEWORK_PATH/templates/arch.md` (`code`) or `templates/arch-harness.md` (`harness`) into the
+sibling `<same-slug>.arch.md`, and set `arch_spec: <same-slug>.arch.md` in the plan's frontmatter (the
+file name only, no folder). Replace every placeholder in the spec. Fill the spec before any work item
+exists: work items follow from the structure, not the other way round. With no `arch_profile`, write
+no spec and leave `arch_spec` empty.
+
 ## (b) Load + select critics
 
 Use the pack + selected critics resolved in the ANALYZE addendum (`personas/_resolution.md`). Read each
@@ -218,7 +226,9 @@ Mark the plan `status: proposed` and set `process_record` to the sidecar filenam
 `convergence` are process state and live in the sidecar, not in the plan's frontmatter.** Then run
 v-work `03-propose.md` **§3b dedupe** for the plan artifact and any implied feature/ADR docs, and run
 `bin/doc-lint.sh <plan>` — a finding here means the plan is carrying something that belongs in the
-sidecar. Fix it before the approval gate.
+sidecar. Fix it before the approval gate. Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh arch <plan>`:
+exit 1 means the spec breaks its contract or the plan names no spec in a profiled repo, so fix it
+now; exit 2 means a file could not be read, so stop and say so. Step 4 runs the same check again.
 
 ---
 

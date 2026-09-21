@@ -360,7 +360,9 @@ mkplan() {
     local f
     f=$(mkplan phase_propose "" \
         '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `ok.sh` | exit 0 | | |')
-    run "${GATE_SH}" all "${f}" --phase propose
+    # An unprofiled repo: the working directory's own VAULT.md declares a profile, and a plan that
+    # names no spec is refused there by design.
+    run "${GATE_SH}" all "${f}" --phase propose --repo "${TMP}"
     [ "$status" -eq 0 ]
 }
 
@@ -806,4 +808,411 @@ delivery_command: make ship' >/dev/null
     cp "${f}" "${TMP}/solo.trail.md"; cp "${f}" "${TMP}/solo.brief.md"
     run "${GATE_SH}" criteria "${f}"
     [ "$status" -eq 0 ]
+}
+
+# ---------------------------------------------------------------------------- arch
+#
+# `arch` checks a plan's architecture spec. Contract: commands/_shared/architecture-spec.md. Each
+# defect below is derived from one of two complete fixtures, so the assertion sits beside the edit.
+
+FX() { printf '%s' "${VAULT_ROOT}/tests/fixtures/arch/$1.arch.md"; }
+
+# mkarchrepo <name> [VAULT.md line...] — a repo root holding the two files the harness fixture lists as
+# existing, so its `new: no` rows resolve. Prints the directory.
+mkarchrepo() {
+    local d="${TMP}/$1"; shift
+    mkdir -p "${d}/bin"; : > "${d}/bin/gate.sh"; : > "${d}/bin/doc-lint.sh"
+    if [ $# -gt 0 ]; then printf '%s\n' "$@" > "${d}/VAULT.md"; fi
+    printf '%s' "${d}"
+}
+
+# variant <fixture> <from> <to> <out> — one literal replacement, so the defect is visible in the test.
+variant() {
+    local c; c=$(<"$1")
+    printf '%s\n' "${c/"$2"/"$3"}" > "$4"
+}
+
+# arch_ok <spec> [--repo <dir>] — the gate accepts the spec and prints the one success line.
+arch_ok() {
+    run "${GATE_SH}" arch "$@"
+    [ "$status" -eq 0 ]
+    [ "$output" = "arch: ok $1" ]
+}
+
+# arch_refused <problem-substring> <row-substring> <spec> [--repo <dir>]
+arch_refused() {
+    local problem=$1 row=$2; shift 2
+    run "${GATE_SH}" arch "$@"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"REFUSED arch "* ]]
+    [[ "$output" == *"${problem}"* ]]
+    [[ "$output" == *"[${row}]"* ]] || [ -z "${row}" ]
+}
+
+@test "arch: an unreadable or missing file exits 2 with nothing on stdout" {
+    run "${GATE_SH}" arch "${TMP}/absent.arch.md"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"cannot read"* ]]
+    run "${GATE_SH}" arch "${TMP}"
+    [ "$status" -eq 2 ]
+}
+
+@test "arch: both complete fixtures pass and print exactly one line" {
+    local r; r=$(mkarchrepo r1 "arch_profile: code")
+    arch_ok "$(FX code-complete)" --repo "${r}"
+    r=$(mkarchrepo r2 "arch_profile: harness")
+    arch_ok "$(FX harness-complete)" --repo "${r}"
+}
+
+@test "arch: a profiled repo refuses a plan that names no spec, whether the key is absent or empty" {
+    local r p
+    for prof in code harness; do
+        r=$(mkarchrepo "p-${prof}" "arch_profile: ${prof}")
+        printf -- '---\ntype: plan\n---\n# p\n' > "${TMP}/absent.md"
+        run "${GATE_SH}" arch "${TMP}/absent.md" --repo "${r}"
+        [ "$status" -eq 1 ]
+        [[ "$output" == *"names no arch_spec"* ]]
+        printf -- '---\ntype: plan\narch_spec:\n---\n# p\n' > "${TMP}/empty.md"
+        run "${GATE_SH}" arch "${TMP}/empty.md" --repo "${r}"
+        [ "$status" -eq 1 ]
+        [[ "$output" == *"names no arch_spec"* ]]
+    done
+}
+
+@test "arch: all --phase propose and approve run the arch check, close does not" {
+    local r; r=$(mkarchrepo r3 "arch_profile: code")
+    mkcheck c1.sh 0
+    local f
+    f=$(mkplan noarch "" '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `c1.sh` | exit 0 | | |')
+    run "${GATE_SH}" all "${f}" --phase propose --repo "${r}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"names no arch_spec"* ]]
+    run "${GATE_SH}" all "${f}" --phase approve --repo "${r}"
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"names no arch_spec"* ]]
+    run "${GATE_SH}" all "${f}" --phase close --repo "${r}"
+    [[ "$output" != *"names no arch_spec"* ]]
+}
+
+@test "arch: a repo with no profile, no key, or no VAULT.md skips a plan that names no spec" {
+    printf -- '---\ntype: plan\n---\n# p\n' > "${TMP}/nospec.md"
+    for setup_line in "arch_profile: none" "dod_profile: code" ""; do
+        local r
+        if [ -n "${setup_line}" ]; then r=$(mkarchrepo "u-$RANDOM" "${setup_line}"); else r=$(mkarchrepo "u-$RANDOM"); fi
+        run "${GATE_SH}" arch "${TMP}/nospec.md" --repo "${r}"
+        [ "$status" -eq 0 ]
+        [ -z "$output" ]
+    done
+}
+
+@test "arch: a repo with no profile still validates a spec that is named" {
+    local r; r=$(mkarchrepo r4 "dod_profile: code")
+    arch_ok "$(FX code-complete)" --repo "${r}"
+    variant "$(FX code-complete)" "| orderId: string, qty: int |" "| orderId, qty: int |" "${TMP}/x.arch.md"
+    arch_refused "param orderId has no type" "OrderService.place" "${TMP}/x.arch.md" --repo "${r}"
+}
+
+@test "arch: a spec beside a plan is not read as a plan by the claimed-elsewhere check" {
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${TMP}/solo2.sh"; chmod +x "${TMP}/solo2.sh"
+    local f
+    f=$(mkplan solo2 "" '| SC-1 | WHEN it runs THE SYSTEM SHALL work | delivery | command | `solo2.sh` | exit 0 | | |')
+    cp "${f}" "${TMP}/solo2.arch.md"
+    run "${GATE_SH}" criteria "${f}"
+    [ "$status" -eq 0 ]
+}
+
+@test "arch: profile equal passes; differing, missing or invalid is refused, on a spec and through a plan" {
+    local r; r=$(mkarchrepo r5 "arch_profile: harness")
+    arch_refused "profile differs" "" "$(FX code-complete)" --repo "${r}"
+    r=$(mkarchrepo r6 "arch_profile: code")
+    variant "$(FX code-complete)" "profile: code" "profile: python" "${TMP}/bad.arch.md"
+    arch_refused "profile differs" "" "${TMP}/bad.arch.md" --repo "${r}"
+    grep -v '^profile:' "$(FX code-complete)" > "${TMP}/nop.arch.md"
+    arch_refused "profile differs" "" "${TMP}/nop.arch.md" --repo "${r}"
+    cp "$(FX code-complete)" "${TMP}/good.arch.md"
+    printf -- '---\ntype: plan\narch_spec: good.arch.md\n---\n# p\n' > "${TMP}/viaplan.md"
+    run "${GATE_SH}" arch "${TMP}/viaplan.md" --repo "${r}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "arch: ok ${TMP}/good.arch.md" ]
+    cd /
+    run "${GATE_SH}" arch "${TMP}/viaplan.md" --repo "${r}"
+    [ "$status" -eq 0 ]
+}
+
+@test "arch: a plan naming a spec that does not exist is refused with the path" {
+    local r; r=$(mkarchrepo r7 "arch_profile: code")
+    printf -- '---\ntype: plan\narch_spec: gone.arch.md\n---\n# p\n' > "${TMP}/dangling.md"
+    arch_refused "does not exist" "gone.arch.md" "${TMP}/dangling.md" --repo "${r}"
+}
+
+@test "arch: an invalid arch_profile value is refused; a comment, CRLF and a prefix key read correctly" {
+    local r
+    r=$(mkarchrepo r8 "arch_profile: python")
+    arch_refused "invalid value" "python" "$(FX code-complete)" --repo "${r}"
+    r=$(mkarchrepo r9 "arch_profile: harness   # this repo ships instructions")
+    arch_ok "$(FX harness-complete)" --repo "${r}"
+    r=$(mkarchrepo r10); printf 'arch_profile: harness\r\n' > "${r}/VAULT.md"
+    arch_ok "$(FX harness-complete)" --repo "${r}"
+    r=$(mkarchrepo r11 "x_arch_profile: harness")
+    printf -- '---\ntype: plan\n---\n# p\n' > "${TMP}/nospec2.md"
+    run "${GATE_SH}" arch "${TMP}/nospec2.md" --repo "${r}"
+    [ "$status" -eq 0 ]
+    r=$(mkarchrepo r12 "arch_profile:")
+    arch_refused "invalid value" "" "$(FX code-complete)" --repo "${r}"
+}
+
+@test "arch: the wrong type, a missing frontmatter and status are refused" {
+    local r; r=$(mkarchrepo r13 "dod_profile: code")
+    for t in "type: arch_spec" "type: Arch-Spec" 'type: "arch-spec"' "type: decision"; do
+        variant "$(FX code-complete)" "type: arch-spec" "${t}" "${TMP}/t.arch.md"
+        arch_refused "frontmatter needs type: arch-spec" "" "${TMP}/t.arch.md" --repo "${r}"
+    done
+    tail -n +6 "$(FX code-complete)" > "${TMP}/nofm.arch.md"
+    arch_refused "frontmatter needs type: arch-spec" "" "${TMP}/nofm.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "tags: [arch-spec]" "status: approved" "${TMP}/st.arch.md"
+    arch_refused "must not carry status" "" "${TMP}/st.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "plan: fixture" "plan:" "${TMP}/np.arch.md"
+    arch_refused "non-empty plan" "" "${TMP}/np.arch.md" --repo "${r}"
+}
+
+@test "arch: a missing required section is named, for both profiles" {
+    local r; r=$(mkarchrepo r14 "dod_profile: code")
+    awk '/^## Data model$/{s=1;next} /^## /{s=0} !s' "$(FX code-complete)" > "${TMP}/a.arch.md"
+    arch_refused "missing section Data model" "" "${TMP}/a.arch.md" --repo "${r}"
+    r=$(mkarchrepo r15 "arch_profile: harness")
+    awk '/^## Load order$/{s=1;next} /^## /{s=0} !s' "$(FX harness-complete)" > "${TMP}/b.arch.md"
+    arch_refused "missing section Load order" "" "${TMP}/b.arch.md" --repo "${r}"
+}
+
+@test "arch: a table needs a primary key, and a second valid table does not mask it" {
+    local r; r=$(mkarchrepo r16 "dod_profile: code")
+    variant "$(FX code-complete)" "| order_lines | id | uuid | no | PK |" "| order_lines | id | uuid | no | |" "${TMP}/a.arch.md"
+    arch_refused "table has no primary key" "order_lines" "${TMP}/a.arch.md" --repo "${r}"
+    [[ "$output" != *"[orders]"* ]]
+    variant "$(FX code-complete)" "| orders | status | text | no | |" "| orders | status | text | no | PK |" "${TMP}/b.arch.md"
+    arch_ok "${TMP}/b.arch.md" --repo "${r}"
+}
+
+@test "arch: a foreign key needs an index and a references target" {
+    local r; r=$(mkarchrepo r17 "dod_profile: code")
+    variant "$(FX code-complete)" "| ix_order_lines_order_id |" "| - |" "${TMP}/a.arch.md"
+    arch_refused "foreign key has no index" "order_lines.order_id" "${TMP}/a.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| ix_order_lines_order_id | orders.id |" "| ix_order_lines_order_id | |" "${TMP}/b.arch.md"
+    arch_refused "foreign key names no references" "order_lines.order_id" "${TMP}/b.arch.md" --repo "${r}"
+}
+
+@test "arch: identifiers, key, and null values are checked" {
+    local r; r=$(mkarchrepo r18 "dod_profile: code")
+    variant "$(FX code-complete)" "| orders | status |" "| Order Lines | status |" "${TMP}/a.arch.md"
+    arch_refused "is not an identifier" "" "${TMP}/a.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| orders | status |" "| 1orders | status |" "${TMP}/b.arch.md"
+    arch_refused "is not an identifier" "" "${TMP}/b.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| text | no | |" "| text | maybe | |" "${TMP}/c.arch.md"
+    arch_refused "null must be yes or no" "" "${TMP}/c.arch.md" --repo "${r}"
+}
+
+@test "arch: n/a is legal under Data model only with a reason and without a table" {
+    local r; r=$(mkarchrepo r19 "dod_profile: code")
+    for body in "n/a: no database" ; do
+        awk -v b="${body}" '/^## Data model$/{print; print ""; print b; print ""; s=1; next} /^## /{s=0} !s' "$(FX code-complete)" > "${TMP}/a.arch.md"
+        arch_ok "${TMP}/a.arch.md" --repo "${r}"
+    done
+    for body in "n/a:" "n/a"; do
+        awk -v b="${body}" '/^## Data model$/{print; print ""; print b; print ""; s=1; next} /^## /{s=0} !s' "$(FX code-complete)" > "${TMP}/b.arch.md"
+        arch_refused "n/a needs a reason" "Data model" "${TMP}/b.arch.md" --repo "${r}"
+    done
+    awk '/^## Data model$/{print; print ""; print "n/a: no database"; next} {print}' "$(FX code-complete)" > "${TMP}/c.arch.md"
+    arch_refused "holds n/a and a table" "" "${TMP}/c.arch.md" --repo "${r}"
+}
+
+@test "arch: interface params — valid forms pass, malformed ones are refused naming the row" {
+    local r; r=$(mkarchrepo r20 "dod_profile: code")
+    local good bad
+    for good in "-" " - " "a: int" "m: Map<string, int>" "s: ?string" "l: string[]" 'u: int\|string' "f: fn(a: int, b: int), z: int"; do
+        variant "$(FX code-complete)" "| orderId: string, qty: int |" "| ${good} |" "${TMP}/g.arch.md"
+        arch_ok "${TMP}/g.arch.md" --repo "${r}"
+    done
+    for bad in "" "a" "a:" ": int" "a: int," "a: int,, b: int" "-, a: int" "a: int = 1" "1a: int"; do
+        variant "$(FX code-complete)" "| orderId: string, qty: int |" "| ${bad} |" "${TMP}/b.arch.md"
+        run "${GATE_SH}" arch "${TMP}/b.arch.md" --repo "${r}"
+        [ "$status" -eq 1 ]
+        [[ "$output" == *"[OrderService.place]"* ]]
+    done
+}
+
+@test "arch: reuse map rules" {
+    local r; r=$(mkarchrepo r21 "dod_profile: code")
+    variant "$(FX code-complete)" "| app/Repositories/BaseRepository.php | extend |" "| - | extend |" "${TMP}/a.arch.md"
+    arch_refused "extend row names no symbol" "transactional save" "${TMP}/a.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| app/Repositories/BaseRepository.php | extend |" "|  | reuse |" "${TMP}/b.arch.md"
+    arch_refused "reuse row names no symbol" "transactional save" "${TMP}/b.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| new | searched app/ for \`Number\`; no generator exists |" "| new | |" "${TMP}/c.arch.md"
+    arch_refused "new reuse row has no reason" "order number" "${TMP}/c.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| extend | shares" "| replace | shares" "${TMP}/d.arch.md"
+    arch_refused "decision must be reuse, extend or new" "transactional save" "${TMP}/d.arch.md" --repo "${r}"
+}
+
+@test "arch: files rules resolve against --repo, and a new file may not exist yet" {
+    local r; r=$(mkarchrepo r22 "arch_profile: harness")
+    variant "$(FX harness-complete)" "| bin/gate.sh | no |" "| bin/missing.sh | no |" "${TMP}/a.arch.md"
+    arch_refused "path does not exist" "bin/missing.sh" "${TMP}/a.arch.md" --repo "${r}"
+    variant "$(FX harness-complete)" "| bin/gate.sh | no |" "| bin/gate.sh | maybe |" "${TMP}/b.arch.md"
+    arch_refused "new must be yes or no" "bin/gate.sh" "${TMP}/b.arch.md" --repo "${r}"
+    variant "$(FX harness-complete)" "| bin/gate.sh | no | refuses a session that skipped a required step | on-demand |" "| bin/gate.sh | no | refuses a session that skipped a required step | sometimes |" "${TMP}/c.arch.md"
+    arch_refused "loaded must be" "bin/gate.sh" "${TMP}/c.arch.md" --repo "${r}"
+    variant "$(FX harness-complete)" "| bin/gate.sh | no |" "| ../outside.sh | no |" "${TMP}/d.arch.md"
+    arch_refused "relative to the repo" "../outside.sh" "${TMP}/d.arch.md" --repo "${r}"
+    variant "$(FX harness-complete)" "| checks/arch-SC-9.sh | yes |" "| checks/not-yet.sh | yes |" "${TMP}/e.arch.md"
+    arch_ok "${TMP}/e.arch.md" --repo "${r}"
+}
+
+@test "arch: a heading inside a fenced block does not truncate its section" {
+    local r; r=$(mkarchrepo r23 "dod_profile: code")
+    awk '/^## Interfaces$/{print; print ""; print "```text"; print "## Fake"; print "```"; next} {print}' "$(FX code-complete)" > "${TMP}/a.arch.md"
+    arch_ok "${TMP}/a.arch.md" --repo "${r}"
+}
+
+@test "arch: CRLF changes no verdict, in either direction" {
+    local r; r=$(mkarchrepo r24 "dod_profile: code")
+    sed 's/$/\r/' "$(FX code-complete)" > "${TMP}/crlf.arch.md"
+    arch_ok "${TMP}/crlf.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| order_lines | id | uuid | no | PK |" "| order_lines | id | uuid | no | |" "${TMP}/nopk.arch.md"
+    sed 's/$/\r/' "${TMP}/nopk.arch.md" > "${TMP}/crlf2.arch.md"
+    arch_refused "table has no primary key" "order_lines" "${TMP}/crlf2.arch.md" --repo "${r}"
+}
+
+@test "arch: a repeated section heading is refused, so a later bad row cannot hide" {
+    local r; r=$(mkarchrepo r25 "dod_profile: code")
+    { cat "$(FX code-complete)"; printf '\n## Interfaces\n\n| interface | method | params | returns | throws | layer |\n|---|---|---|---|---|---|\n| X | y | z | int | - | http |\n'; } > "${TMP}/a.arch.md"
+    arch_refused "duplicate section Interfaces" "" "${TMP}/a.arch.md" --repo "${r}"
+}
+
+@test "arch: an unclosed fence is refused" {
+    local r; r=$(mkarchrepo r26 "dod_profile: code")
+    { cat "$(FX code-complete)"; printf '\n```text\nnever closed\n'; } > "${TMP}/a.arch.md"
+    arch_refused "unclosed code fence" "" "${TMP}/a.arch.md" --repo "${r}"
+}
+
+@test "arch: a row with the wrong cell count, or a missing column, is refused" {
+    local r; r=$(mkarchrepo r27 "dod_profile: code")
+    variant "$(FX code-complete)" "| orders | id | uuid | no | PK | pk_orders | |" "| orders | id | uuid | no | PK | pk_orders |" "${TMP}/a.arch.md"
+    arch_refused "row has 6 cells, header has 7" "orders" "${TMP}/a.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| index | references |" "| index |" "${TMP}/b.arch.md"
+    run "${GATE_SH}" arch "${TMP}/b.arch.md" --repo "${r}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"lacks column references"* ]]
+    variant "$(FX code-complete)" "| shares transaction handling |" "| shares | transaction handling |" "${TMP}/c.arch.md"
+    arch_refused "cells" "" "${TMP}/c.arch.md" --repo "${r}"
+}
+
+@test "arch: row order and column order do not change the verdict" {
+    local r; r=$(mkarchrepo r28 "dod_profile: code")
+    awk '/^\| order_lines \| order_id /{fk=$0; next} {print} /^\|-------\|--------\|------\|------\|-----\|-------\|------------\|$/{print "@@FK@@"}' "$(FX code-complete)" > "${TMP}/t.md"
+    local fk; fk=$(grep '^| order_lines | order_id ' "$(FX code-complete)")
+    local c; c=$(<"${TMP}/t.md"); printf '%s\n' "${c/@@FK@@/${fk}}" > "${TMP}/a.arch.md"
+    arch_ok "${TMP}/a.arch.md" --repo "${r}"
+    run "${GATE_SH}" arch "$(FX code-complete)" --repo "${r}"
+    [ "$status" -eq 0 ]
+}
+
+@test "arch: size budgets and load order numbers are integers in range" {
+    local r v; r=$(mkarchrepo r29 "dod_profile: code")
+    for v in 0 -1 1.5 abc "" 99999999999999999999; do
+        variant "$(FX code-complete)" "| app/Services/OrderService.php | 200 | 30 |" "| app/Services/OrderService.php | ${v} | 30 |" "${TMP}/a.arch.md"
+        run "${GATE_SH}" arch "${TMP}/a.arch.md" --repo "${r}"
+        [ "$status" -eq 1 ]
+        [[ "$output" == *"max lines must be an integer"* ]]
+    done
+    r=$(mkarchrepo r30 "arch_profile: harness")
+    variant "$(FX harness-complete)" "| PROPOSE finalise | bin/gate.sh | 0 |" "| PROPOSE finalise | bin/gate.sh | lots |" "${TMP}/b.arch.md"
+    arch_refused "tokens-max must be an integer" "PROPOSE finalise" "${TMP}/b.arch.md" --repo "${r}"
+}
+
+@test "arch: the output contract holds — success is one exact line, a refusal names path, problem and row" {
+    local r; r=$(mkarchrepo r31 "dod_profile: code")
+    run "${GATE_SH}" arch "$(FX code-complete)" --repo "${r}"
+    [ "$output" = "arch: ok $(FX code-complete)" ]
+    variant "$(FX code-complete)" "| orderId: string, qty: int |" "| orderId, qty: int |" "${TMP}/a.arch.md"
+    run "${GATE_SH}" arch "${TMP}/a.arch.md" --repo "${r}"
+    [ "$status" -eq 1 ]
+    [[ "${lines[0]}" =~ ^REFUSED\ arch\ ${TMP}/a\.arch\.md:\ .+\ \[.+\]$ ]]
+    [[ "$output" == *"gate: 1 refusal(s)"* ]]
+}
+
+@test "arch: two runs give identical output, the spec is not modified, and the working directory does not matter" {
+    local r; r=$(mkarchrepo r32 "dod_profile: code")
+    variant "$(FX code-complete)" "| orderId: string, qty: int |" "| orderId, qty: int |" "${TMP}/a.arch.md"
+    local before; before=$(cksum < "${TMP}/a.arch.md")
+    run "${GATE_SH}" arch "${TMP}/a.arch.md" --repo "${r}"; local one="$output" s1="$status"
+    cd /
+    run "${GATE_SH}" arch "${TMP}/a.arch.md" --repo "${r}"
+    [ "$output" = "$one" ]
+    [ "$status" -eq "$s1" ]
+    [ "$(cksum < "${TMP}/a.arch.md")" = "$before" ]
+}
+
+@test "arch: --help lists the arch subcommand" {
+    run "${GATE_SH}" --help
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"gate.sh arch"* ]]
+}
+
+@test "arch: arrow types are legal, unbalanced brackets are refused, and an untyped param after an arrow is caught" {
+    local r; r=$(mkarchrepo r36 "dod_profile: code")
+    variant "$(FX code-complete)" "| orderId: string, qty: int |" "| cb: (x: int) => void, qty: int |" "${TMP}/a.arch.md"
+    arch_ok "${TMP}/a.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| orderId: string, qty: int |" "| cb: fn(i32) -> i32, qty: int |" "${TMP}/b.arch.md"
+    arch_ok "${TMP}/b.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| orderId: string, qty: int |" "| cb: fn(i32) -> i32, qty |" "${TMP}/c.arch.md"
+    arch_refused "param qty has no type" "OrderService.place" "${TMP}/c.arch.md" --repo "${r}"
+    variant "$(FX code-complete)" "| orderId: string, qty: int |" "| orderId: fn(a, qty: int |" "${TMP}/d.arch.md"
+    arch_refused "unbalanced brackets" "OrderService.place" "${TMP}/d.arch.md" --repo "${r}"
+}
+
+@test "arch: a data row made only of dashes is validated, not dropped as a separator" {
+    local r; r=$(mkarchrepo r37 "dod_profile: code")
+    variant "$(FX code-complete)" "| app/Services/OrderService.php | 200 | 30 |" "| - | - | - |" "${TMP}/a.arch.md"
+    run "${GATE_SH}" arch "${TMP}/a.arch.md" --repo "${r}"
+    [ "$status" -eq 1 ]
+    variant "$(FX code-complete)" "| order number | - | new | searched app/ for \`Number\`; no generator exists |" "| - | - | - | - |" "${TMP}/b.arch.md"
+    arch_refused "decision must be reuse, extend or new" "" "${TMP}/b.arch.md" --repo "${r}"
+}
+
+@test "arch: an unclosed frontmatter block, a repeated --repo, a VAULT.md that is a directory, and a missing option value are refused" {
+    local r; r=$(mkarchrepo r38 "dod_profile: code")
+    variant "$(FX code-complete)" "tags: [arch-spec]
+---" "tags: [arch-spec]" "${TMP}/a.arch.md"
+    arch_refused "frontmatter is not closed" "" "${TMP}/a.arch.md" --repo "${r}"
+    run "${GATE_SH}" arch "$(FX code-complete)" --repo "${r}" --repo "${r}"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"--repo given twice"* ]]
+    mkdir -p "${TMP}/r39/VAULT.md"
+    run "${GATE_SH}" arch "$(FX code-complete)" --repo "${TMP}/r39"
+    [ "$status" -eq 2 ]
+    run "${GATE_SH}" all "$(FX code-complete)" --phase propose --repo
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"--repo needs a directory"* ]]
+}
+
+@test "arch: a spec that still holds a template placeholder is refused, and both templates are" {
+    local r; r=$(mkarchrepo r33 "dod_profile: code")
+    arch_refused "template placeholder" "" "${VAULT_ROOT}/templates/arch.md" --repo "${r}"
+    arch_refused "template placeholder" "" "${VAULT_ROOT}/templates/arch-harness.md" --repo "${r}"
+    variant "$(FX code-complete)" "| app/Services/OrderService.php | 200 | 30 |" "| path/to/Service.ext | 200 | 30 |" "${TMP}/a.arch.md"
+    arch_refused "template placeholder" "" "${TMP}/a.arch.md" --repo "${r}"
+}
+
+@test "arch: a trailing comment on the plan's arch_spec value is ignored, as the template writes it" {
+    local r; r=$(mkarchrepo r34 "arch_profile: code")
+    cp "$(FX code-complete)" "${TMP}/good.arch.md"
+    printf -- '---\ntype: plan\narch_spec: good.arch.md   # file name only\n---\n# p\n' > "${TMP}/commented.md"
+    run "${GATE_SH}" arch "${TMP}/commented.md" --repo "${r}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "arch: ok ${TMP}/good.arch.md" ]
+    grep -q '^arch_spec:.*#' "${VAULT_ROOT}/templates/plan.md"
+    sed 's/{{[a-z]*}}/x/g' "${VAULT_ROOT}/templates/plan.md" > "${TMP}/fromtemplate.md"
+    r=$(mkarchrepo r35 "dod_profile: code")
+    run "${GATE_SH}" arch "${TMP}/fromtemplate.md" --repo "${r}"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }

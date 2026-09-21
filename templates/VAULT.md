@@ -51,6 +51,12 @@ dod_profile: {{dod_profile}}
 test_command: {{test_command}}
 lint_command: {{lint_command}}
 delivery_command: {{delivery_command}}
+<!-- Optional. Which architecture spec a `/v-team` plan must carry (contract:
+     commands/_shared/architecture-spec.md). `code`: data model, interfaces, layers. `harness`: file
+     tree, load order, size budgets, config points, for repos whose product is instructions or
+     configuration. `none`: no spec is required. An absent line means `none`, so no existing repo is
+     refused for lacking it. -->
+# arch_profile: none
 
 ## hooks
 <!-- Per-project, per-step instruction (prose only; never run as a shell command, there is no `run:`
