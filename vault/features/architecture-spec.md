@@ -12,10 +12,9 @@ tags: [feature, planning, gates]
 ## Scope
 A `/v-team` plan in a repo that declares an `arch_profile` other than `none` carries a sibling structure spec, `plans/<slug>.arch.md`. `bin/gate.sh arch` checks it before any work item exists and again at the approval gate.
 
-Built: the spec contract, the gate, the two templates and the propose and approval wiring.
+Built: the spec contract, the gate, the two templates, the propose and approval wiring, the human page renderer and its gate, and the probe kit core.
 
 Not built. Each item is a session in `vault/plans/2026-09-21-0900-architecture-first-planning.md`:
-- the human page renderer and its gate;
 - plan-time auditors that run the probe kit;
 - master plans with cross-session contracts;
 - probe results in review panels, `/v-rule`, and stack probe packs.
@@ -39,6 +38,11 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 - A spec holding `{{` or `path/to/` → exit 1, so an unedited template never passes.
 - A spec whose `profile` differs from the repo's `arch_profile` → exit 1.
 
+- Repo registry present, no `--allow-repo-registry` → its rows never run; with it, `--no-repo-code` skips them.
+- Registry row names an absent tool → `absent: <id>: <install>` on stderr, exit 2, nothing installed.
+- A probe prints a malformed row → that probe fails, prints no row, and the run exits 2.
+- `diff` in a repo whose config defines a filter, fsmonitor or hook command → none runs.
+
 ## Coupling
 - `commands/v-team.md` Step 4 and `commands/v-team/steps/03-propose-loop.md` (a) and (g) name the gate; `tests/unit/v-team.bats` guards that text.
 - `bin/doc-lint.sh` types a `*.arch.md` file as `arch-spec` when frontmatter gives no type.
@@ -57,3 +61,4 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 ## Sessions
 - [[../sessions/2026-09-21-1015-architecture-first-planning-s1-s2]]: contract, gate, templates, wiring and tests.
 - [[../sessions/2026-09-21-1130-human-plan-page-and-profiles]]: profiles as data, the human page renderer, its gate and the `/v-team` wiring.
+- [[../sessions/2026-09-21-1317-probe-kit-core-s4]]: the probe kit core, its tool verification and two review rounds.
