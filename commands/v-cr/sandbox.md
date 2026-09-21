@@ -169,13 +169,7 @@ container with `--pull never`. An indication never sets the probe image, because
 `cr_probe_image` reads only `VCR_SANDBOX_MAP`. The image needs bash 4.4 or later, awk, grep, sed, coreutils
 (`timeout`, `od`, `sort`, `tr`, `cut`, `mktemp`), findutils and `jq`. It also needs `lizard` and `typos` for their rows, and `claude`
 for `claude-validate`. A probe never installs a tool, so a missing tool prints `absent: <id>: <install>` and the run
-reads INCOMPLETE until the operator adds the tool to the image. A sample:
-
-```dockerfile
-FROM python:3.12-slim
-RUN apt-get update && apt-get install -y --no-install-recommends bash gawk grep sed coreutils findutils jq \
- && pip install --no-cache-dir lizard typos && rm -rf /var/lib/apt/lists/*
-```
+reads INCOMPLETE until the operator adds the tool to the image. `probes/image.Dockerfile` builds an image with `lizard` and `typos`: `docker build -f probes/image.Dockerfile -t vault-probes:local probes`.
 
 **The containers.** Every container gets the S0 envelope: no network, a read-only root, all capabilities dropped,
 `no-new-privileges`, user 65534, memory, cpu and pid limits from `VCR_SANDBOX_MAP` (keys `memory`, `cpus`, `pids`), a
