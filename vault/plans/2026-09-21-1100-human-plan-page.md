@@ -7,7 +7,7 @@ status: executed
 process_record: 2026-09-21-1100-human-plan-page.trail.md
 arch_spec: 2026-09-21-1100-human-plan-page.arch.md
 human_plan: https://claude.ai/artifact/FUj88e47kH8AWzaZQdcsMz
-session:
+session: vault/sessions/2026-09-21-1130-human-plan-page-and-profiles.md
 tags: [plan, architecture, human-plan]
 ---
 
