@@ -7,7 +7,7 @@ status: executed
 process_record: 2026-09-21-0900-architecture-first-planning.trail.md
 arch_spec: 2026-09-21-0900-architecture-first-planning.arch.md
 human_plan: https://claude.ai/artifact/LHVhsU2fsQWNFpJTH6NKuC
-session:
+session: vault/sessions/2026-09-21-1015-architecture-first-planning-s1-s2.md
 tags: [plan, master-plan, architecture, probes]
 ---
 
