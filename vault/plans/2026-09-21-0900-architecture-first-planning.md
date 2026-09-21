@@ -33,7 +33,7 @@ columns, check order, messages) is `commands/_shared/architecture-spec.md`.
 - existing defect, not this plan's: `vault/decisions/` holds two files numbered ADR-030.
 - existing defect, not this plan's: 5 unit tests fail on `HEAD` (`v-reconcile.md` has no frontmatter description, `commands/v-loop/adapters/test-and-repair.md` has no path note, and three others).
 - deferred: `lib/arch-check.sh` repeats one row-loop skeleton seven times and holds two functions over 40 lines. Extract a shared row iterator when a later profile adds tables.
-- deferred: the spec gate checks form, not truth; a session can write plausible rows. S5 adds probes that compare the spec with the existing code.
+- deferred: the spec gate checks form, not truth. S5 added `spec-symbols`, which checks that a Reuse-map row names code that exists; S11 adds the table and naming comparisons.
 
 ## Open questions
 
@@ -178,7 +178,7 @@ does not redefine it. The producing session may add columns, never rename or dro
 | C-6 | rule file location | S8 | S7, S9, S10 | `probes/rules/<slug>.grep` in the target repo, plus one registry row that `bin/rule-check.sh row` prints and `probes/rule-grep.sh` runs; the format and the row are in `commands/_shared/probe-kit.md` section Rule files |
 | C-7 | human page and its check | S3 | S5, S6 | `bin/render-human.sh <plan>` writes `<plan>.human.html`; `bin/gate.sh human <plan>` prints `human: ok <page>` when the page equals a fresh render and `human_plan` is a link |
 | C-8 | sandbox probe rows | S10 | S7 | four files in one directory, written by the host after the container exits: `framework.tsv` and `rules.tsv` hold C-2 rows, `framework.status` and `rules.status` hold the kit's status lines; `bin/probe-panel.sh` tags a row `[confirmed]` from the file that held it and never from the row's content |
-
+| S11 | spec-reading SQL probes `spec-tables` and `spec-naming`, and the `data-model` and `naming` auditors of `commands/_shared/plan-probes.md` | /v-team | todo | S5 | 2026-09-21 | |
 ## Sessions
 
 | id | scope | command | status | depends | date | evidence |
@@ -187,7 +187,7 @@ does not redefine it. The producing session may add columns, never rename or dro
 | S2 | arch spec contract, `gate.sh arch`, PROPOSE and approval wiring | /v-team | done | S1 | 2026-09-21 | `checks/arch-SC-2.sh` to `-6.sh` exit 0; `./tests/run.sh tests/unit/gate.bats` 93 of 93 |
 | S3 | human plan page: `bin/render-human.sh`, `gate.sh human`, the `human_plan` link and its `file:` fallback, wired into `/v-team`; the master page regenerated | /v-team | done | S2 | 2026-09-21 | the ten human-page checks exit 0; `./tests/run.sh tests/unit/human-plan.bats` 22 of 22 |
 | S4 | probe kit core: `bin/probe.sh`, `probes/registry.tsv`, harness probes, `probe.sh scale`, schema duplicate-column, index and naming probes, similar-method probe, verified tool list | /v-team | done | S1 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1130-probe-kit-core.md` reports SC-1 to SC-11 MET; `./tests/run.sh tests/unit/probe.bats` 40 of 40 |
-| S5 | plan-time probes: auditor agents, longer planning stage, cost delta per D-10 | /v-team | todo | S3, S4 | 2026-09-21 | |
+| S5 | plan-time probes: `bin/plan-probes.sh` (tier by the D-10 limit, `verify`, `measure`), the `--stage plan` block of `bin/probe-panel.sh`, the `spec-symbols` check, the `reuse` auditor, step (b2) of `commands/v-team/steps/03-propose-loop.md`; the plan is `vault/plans/2026-09-21-1800-plan-time-probes.md`; `critic-panel.md` is unchanged | /v-team | done | S3, S4 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1800-plan-time-probes.md` reports SC-1 to SC-7 MET; measured baselines 769,168 and 1,018,594 fresh tokens; projected added cost 4% and 3% |
 | S6 | master plan template with a required `## Cross-session contracts` table and its artifact, `gate.sh master` (D-15, E-3), `/v-pm` and `(f3)` in `commands/v-team/steps/03-propose-loop.md` write and read it, sub-plan ordering gate | /v-team | todo | S2, S3 | 2026-09-21 | |
 | S7 | probe results as a panel input: `commands/_shared/critic-panel.md` runs `bin/probe.sh diff` in its ground-first stage; `/v-team` execute, `/v-cr` review (D-14) and `/v-work` review read it; each indication names its probe | /v-team | done | S4 | 2026-09-21 | | `bin/gate.sh verdict vault/plans/2026-09-21-1330-probe-panel-input.md` reports SC-1 to SC-7 MET |
 | S8 | `/v-rule` skill: operator comments in, indication plus rule file plus fixtures out (D-8, D-12, D-13); `bin/rule-check.sh`, `probes/rule-grep.sh`, the Rule files section of `commands/_shared/probe-kit.md` | /v-team | done | S4, S7 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1430-v-rule.md` reports SC-1 to SC-8 MET |

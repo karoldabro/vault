@@ -10,3 +10,4 @@ sql-dup-columns	sql	plan	{ find database migrations db schema -name '*.sql' 2>/d
 sql-fk-index	sql	plan	{ find database migrations db schema -name '*.sql' 2>/dev/null; ls schema.sql 2>/dev/null; } | grep -q .	"$PROBE_FRAMEWORK/probes/sql-schema.sh" --check sql-fk-index	native	S	no	none
 sql-naming	sql	plan	{ find database migrations db schema -name '*.sql' 2>/dev/null; ls schema.sql 2>/dev/null; } | grep -q .	"$PROBE_FRAMEWORK/probes/sql-schema.sh" --check sql-naming	native	S	no	none
 similar-symbols	any	plan	find . \( -name '*.sh' -o -name '*.php' -o -name '*.py' -o -name '*.go' -o -name '*.js' -o -name '*.ts' -o -name '*.vue' \) -not -path './.git/*' -not -path './node_modules/*' -not -path './vendor/*' | grep -q .	"$PROBE_FRAMEWORK/probes/similar-symbols.sh" --check similar-symbols	native	S	no	none
+spec-symbols	any	plan	test -n "$PROBE_SPEC"	"$PROBE_FRAMEWORK/probes/similar-symbols.sh" --check spec-symbols	native	S	no	none

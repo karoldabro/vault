@@ -3,6 +3,7 @@
 #
 # Usage:  bin/probe-panel.sh run --posture pr|own --repo <root> --base <ref> [--out <dir>] [--paths <file>]
 #         bin/probe-panel.sh run --posture sandbox --rows-from <dir> --repo <root> --base <ref> [--out <dir>] [--paths <file>]
+#         bin/probe-panel.sh run --stage plan --spec <file> --repo <root> [--only <id>]... [--out <dir>]
 #         bin/probe-panel.sh cited <out-dir> <probe> <file> <line>
 #
 # run    calls `bin/probe.sh diff` once and prints a status, the out directory, and a fenced block of
@@ -12,6 +13,8 @@
 #        file is listed in the file, one repo-relative path per line.
 #        `pr` never runs repo code. `own` runs none either, unless PROBE_PANEL_REPO_CODE=yes. `sandbox` runs nothing:
 #        it reads the four files of bin/probe-sandbox.sh from --rows-from and tags every row `[confirmed]`.
+#        `--stage plan` runs `bin/probe.sh run plan` once per `--only` id (once with none) on the repo and the spec, never with
+#        repo code, and takes neither --posture nor --base. Contract: commands/_shared/plan-probes.md.
 # cited  prints confirmed or advisory and exits 0 when the row is in the block, else none and exit 1.
 #
 # Exit: 0 complete · 2 incomplete, error or usage. Findings do not change the exit code.
@@ -34,7 +37,7 @@ T=$'\t'
 work=""
 
 die() { printf 'probe-panel: %s\n' "$*" >&2; exit 2; }
-usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 clean() { LC_ALL=C tr '\000-\011\013-\037\177' ' ' | LC_ALL=C cut -c1-300; }
 
 cited() {
@@ -73,20 +76,30 @@ sandbox_rows() {
 }
 
 run() {
-    local posture="" repo="" base="" out="" paths="" rowsfrom=""
+    local posture="" repo="" base="" out="" paths="" rowsfrom="" stage=diff spec="" only=()
     while [ $# -gt 0 ]; do
         case $1 in
-            --posture|--repo|--base|--out|--paths|--rows-from)
+            --posture|--repo|--base|--out|--paths|--rows-from|--stage|--spec|--only)
                 [ $# -ge 2 ] || die "$1 needs a value"
-                case $1 in --posture) posture=$2 ;; --repo) repo=$2 ;; --base) base=$2 ;; --out) out=$2 ;; --paths) paths=$2 ;; --rows-from) rowsfrom=$2 ;; esac
+                case $1 in --posture) posture=$2 ;; --repo) repo=$2 ;; --base) base=$2 ;; --out) out=$2 ;; --paths) paths=$2 ;; --rows-from) rowsfrom=$2 ;; --stage) stage=$2 ;; --spec) spec=$2 ;; --only) case $2 in ''|*[!a-z0-9-]*) die "--only must match [a-z0-9-]+" ;; esac; only+=("$2") ;; esac
                 shift 2 ;;
             *) die "unknown option: $1" ;;
         esac
     done
+    case $stage in diff|plan) ;; *) die "--stage must be diff or plan" ;; esac
+    if [ "$stage" = plan ]; then
+        [ -z "$posture" ] || die "--posture does not apply to --stage plan"
+        [ -z "$rowsfrom" ] || die "--rows-from does not apply to --stage plan"
+        [ -n "$spec" ] && [ -f "$spec" ] && [ -r "$spec" ] || die "--stage plan needs --spec <readable file>"
+        [ -z "$base" ] || die "--base does not apply to --stage plan"; [ -z "$paths" ] || die "--paths does not apply to --stage plan"
+        spec=$(readlink -f "$spec"); posture=own
+    else
+        [ ${#only[@]} -eq 0 ] || die "--only belongs to --stage plan"; [ -z "$spec" ] || die "--spec belongs to --stage plan"
+    fi
     case $posture in pr|own|sandbox) ;; *) die "--posture must be pr, own or sandbox" ;; esac
     if [ "$posture" = sandbox ]; then [ -n "$rowsfrom" ] || die "--posture sandbox needs --rows-from"; [ -d "$rowsfrom" ] || die "--rows-from needs a directory"
     else [ -z "$rowsfrom" ] || die "--rows-from belongs to --posture sandbox"; fi
-    [ -n "$base" ] || die "--base is required; there is no default"
+    [ "$stage" = plan ] || [ -n "$base" ] || die "--base is required; there is no default"
     [ -d "$repo" ] || die "--repo needs a directory"
     [ -z "$paths" ] || [ -r "$paths" ] || die "--paths needs a readable file"
     if [ -z "$out" ]; then out=$(mktemp -d "${TMPDIR:-/tmp}/probe-panel.XXXXXX") || die "cannot create a temp directory"
@@ -94,7 +107,7 @@ run() {
     out=$(cd "$out" && pwd)
     rm -f "$out/operator.txt" "$out/confirmed.tsv" "$out/advisory.tsv"
     local flags=(--no-repo-code) nocode=1 allow=()
-    if [ "$posture" = own ] && [ "${PROBE_PANEL_REPO_CODE:-}" = yes ]; then flags=(--allow-repo-registry); nocode=0; allow=(--allow-repo-registry); fi
+    if [ "$stage" = diff ] && [ "$posture" = own ] && [ "${PROBE_PANEL_REPO_CODE:-}" = yes ]; then flags=(--allow-repo-registry); nocode=0; allow=(--allow-repo-registry); fi
 
     work=$(mktemp -d "${TMPDIR:-/tmp}/probe-panel-work.XXXXXX") || die "cannot create a temp directory"
     trap 'rm -rf "${work:-}"' EXIT
@@ -102,7 +115,17 @@ run() {
     if [ "$posture" = sandbox ]; then sandbox_rows "$rowsfrom" "$raw" "$status"; krc=$?
         : > "$work/list.fw"; : > "$work/list.all"; local repoids="" shared=""
     else
+    if [ "$stage" = plan ]; then
+        : > "$raw"; : > "$status"; krc=0
+        local ids=("${only[@]}") id rc; [ ${#ids[@]} -gt 0 ] || ids=("")
+        for id in "${ids[@]}"; do
+            local pargs=(run plan --repo "$repo" --spec "$spec" --no-repo-code); [ -z "$id" ] || pargs+=(--only "$id")
+            "$here/probe.sh" "${pargs[@]}" >> "$raw" 2>> "$status"; rc=$?
+            [ "$rc" -lt 2 ] || krc=2
+        done
+    else
     "$here/probe.sh" diff --repo "$repo" --base "$base" "${flags[@]}" > "$raw" 2> "$status"; krc=$?
+    fi
 
     # Origin: the finding row has none, so read it from `list`. An id a repo also defines is advisory.
     "$here/probe.sh" list --repo "$repo" > "$work/list.fw" 2>/dev/null
@@ -119,7 +142,7 @@ run() {
     # shellcheck source=../lib/probe-emit.sh
     . "$root/lib/probe-emit.sh"; . "$root/lib/probe-scope.sh"
     PROBE_GIT_BIN=$(command -v git || true)
-    if probe_changed "$repo" "$base" "$chg" 2>/dev/null; then
+    if [ "$stage" = diff ] && probe_changed "$repo" "$base" "$chg" 2>/dev/null; then
         tr '\0' '\n' < "$chg" | grep -Eq '^(probes(/.*)?|lib/probe-.*|bin/probe\.sh)$' && edited=1
     fi
 
@@ -158,6 +181,8 @@ run() {
     if [ "$krc" -ge 2 ] && ! grep -q '^ran: ' "$status" && [ $((a + s + f)) -eq 0 ]; then
         state=ERROR; msg=$(grep -m1 '^probe: ' "$status" | clean); [ -n "$msg" ] || msg="the probe kit exited 2"
     fi
+
+    if [ "$stage" = plan ] && grep -q '^probe: ' "$status"; then state=ERROR; msg=$(grep -m1 '^probe: ' "$status" | clean); fi
 
     if [ "$state" != complete ]; then
         {

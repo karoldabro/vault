@@ -49,6 +49,8 @@ directory). `run` and `diff` also take `--spec <file>`, `--only <id>`, `--max-co
 `--allow-repo-registry`. `diff` takes `--base <ref>` (default `HEAD`) and keeps findings in files changed since
 the base and in untracked files. `diff` also takes `--changed-list <file>`, a NUL separated list of repo-relative paths, instead of `--base`; it reads no git, and it drops a path that is absent, escapes the repo or is a link. `--only` matches `[a-z0-9-]+`, and `--base` may not start with a dash.
 
+`bin/probe-panel.sh run --stage plan --spec <file> --repo <root> [--only <id>]...` prints the review block for a draft spec. It calls `probe.sh run plan` once per `--only` id (once with none), never with repo code, and takes neither `--posture` nor `--base`. An id with no row at the stage prints `probe-status: ERROR`. `commands/_shared/plan-probes.md` owns the stage.
+
 ## Lines
 
 | where | line |
@@ -96,6 +98,7 @@ Environment variables and their defaults: `PROBE_TIMEOUT` 120, `PROBE_OUT_MAX` 5
 | `sql-fk-index` | `fk-no-index`, `id-column-no-fk` |
 | `sql-naming` | `naming-snake-case`, `naming-glossary` |
 | `similar-symbols` | `similar-symbol`, `duplicate-symbol-tokens` |
+| `spec-symbols` | `reuse-path-missing`, `reuse-symbol-missing`, `reuse-map-unreadable` |
 | `lizard` | `high-complexity`, `long-function`, `many-parameters` |
 | `typos` | `typo` |
 | `claude-validate` | `plugin-<field>` |

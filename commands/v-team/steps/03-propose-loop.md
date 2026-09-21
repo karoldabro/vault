@@ -59,6 +59,13 @@ creates no handoff at all, and say so in the trail. When architect + consumer + 
 `skeptic` exceed the default 3, raise `team_max_parallel_critics` to 4 for the run rather than
 dropping a triggered lens.
 
+## (b2) Plan-time probes
+
+Runs when the plan names an `arch_spec`. Read `$VAULT_FRAMEWORK_PATH/commands/_shared/plan-probes.md` and follow its order: run
+`bin/probe-panel.sh run --stage plan`, save the block, run
+`bin/plan-probes.sh budget --critics <n> --rounds <n> --block <block> --out <out>`, and act on the tier. Keep the notes it prints
+for the approval block.
+
 ## (c) Parallel critic spawn
 
 One message, **multiple `Agent` calls** — one per selected persona, spawned as its `base_agent`
@@ -70,6 +77,7 @@ One message, **multiple `Agent` calls** — one per selected persona, spawned as
   `requirements.md` — its business rules (`REQ-NN`) + `## Variant & state rules` tables + glossary** (so
   critics and the test-design fan-out reason from the product's business logic, not just code);
 - its **persona block verbatim** (mandate · bound analyzer · rubric · checklist);
+- (tier `full` or `block-only`) the **plan-time probe block** saved in §(b2); a critic cites a row as `check: probe <id> <file>:<line>`;
 - (R ≥ 1) the **prior round's merged findings**, so it sees what changed and whether its concern was
   addressed.
 
@@ -231,6 +239,8 @@ sidecar. Fix it before the approval gate. Then run `$VAULT_FRAMEWORK_PATH/bin/ga
 exit 1 means the spec breaks its contract or the plan names no spec in a profiled repo, so fix it
 now; exit 2 means a file could not be read, so stop and say so. Step 4 runs the same check again.
 
+When step (b2) ran, run `$VAULT_FRAMEWORK_PATH/bin/plan-probes.sh verify <out>`, adding `<out>/auditor-reuse.tsv` when the auditor ran. Exit 1 prints `open:` rows: fix the spec and repeat step (b2), or list each row in the `Open` field so the operator can accept it. Exit 2 means step (b2) did not run.
+
 **Human page.** Skip this block when the plan names no `arch_spec`, as in a repo with no
 `arch_profile`. Otherwise read `$VAULT_FRAMEWORK_PATH/commands/_shared/human-plan.md`, then run
 `$VAULT_FRAMEWORK_PATH/bin/render-human.sh <plan>`. It writes `<plan name>.human.html` beside the plan.
@@ -264,7 +274,7 @@ Panel-specific rules for this layer:
 - **These always surface** (they are exceptions, not status): `CONVERGENCE: capped with N open
   blockers` — stated plainly, e.g. "the reviewers ran out of rounds with N things still open"; any
   **minority flag** (§(e) item 6); any irreconcilable trade-off the synthesizer escalated (§(e) item
-  3); and the `(f2)` skip note (§f2 gating) when test design was skipped.
+  3); and the `(f2)` skip note (§f2 gating) when test design was skipped, and the `note:` and `open:` lines of the plan-time stage (§(b2)), each in plain words in the `Open` field.
 - **Say the reviewing happened; do not narrate it.** One line at most — how many reviewers, whether
   anything is still open. Never a round-by-round account.
 
