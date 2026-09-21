@@ -1270,3 +1270,176 @@ arch_refused() {
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
+
+# ---------------------------------------------------------------------------- master
+# `gate.sh master` on a master plan and on a session's own plan. Each defect is derived inline from
+# tests/fixtures/master/complete.md or session-plan.md, so it sits beside its assertion.
+
+MF() { printf '%s' "${VAULT_ROOT}/tests/fixtures/master/$1.md"; }
+
+# master_refused <pattern> <file> — exit 1, a REFUSED master line matching the pattern, on stderr
+master_refused() {
+    run "${GATE_SH}" master "$2"
+    [ "$status" -eq 1 ]
+    grep -Eq -- "REFUSED master .*$1" <<<"$output"
+}
+
+@test "master: the complete fixture passes, deleting a contract row names the pair, an ordinary plan is silent" {
+    run "${GATE_SH}" master "$(MF complete)"
+    [ "$status" -eq 0 ]
+    [ "$output" = "master: ok $(MF complete)" ]
+    sed '/^| C-2 /d' "$(MF complete)" > "${TMP}/a.md"
+    master_refused 'S3 depends on S2 and no contract row is produced by S2 and consumed by S3; add a row naming what S2 hands S3 and its shape, or drop S2 from depends if S3 needs nothing from S2 \[S3\]$' "${TMP}/a.md"
+    printf '# p\n\n## Task\nx\n' > "${TMP}/plain.md"
+    run "${GATE_SH}" master "${TMP}/plain.md"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "master: a CRLF copy reads both tables, and a CRLF copy that lost a row is still refused" {
+    sed 's/$/\r/' "$(MF complete)" > "${TMP}/crlf.md"
+    run "${GATE_SH}" master "${TMP}/crlf.md"
+    [ "$status" -eq 0 ]
+    sed '/^| C-3 /d' "$(MF complete)" | sed 's/$/\r/' > "${TMP}/crlf2.md"
+    master_refused 'S4 depends on S3' "${TMP}/crlf2.md"
+}
+
+@test "master: a bullet list under ## Sessions is not a master plan" {
+    printf '# p\n\n## Sessions\n- [[../sessions/a]]\n- [[../sessions/b]]\n' > "${TMP}/bullets.md"
+    run "${GATE_SH}" master "${TMP}/bullets.md"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "master: a token that is no session id is refused in depends, produced by and consumed by" {
+    sed 's/| S1, S2 | 2026-09-21 | |/| S1, S7 | 2026-09-21 | |/' "$(MF complete)" > "${TMP}/a.md"
+    master_refused 'S3 depends on S7, and the Sessions table has no S7' "${TMP}/a.md"
+    sed 's/| C-1 | spec format | S1 |/| C-1 | spec format | S8 |/' "$(MF complete)" > "${TMP}/b.md"
+    master_refused 'C-1 names session S8 in produced by' "${TMP}/b.md"
+    sed 's/| S2 | S3 | `bin\/render.sh/| S2 | S9 | `bin\/render.sh/' "$(MF complete)" > "${TMP}/c.md"
+    master_refused 'C-2 names session S9 in consumed by' "${TMP}/c.md"
+    sed 's/| S4 | the report/| S3 | the report/' "$(MF complete)" > "${TMP}/d.md"
+    master_refused 'session id S3 appears twice' "${TMP}/d.md"
+    sed 's/^| C-3 /| C-1 /' "$(MF complete)" > "${TMP}/e.md"
+    master_refused 'contract id C-1 appears twice' "${TMP}/e.md"
+}
+
+@test "master: a missing depends column, a missing contracts table and an empty cell are refused by name" {
+    sed 's/| depends |/| waits |/' "$(MF complete)" > "${TMP}/a.md"
+    master_refused 'no depends column' "${TMP}/a.md"
+    awk '/^## Cross-session contracts/{s=1} /^## Refs/{s=0} !s' "$(MF complete)" > "${TMP}/b.md"
+    master_refused 'needs a ## Cross-session contracts table' "${TMP}/b.md"
+    sed 's/| `docs\/spec.md` sections and columns |/| |/' "$(MF complete)" > "${TMP}/c.md"
+    master_refused 'C-1 has an empty shape cell' "${TMP}/c.md"
+    sed 's/| C-2 | rendered page | S2 | S3 |/| C-2 | rendered page | | S3 |/' "$(MF complete)" > "${TMP}/d.md"
+    master_refused 'C-2 has an empty produced by cell' "${TMP}/d.md"
+}
+
+@test "master: a row of the wrong width and a second table under a heading are refused" {
+    sed 's/| S4 | the report | \/v-do | todo | S3 | 2026-09-21 | |/| S4 | the report | \/v-do | todo | S3 | 2026-09-21 | | extra |/' "$(MF complete)" > "${TMP}/a.md"
+    master_refused 'a Sessions row has 8 cells and the header has 7 \[S4\]' "${TMP}/a.md"
+    awk '{print} /^\| C-3 /{print "\n| id | contract | produced by | consumed by | shape |\n|----|----------|-------------|-------------|-------|\n| C-4 | x | S1 | S2 | `y` |"}' "$(MF complete)" > "${TMP}/b.md"
+    master_refused 'a second table or a stray row sits under ## Cross-session contracts' "${TMP}/b.md"
+}
+
+@test "master: the ordering check passes when every producer is done and names the status when one is not" {
+    cp "$(MF complete)" "${TMP}/complete.md"; cp "$(MF session-plan)" "${TMP}/session-plan.md"
+    run "${GATE_SH}" master "${TMP}/session-plan.md"
+    [ "$status" -eq 0 ]
+    for st in todo doing dropped; do
+        sed "s/| S2 | the renderer | \/v-team | done/| S2 | the renderer | \/v-team | $st/" "$(MF complete)" > "${TMP}/complete.md"
+        master_refused "S3 consumes C-2, and its producer S2 has status $st, so C-2 is not produced yet; mark S2 done in the master plan if it shipped \\[C-2\\]\$" "${TMP}/session-plan.md"
+    done
+}
+
+@test "master: session_of without an id, with a missing master or an unknown id is refused, an absolute path works" {
+    cp "$(MF complete)" "${TMP}/complete.md"
+    sed 's/^session_of: .*/session_of: complete.md/' "$(MF session-plan)" > "${TMP}/a.md"
+    master_refused 'session_of needs the form' "${TMP}/a.md"
+    sed 's/^session_of: .*/session_of: gone.md#S3/' "$(MF session-plan)" > "${TMP}/b.md"
+    master_refused 'names a master plan that does not exist' "${TMP}/b.md"
+    sed 's/^session_of: .*/session_of: complete.md#S9/' "$(MF session-plan)" > "${TMP}/c.md"
+    master_refused 'the master plan has no session S9' "${TMP}/c.md"
+    sed "s|^session_of: .*|session_of: ${TMP}/complete.md#S3|" "$(MF session-plan)" > "${TMP}/d.md"
+    run "${GATE_SH}" master "${TMP}/d.md"
+    [ "$status" -eq 0 ]
+    sed '/^session_of: /d' "$(MF session-plan)" > "${TMP}/e.md"
+    run "${GATE_SH}" master "${TMP}/e.md"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "master: the repaired master plan of this framework passes" {
+    run "${GATE_SH}" master "${VAULT_ROOT}/vault/plans/2026-09-21-0900-architecture-first-planning.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "master: all runs it in propose and approve, and all --repo does not die on it" {
+    sed '/^| C-2 /d' "$(MF complete)" > "${TMP}/a.md"
+    for phase in propose approve; do
+        run "${GATE_SH}" all "${TMP}/a.md" --phase "$phase" --repo "${VAULT_ROOT}"
+        [ "$status" -ne 0 ]
+        grep -q 'REFUSED master .*S3 depends on S2' <<<"$output"
+    done
+    run "${GATE_SH}" all "${TMP}/a.md" --phase propose --repo "${VAULT_ROOT}"
+    [ "$status" -eq 1 ]
+}
+
+@test "master: an unreadable plan exits 2 with nothing on stdout, and refusal lines keep one shape" {
+    local out rc
+    out=$("${GATE_SH}" master "${TMP}/absent.md" 2>/dev/null) && rc=0 || rc=$?
+    [ "$rc" -eq 2 ]
+    [ -z "$out" ]
+    sed '/^| C-2 /d' "$(MF complete)" > "${TMP}/a.md"
+    run "${GATE_SH}" master "${TMP}/a.md"
+    while IFS= read -r line; do
+        case "$line" in REFUSED*) grep -Eq '^REFUSED master .+: .* \[[^]]+\]$' <<<"$line" ;; esac
+    done <<<"$output"
+    first="$output"
+    run "${GATE_SH}" master "${TMP}/a.md"
+    [ "$output" = "$first" ]
+}
+
+@test "master: --help lists the subcommand" {
+    run "${GATE_SH}" --help
+    grep -q 'gate.sh master' <<<"$output"
+}
+
+@test "master: an empty consumed by cell, a wide contract row and each missing contract column are refused" {
+    sed 's/| C-3 | reader output | S3 | S4 |/| C-3 | reader output | S3 | |/' "$(MF complete)" > "${TMP}/a.md"
+    master_refused 'C-3 has an empty consumed by cell' "${TMP}/a.md"
+    sed 's/^| C-3 \(.*\) |$/| C-3 \1 | extra |/' "$(MF complete)" > "${TMP}/b.md"
+    master_refused 'a contract row has 6 cells and the header has 5 \[C-3\]' "${TMP}/b.md"
+    local col
+    for col in 'contract:name' 'produced by:made by' 'consumed by:used by' 'shape:form'; do
+        sed "s/^| id | ${col%%:*} |/| id | ${col##*:} |/; s/| ${col%%:*} |\$/| ${col##*:} |/; s/| ${col%%:*} | \(.*\)|\$/| ${col##*:} | \1|/" "$(MF complete)" > "${TMP}/c.md"
+        master_refused "no ${col%%:*} column" "${TMP}/c.md"
+    done
+}
+
+@test "master: a Sessions table with no status or id column is refused, and a session cannot depend on itself" {
+    sed 's/| status |/| state |/' "$(MF complete)" > "${TMP}/a.md"
+    master_refused 'the ## Sessions table has no status column' "${TMP}/a.md"
+    sed 's/| id | scope/| ident | scope/' "$(MF complete)" > "${TMP}/b.md"
+    master_refused 'the ## Sessions table has no id column' "${TMP}/b.md"
+    sed 's/| S1, S2 | 2026-09-21 | |/| S1, S3 | 2026-09-21 | |/' "$(MF complete)" > "${TMP}/c.md"
+    master_refused 'S3 depends on itself' "${TMP}/c.md"
+}
+
+@test "master: the ordering check keeps the first of two rows with one id and refuses a master with no contracts table" {
+    cp "$(MF session-plan)" "${TMP}/session-plan.md"
+    awk '/^\| S4 /{print; print "| S3 | dup | \/v-do | done | | | |"; next}{print}' "$(MF complete)" > "${TMP}/complete.md"
+    run "${GATE_SH}" master "${TMP}/session-plan.md"
+    [ "$status" -eq 0 ]
+    awk '/^## Cross-session contracts/{s=1} /^## Refs/{s=0} !s' "$(MF complete)" > "${TMP}/complete.md"
+    master_refused 'needs a ## Cross-session contracts table' "${TMP}/session-plan.md"
+}
+
+@test "master: a session may consume what it also produces, and a producer with an empty status counts as not done" {
+    cp "$(MF complete)" "${TMP}/complete.md"; cp "$(MF session-plan)" "${TMP}/session-plan.md"
+    sed 's/^| C-3 .*/&\n| C-9 | own output | S3 | S3 | `x` |/' "$(MF complete)" > "${TMP}/complete.md"
+    run "${GATE_SH}" master "${TMP}/session-plan.md"
+    [ "$status" -eq 0 ]
+    sed 's/| S2 | the renderer | \/v-team | done |/| S2 | the renderer | \/v-team | |/' "$(MF complete)" > "${TMP}/complete.md"
+    master_refused 'its producer S2 has status empty' "${TMP}/session-plan.md"
+}

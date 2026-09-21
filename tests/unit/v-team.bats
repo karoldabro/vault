@@ -109,6 +109,15 @@ teardown() {
     grep -q 'gate.sh human' "${VAULT_ROOT}/commands/v-team.md"
 }
 
+@test "the master plan check is wired into the propose loop and the approval gate" {
+    local f="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -q 'templates/master-plan.md' "${f}"
+    grep -q 'session_of' "${f}"
+    grep -q 'gate.sh master' "${f}"
+    grep -q 'gate.sh master' "${VAULT_ROOT}/commands/v-team.md"
+    [ -f "${VAULT_ROOT}/templates/master-plan.md" ]
+}
+
 @test "the human plan contract, renderer, gate library and page skeleton exist" {
     [ -f "${VAULT_ROOT}/commands/_shared/human-plan.md" ]
     [ -x "${VAULT_ROOT}/bin/render-human.sh" ]

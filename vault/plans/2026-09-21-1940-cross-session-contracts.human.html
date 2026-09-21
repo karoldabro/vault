@@ -1,0 +1,228 @@
+<title>cross-session-contracts — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+</style>
+
+<main>
+<h1>cross-session-contracts — plan</h1>
+<h2>Check these yourself</h2>
+<ul>
+<li>Does each file have one purpose, and is any file doing two jobs?</li>
+<li>Is anything loaded every time that could load only when needed?</li>
+<li>Do the size budgets fit what each file must hold?</li>
+<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
+<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
+</ul>
+<h2>Task</h2>
+<p>Session S6 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code> (decision D-15, state E-3). Give every master plan a <code>## Cross-session contracts</code> table. Add <code>bin/gate.sh master &lt;plan&gt;</code>, which exits 1 when two sessions depend on each other without a contract row. Add an ordering check that refuses a session consuming a contract its producer has not produced. Contracts used: C-1, C-7. Keywords: <code>gate.sh master</code>, <code>lib/master-check.sh</code>, <code>session_of</code>, <code>depends</code>, <code>produced by</code>, <code>consumed by</code>.</p>
+<h2>Open &amp; deferred</h2>
+<ul>
+<li>needs the operator: approve decisions CS-1 to CS-10, and the split below.</li>
+<li>split: this plan touches 20 paths, past the ~15 at which a session drops work. Session S12 takes the <code>/v-pm</code> side: <code>templates/_features/project-shard.md</code> gains the <code>depends</code> column and the contracts section, <code>commands/v-pm/steps/04-seed-workspace.md</code> seeds them, <code>commands/v-pm/steps/07-status.md</code> runs <code>bin/gate.sh master</code> on each shard. <code>tests/unit/v-pm.bats</code> guards the text. <code>commands/v-work/steps/05-commit-capture.md</code> extends its Sessions close duty to ordinary master plans. Until S12 lands, step (f3) inserts <code>depends</code> after <code>status</code> in a shard's Sessions table and copies the contracts section from <code>templates/master-plan.md</code>.</li>
+<li>accepted limit: a plan that splits its scope into sessions but has no <code>## Sessions</code> heading reads as an ordinary plan, and the gate passes it silently. Step (a) and step (f3) say when to add the sections; no code detects the omission, and a misspelled heading such as <code>## Session</code> turns the gate off the same way. This is why E-1 is HALF-BUILT.</li>
+<li>accepted limit: a contract whose consumer does not list the producer in <code>depends</code> (C-6 lists S7, which depends on S4 only) passes <code>gate.sh master</code>. The ordering check refuses it when that consumer's own plan runs.</li>
+<li>accepted limit: <code>bin/gate.sh</code> reads no code fences and matches a heading exactly, so a fenced example table under <code>## Sessions</code> counts as its header. A trailing space after the heading turns the gate off. The shared table helpers own both.</li>
+<li>accepted limit: a contract whose producer is also a consumer is accepted, and the ordering check ignores the session's own output.</li>
+<li>accepted limit: a master plan whose tables hold only the blank template rows prints <code>master: ok</code>, because a row with an empty id is skipped. The gate proves consistency, not that the tables are filled.</li>
+<li>deferred: <code>master_refuse</code>, <code>arch_refuse</code> and <code>human_refuse</code> share one body, and <code>master_order_check</code> and <code>cmd_arch</code> share the absolute-or-beside path rule. Extract <code>refuse</code> and a path helper into <code>bin/gate.sh</code> when a fourth library needs them. <code>bin/gate.sh</code> has 6 lines of headroom under its 830-line budget, so the next subcommand moves the <code>all</code> phase dispatch into a library first.</li>
+<li>deferred: a cycle check over <code>depends</code>, and a check that <code>depends</code> and the contract rows name the same direction.</li>
+<li>existing defect, not this plan's: the master plan holds a Sessions row for S11 inside its contracts table, and its S7 row has an extra cell. W-15 repairs both because the gate reads those tables.</li>
+<li>existing defect, not this plan's: <code>tests/fixtures/human/plan.md</code> has a Sessions table with <code>depends</code> and no contracts table, so W-19 adds one; two cases of <code>tests/unit/human-plan.bats</code> run <code>all --phase approve</code> on it.</li>
+<li>outside the planned file list: <code>vault/check-budget.md</code> gains rows for <code>arch</code> and <code>human</code> beside <code>master</code>, because <code>checks/doc-truth-SC-3.sh</code> failed on <code>HEAD</code> for those two subcommands. <code>tests/fixtures/human/expected.html</code> is re-rendered because the fixture plan gained a contracts table.</li>
+<li>unverified: the published page of the master plan at its <code>human_plan</code> link still shows the old tables. <code>bin/gate.sh human</code> compares the file on disk, so it passes; republish that page to refresh the link.</li>
+<li>existing defect, not this plan's: <code>bin/rule-count.sh --assert</code> fails on <code>HEAD</code> (181 rule lines, budget 173). This plan adds none.</li>
+<li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>document-standard.bats</code> two, <code>plugin-install.bats</code> two, <code>research-clarify.bats</code> one).</li>
+</ul>
+<h2>Success criteria</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+</thead>
+<tbody>
+<tr><td>SC-1</td><td>WHEN an operator opens <code>templates/master-plan.md</code> THE SYSTEM SHALL show a <code>## Sessions</code> table with a <code>depends</code> column, a <code>## Cross-session contracts</code> table with the columns id, contract, produced by, consumed by and shape, and a copyable artifact-lifecycle row; <code>templates/plan.md</code> SHALL carry a <code>session_of</code> key; no comment line of the master template SHALL start with <code>## </code>; and <code>bin/doc-lint.sh</code> SHALL pass both</td><td>artifact</td><td>command</td></tr>
+<tr><td>SC-2</td><td>WHEN <code>bin/gate.sh master &lt;plan&gt;</code> reads a plan with a <code>## Sessions</code> table THE SYSTEM SHALL exit 1 naming the dependency when a <code>depends</code> entry has no contract row from the depended-on session to the depending one, exit 1 naming the contract when a contract row or a <code>depends</code> entry names a session the table lacks, exit 1 when the contracts table, the <code>depends</code> column or a row's full cell count is missing, print <code>master: ok &lt;file&gt;</code> and exit 0 for a complete plan with LF or CRLF endings, exit 0 silently for a plan with neither a <code>## Sessions</code> table nor <code>session_of</code> (a <code>## Sessions</code> bullet list counts as neither), and exit 2 for an unreadable file</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-3</td><td>WHEN <code>bin/gate.sh master &lt;plan&gt;</code> reads a plan whose frontmatter names <code>session_of: &lt;master file&gt;#&lt;id&gt;</code> THE SYSTEM SHALL exit 1 naming the contract, the consumer, the producer and its status when a contract the session consumes has a producer whose Sessions status is not <code>done</code>, exit 1 naming <code>dropped</code>, <code>todo</code> or <code>doing</code> in the refusal, exit 1 when the master file or the session id does not exist, and print <code>master: ok &lt;file&gt;</code> and exit 0 when every producer is <code>done</code></td><td>functional</td><td>command</td></tr>
+<tr><td>SC-4</td><td>WHEN the gate runs on the real master plan and on this plan THE SYSTEM SHALL print <code>master: ok</code> for <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>, exit 1 naming the pair when a copy of it loses one contract row, exit 0 for <code>bin/gate.sh all &lt;this plan&gt; --phase propose</code> and exit 1 from the same call on a copy of the master plan that lost a contract row</td><td>delivery</td><td>command</td></tr>
+<tr><td>SC-5</td><td>WHEN a session reads step (a), (f3) and (g) of <code>commands/v-team/steps/03-propose-loop.md</code> and Step 4 of <code>commands/v-team.md</code> THE SYSTEM SHALL find <code>gate.sh master</code> in (f3), (g) and Step 4 and <code>templates/master-plan.md</code> in (a) and (f3); <code>vault/check-budget.md</code> SHALL list <code>master</code>, <code>bin/gate.sh --help</code> SHALL list it, <code>bin/gate.sh</code> SHALL stay at 830 lines or fewer, <code>bin/rule-count.sh</code> SHALL print 181 rule lines, and the master plan's E-3 row SHALL name <code>HALF-BUILT</code></td><td>functional</td><td>command</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Decisions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>CS-1 A master plan is any plan file whose <code>## Sessions</code> section holds a table, and its contracts table is <code>## Cross-session contracts</code> in the same file. A plan with no such table (a bullet list under that heading is not one) and no <code>session_of</code> key is ordinary: the gate exits 0 and prints nothing. A plan with <code>session_of</code> is a session's own plan and gets the ordering check only</td><td>the table is the fact that makes a plan a master, so detection needs no flag that can disagree with the file; silence for ordinary plans matches <code>arch</code> with no profile</td></tr>
+<tr><td>CS-2 A dependency is an id in the <code>depends</code> column of <code>## Sessions</code>. The prose of <code>## Sequencing &amp; dependencies</code> is not read. A dependency needs one contract row whose <code>produced by</code> holds the depended-on id and whose <code>consumed by</code> holds the depending id. The refusal is <code>REFUSED master &lt;plan&gt;: S5 depends on S3 and no contract row is produced by S3 and consumed by S5; add a row naming what S3 hands S5 and its shape, or drop S3 from depends if S5 needs nothing from S3 [S5]</code></td><td>the column already holds the fact in structured form, and prose that repeats it is a second home for one rule; a regex over prose fails on any rewording</td></tr>
+<tr><td>CS-3 <code>bin/gate.sh all --phase propose</code> and <code>--phase approve</code> call <code>cmd_master</code> after <code>arch</code>. Step (g) of <code>commands/v-team/steps/03-propose-loop.md</code> and Step 4 of <code>commands/v-team.md</code> call it beside <code>arch</code>. Step (f3) calls it on the shard after it writes the rows. <code>cmd_master</code> takes one plan argument, and <code>all</code> calls it without <code>--repo</code>. The <code>close</code> phase does not call it</td><td>propose and approve are where a plan is still editable; at close the Sessions table has changed status and the contract check has done its work</td></tr>
+<tr><td>CS-4 The operator sees one <code>REFUSED master &lt;path&gt;: &lt;problem&gt; [&lt;row&gt;]</code> line per defect on standard error, followed by the footer that <code>bin/gate.sh</code> prints. Each problem names the fix. Success prints <code>master: ok &lt;file&gt;</code>. <code>master_refuse</code> copies <code>human_refuse</code> on purpose, since each library prints its own name</td><td>the same shape as <code>arch</code>, so a session that handles one handles the other; naming the fix in the line means the session needs no document to act</td></tr>
+<tr><td>CS-5 The two sections live in the sibling <code>templates/master-plan.md</code>, not in <code>templates/plan.md</code>. Step (a) instantiates them after <code>## Sequencing &amp; dependencies</code> when the scope splits into two or more sessions that each write a plan</td><td>most plans are ordinary, and <code>templates/plan.md</code> is 182 lines against a 300-line cap; a sibling keeps every ordinary plan free of about 40 comment lines it never uses</td></tr>
+<tr><td>CS-6 A session's own plan names its master in frontmatter as <code>session_of: &lt;master file&gt;#&lt;id&gt;</code>, the file beside the plan or an absolute path. For each contract whose <code>consumed by</code> holds <code>&lt;id&gt;</code>, each session in <code>produced by</code> other than <code>&lt;id&gt;</code> has status <code>done</code>; any other status refuses, naming the contract, the consumer, the producer and the status, with the fix <code>mark &lt;producer&gt; done in the master plan if it shipped</code>. The master file named by <code>session_of</code> is the authoritative copy</td><td>the sub-plan is the place a session first meets the contracts it consumes, and <code>done</code> is the status a closed session row carries</td></tr>
+<tr><td>CS-7 <code>/v-pm</code> shard support goes to session S12, and step (f3) adds <code>depends</code> after <code>status</code> in a shard's Sessions header and rows, then copies only the contracts section from <code>templates/master-plan.md</code>, and only then runs the gate</td><td>18 paths past ~15; the shard template, the seed step, the status step and their test form one reviewable unit</td></tr>
+<tr><td>CS-8 E-3 of the master plan becomes HALF-BUILT</td><td>the gate and its route in <code>all</code> exist and are tested, and nothing runs <code>all</code> except text a session may skip; ENFORCED needs a hook that fails without a document, and none exists</td></tr>
+<tr><td>CS-9 Edge contracts. Exit 2: the plan or a <code>session_of</code> master cannot be read. Exit 1 with a named row: a <code>## Sessions</code> table with no <code>id</code>, <code>status</code> or <code>depends</code> column, a session that depends on itself, a missing contracts table, a duplicate session id (the first row wins in the ordering check), a duplicate contract id, a <code>depends</code>, <code>produced by</code> or <code>consumed by</code> token that is no session id, an empty <code>shape</code>, <code>produced by</code> or <code>consumed by</code> cell, a <code>session_of</code> with no <code>#&lt;id&gt;</code>, a master file with no <code>## Sessions</code> table, an id the master lacks. A row whose cell count differs from its header is refused, which also refuses a second table or a stray row under a heading. A row with an empty id cell is skipped. Tokens split on commas and spaces. CR is removed before each read, and <code>cmd_master</code> never exits 2 once the plan has been read. A <code>## Sessions</code> table with no <code>depends</code> entries and a contracts table with a header and no rows passes</td><td>each is a way a hand-edited table breaks, and a test pins only a stated value</td></tr>
+<tr><td>CS-10 Master plan repairs land in W-15: S11 moves into <code>## Sessions</code> with <code>depends</code> S5, the S7 row loses its extra cell, rows C-9 (S1 to S2, S4), C-10 (S5 to S9, S11) and C-11 (S6 to S12) join the contracts table, the S6 row closes, S12 is added, and <code>## Sequencing &amp; dependencies</code> drops the <code>X needs Y</code> sentences and keeps the Order line and the within-session precedence</td><td>the gate must pass on the real plan, and one rule needs one home (CS-2)</td></tr>
+</tbody>
+</table>
+</div>
+<h2>File tree</h2>
+<pre><code>
+lib/master-check.sh                                    new, cmd_master: the table check and the ordering check
+bin/gate.sh                                            existing, sources the library, routes master, calls it in propose and approve
+templates/master-plan.md                               new, the Sessions and Cross-session contracts sections of a master plan
+templates/plan.md                                      existing, gains the session_of key
+commands/v-team/steps/03-propose-loop.md               existing, gains lines in (a), (f3) and (g)
+commands/v-team.md                                     existing, Step 4 runs the gate
+vault/check-budget.md                                  existing, gains the master row
+vault/plans/2026-09-21-0900-architecture-first-planning.md   existing, repaired tables, S6 done, S12 added, E-3 HALF-BUILT
+tests/fixtures/master/complete.md                      new, a complete master plan
+tests/fixtures/master/session-plan.md                  new, a session plan naming session_of
+tests/fixtures/human/plan.md                           existing, gains a contracts table so its Sessions table stays valid
+vault/plans/2026-09-21-0900-architecture-first-planning.human.html   existing, re-rendered from the repaired master plan
+tests/unit/gate.bats                                   existing, master cases
+tests/unit/v-team.bats                                 existing, guards the step text
+checks/master-SC-1.sh to SC-5.sh                       new, decide the five criteria
+</code></pre>
+<h2>Files</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
+</thead>
+<tbody>
+<tr><td>lib/master-check.sh</td><td>yes</td><td>checks a master plan's contracts and a session plan's ordering</td><td>on-demand</td></tr>
+<tr><td>bin/gate.sh</td><td>no</td><td>routes the gate subcommands</td><td>on-demand</td></tr>
+<tr><td>templates/master-plan.md</td><td>yes</td><td>source of the two master-plan sections</td><td>on-demand</td></tr>
+<tr><td>templates/plan.md</td><td>no</td><td>source of every plan</td><td>on-demand</td></tr>
+<tr><td>commands/v-team/steps/03-propose-loop.md</td><td>no</td><td>PROPOSE step of a team run</td><td>always</td></tr>
+<tr><td>commands/v-team.md</td><td>no</td><td>dispatcher of a team run</td><td>always</td></tr>
+<tr><td>vault/check-budget.md</td><td>no</td><td>lists every gate check with its wrong-fire budget</td><td>on-demand</td></tr>
+<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.md</td><td>no</td><td>master plan and session tracker</td><td>on-demand</td></tr>
+<tr><td>tests/fixtures/master/complete.md</td><td>yes</td><td>fixture master plan</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/master/session-plan.md</td><td>yes</td><td>fixture session plan</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/human/plan.md</td><td>no</td><td>fixture plan of the human page tests</td><td>never-by-agent</td></tr>
+<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.human.html</td><td>no</td><td>rendered page of the master plan</td><td>never-by-agent</td></tr>
+<tr><td>tests/unit/gate.bats</td><td>no</td><td>tests the gate</td><td>never-by-agent</td></tr>
+<tr><td>tests/unit/v-team.bats</td><td>no</td><td>guards command text</td><td>never-by-agent</td></tr>
+<tr><td>checks/master-SC-1.sh</td><td>yes</td><td>decides criterion SC-1</td><td>never-by-agent</td></tr>
+<tr><td>checks/master-SC-2.sh</td><td>yes</td><td>decides criterion SC-2</td><td>never-by-agent</td></tr>
+<tr><td>checks/master-SC-3.sh</td><td>yes</td><td>decides criterion SC-3</td><td>never-by-agent</td></tr>
+<tr><td>checks/master-SC-4.sh</td><td>yes</td><td>decides criterion SC-4</td><td>never-by-agent</td></tr>
+<tr><td>checks/master-SC-5.sh</td><td>yes</td><td>decides criterion SC-5</td><td>never-by-agent</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    A["PROPOSE step (a) or (f3)"] -->|"template sections"| B["master plan Sessions and contracts tables"]
+    B -->|"plan path"| C["gate.sh master"]
+    C -->|"plan path"| D["lib/master-check.sh cmd_master"]
+    D -->|"session rows and contract rows"| E["table check"]
+    D -->|"session_of, session rows and contract rows"| F["ordering check"]
+    E -->|"REFUSED lines, exit 0 or 1"| C
+    F -->|"REFUSED lines, exit 0 or 1"| C
+    C -->|"master: ok or refusals"| G["session and operator"]
+</pre>
+<h2>Interfaces</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
+</thead>
+<tbody>
+<tr><td>bin/gate.sh</td><td>master</td><td>plan: path</td><td>master: ok line and exit 0, or REFUSED lines and exit 1, or silence and exit 0 for an ordinary plan</td><td>exit 2 on an unreadable plan or master file</td><td>cli</td></tr>
+<tr><td>bin/gate.sh</td><td>all</td><td>plan: path, phase: string</td><td>runs master after arch in propose and approve</td><td>exit 2 on a bad option</td><td>cli</td></tr>
+<tr><td>lib/master-check.sh</td><td>cmd_master</td><td>plan: path</td><td>the same lines as gate.sh master; takes no --repo</td><td>exit 2 through die when the plan is unreadable</td><td>cli</td></tr>
+<tr><td>lib/master-check.sh</td><td>master_refuse</td><td>plan: path, problem: string, row: string</td><td>one REFUSED master line on standard error, one violation counted</td><td>-</td><td>cli</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Load order</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
+</thead>
+<tbody>
+<tr><td>PROPOSE step (a) scope splits into sessions</td><td>templates/master-plan.md</td><td>1200</td></tr>
+<tr><td>PROPOSE step (g) or Step 4</td><td>lib/master-check.sh through bin/gate.sh</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Reuse map</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>read a table by heading</td><td>bin/gate.sh table_rows</td><td>reuse</td><td>the same reader every gate uses</td></tr>
+<tr><td>read a table header</td><td>bin/gate.sh table_header</td><td>reuse</td><td>finds the column positions</td></tr>
+<tr><td>read a frontmatter value without a trailing comment</td><td>lib/arch-check.sh arch_fm_value</td><td>reuse</td><td>session_of has the same shape as arch_spec</td></tr>
+<tr><td>resolve a file named in frontmatter beside the plan</td><td>lib/arch-check.sh cmd_arch</td><td>extend</td><td>cmd_arch resolves arch_spec inline; master_check repeats the two-line absolute-or-beside rule because cmd_arch has no function to call, and extracting one changes a file outside this plan</td></tr>
+<tr><td>print a refusal</td><td>lib/human-check.sh human_refuse</td><td>new</td><td>each library prints its own name in the REFUSED line; searched lib for a shared printer and found none</td></tr>
+<tr><td>refuse a session that consumes an unproduced contract</td><td>-</td><td>new</td><td>searched bin and lib for the words produced and consumed; only the master plan's own tables use them</td></tr>
+<tr><td>add a gate subcommand to the check budget</td><td>vault/check-budget.md</td><td>extend</td><td>checks/doc-truth-SC-3.sh requires one row per subcommand</td></tr>
+<tr><td>guard command text</td><td>tests/unit/v-team.bats</td><td>extend</td><td>the gate arch cases already live there</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Size budgets</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>path</th><th>max lines</th></tr>
+</thead>
+<tbody>
+<tr><td>lib/master-check.sh</td><td>170</td></tr>
+<tr><td>templates/master-plan.md</td><td>90</td></tr>
+<tr><td>bin/gate.sh</td><td>830</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Config points</h2>
+<p>n/a: the gate reads no setting, and the status word <code>done</code> is fixed by the Sessions vocabulary in <code>templates/master-plan.md</code>.</p>
+</main>

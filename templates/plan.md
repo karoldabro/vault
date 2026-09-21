@@ -7,6 +7,7 @@ status: proposed                     # proposed | approved | executed | supersed
 process_record: {{slug}}.trail.md    # sibling record file: findings, dispositions, rejected options
 arch_spec:                           # file name only, <slug>.arch.md, set when the repo declares arch_profile; empty otherwise
 human_plan:                          # https://claude.ai/artifact/<id>, or file:<page name> when publishing failed; `bin/gate.sh human` checks it
+session_of:                           # <master plan file>#<session id>, set when this is one session of a master plan (templates/master-plan.md); empty otherwise
 session: {{session}}                 # the session that executed this, once it has
 tags: [plan]
 ---

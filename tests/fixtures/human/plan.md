@@ -36,3 +36,10 @@ Second paragraph with `code` and a second line.
 | S1 | first | /v-work | done | | 2026-09-21 | |
 | S2 | second | /v-team | done | S1 | 2026-09-21 | |
 | S3 | third | /v-team | todo | S1, S2 | 2026-09-21 | |
+
+## Cross-session contracts
+
+| id | contract | produced by | consumed by | shape |
+|----|----------|-------------|-------------|-------|
+| C-1 | first output | S1 | S2, S3 | `bin/first.sh` prints one line |
+| C-2 | second output | S2 | S3 | `bin/second.sh` prints one line |

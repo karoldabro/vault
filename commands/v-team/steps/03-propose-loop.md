@@ -46,6 +46,12 @@ file name only, no folder). Replace every placeholder in the spec. Fill the spec
 exists: work items follow from the structure, not the other way round. With no `arch_profile`, write
 no spec and leave `arch_spec` empty.
 
+**Master plan.** When the scope splits into two or more sessions that each write their own plan file,
+append both sections of `$VAULT_FRAMEWORK_PATH/templates/master-plan.md`, Sessions first, after `## Sequencing & dependencies`
+and fill them: it owns the table rules. When the task names one session of a master plan, set
+`session_of: <master plan file>#<session id>` in the plan's frontmatter, taking the file and id from
+the task or from the Sessions row that launched the session.
+
 ## (b) Load + select critics
 
 Use the pack + selected critics resolved in the ANALYZE addendum (`personas/_resolution.md`). Read each
@@ -223,6 +229,11 @@ job, and the rows it writes are this session's to maintain.
 5. **Write the rows** into `projects/<this>/plan.md` `## Sessions`, one per unit: id, scope, command,
    `status: todo`, the `REQ-NN` ids it covers, and today's date. Leave `evidence` empty — it is filled
    when the row closes, and a `done` row without it is invalid.
+6. **Write the dependencies.** Insert a `depends` column after `status` in the shard's Sessions header,
+   separator and rows, and fill it with the ids each unit waits for. Copy the `## Cross-session contracts` section
+   from `templates/master-plan.md` when the shard lacks it, and write one contract row for each
+   dependency. Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <shard>`: exit 1 names each defect and
+   its fix, so repeat until it prints `master: ok`.
 
 **Expect these rows to be wrong in detail.** The tracker that worked here shipped all ten of its
 sessions and rewrote nearly every row on the way — scope cut, work added, one session inserted that no
@@ -238,6 +249,10 @@ v-work `03-propose.md` **§3b dedupe** for the plan artifact and any implied fea
 sidecar. Fix it before the approval gate. Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh arch <plan>`:
 exit 1 means the spec breaks its contract or the plan names no spec in a profiled repo, so fix it
 now; exit 2 means a file could not be read, so stop and say so. Step 4 runs the same check again.
+Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <plan>`. It is silent for an ordinary plan. For a
+master plan, exit 1 names each defect, such as a dependency that lacks a contract row. For a plan with `session_of`, exit 1
+names each contract whose producer is not `done`. Fix the tables or finish the producer first, and read
+exit 2 as a file that could not be read.
 
 When step (b2) ran, run `$VAULT_FRAMEWORK_PATH/bin/plan-probes.sh verify <out>`, adding `<out>/auditor-reuse.tsv` when the auditor ran. Exit 1 prints `open:` rows: fix the spec and repeat step (b2), or list each row in the `Open` field so the operator can accept it. Exit 2 means step (b2) did not run.
 

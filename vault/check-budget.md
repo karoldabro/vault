@@ -33,6 +33,9 @@ sets `wrong`; a session never scores its own refusal.
 | config | 0 | 0 | |
 | budget | 0 | 0 | |
 | recurrence | 0 | 0 | |
+| arch | 0 | 0 | `cmd_arch`; the contract is `commands/_shared/architecture-spec.md` |
+| human | 0 | 0 | `cmd_human`; the contract is `commands/_shared/human-plan.md` |
+| master | 0 | 0 | `cmd_master`; refuses a dependency with no contract row and a session that consumes an unproduced contract; the contract is `templates/master-plan.md` |
 | completion-hook | 0 | 0 | |
 | staging-hook | 0 | 0 | |
 | rule-coverage | 0 | 0 | `cr_rule_coverage`; refuses only on a routed rule nobody decided |

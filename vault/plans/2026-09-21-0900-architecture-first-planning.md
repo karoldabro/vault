@@ -70,7 +70,7 @@ columns, check order, messages) is `commands/_shared/architecture-spec.md`.
 |----|--------|-------|-----------|
 | E-1 | A profiled repo's PROPOSE session drafts no work item before the spec passes | HALF-BUILT | `bin/gate.sh arch` and its tests exist; a session runs it only because `commands/v-team/steps/03-propose-loop.md` (g) and `commands/v-team.md` Step 4 say so, and `tests/unit/v-team.bats` guards that text |
 | E-2 | Data-model and interface rules | ENFORCED | `bin/gate.sh arch`, `tests/unit/gate.bats` arch cases, `checks/arch-SC-3.sh` |
-| E-3 | Every dependency between two sessions of a master plan has a contract row | OPEN | `bin/gate.sh master <plan>`, built in S6 |
+| E-3 | Every dependency between two sessions of a master plan has a contract row | HALF-BUILT | `bin/gate.sh master`, `tests/unit/gate.bats` master cases exist, and `all --phase propose` and `approve` call it; a session runs it because `commands/v-team/steps/03-propose-loop.md` (f3) and (g) and `commands/v-team.md` Step 4 say so |
 
 ## Verified current state
 - `bin/gate.sh all --phase propose` and `approve` run `arch` after `criteria`; `/v-team` calls `gate.sh arch` in step (g) and in Step 4 · `grep -n 'gate.sh arch' commands/v-team.md commands/v-team/steps/03-propose-loop.md` · 2026-09-21
@@ -160,8 +160,7 @@ exists; the plan targets reuse, layering and data model, where agents fail most)
 | W-25 | `vault/plans/2026-09-21-0900-architecture-first-planning.arch.md` | create | Write | this plan's own harness spec | SC-5 | `checks/arch-SC-5.sh` case (a) | DONE |
 
 ## Sequencing & dependencies
-Order: S1, S2, S3, S4, S5, S6, S7, S8, S9. S2 needs S1's ADR. S3 needs S2's spec. S5 needs S3 and S4.
-S6 needs S2 and S3. S7 needs S4. S8 needs S4 and S7. S9 needs S4 and S5. S10 needs S8. Within S2, W-14 (done) precedes W-12 and W-13. W-15 precedes W-16 only in review order; both
+Order: S1, S2, S3, S4, S5, S6, S7, S8, S9. The `depends` column of Sessions holds every dependency. Within S2, W-14 (done) precedes W-12 and W-13. W-15 precedes W-16 only in review order; both
 land in one commit.
 
 ## Cross-session contracts
@@ -178,7 +177,9 @@ does not redefine it. The producing session may add columns, never rename or dro
 | C-6 | rule file location | S8 | S7, S9, S10 | `probes/rules/<slug>.grep` in the target repo, plus one registry row that `bin/rule-check.sh row` prints and `probes/rule-grep.sh` runs; the format and the row are in `commands/_shared/probe-kit.md` section Rule files |
 | C-7 | human page and its check | S3 | S5, S6 | `bin/render-human.sh <plan>` writes `<plan>.human.html`; `bin/gate.sh human <plan>` prints `human: ok <page>` when the page equals a fresh render and `human_plan` is a link |
 | C-8 | sandbox probe rows | S10 | S7 | four files in one directory, written by the host after the container exits: `framework.tsv` and `rules.tsv` hold C-2 rows, `framework.status` and `rules.status` hold the kit's status lines; `bin/probe-panel.sh` tags a row `[confirmed]` from the file that held it and never from the row's content |
-| S11 | spec-reading SQL probes `spec-tables` and `spec-naming`, and the `data-model` and `naming` auditors of `commands/_shared/plan-probes.md` | /v-team | todo | S5 | 2026-09-21 | |
+| C-9 | architecture decision and research | S1 | S2, S4 | `vault/decisions/ADR-031-architecture-first-planning.md` records D-1 to D-4, D-11 and D-15; `vault/research/ai-code-slop.md` holds the eight mechanisms M1 to M8 |
+| C-10 | plan-time probe stage | S5 | S9, S11 | `bin/plan-probes.sh` subcommands `budget`, `verify`, `measure`, `probes` and `auditors`; `commands/_shared/plan-probes.md` owns the tier, the auditor and the notes |
+| C-11 | master plan tables and their gate | S6 | S12 | `templates/master-plan.md` sections `## Sessions` (column `depends`) and `## Cross-session contracts`; `bin/gate.sh master <plan>` prints `master: ok <file>` or `REFUSED master <path>: <problem> [<row>]`; `session_of: <master file>#<id>` in a session's plan |
 ## Sessions
 
 | id | scope | command | status | depends | date | evidence |
@@ -188,11 +189,13 @@ does not redefine it. The producing session may add columns, never rename or dro
 | S3 | human plan page: `bin/render-human.sh`, `gate.sh human`, the `human_plan` link and its `file:` fallback, wired into `/v-team`; the master page regenerated | /v-team | done | S2 | 2026-09-21 | the ten human-page checks exit 0; `./tests/run.sh tests/unit/human-plan.bats` 22 of 22 |
 | S4 | probe kit core: `bin/probe.sh`, `probes/registry.tsv`, harness probes, `probe.sh scale`, schema duplicate-column, index and naming probes, similar-method probe, verified tool list | /v-team | done | S1 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1130-probe-kit-core.md` reports SC-1 to SC-11 MET; `./tests/run.sh tests/unit/probe.bats` 40 of 40 |
 | S5 | plan-time probes: `bin/plan-probes.sh` (tier by the D-10 limit, `verify`, `measure`), the `--stage plan` block of `bin/probe-panel.sh`, the `spec-symbols` check, the `reuse` auditor, step (b2) of `commands/v-team/steps/03-propose-loop.md`; the plan is `vault/plans/2026-09-21-1800-plan-time-probes.md`; `critic-panel.md` is unchanged | /v-team | done | S3, S4 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1800-plan-time-probes.md` reports SC-1 to SC-7 MET; measured baselines 769,168 and 1,018,594 fresh tokens; projected added cost 4% and 3% |
-| S6 | master plan template with a required `## Cross-session contracts` table and its artifact, `gate.sh master` (D-15, E-3), `/v-pm` and `(f3)` in `commands/v-team/steps/03-propose-loop.md` write and read it, sub-plan ordering gate | /v-team | todo | S2, S3 | 2026-09-21 | |
-| S7 | probe results as a panel input: `commands/_shared/critic-panel.md` runs `bin/probe.sh diff` in its ground-first stage; `/v-team` execute, `/v-cr` review (D-14) and `/v-work` review read it; each indication names its probe | /v-team | done | S4 | 2026-09-21 | | `bin/gate.sh verdict vault/plans/2026-09-21-1330-probe-panel-input.md` reports SC-1 to SC-7 MET |
+| S6 | master plan template with a required `## Cross-session contracts` table and its artifact, `gate.sh master` (D-15, E-3), `/v-pm` and `(f3)` in `commands/v-team/steps/03-propose-loop.md` write and read it, sub-plan ordering gate | /v-team | done | S2, S3 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1940-cross-session-contracts.md` reports SC-1 to SC-5 MET; the `/v-pm` shard side is S12 |
+| S7 | probe results as a panel input: `commands/_shared/critic-panel.md` runs `bin/probe.sh diff` in its ground-first stage; `/v-team` execute, `/v-cr` review (D-14) and `/v-work` review read it; each indication names its probe | /v-team | done | S4 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1330-probe-panel-input.md` reports SC-1 to SC-7 MET |
 | S8 | `/v-rule` skill: operator comments in, indication plus rule file plus fixtures out (D-8, D-12, D-13); `bin/rule-check.sh`, `probes/rule-grep.sh`, the Rule files section of `commands/_shared/probe-kit.md` | /v-team | done | S4, S7 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1430-v-rule.md` reports SC-1 to SC-8 MET |
 | S9 | stack packs for Laravel, Nuxt, Flutter, Python and SQL, validated on `recycling-api` and one Nuxt repo | /v-work | todo | S4, S5 | 2026-09-21 | |
 | S10 | sandbox probe stage `probe-sandbox`: `bin/probe-sandbox.sh`, `bin/probe.sh`, `bin/probe-panel.sh`, `lib/probe-registry.sh`, `lib/cr-sandbox.sh`, `commands/v-cr/sandbox.md`, `commands/v-cr/steps/02-gather.md`, `commands/v-cr/steps/03-review.md`, `commands/_shared/critic-panel.md`, `commands/_shared/probe-kit.md`, `vault/decisions/ADR-009-v-cr-sandboxed-execution.md`, three unit suites, two fixtures and seven graders; the plan is `vault/plans/2026-09-21-1600-sandbox-probe.md`; `critic-panel.md` stays at 181 rule lines | /v-team | done | S8 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1600-sandbox-probe.md` reports SC-1 to SC-7 MET |
+| S11 | spec-reading SQL probes `spec-tables` and `spec-naming`, and the `data-model` and `naming` auditors of `commands/_shared/plan-probes.md` | /v-team | todo | S5 | 2026-09-21 | |
+| S12 | `/v-pm` side of the contracts table: `templates/_features/project-shard.md` gains `depends` and `## Cross-session contracts`, `commands/v-pm/steps/04-seed-workspace.md` seeds them, `commands/v-pm/steps/07-status.md` runs `bin/gate.sh master` on each shard, `tests/unit/v-pm.bats` guards it, and the Sessions close duty of `commands/v-work/steps/05-commit-capture.md` covers ordinary master plans | /v-team | todo | S6 | 2026-09-21 | |
 
 ## Rollback
 Every change is additive. Revert the session commit. A repo without `arch_profile` reads as `none`, so

@@ -64,7 +64,7 @@ pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font
 <li>existing defect, not this plan's: <code>vault/decisions/</code> holds two files numbered ADR-030.</li>
 <li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>v-reconcile.md</code> has no frontmatter description, <code>commands/v-loop/adapters/test-and-repair.md</code> has no path note, and three others).</li>
 <li>deferred: <code>lib/arch-check.sh</code> repeats one row-loop skeleton seven times and holds two functions over 40 lines. Extract a shared row iterator when a later profile adds tables.</li>
-<li>deferred: the spec gate checks form, not truth; a session can write plausible rows. S5 adds probes that compare the spec with the existing code.</li>
+<li>deferred: the spec gate checks form, not truth. S5 added <code>spec-symbols</code>, which checks that a Reuse-map row names code that exists; S11 adds the table and naming comparisons.</li>
 </ul>
 <h2>Success criteria</h2>
 <p>&lt;!-- Criteria cover S1 and S2. Each later session adds its own criteria to its own plan. --&gt;</p>
@@ -121,8 +121,12 @@ pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font
 <tr><td>C-3</td><td>probe registry <code>probes/registry.tsv</code></td><td>S4</td><td>S5, S7, S8, S9</td><td>columns <code>id stack stage detect run parser cost executes-repo-code install</code>; <code>stage</code> is <code>plan</code>, <code>diff</code> or <code>review</code>; a missing tool reports <code>absent: &lt;project-scope install command&gt;</code></td></tr>
 <tr><td>C-4</td><td>probe commands</td><td>S4</td><td>S5, S7</td><td><code>bin/probe.sh list</code>, <code>detect</code>, <code>run &lt;stage&gt;</code>, <code>diff</code>, <code>scale</code></td></tr>
 <tr><td>C-5</td><td>indication-to-probe link</td><td>S7</td><td>S8</td><td>optional <code>probe: &lt;registry id&gt;</code> in an indication's frontmatter</td></tr>
-<tr><td>C-6</td><td>rule file location</td><td>S8</td><td>S7, S9</td><td><code>probes/rules/&lt;slug&gt;.&lt;ext&gt;</code> in the target repo, plus one registry row</td></tr>
+<tr><td>C-6</td><td>rule file location</td><td>S8</td><td>S7, S9, S10</td><td><code>probes/rules/&lt;slug&gt;.grep</code> in the target repo, plus one registry row that <code>bin/rule-check.sh row</code> prints and <code>probes/rule-grep.sh</code> runs; the format and the row are in <code>commands/_shared/probe-kit.md</code> section Rule files</td></tr>
 <tr><td>C-7</td><td>human page and its check</td><td>S3</td><td>S5, S6</td><td><code>bin/render-human.sh &lt;plan&gt;</code> writes <code>&lt;plan&gt;.human.html</code>; <code>bin/gate.sh human &lt;plan&gt;</code> prints <code>human: ok &lt;page&gt;</code> when the page equals a fresh render and <code>human_plan</code> is a link</td></tr>
+<tr><td>C-8</td><td>sandbox probe rows</td><td>S10</td><td>S7</td><td>four files in one directory, written by the host after the container exits: <code>framework.tsv</code> and <code>rules.tsv</code> hold C-2 rows, <code>framework.status</code> and <code>rules.status</code> hold the kit's status lines; <code>bin/probe-panel.sh</code> tags a row <code>[confirmed]</code> from the file that held it and never from the row's content</td></tr>
+<tr><td>C-9</td><td>architecture decision and research</td><td>S1</td><td>S2, S4</td><td><code>vault/decisions/ADR-031-architecture-first-planning.md</code> records D-1 to D-4, D-11 and D-15; <code>vault/research/ai-code-slop.md</code> holds the eight mechanisms M1 to M8</td></tr>
+<tr><td>C-10</td><td>plan-time probe stage</td><td>S5</td><td>S9, S11</td><td><code>bin/plan-probes.sh</code> subcommands <code>budget</code>, <code>verify</code>, <code>measure</code>, <code>probes</code> and <code>auditors</code>; <code>commands/_shared/plan-probes.md</code> owns the tier, the auditor and the notes</td></tr>
+<tr><td>C-11</td><td>master plan tables and their gate</td><td>S6</td><td>S12</td><td><code>templates/master-plan.md</code> sections <code>## Sessions</code> (column <code>depends</code>) and <code>## Cross-session contracts</code>; <code>bin/gate.sh master &lt;plan&gt;</code> prints <code>master: ok &lt;file&gt;</code> or <code>REFUSED master &lt;path&gt;: &lt;problem&gt; [&lt;row&gt;]</code>; <code>session_of: &lt;master file&gt;#&lt;id&gt;</code> in a session's plan</td></tr>
 </tbody>
 </table>
 </div>
@@ -137,11 +141,14 @@ pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font
 <tr><td>S2</td><td>arch spec contract, <code>gate.sh arch</code>, PROPOSE and approval wiring</td><td>S1</td></tr>
 <tr><td>S3</td><td>human plan page: <code>bin/render-human.sh</code>, <code>gate.sh human</code>, the <code>human_plan</code> link and its <code>file:</code> fallback, wired into <code>/v-team</code>; the master page regenerated</td><td>S2</td></tr>
 <tr><td>S4</td><td>probe kit core: <code>bin/probe.sh</code>, <code>probes/registry.tsv</code>, harness probes, <code>probe.sh scale</code>, schema duplicate-column, index and naming probes, similar-method probe, verified tool list</td><td>S1</td></tr>
-<tr><td>S5</td><td>plan-time probes: auditor agents, longer planning stage, cost delta per D-10</td><td>S3, S4</td></tr>
+<tr><td>S5</td><td>plan-time probes: <code>bin/plan-probes.sh</code> (tier by the D-10 limit, <code>verify</code>, <code>measure</code>), the <code>--stage plan</code> block of <code>bin/probe-panel.sh</code>, the <code>spec-symbols</code> check, the <code>reuse</code> auditor, step (b2) of <code>commands/v-team/steps/03-propose-loop.md</code>; the plan is <code>vault/plans/2026-09-21-1800-plan-time-probes.md</code>; <code>critic-panel.md</code> is unchanged</td><td>S3, S4</td></tr>
 <tr><td>S6</td><td>master plan template with a required <code>## Cross-session contracts</code> table and its artifact, <code>gate.sh master</code> (D-15, E-3), <code>/v-pm</code> and <code>(f3)</code> in <code>commands/v-team/steps/03-propose-loop.md</code> write and read it, sub-plan ordering gate</td><td>S2, S3</td></tr>
 <tr><td>S7</td><td>probe results as a panel input: <code>commands/_shared/critic-panel.md</code> runs <code>bin/probe.sh diff</code> in its ground-first stage; <code>/v-team</code> execute, <code>/v-cr</code> review (D-14) and <code>/v-work</code> review read it; each indication names its probe</td><td>S4</td></tr>
-<tr><td>S8</td><td><code>/v-rule</code> skill: operator comments in, indication plus rule file plus fixtures out (D-8, D-12, D-13)</td><td>S4, S7</td></tr>
+<tr><td>S8</td><td><code>/v-rule</code> skill: operator comments in, indication plus rule file plus fixtures out (D-8, D-12, D-13); <code>bin/rule-check.sh</code>, <code>probes/rule-grep.sh</code>, the Rule files section of <code>commands/_shared/probe-kit.md</code></td><td>S4, S7</td></tr>
 <tr><td>S9</td><td>stack packs for Laravel, Nuxt, Flutter, Python and SQL, validated on <code>recycling-api</code> and one Nuxt repo</td><td>S4, S5</td></tr>
+<tr><td>S10</td><td>sandbox probe stage <code>probe-sandbox</code>: <code>bin/probe-sandbox.sh</code>, <code>bin/probe.sh</code>, <code>bin/probe-panel.sh</code>, <code>lib/probe-registry.sh</code>, <code>lib/cr-sandbox.sh</code>, <code>commands/v-cr/sandbox.md</code>, <code>commands/v-cr/steps/02-gather.md</code>, <code>commands/v-cr/steps/03-review.md</code>, <code>commands/_shared/critic-panel.md</code>, <code>commands/_shared/probe-kit.md</code>, <code>vault/decisions/ADR-009-v-cr-sandboxed-execution.md</code>, three unit suites, two fixtures and seven graders; the plan is <code>vault/plans/2026-09-21-1600-sandbox-probe.md</code>; <code>critic-panel.md</code> stays at 181 rule lines</td><td>S8</td></tr>
+<tr><td>S11</td><td>spec-reading SQL probes <code>spec-tables</code> and <code>spec-naming</code>, and the <code>data-model</code> and <code>naming</code> auditors of <code>commands/_shared/plan-probes.md</code></td><td>S5</td></tr>
+<tr><td>S12</td><td><code>/v-pm</code> side of the contracts table: <code>templates/_features/project-shard.md</code> gains <code>depends</code> and <code>## Cross-session contracts</code>, <code>commands/v-pm/steps/04-seed-workspace.md</code> seeds them, <code>commands/v-pm/steps/07-status.md</code> runs <code>bin/gate.sh master</code> on each shard, <code>tests/unit/v-pm.bats</code> guards it, and the Sessions close duty of <code>commands/v-work/steps/05-commit-capture.md</code> covers ordinary master plans</td><td>S6</td></tr>
 </tbody>
 </table>
 </div>
@@ -151,11 +158,14 @@ flowchart TD
     S2["S2 arch spec contract, gate.sh arch, PROPOSE and"]
     S3["S3 human plan page: bin/render-human.sh, gate.sh"]
     S4["S4 probe kit core: bin/probe.sh,"]
-    S5["S5 plan-time probes: auditor agents, longer"]
+    S5["S5 plan-time probes: bin/plan-probes.sh tier by the"]
     S6["S6 master plan template with a required"]
     S7["S7 probe results as a panel input:"]
     S8["S8 /v-rule skill: operator comments in, indication"]
     S9["S9 stack packs for Laravel, Nuxt, Flutter, Python"]
+    S10["S10 sandbox probe stage probe-sandbox:"]
+    S11["S11 spec-reading SQL probes spec-tables and"]
+    S12["S12 /v-pm side of the contracts table:"]
     S1 --> S2
     S2 --> S3
     S1 --> S4
@@ -168,6 +178,9 @@ flowchart TD
     S7 --> S8
     S4 --> S9
     S5 --> S9
+    S8 --> S10
+    S5 --> S11
+    S6 --> S12
 </pre>
 <h2>Diagrams</h2>
 <h3>How a plan is produced after this work</h3>

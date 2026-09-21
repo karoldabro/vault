@@ -106,6 +106,8 @@ in the document rather than a verdict on the work.
 spec is missing or breaks its contract: fix it, then present. Exit 2 means a file could not be read:
 stop as an error. The check passes silently in a repo whose `VAULT.md` declares no `arch_profile`.
 
+**Then check the master plan tables:** `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <plan>`. Exit 1 means a dependency has no contract row, or a contract the session consumes has a producer that is not `done`: fix the table or finish the producer, then present. Exit 2 means a file could not be read: stop as an error. The check passes silently for an ordinary plan.
+
 **Then check the human page:** `$VAULT_FRAMEWORK_PATH/bin/gate.sh human <plan>`. Exit 1 means the page
 is missing, stale or not linked; a page that is not linked needs publishing and a `human_plan` value, as
 in `03-propose-loop.md`. If the plan or the spec changed after the page was made, run
