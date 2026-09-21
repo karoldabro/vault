@@ -30,7 +30,6 @@ Session S6 of `vault/plans/2026-09-21-0900-architecture-first-planning.md` (deci
 - existing defect, not this plan's: the master plan holds a Sessions row for S11 inside its contracts table, and its S7 row has an extra cell. W-15 repairs both because the gate reads those tables.
 - existing defect, not this plan's: `tests/fixtures/human/plan.md` has a Sessions table with `depends` and no contracts table, so W-19 adds one; two cases of `tests/unit/human-plan.bats` run `all --phase approve` on it.
 - outside the planned file list: `vault/check-budget.md` gains rows for `arch` and `human` beside `master`, because `checks/doc-truth-SC-3.sh` failed on `HEAD` for those two subcommands. `tests/fixtures/human/expected.html` is re-rendered because the fixture plan gained a contracts table.
-- unverified: the published page of the master plan at its `human_plan` link still shows the old tables. `bin/gate.sh human` compares the file on disk, so it passes; republish that page to refresh the link.
 - existing defect, not this plan's: `bin/rule-count.sh --assert` fails on `HEAD` (181 rule lines, budget 173). This plan adds none.
 - existing defect, not this plan's: 5 unit tests fail on `HEAD` (`document-standard.bats` two, `plugin-install.bats` two, `research-clarify.bats` one).
 

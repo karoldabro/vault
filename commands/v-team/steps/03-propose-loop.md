@@ -230,7 +230,7 @@ job, and the rows it writes are this session's to maintain.
    `status: todo`, the `REQ-NN` ids it covers, and today's date. Leave `evidence` empty — it is filled
    when the row closes, and a `done` row without it is invalid.
 6. **Write the dependencies.** Insert a `depends` column after `status` in the shard's Sessions header,
-   separator and rows, and fill it with the ids each unit waits for. Copy the `## Cross-session contracts` section
+   separator and rows when the header lacks it, and fill it with the ids each unit waits for. Copy the `## Cross-session contracts` section
    from `templates/master-plan.md` when the shard lacks it, and write one contract row for each
    dependency. Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <shard>`: exit 1 names each defect and
    its fix, so repeat until it prints `master: ok`.

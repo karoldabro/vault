@@ -27,14 +27,17 @@ Create `~/vault/_features/<feature>/` from `$VAULT_FRAMEWORK_PATH/templates/_fea
 ```
 Instantiate `requirements.md` + `generic-plan.md` + `contracts.md` from what Step 2 produced. Instantiate
 one `projects/<proj>/plan.md` **stub** per participant from `templates/_features/project-shard.md` (the
-project fills the body in its own session). v-pm seeds **two** sections there and no others:
+project fills the body in its own session). v-pm seeds **three** sections there and no others:
 
 1. **`## Business rules to satisfy`** — the `REQ-NN` ids from `requirements.md` that fall to that
    project. **Id refs only, not copied rule text.**
-2. **`## Sessions`** — the table **header and the repo's appetite only, with no rows**. The executing
-   `/v-team` session writes every row; v-pm never guesses them.
+2. **`## Sessions`** — the table **header and the repo's appetite only, with no rows**. Copy the header
+   from the template, which includes `depends`. The executing `/v-team` session writes every row; v-pm
+   never guesses them.
+3. **`## Cross-session contracts`** — the five-column header of `templates/master-plan.md`, **no rows**.
+   The `/v-team` session writes them through step (f3) item 6 of `03-propose-loop.md`.
 
-Keep **both** out of `## Consumed contract`, so the Step-0 drift check still diffs cleanly — it is a
+Keep **all three** out of `## Consumed contract`, so the Step-0 drift check still diffs cleanly — it is a
 mechanical field-by-field compare of that section against `contracts.md`, and a second table inside it
 would produce false drift on every pickup. Do **not** create a `ledger.md` — the ledger is a **derived view**:
 `/v-pm status` and reconcile compute it from thread filenames on read, so there is no shared file to
@@ -59,6 +62,7 @@ ingests it.)
 Workspace: ~/vault/_features/<feature>/  [seeded, staged]  (requirements.md · generic-plan.md · contracts.md)
 Shard rule-ids: [<proj>: REQ-NN,… seeded into `## Business rules to satisfy`, per participant]
 Shard appetite: [<proj>: N sessions seeded into `## Sessions`, header only — no rows]
+Shard contracts: [<proj>: `## Cross-session contracts` header seeded — no rows]
 Symlinks: [<proj>/features/<feature> → workspace, per participant]
 ```
 Mark SEED WORKSPACE `completed` → Step 5 (CAPTURE).

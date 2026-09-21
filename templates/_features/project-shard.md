@@ -9,11 +9,11 @@ status: todo   # todo | in-progress | done
 
 This project's detailed plan. **Self-contained** (BMAD): it carries enough context to act without
 re-reading everything. Written by this project's `/v-team <feature>` session, not by `/v-pm` — **except
-two things `/v-pm` seeds and `/v-team` must preserve: the `## Business rules to satisfy` ids, and the
-`## Sessions` appetite line.** `/v-pm` never writes a session row; this project's session owns every one.
+three things `/v-pm` seeds and `/v-team` must preserve: the `## Business rules to satisfy` ids, the
+`## Sessions` appetite line and header, and the `## Cross-session contracts` header.** `/v-pm` never writes a session row; this project's session owns every one.
 
 ## Business rules to satisfy (from requirements.md — REQ-NN id refs)
-<!-- SEEDED BY /v-pm (one of the two sections it owns here). The `requirements.md` business-rule ids this
+<!-- SEEDED BY /v-pm (one of the three sections it owns here). The `requirements.md` business-rule ids this
      project is responsible for satisfying — id refs only, never copied rule text (requirements.md is the
      source). /v-team PRESERVES the ids and never overwrites them.
      Coverage is NOT recorded here — it lives in the `## Sessions` table's `REQ covered` column, so one
@@ -43,9 +43,18 @@ two things `/v-pm` seeds and `/v-team` must preserve: the `## Business rules to 
 
 Appetite: <N> sessions.
 
-| id | scope | command | status | REQ covered | evidence | last touched | deviation |
-|----|-------|---------|--------|-------------|----------|--------------|-----------|
-|    |       |         | todo   |             |          |              |           |
+| id | scope | command | status | depends | REQ covered | evidence | last touched | deviation |
+|----|-------|---------|--------|---------|-------------|----------|--------------|-----------|
+
+## Cross-session contracts
+<!-- What one session of this project hands to another. Column rules, the `depends` rule and the `done`
+     rule live in templates/master-plan.md; this section copies its header and keeps no second copy of
+     the rules. It lists hand-offs between sessions and is not the API that the Step 0 drift check
+     compares. /v-pm seeds the header only, and this project's /v-team session writes every row through
+     step (f3) item 6 of commands/v-team/steps/03-propose-loop.md. -->
+
+| id | contract | produced by | consumed by | shape |
+|----|----------|-------------|-------------|-------|
 
 ## What this project does for the feature
 <!-- This repo's slice of the generic plan. -->

@@ -33,6 +33,10 @@ before §5.1 stages a single file. A gate that runs after the commit blocks noth
 - The **baseline** applies to every session.
 - The **feature-mode extension** applies only when this session has a `## Sessions` row in a feature
   shard. A plain session has no such row and is **not** blocked by those lines — do not invent one.
+- The **master-plan bullet** applies when the plan's frontmatter names `session_of`. Open the file named
+  before `#` (beside the plan, or an absolute path), find the Sessions row whose id follows `#`, set
+  `status` to `done` and `date` to today, and fill `evidence` with the result of `gate.sh verdict <plan>
+  --run`. Stage that file in the same commit and confirm it with `gate.sh master <master file>`.
 
 Each line is `met`, `failed`, or `not-applicable` **with a reason**. Silence is not a pass, and a line
 you cannot honestly assert is recorded as not-applicable rather than ticked. That distinction is the

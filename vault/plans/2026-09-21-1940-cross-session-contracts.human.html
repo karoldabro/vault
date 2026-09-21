@@ -68,7 +68,6 @@ pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font
 <li>existing defect, not this plan's: the master plan holds a Sessions row for S11 inside its contracts table, and its S7 row has an extra cell. W-15 repairs both because the gate reads those tables.</li>
 <li>existing defect, not this plan's: <code>tests/fixtures/human/plan.md</code> has a Sessions table with <code>depends</code> and no contracts table, so W-19 adds one; two cases of <code>tests/unit/human-plan.bats</code> run <code>all --phase approve</code> on it.</li>
 <li>outside the planned file list: <code>vault/check-budget.md</code> gains rows for <code>arch</code> and <code>human</code> beside <code>master</code>, because <code>checks/doc-truth-SC-3.sh</code> failed on <code>HEAD</code> for those two subcommands. <code>tests/fixtures/human/expected.html</code> is re-rendered because the fixture plan gained a contracts table.</li>
-<li>unverified: the published page of the master plan at its <code>human_plan</code> link still shows the old tables. <code>bin/gate.sh human</code> compares the file on disk, so it passes; republish that page to refresh the link.</li>
 <li>existing defect, not this plan's: <code>bin/rule-count.sh --assert</code> fails on <code>HEAD</code> (181 rule lines, budget 173). This plan adds none.</li>
 <li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>document-standard.bats</code> two, <code>plugin-install.bats</code> two, <code>research-clarify.bats</code> one).</li>
 </ul>

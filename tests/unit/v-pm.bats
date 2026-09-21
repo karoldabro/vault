@@ -382,3 +382,49 @@ teardown() {
     ! grep -q 'Step 5b' "${IND}"
     grep -q '^## Step 4d' "${VAULT_ROOT}/commands/v-capture.md"
 }
+
+# The shard carries the columns `bin/gate.sh master` reads, and three v-pm and v-work steps name them.
+
+@test "the shard has depends after status and a Cross-session contracts section with five columns" {
+    SH="${TPL}/project-shard.md"
+    grep -q '^| id | scope | command | status | depends | REQ covered | evidence | last touched | deviation |$' "${SH}"
+    grep -q '^## Cross-session contracts$' "${SH}"
+    grep -q '^| id | contract | produced by | consumed by | shape |$' "${SH}"
+    grep -q 'templates/master-plan.md' "${SH}"
+}
+
+@test "the seed step seeds three sections, the third with a header and no rows, and reports it" {
+    S="${STEPS}/04-seed-workspace.md"
+    grep -q 'seeds \*\*three\*\* sections' "${S}"
+    grep -q '`## Cross-session contracts`' "${S}"
+    grep -qi 'no rows' "${S}"
+    grep -q 'step (f3) item 6' "${S}"
+    grep -q '^Shard contracts:' "${S}"
+}
+
+@test "the status step runs the master gate per open shard and reports a Contract gap" {
+    ST="${STEPS}/07-status.md"
+    grep -q 'bin/gate.sh master <shard> 2>&1' "${ST}"
+    grep -q 'REFUSED master' "${ST}"
+    grep -q '\*\*Contract gap\*\*' "${ST}"
+    grep -q 'Four exceptions' "${ST}"
+}
+
+@test "step 5.0 of the close step sets the master-plan row through session_of" {
+    local s="${VAULT_ROOT}/commands/v-work/steps/05-commit-capture.md"
+    grep -q 'session_of' "${s}"
+    grep -q 'gate.sh verdict' "${s}"
+    grep -q 'gate.sh master' "${s}"
+}
+
+@test "a shard instantiated from the template passes the master gate and loses a row on deletion" {
+    local TMP; TMP=$(mktemp -d)
+    sed 's/{{[a-z]*}}/x/g' "${TPL}/project-shard.md" > "${TMP}/shard.md"
+    run "${VAULT_ROOT}/bin/gate.sh" master "${TMP}/shard.md"
+    [ "$status" -eq 0 ]
+    awk '{print} /^\|----\|-------\|---------\|--------\|---------\|/{print "| S1 | a | \/v-do | done | | | `x` | 2026-09-21 | |"; print "| S2 | b | \/v-do | todo | S1 | | | 2026-09-21 | |"}' "${TMP}/shard.md" > "${TMP}/filled.md"
+    run "${VAULT_ROOT}/bin/gate.sh" master "${TMP}/filled.md"
+    [ "$status" -eq 1 ]
+    grep -q 'S2 depends on S1' <<<"$output"
+    rm -rf "${TMP}"
+}
