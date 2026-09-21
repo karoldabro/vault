@@ -50,6 +50,9 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 - `scripts/completion-hook.sh` lists plans by `status: approved`, so a spec carries no `status` key.
 - A check script that pipes into `grep -q` under `pipefail` fails on SIGPIPE. Capture the output first.
 - `dod_profile` is `code` in every operator repo, so it cannot select the harness profile.
+- A page renders only the columns listed in `templates/human-plan-sections.tsv`; a column added to a plan section stays off the page until listed.
+- A diagram line holding `click`, `href` or `javascript` is dropped from the page, so a label containing one of those words disappears too.
 
 ## Sessions
 - [[../sessions/2026-09-21-1015-architecture-first-planning-s1-s2]]: contract, gate, templates, wiring and tests.
+- [[../sessions/2026-09-21-1130-human-plan-page-and-profiles]]: profiles as data, the human page renderer, its gate and the `/v-team` wiring.
