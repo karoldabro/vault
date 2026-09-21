@@ -1,0 +1,33 @@
+{
+  "success": false,
+  "strict": false,
+  "target": "/work/repo/.claude-plugin/plugin.json",
+  "manifest": {
+    "file": "/work/repo/.claude-plugin/plugin.json",
+    "type": "plugin",
+    "errors": [
+      {
+        "path": "version",
+        "message": "Invalid input",
+        "code": null
+      }
+    ],
+    "warnings": [],
+    "notes": []
+  },
+  "contents": [
+    {
+      "file": "/work/repo/commands/step.md",
+      "type": "command",
+      "errors": [],
+      "warnings": [
+        {
+          "path": "frontmatter",
+          "message": "No frontmatter block found. Add YAML frontmatter between --- delimiters at the top of the file to set description and other metadata.",
+          "code": null
+        }
+      ],
+      "notes": []
+    }
+  ]
+}

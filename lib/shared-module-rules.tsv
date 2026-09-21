@@ -45,3 +45,4 @@ never raw git against a vault	vault-sync.md
 declared (values|identifiers) are consumed	bin/gate.sh readers
 each table has at least one .?PK.? row	architecture-spec.md Rule library
 the page holds no .?<script	human-plan.md Escaping
+a repo registry is read only under	probe-kit.md Registry

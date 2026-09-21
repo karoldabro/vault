@@ -1,0 +1,2 @@
+{"type":"typo","path":"f/a.txt","line_num":1,"byte_offset":4,"typo":"recieve","corrections":["receive"]}
+{"type":"typo","path":"f/a.txt","line_num":1,"byte_offset":12,"typo":"client","corrections":["customer"]}

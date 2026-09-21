@@ -1,0 +1,8 @@
+# The probe registry. Contract: commands/_shared/probe-kit.md. One row per probe and stage, nine tab separated fields:
+# id	stack	stage	detect	run	parser	cost	executes-repo-code	install
+md-links	harness	plan	find . -name '*.md' -not -path './.git/*' -not -path './node_modules/*' | grep -q .	"$PROBE_FRAMEWORK/probes/harness.sh" --check md-links	native	M	no	none
+dead-files	harness	plan	find . -name '*.md' -not -path './.git/*' -not -path './node_modules/*' | grep -q .	"$PROBE_FRAMEWORK/probes/harness.sh" --check dead-files	native	M	no	none
+token-size	harness	plan	find . -name '*.md' -not -path './.git/*' -not -path './node_modules/*' | grep -q .	"$PROBE_FRAMEWORK/probes/harness.sh" --check token-size	native	S	no	none
+claude-validate	harness	plan	test -f .claude-plugin/plugin.json	claude plugin validate .claude-plugin/plugin.json --json	parse_claude_validate	M	yes	none
+lizard	any	diff	find . \( -name '*.sh' -o -name '*.php' -o -name '*.py' -o -name '*.ts' -o -name '*.js' -o -name '*.go' -o -name '*.dart' \) -not -path './.git/*' -not -path './node_modules/*' -not -path './vendor/*' | grep -q .	lizard --csv -x "./node_modules/*" -x "./vendor/*" .	parse_lizard_csv	S	yes	python3 -m venv .venv-probes && .venv-probes/bin/pip install lizard
+typos	any	diff	test -f _typos.toml -o -f .typos.toml -o -f typos.toml	typos --format json	parse_typos_json	S	yes	python3 -m venv .venv-probes && .venv-probes/bin/pip install typos
