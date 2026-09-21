@@ -5,7 +5,7 @@
 #         bin/probe.sh detect [--repo <root>] [--allow-repo-registry] [--no-repo-code]
 #         bin/probe.sh run <plan|review> [--repo <root>] [--spec <file>] [--only <id>] [--max-cost S|M|L]
 #                          [--no-repo-code] [--allow-repo-registry]
-#         bin/probe.sh diff  [--repo <root>] [--base <ref>] [same options as run]
+#         bin/probe.sh diff  [--repo <root>] [--base <ref> | --changed-list <file>] [same options as run]
 #         bin/probe.sh scale [--repo <root>]
 #
 # Findings go to stdout as six tab separated fields (probe file line severity rule message). Status lines
@@ -41,7 +41,7 @@ case $cmd in
     *) probe_die "unknown command: $cmd" ;;
 esac
 
-stage="" repo="" spec="" only="" maxcost="" base=HEAD nocode=0 allow=0
+stage="" repo="" spec="" only="" maxcost="" base=HEAD nocode=0 allow=0 clist="" base_set=0
 if [ "$cmd" = run ]; then
     stage=${1:-}; shift || true
     case $stage in
@@ -52,15 +52,22 @@ if [ "$cmd" = run ]; then
 fi
 while [ $# -gt 0 ]; do
     case $1 in
-        --repo|--spec|--only|--base|--max-cost)
+        --repo|--spec|--only|--base|--max-cost|--changed-list)
             [ $# -ge 2 ] || probe_die "$1 needs a value"
-            case $1 in --repo) repo=$2 ;; --spec) spec=$2 ;; --only) only=$2 ;; --base) base=$2 ;; --max-cost) maxcost=$2 ;; esac
+            case $1 in --repo) repo=$2 ;; --spec) spec=$2 ;; --only) only=$2 ;; --base) base=$2; base_set=1 ;; --max-cost) maxcost=$2 ;; --changed-list) clist=$2 ;; esac
             shift 2 ;;
         --no-repo-code) nocode=1; shift ;;
         --allow-repo-registry) allow=1; shift ;;
         *) probe_die "unknown option: $1" ;;
     esac
 done
+case ${PROBE_TOOLS_FROM:-} in ''|image) ;; *) probe_die "PROBE_TOOLS_FROM must be image or unset" ;; esac
+if [ -n "$clist" ]; then
+    [ "$cmd" = diff ] || probe_die "--changed-list belongs to diff"
+    [ "$base_set" = 0 ] || probe_die "--changed-list and --base exclude each other"
+    [ -r "$clist" ] && [ -f "$clist" ] || probe_die "--changed-list needs a readable file: $clist"
+    clist=$(readlink -f "$clist")
+fi
 repo=${repo:-$PWD}
 [ -d "$repo" ] || probe_die "--repo needs a directory: $repo"
 repo=$(cd "$repo" && pwd)
@@ -79,7 +86,8 @@ rows=$(probe_registry "$repo" "$allow") || exit 2
 
 file_list() {
     if [ "$cmd" = diff ]; then
-        probe_changed "$repo" "$base" "$PROBE_FILES" || exit 2
+        if [ -n "$clist" ]; then probe_filter_list "$repo" "$PROBE_FILES.skipped" < "$clist" | LC_ALL=C sort -z > "$PROBE_FILES"
+        else probe_changed "$repo" "$base" "$PROBE_FILES" || exit 2; fi
         tr '\0' '\n' < "$PROBE_FILES" > "$PROBE_TMP/changed"
         export PROBE_CHANGED_FILE="$PROBE_TMP/changed"
     else

@@ -23,7 +23,7 @@ grep -q 'rule' tests/unit/rule.bats 2>/dev/null || fail "tests/unit/rule.bats mi
 grep -q 'D-12' tests/unit/rule.bats || fail "tests/unit/rule.bats has no guard that no command calls /v-rule"
 m=vault/plans/2026-09-21-0900-architecture-first-planning.md
 grep -Eq '^\| S8 \|.*\| done \|' "$m" || fail "master plan S8 row is not done"
-grep -Eq '^\| S10 \|.*probe-sandbox.*\| todo \| S8' "$m" || fail "master plan has no S10 row for the sandbox probes that depends on S8"
+grep -Eq '^\| S10 \|.*probe-sandbox.*\| (todo|done) \| S8' "$m" || fail "master plan has no S10 row for the sandbox probes that depends on S8"
 grep -Eq '^\| C-8 \| ' "$m" || fail "master plan has no C-8 contract row"
 grep -q 'rule-grep.sh' <(grep '^| C-6 ' "$m") || fail "master plan C-6 does not name the rule row template"
 [ "$(bin/rule-count.sh 2>/dev/null | awk '/^rule lines/ {print $3}')" -le 181 ] || fail "bin/rule-count.sh reports more than 181 rule lines"

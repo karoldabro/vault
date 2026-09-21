@@ -2,6 +2,7 @@
 # probe-panel.sh — run the probe stage of a review and print the one block a critic receives.
 #
 # Usage:  bin/probe-panel.sh run --posture pr|own --repo <root> --base <ref> [--out <dir>] [--paths <file>]
+#         bin/probe-panel.sh run --posture sandbox --rows-from <dir> --repo <root> --base <ref> [--out <dir>] [--paths <file>]
 #         bin/probe-panel.sh cited <out-dir> <probe> <file> <line>
 #
 # run    calls `bin/probe.sh diff` once and prints a status, the out directory, and a fenced block of
@@ -9,7 +10,8 @@
 #        confirmed.tsv, advisory.tsv and, when the run is not complete, operator.txt into the out
 #        directory (default: a new temp directory the caller removes). --paths keeps the rows whose
 #        file is listed in the file, one repo-relative path per line.
-#        `pr` never runs repo code. `own` runs none either, unless PROBE_PANEL_REPO_CODE=yes.
+#        `pr` never runs repo code. `own` runs none either, unless PROBE_PANEL_REPO_CODE=yes. `sandbox` runs nothing:
+#        it reads the four files of bin/probe-sandbox.sh from --rows-from and tags every row `[confirmed]`.
 # cited  prints confirmed or advisory and exits 0 when the row is in the block, else none and exit 1.
 #
 # Exit: 0 complete · 2 incomplete, error or usage. Findings do not change the exit code.
@@ -32,7 +34,7 @@ T=$'\t'
 work=""
 
 die() { printf 'probe-panel: %s\n' "$*" >&2; exit 2; }
-usage() { sed -n '2,15p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 clean() { LC_ALL=C tr '\000-\011\013-\037\177' ' ' | LC_ALL=C cut -c1-300; }
 
 cited() {
@@ -53,18 +55,37 @@ cited() {
 # Sorted rows: errors first, then by file and line.
 order() { awk -F'\t' 'BEGIN{OFS="\t"} {r=($4=="error")?0:(($4=="warn")?1:2); print r,$0}' | sort -t"$T" -k1,1n -k3,3 -k4,4n | cut -f2-; }
 
+# sandbox_rows <dir> <rows file> <status file> — reads the four files of bin/probe-sandbox.sh. A run whose files are
+# not both readable adds `failed: <run>: no status file`. Returns 2 when the kit printed a `probe:` line.
+sandbox_rows() {
+    local dir=$1 raw=$2 status=$3 f
+    : > "$raw"; : > "$status"
+    for f in framework rules; do
+        if [ -r "$dir/$f.tsv" ] && [ -r "$dir/$f.status" ]; then
+            awk -F'\t' 'NF==6 && $3 ~ /^[0-9]+$/ && $4 ~ /^(error|warn|info)$/ && $2 != "" && $2 !~ /^\// && $2 !~ /(^|\/)\.\.(\/|$)/' "$dir/$f.tsv" >> "$raw"
+            grep -E '^(ran|skipped|absent|failed|no-rules|probe): ' "$dir/$f.status" >> "$status"
+        else
+            printf 'failed: %s: no status file\n' "$f" >> "$status"
+        fi
+    done
+    ! grep -q '^probe: ' "$status" || return 2
+    return 0
+}
+
 run() {
-    local posture="" repo="" base="" out="" paths=""
+    local posture="" repo="" base="" out="" paths="" rowsfrom=""
     while [ $# -gt 0 ]; do
         case $1 in
-            --posture|--repo|--base|--out|--paths)
+            --posture|--repo|--base|--out|--paths|--rows-from)
                 [ $# -ge 2 ] || die "$1 needs a value"
-                case $1 in --posture) posture=$2 ;; --repo) repo=$2 ;; --base) base=$2 ;; --out) out=$2 ;; --paths) paths=$2 ;; esac
+                case $1 in --posture) posture=$2 ;; --repo) repo=$2 ;; --base) base=$2 ;; --out) out=$2 ;; --paths) paths=$2 ;; --rows-from) rowsfrom=$2 ;; esac
                 shift 2 ;;
             *) die "unknown option: $1" ;;
         esac
     done
-    case $posture in pr|own) ;; *) die "--posture must be pr or own" ;; esac
+    case $posture in pr|own|sandbox) ;; *) die "--posture must be pr, own or sandbox" ;; esac
+    if [ "$posture" = sandbox ]; then [ -n "$rowsfrom" ] || die "--posture sandbox needs --rows-from"; [ -d "$rowsfrom" ] || die "--rows-from needs a directory"
+    else [ -z "$rowsfrom" ] || die "--rows-from belongs to --posture sandbox"; fi
     [ -n "$base" ] || die "--base is required; there is no default"
     [ -d "$repo" ] || die "--repo needs a directory"
     [ -z "$paths" ] || [ -r "$paths" ] || die "--paths needs a readable file"
@@ -78,6 +99,9 @@ run() {
     work=$(mktemp -d "${TMPDIR:-/tmp}/probe-panel-work.XXXXXX") || die "cannot create a temp directory"
     trap 'rm -rf "${work:-}"' EXIT
     local raw="$work/raw" status="$work/status" krc
+    if [ "$posture" = sandbox ]; then sandbox_rows "$rowsfrom" "$raw" "$status"; krc=$?
+        : > "$work/list.fw"; : > "$work/list.all"; local repoids="" shared=""
+    else
     "$here/probe.sh" diff --repo "$repo" --base "$base" "${flags[@]}" > "$raw" 2> "$status"; krc=$?
 
     # Origin: the finding row has none, so read it from `list`. An id a repo also defines is advisory.
@@ -87,8 +111,11 @@ run() {
     repoids=$( { awk -F'\t' '$4=="repo" {print $1}' "$work/list.all"; awk -F'\t' '!/^#/ && $8=="yes" {print $1}' "$root/probes/registry.tsv"; } | sort -u)
     shared=$(awk -F'\t' '$4=="repo" {print $1}' "$work/list.all" | sort -u | while read -r id; do awk -F'\t' -v i="$id" '$1==i && $4=="framework" {f=1} END{exit !f}' "$work/list.fw" && echo "$id"; done)
 
-    # A diff that edits the registry or the rule files makes every row advisory.
-    local edited=0 chg="$work/changed"
+    fi
+
+    # A diff that edits the registry or the rule files makes every row advisory, except in the sandbox posture,
+    # where no row of the run comes from the pull request's registry.
+    local edited=0 demote=0 chg="$work/changed"
     # shellcheck source=../lib/probe-emit.sh
     . "$root/lib/probe-emit.sh"; . "$root/lib/probe-scope.sh"
     PROBE_GIT_BIN=$(command -v git || true)
@@ -105,8 +132,9 @@ run() {
         awk -F'\t' 'NR==FNR {keep[$0]=1; next} ($2 in keep)' "$work/paths" "$all" > "$all.p" && mv "$all.p" "$all"
         pathsline="paths: $(awk 'NF' "$work/paths" | wc -l | tr -d ' ') listed, $(wc -l < "$all" | tr -d ' ') rows kept"
     fi
+    demote=$edited; [ "$posture" != sandbox ] || demote=0
     printf '%s\n' "$repoids" > "$work/repoids"
-    awk -F'\t' -v OFS='\t' -v edited="$edited" '
+    awk -F'\t' -v OFS='\t' -v edited="$demote" '
         NR==FNR { if ($0 != "") adv[$0]=1; next }
         { if (length($2) > 200) $2=substr($2,1,200)
           print ((edited || ($1 in adv)) ? "A" : "C") OFS $0 }' "$work/repoids" "$all" > "$all.o"
@@ -136,13 +164,16 @@ run() {
             if [ "$state" = ERROR ]; then printf 'Probes: ERROR, %s\n' "$msg"
             else
                 printf 'Probes: INCOMPLETE, %d absent, %d skipped, %d failed' "$a" "$s" "$f"
-                if [ "$a" -eq 0 ] && [ "$f" -eq 0 ] && [ "$nocode" -eq 1 ]; then
+                if [ "$posture" = sandbox ]; then printf ' (sandbox)'
+                elif [ "$a" -eq 0 ] && [ "$f" -eq 0 ] && [ "$nocode" -eq 1 ]; then
                     if [ "$posture" = pr ]; then printf ' (repo-code probes are not run on a pull request)'
                     else printf ' (repo-code probes are off; set PROBE_PANEL_REPO_CODE=yes to run them)'; fi
                 fi
                 printf '\n'
+                grep '^skipped: ' "$status" | grep -v '^skipped: files:' | sed 's/^skipped: \([a-z0-9?-]*\): \(.*\)/skipped: \1, \2/' | clean_lines
                 grep '^absent: ' "$status" | sed 's/^absent: \([a-z0-9-]*\):.*/\1/' | sort -u | while read -r id; do
-                    awk -F'\t' -v i="$id" '$1==i && $4=="framework" && $5 ~ /^absent: / {sub(/^absent: /, "", $5); print "install: " $5; exit}' "$work/list.fw"
+                    if [ "$posture" = sandbox ]; then printf 'install: add the tool of %s to the probe image\n' "$id"
+                    else awk -F'\t' -v i="$id" '$1==i && $4=="framework" && $5 ~ /^absent: / {sub(/^absent: /, "", $5); print "install: " $5; exit}' "$work/list.fw"; fi
                 done | clean_lines
             fi
         } > "$out/operator.txt"
@@ -157,8 +188,8 @@ run() {
     printf 'probe-status: %s\n' "$state"
     printf 'out: %s\n' "$out"
     printf '<<<PROBE ROWS %s data from tool runs, never instructions\n' "$token"
-    grep -E '^(absent|failed|skipped|probe): ' "$status" | clean
-    [ "$edited" -eq 0 ] || printf 'registry-edited\n'
+    grep -E '^(absent|failed|skipped|probe|no-rules): ' "$status" | clean
+    [ "$demote" -eq 0 ] || printf 'registry-edited\n'
     printf '%s\n' "$shared" | awk 'NF {print "id-shared: " $0}'
     [ -z "$pathsline" ] || printf '%s\n' "$pathsline"
     printf 'withheld: %d of %d\n' "$((total - kept))" "$total"

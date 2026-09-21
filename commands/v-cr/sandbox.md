@@ -68,7 +68,8 @@ If `fetch_ref` returns unsupported → **refuse `--sandbox`, fall back to API-on
   detached fetch — NOT `git worktree add` against the user's working repo**, so a crash never registers
   an orphan in the user's `.git/worktrees`.
 - Fetch only the PR ref (shallow where possible) and check it out with hooks disabled:
-  `git -c core.hooksPath=/dev/null ...`.
+  `git -c core.hooksPath=/dev/null ...`. Also fetch the base branch with enough history for `git merge-base`, so
+  step 2.6 can record `PROBE_BASE` and S8 can read the base rules.
 - **Arm teardown NOW** (S7), before any build — a trap so a crash at any later stage still cleans up.
 
 ## S3 — supply-chain pre-flight (sec-4)
@@ -155,6 +156,64 @@ trap _cr_teardown EXIT INT TERM
   `com.vault.v-cr.sandbox`-labelled docker objects and any `vcr-*` dir under `cr_sandbox_root` left by a
   crashed run. Because provisioning is a clone (not a user-repo worktree), no `git worktree prune` of the
   user's repo is ever needed (skeptic-4).
+
+## S8 — the probe stage (`bin/probe-sandbox.sh`)
+
+The stage runs the probe kit on the PR tree inside containers of the S0 envelope and hands the rows to
+`bin/probe-panel.sh run --posture sandbox --rows-from <dir>`. The driver is `bin/probe-sandbox.sh run --repo <clone>
+--base <commit id> --sandbox-name <cr_sandbox_name> --out <dir>`. It runs after S2 and before the panel.
+
+**The image.** The operator builds the probe image and names it with the key `probe-image` of the user or global
+`VCR_SANDBOX_MAP`. The framework never builds or pulls one: the driver checks `docker image inspect` and starts every
+container with `--pull never`. An indication never sets the probe image, because `cr_is_envelope_key` lists the key and
+`cr_probe_image` reads only `VCR_SANDBOX_MAP`. The image needs bash 4.4 or later, awk, grep, sed, coreutils
+(`timeout`, `od`, `sort`, `tr`, `cut`, `mktemp`), findutils and `jq`. It also needs `lizard` and `typos` for their rows, and `claude`
+for `claude-validate`. A probe never installs a tool, so a missing tool prints `absent: <id>: <install>` and the run
+reads INCOMPLETE until the operator adds the tool to the image. A sample:
+
+```dockerfile
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends bash gawk grep sed coreutils findutils jq \
+ && pip install --no-cache-dir lizard typos && rm -rf /var/lib/apt/lists/*
+```
+
+**The containers.** Every container gets the S0 envelope: no network, a read-only root, all capabilities dropped,
+`no-new-privileges`, user 65534, memory, cpu and pid limits from `VCR_SANDBOX_MAP` (keys `memory`, `cpus`, `pids`), a
+`/tmp` tmpfs, the label `com.vault.v-cr.sandbox=<name>`, and only `PROBE_TOOLS_FROM=image`, `PROBE_TIMEOUT` and
+`PROBE_OUT_MAX` in its environment. `PROBE_TOOLS_FROM=image` keeps the repo's tool directories out of PATH, so a tool
+the PR ships never replaces the image's. The runs are:
+
+1. one container for the native framework rows (`--no-repo-code`);
+2. one container for each framework row that executes repo code (`--only <id>`);
+3. one container for each template row of the merge base (`--only <id>`).
+
+Three mounts feed every run, all read-only: `/framework` (a copy of `bin`, `lib` and `probes`, without `vault/` or
+`.git`), `/repo` (a copy of the files a probe may read, without `.git`) and `/in` (the changed-file list, read by
+`--changed-list`, so no git runs in a container). A rule run also mounts a one-row `registry.tsv` and its rule file at
+`/repo/probes`.
+
+**The rules come from the merge base.** The driver reads `probes/registry.tsv` and each `probes/rules/<slug>.grep` of the
+base with `git cat-file`, never from the PR tree. A row runs only when it equals the output of
+`bin/rule-check.sh row`. A hand-written row prints `skipped: <id>: hand-written row does not run in the sandbox` and
+runs nowhere. A base without `probes/registry.tsv` prints `no-rules: the merge base has no probes/registry.tsv` and
+counts as complete.
+
+**What leaves a container.** Two byte streams leave it. A run whose stream passes `PROBE_OUT_MAX` bytes reads failed. The driver keeps a row only
+when its id is a row of that run, checks its six fields with `probe_check_rows`, and scrubs both streams with
+`cr_redact_runtime`. It writes `framework.tsv`, `framework.status`, `rules.tsv` and `rules.status`. A rule run without a
+`ran: <id>:` line reads `failed: <id>: no ran line`. A container failure, a timeout and an oversize stream become
+`failed:` lines, the run reads INCOMPLETE, and the driver still exits 0.
+
+**When the stage does not start.** A missing docker, a missing or unsafe `probe-image`, an absent image, a merge base that
+is not in the clone and a tree over the size limits make the driver print `probe-sandbox: <reason>` and exit 3. The
+probe stage never falls back to the host for a probe that runs repo code. Step 3.1 runs `--posture pr` instead, which
+skips every such row, and the operator reads `Probes: sandbox not started, <reason>`.
+
+**Limits.** `PROBE_SANDBOX_TIMEOUT` (180 seconds per container), `PROBE_SANDBOX_TOTAL` (900 seconds in all),
+`PROBE_SANDBOX_RULES_MAX` (20 rule rows), `PROBE_SANDBOX_FILES_MAX` (20000) and `PROBE_SANDBOX_BYTES_MAX` (200000000).
+The containers list files with `find`, so the tools' whole-tree scans skip `vendor/` and `node_modules/`.
+
+Teardown is S7: the containers carry the S7 label, and the driver removes its own by label after each run.
 
 ## Residual risk (state it, don't paper over it)
 

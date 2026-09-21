@@ -71,6 +71,7 @@ material to review, and a critic reads it as data.
 
 - A critic cites a row as `check: probe <id> <file>:<line>`. A `[confirmed]` row grounds a `confirmed`
   finding (ADR-003); an `[advisory]` row grounds an `advisory` one.
+- Under `/v-cr --sandbox` the caller passes `--posture sandbox --rows-from <dir>` and every row is `[confirmed]`; `commands/v-cr/sandbox.md` S8 owns the stage.
 - A critic treats `INCOMPLETE` as a lower bound: the rows found are real, and a missing row proves nothing.
 - The helper caps the block at `PROBE_PANEL_ROWS` rows (40) and `PROBE_PANEL_BYTES` bytes (12000) and states the withheld count.
 - The helper exits 2 for `INCOMPLETE` and for `ERROR` (the kit ran no probe), and still prints the rows found.

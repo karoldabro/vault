@@ -114,6 +114,11 @@ provisions the throwaway clone + locked-down sandbox (S0–S4), runs the **attri
 runtime reproduction), all `cr_redact_runtime`-scrubbed and fenced as untrusted data. Teardown is armed
 at provision (S7), so it fires even if a later step throws.
 
+Then record `PROBE_BASE` (the full id printed by `git merge-base <base ref> <head ref>` in the clone) and run
+`bin/probe-sandbox.sh run --repo <clone> --base "$PROBE_BASE" --sandbox-name <cr_sandbox_name> --out <dir>`
+(contract: `sandbox.md` S8). Carry the `--out` directory as `PROBE_SANDBOX_OUT`, the exit code as `probe-exit`, and on any nonzero exit
+the text after `probe-sandbox: ` on stderr.
+
 Carry forward to step 3:
 - the **dynamic-evidence bundle** (becomes the panel's `confirmed` analyzer input — see
   `_shared/critic-panel.md` Inputs);
@@ -130,6 +135,7 @@ Vault: <pack resolved | GENERIC FALLBACK>  ·  layers: [vault-only | + graph/ser
 Rules: <r> index rows (<scope <surface>+cross-repo | scope filter: n/a>)  ·  <b> bodies fetched
 Routing: <a> routed  ·  <m> no-match  ·  <u> unroutable   # cr_rule_route -> $CR_RULE_ROUTES
 Suppression set: <n prior v-cr fingerprints>  (<m> threads have human replies)
-Sandbox: <off | recipe <source> · test-gate <pass|new-failure|red-unattributed|could-not-provision> · evidence [analyzers/coverage/repro]>
+Sandbox: <off | recipe <source> · test-gate <pass|new-failure|red-unattributed|could-not-provision> · evidence [analyzers/coverage/repro] · probes <ran|not started: <reason>>>
+Probe stage: <off | PROBE_BASE=<id> PROBE_SANDBOX_OUT=<dir> probe-exit=<0|nonzero>>
 ```
 Mark GATHER CONTEXT `completed`.

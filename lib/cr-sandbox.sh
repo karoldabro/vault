@@ -22,6 +22,8 @@
 #                                                    -> prints "<source>\t<value>" of the winning recipe
 #                                                       source by precedence (project indication first)
 #   cr_stack_default_recipe <stack>                  -> prints "image\tinstall\ttest\tlint" for a stack
+#   cr_sandbox_map_get <key>                         -> the value of the first <key>= in VCR_SANDBOX_MAP (a ';' list)
+#   cr_probe_image                                   -> the probe image name from VCR_SANDBOX_MAP key probe-image
 #   cr_redact_runtime                                -> stdin -> stdout, secret-shapes + CR_REDACT_VALUES
 #                                                       scrubbed (runtime output is untrusted; sec-1)
 #
@@ -98,7 +100,8 @@ cr_is_envelope_key() {
         |cap_add|cap_drop|capabilities|privileged|security_opt|devices|sysctls \
         |cpus|cpu_*|memory|mem_*|pids|pids_limit|ulimits|shm_size \
         |volumes|mounts|mount|bind|tmpfs|volumes_from \
-        |env|environment|env_passthrough|proxy|http_proxy|https_proxy|registry|registries|user|userns_mode)
+        |env|environment|env_passthrough|proxy|http_proxy|https_proxy|registry|registries|user|userns_mode \
+        |probe-image|probe_image)
             return 0 ;;
         *)
             return 1 ;;
@@ -163,6 +166,36 @@ cr_stack_default_recipe() {
         *)
             return 1 ;;
     esac
+}
+
+# cr_sandbox_map_get <key> — prints the value of the first <key>=<value> pair of VCR_SANDBOX_MAP, a ';'
+# separated list like VCR_HOST_MAP. rc 1 when the map is unset or holds no such key.
+cr_sandbox_map_get() {
+    local key="${1:-}" rest="${VCR_SANDBOX_MAP:-}" pair
+    [ -n "$key" ] && [ -n "$rest" ] || return 1
+    while [ -n "$rest" ]; do
+        case "$rest" in
+            *";"*) pair="${rest%%";"*}"; rest="${rest#*";"}" ;;
+            *)     pair="$rest"; rest="" ;;
+        esac
+        case "$pair" in
+            "$key="*) printf '%s\n' "${pair#*=}"; return 0 ;;
+        esac
+    done
+    return 1
+}
+
+# cr_probe_image — prints the image the probe stage runs in, from the user/global VCR_SANDBOX_MAP only. The
+# name must look like a docker image reference: it may not start with a dash or hold a space, quote or shell
+# metacharacter. No key, an empty value or an unsafe name -> rc 1 (the stage does not start).
+cr_probe_image() {
+    local img
+    img="$(cr_sandbox_map_get probe-image)" || return 1
+    [ -n "$img" ] && [ "${#img}" -le 200 ] || return 1
+    case "$img" in
+        *[!A-Za-z0-9._:/@-]*|[!A-Za-z0-9]*|*..*) return 1 ;;
+    esac
+    printf '%s\n' "$img"
 }
 
 # Scrub untrusted runtime output (test/build/lint stdout+stderr) before it enters ANY model context,

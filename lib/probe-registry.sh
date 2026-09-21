@@ -44,9 +44,9 @@ probe_registry() {
 }
 
 # probe_path <trust> <repo> — the PATH a cell runs with. Repo tool directories are appended, never
-# prepended, and only for a row that runs repo code.
+# prepended, and only for a row that runs repo code. PROBE_TOOLS_FROM=image keeps them out: the tools are the image's.
 probe_path() {
-    if [ "$1" = yes ]; then
+    if [ "$1" = yes ] && [ "${PROBE_TOOLS_FROM:-}" != image ]; then
         printf '%s' "$PATH:$2/node_modules/.bin:$2/vendor/bin:$2/.venv/bin:$2/.venv-probes/bin"
     else
         printf '%s' "$PATH"

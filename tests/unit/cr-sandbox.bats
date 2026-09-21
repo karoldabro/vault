@@ -252,3 +252,32 @@ setup() {
     [ "$status" -eq 0 ]
     [ "$output" = "2" ]                  # a, b — trailing blank lines collapsed, by documented contract
 }
+
+# --- the probe image (S10) ---------------------------------------------------
+
+@test "cr_probe_image prints the first probe-image of VCR_SANDBOX_MAP" {
+    VCR_SANDBOX_MAP='memory=1g;probe-image=reg.example/probes:1.2;probe-image=other:1' run cr_probe_image
+    [ "$status" -eq 0 ]
+    [ "$output" = "reg.example/probes:1.2" ]
+}
+
+@test "cr_probe_image returns 1 for an unset map, a missing key and an unsafe name" {
+    unset VCR_SANDBOX_MAP
+    run cr_probe_image; [ "$status" -eq 1 ]
+    VCR_SANDBOX_MAP='memory=1g' run cr_probe_image; [ "$status" -eq 1 ]
+    for bad in '-x' 'a b' 'a$(id)' '../x' 'a..b' ''; do
+        VCR_SANDBOX_MAP="probe-image=$bad" run cr_probe_image
+        [ "$status" -eq 1 ]
+    done
+}
+
+@test "probe-image is an envelope key, so an indication cannot set it, and it is not a recipe key" {
+    run cr_is_envelope_key probe-image; [ "$status" -eq 0 ]
+    run cr_is_envelope_key probe_image; [ "$status" -eq 0 ]
+    run cr_is_recipe_key probe-image; [ "$status" -eq 1 ]
+}
+
+@test "cr_sandbox_map_get keeps an equals sign inside a value" {
+    VCR_SANDBOX_MAP='proxy=http://h:1/?a=b;cpus=2' run cr_sandbox_map_get proxy
+    [ "$output" = "http://h:1/?a=b" ]
+}

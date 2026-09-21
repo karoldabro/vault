@@ -299,3 +299,11 @@ setup() {
     ! grep -q -- '--allow-repo-registry' "${f}"
     grep -q 'Probe stage' /code/commands/_shared/critic-panel.md
 }
+
+@test "T-10 v-cr names the sandbox probe stage in step 2.6 and the three Probes states in step 3" {
+    grep -q 'bin/probe-sandbox.sh' /code/commands/v-cr/steps/02-gather.md
+    grep -q -- '--posture sandbox --rows-from' /code/commands/v-cr/steps/03-review.md
+    grep -q 'Probes: sandbox not started' /code/commands/v-cr/steps/03-review.md
+    grep -q 'Probes: sandbox ran' /code/commands/v-cr/steps/03-review.md
+    ! grep -q -- '--allow-repo-registry' /code/commands/v-cr/steps/03-review.md
+}

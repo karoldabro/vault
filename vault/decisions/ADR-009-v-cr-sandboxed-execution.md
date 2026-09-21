@@ -80,3 +80,10 @@ None (framework-internal). Consumers gain `/v-cr --sandbox` after the next `inst
 requires `VCR_SANDBOX_MAP` (and optionally a per-repo `behaviour.sandbox` recipe or sandbox indication).
 Builds on [[ADR-008-v-cr-remote-pr-review]] and [[ADR-004-generic-packs-specifics-in-indications]];
 reuses the grounding gate of [[ADR-003-tool-grounded-findings]].
+
+## Addendum — the probe stage
+Session S10 (`vault/plans/2026-09-21-1600-sandbox-probe.md`) runs the probe kit inside the same envelope. The driver is `bin/probe-sandbox.sh`, and the mechanism is
+`commands/v-cr/sandbox.md` S8.
+- **Image:** the operator builds it and names it with `probe-image` in `VCR_SANDBOX_MAP`, so a repo file or an indication cannot choose the code that judges a pull request.
+- **Failure:** a container that fails or times out leaves a `failed:` line and no probe runs on the host, so an attacker who exhausts memory gains nothing.
+- **Rows:** the host trusts a row only when its id is a row of that run, because everything a container prints can be forged by the code it ran.

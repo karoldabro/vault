@@ -47,7 +47,7 @@ the core keeps only the findings in changed files. A probe builds a row with `pr
 `bin/probe.sh list|detect|run <plan|review>|diff|scale`, each with `--repo <root>` (default: the working
 directory). `run` and `diff` also take `--spec <file>`, `--only <id>`, `--max-cost S|M|L`, `--no-repo-code` and
 `--allow-repo-registry`. `diff` takes `--base <ref>` (default `HEAD`) and keeps findings in files changed since
-the base and in untracked files. `--only` matches `[a-z0-9-]+`, and `--base` may not start with a dash.
+the base and in untracked files. `diff` also takes `--changed-list <file>`, a NUL separated list of repo-relative paths, instead of `--base`; it reads no git, and it drops a path that is absent, escapes the repo or is a link. `--only` matches `[a-z0-9-]+`, and `--base` may not start with a dash.
 
 ## Lines
 
@@ -76,7 +76,7 @@ stops the group. `--only` with an id that has no row at the stage exits 2.
 
 The repo under review is not trusted. A probe never installs a tool and never evaluates a cell. Every git call
 runs with the global and system config, the repo's fsmonitor, hooks and attributes file, lazy fetch, network
-protocols and filter commands switched off or replaced. How a review passes the flags and reads a row is stated once, in
+protocols and filter commands switched off or replaced. `PROBE_TOOLS_FROM=image` keeps the repo's tool directories out of PATH; the sandbox stage sets it, as `commands/v-cr/sandbox.md` S8 states. How a review passes the flags and reads a row is stated once, in
 `commands/_shared/critic-panel.md` §(a) Probe stage.
 
 ## Settings

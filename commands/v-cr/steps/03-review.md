@@ -18,6 +18,9 @@ Read `$VAULT_FRAMEWORK_PATH/commands/_shared/critic-panel.md` and execute it wit
 - **probe block**: record `PROBE_BASE=$(git merge-base <base ref> <head ref>)` from the refs step 2 gathered, then run
   `bin/probe-panel.sh run --posture pr --repo <checkout> --base "$PROBE_BASE"` on the checkout of the pull request head
   (rules: `_shared/critic-panel.md` §(a) Probe stage). With no checkout, skip the call and print `Probes: not run, no checkout`.
+  Under `--sandbox`, when step 2.6 carried `probe-exit=0`, run `bin/probe-panel.sh run --posture sandbox --rows-from "$PROBE_SANDBOX_OUT"
+  --repo <clone> --base "$PROBE_BASE"` instead; on any nonzero `probe-exit` run the `pr` call on the clone and print
+  `Probes: sandbox not started, <reason>`.
 
 The module handles the untrusted-input fencing, critic selection (`_resolution.md`, incl. the
 `correctness` bug-hunter lens + `skeptic` on high-risk diffs), parallel read-only spawn, the
@@ -107,7 +110,7 @@ preference.
     examined clean · <U> not examined`, from §3.6. Three buckets, never two: a file nobody opened and
     a file checked and found clean are different claims, and merging them is what let a review report
     silence it had not earned. When `<U>` is above zero, name those paths in the summary;
-  - **probe line** — line one of `operator.txt` when it exists, else nothing; the summary carries no install text;
+  - **probe line** — line one of `operator.txt` when it exists, else nothing, and `Probes: sandbox not started, <reason>` when the stage did not start (`Probes: sandbox ran` appears in the terminal block only); the summary carries no install text;
   - **test-posture line (mandatory)** — without `--sandbox`: `Tests: not executed (static review only —
     re-run with --sandbox to gate on tests)`; with `--sandbox`: `Tests: <pass | new-failure | red-unattributed>`;
   - **rule line (mandatory)** — `Rules: <c> checked · <a> n/a · <n> routed-unchecked · <m> no-match ·
@@ -168,7 +171,7 @@ Panel: <pack> → [critics]   (or GENERIC FALLBACK)
 Spawned: [<persona> → <base_agent>, …]   # actual Agent calls — MUST match [critics]; if empty, the panel did not run
 Coverage: <T> changed · <F> with findings · <C> examined clean · <U> NOT EXAMINED   # cr_coverage
 Unexamined: [<paths>]   ·   unexamined test files: <n>
-Probes: <line one of operator.txt | not run, no checkout>   # printed only when the run was incomplete
+Probes: <sandbox ran | sandbox not started, <reason> | line one of operator.txt | not run, no checkout>   # a complete run without --sandbox prints nothing
 Tests: <not executed (static review only) | pass | new-failure | red-unattributed>
 Rules: <c> checked · <a> n/a · <n> routed-unchecked · <m> no-match · <u> unroutable   # cr_rule_coverage
 Routed-unchecked: [<slugs>]   ·   bad anchors rejected: <k>
