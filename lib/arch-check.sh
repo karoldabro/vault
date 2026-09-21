@@ -68,6 +68,17 @@ arch_repo_profile() {
     if [ "$v" = none ] || arch_profile_file "$v" "$repo" >/dev/null; then printf '%s' "$v"; else printf '!%s' "$v"; fi
 }
 
+# arch_fm_value <file> <key>: a frontmatter value with a trailing ` # comment` removed and padding
+# trimmed. A value that is only a comment is empty.
+arch_fm_value() {
+    local v
+    v=$(frontmatter_get "$1" "$2")
+    v=${v%%[[:space:]]\#*}
+    v=$(arch_trim "$v")
+    case "$v" in \#*) v="" ;; esac
+    printf '%s' "$v"
+}
+
 arch_fm_has() {
     awk -v k="$2" 'NR == 1 && $0 == "---" { i = 1; next } i && $0 == "---" { exit }
                    i && index($0, k ":") == 1 { f = 1 } END { exit f ? 0 : 1 }' "$1"
@@ -319,7 +330,7 @@ arch_check_spec() {
     done < <(grep '^## ' "$clean" | sort | uniq -d)
 
     while IFS=$'\t' read -r sec kind cols rules; do
-        case "$sec" in ''|\#*) continue ;; esac
+        case "$sec" in ''|\#*|@*) continue ;; esac
         if ! grep -qxF "## $sec" "$clean"; then arch_refuse "$spec" "missing section $sec"; continue; fi
         case "$kind" in
             fence:mermaid) arch_fence_check "$raw" "$sec" mermaid || arch_refuse "$spec" "section $sec has no mermaid block" ;;
@@ -351,7 +362,8 @@ cmd_arch() {
 
     arch_cleanup
     ARCH_TMP=$(mktemp -d)
-    trap arch_cleanup EXIT
+    # cmd_human replaces this trap and runs both cleanups, so each command runs the other's.
+    trap 'arch_cleanup; if declare -F human_cleanup >/dev/null; then human_cleanup; fi' EXIT
     before=$violations
     raw="$ARCH_TMP/in.raw"
     tr -d '\r' < "$file" > "$raw"
@@ -367,10 +379,7 @@ cmd_arch() {
 
     spec=$file
     if [ "$type" = plan ]; then
-        as=$(frontmatter_get "$raw" arch_spec)
-        as=${as%%[[:space:]]\#*}
-        as=$(arch_trim "$as")
-        case "$as" in \#*) as="" ;; esac
+        as=$(arch_fm_value "$raw" arch_spec)
         if [ -z "$as" ]; then
             [ "$rprofile" = none ] && return 0
             arch_refuse "$file" "plan names no arch_spec while repo declares arch_profile $rprofile"; return 0

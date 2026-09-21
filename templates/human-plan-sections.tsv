@@ -1,0 +1,8 @@
+# The plan sections the human page shows, in order, and the columns of each. The rules are in commands/_shared/human-plan.md.
+# section	columns (* is all, an underscore stands for a space)
+Task	*
+Open & deferred	*
+Success criteria	id criterion kind how
+Decisions	decision reason
+Cross-session contracts	*
+Sessions	id scope depends

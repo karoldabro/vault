@@ -1,0 +1,47 @@
+<title><!--TITLE--></title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+</style>
+
+<main>
+<!--BODY-->
+</main>

@@ -231,6 +231,17 @@ sidecar. Fix it before the approval gate. Then run `$VAULT_FRAMEWORK_PATH/bin/ga
 exit 1 means the spec breaks its contract or the plan names no spec in a profiled repo, so fix it
 now; exit 2 means a file could not be read, so stop and say so. Step 4 runs the same check again.
 
+**Human page.** Skip this block when the plan names no `arch_spec`, as in a repo with no
+`arch_profile`. Otherwise read `$VAULT_FRAMEWORK_PATH/commands/_shared/human-plan.md`, then run
+`$VAULT_FRAMEWORK_PATH/bin/render-human.sh <plan>`. It writes `<plan name>.human.html` beside the plan.
+Load the `artifact-design` skill and, from this session and not from a subagent, call the Artifact tool
+with that file's path, so the operator opens a link instead of a file. Publishing the same path again
+keeps the link. Set `human_plan` in the plan's frontmatter to the URL the tool returns. If
+publishing fails, set it to `file:<page name>` and tell the operator in one line. Then run
+`$VAULT_FRAMEWORK_PATH/bin/gate.sh human <plan>`: exit 1 means the page or the link is wrong, so fix it
+now. A later edit to the plan or the spec makes the page stale, so render, republish and run the gate
+again before the approval gate.
+
 ---
 
 ## Required output — two layers

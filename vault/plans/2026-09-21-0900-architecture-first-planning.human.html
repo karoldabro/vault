@@ -1,4 +1,4 @@
-<title>Architecture-first planning</title>
+<title>architecture-first-planning — master plan</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
@@ -9,8 +9,6 @@
   --line: #d3dde2;
   --accent: #0f766e;
   --accent-soft: #dff1ee;
-  --warn: #9a4b08;
-  --warn-soft: #fdeed9;
   --code-bg: #e9eff2;
   --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -18,66 +16,162 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
-    --accent: #3dd6c3; --accent-soft: #10312e; --warn: #f0a55a; --warn-soft: #362413; --code-bg: #1b2830;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
   }
 }
 :root[data-theme="dark"] {
   --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
-  --accent: #3dd6c3; --accent-soft: #10312e; --warn: #f0a55a; --warn-soft: #362413; --code-bg: #1b2830;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
 }
 * { box-sizing: border-box; }
 body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
   padding-inline: 16px; padding-block: 28px 64px; }
-main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 36px; }
-h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 10px; font-weight: 600; text-wrap: balance; }
-h2 { font-size: 1.2rem; margin: 0 0 12px; font-weight: 600; text-wrap: balance; }
-h3 { font-size: 0.78rem; margin: 0 0 6px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-p { margin: 0 0 10px; max-width: 68ch; }
-code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; }
-.lede { font-size: 1.08rem; color: var(--muted); max-width: 62ch; }
-.ask { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; padding: 16px 18px; }
-.ask h2 { color: var(--accent); }
-.ask ul { margin: 0; padding-left: 20px; }
-.ask li { margin-bottom: 6px; max-width: 70ch; }
-.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); padding: 12px 16px; border-radius: 0 6px 6px 0; }
-.warn h3 { color: var(--warn); }
-.warn ul { margin: 0; padding-left: 20px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
 .scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
-figure { margin: 0; }
-figcaption { color: var(--muted); font-size: 0.88rem; margin-top: 8px; max-width: 70ch; }
 table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
-td code { white-space: nowrap; }
-.tag { display: inline-block; font-family: var(--mono); font-size: 0.78rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); background: var(--code-bg); }
-.tag.now { background: var(--accent); color: var(--panel); border-color: var(--accent); }
-.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-.pane { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
-.pane ul { margin: 0; padding-left: 18px; }
-.pane li { margin-bottom: 5px; }
-pre.mermaid { margin: 0; background: transparent; }
-pre.tree { margin: 0; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; white-space: pre; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
 </style>
 
 <main>
-  <header>
-    <h1>Architecture-first planning</h1>
-    <p class="lede">Every <code>/v-team</code> and <code>/v-pm</code> plan will carry a checked architecture spec and a picture-first summary like this page, so you judge the design before any code exists.</p>
-  </header>
-
-  <section class="ask" aria-labelledby="ask">
-    <h2 id="ask">What you are asked to approve</h2>
-    <ul>
-      <li><b>This session builds S1 and S2 only</b>: the research write-up and the architecture-spec contract with its gate (26 files, all additive, 22 planned test cases).</li>
-      <li><b>S3 to S9 are later sessions</b>, each with its own plan: human artifact renderer, probe kit, plan-time auditors, master plans, probe results in every review panel, an on-demand comment-to-rule skill, per-stack probe packs.</li>
-      <li><b>No tool is installed anywhere.</b> A missing probe reports the project-scope install command and waits for you.</li>
-    </ul>
-  </section>
-
-  <section aria-labelledby="flow">
-    <h2 id="flow">How a plan is produced after this work</h2>
-    <figure>
-      <div class="scroll">
+<h1>architecture-first-planning — master plan</h1>
+<h2>Check these yourself</h2>
+<ul>
+<li>Does each file have one purpose, and is any file doing two jobs?</li>
+<li>Is anything loaded every time that could load only when needed?</li>
+<li>Do the size budgets fit what each file must hold?</li>
+<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
+<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
+</ul>
+<h2>Task</h2>
+<p>Make <code>/v-team</code> and <code>/v-pm</code> plan the structure of the work before any code exists: a machine-checked architecture spec, a human-readable artifact generated from it, deterministic probes run by independent auditors, probe results fed to every review panel, and an on-demand skill that turns an operator's review comments into rules. Keywords: architecture spec, arch_profile, human plan artifact, probes, auditors, master plan, review panel, review-to-rule skill.</p>
+<p>This plan is a master plan: it holds the order of nine sessions and executes S1 and S2 only. Each later session writes its own plan, criteria and work items. The spec for this plan is <code>2026-09-21-0900-architecture-first-planning.arch.md</code> in this folder. The spec contract (sections, columns, check order, messages) is <code>commands/_shared/architecture-spec.md</code>.</p>
+<h2>Open &amp; deferred</h2>
+<ul>
+<li>needs the operator: approve S1 and S2 as this session's scope, and S3 to S9 as later sessions.</li>
+<li>deferred: S3 to S9, one session row each below.</li>
+<li>unverified: 12 tool claims in the probe catalog carry <code>(?)</code> (Atlas lint licence tier, DCM licence and JSON flag, <code>phparkitect --format=json</code>, <code>tbls lint --format json</code>, PHPMD empty-catch rule name, Semgrep and ast-grep Dart and Vue support, lizard <code>--json</code>, PMD 7 CPD flags, typos on PyPI, Qlty offline claim, <code>claude plugin validate</code>). S4 verifies each before a row enters <code>probes/registry.tsv</code>.</li>
+<li>unverified: most research figures came through a summarising fetch tool. W-1 re-opens each URL before its figure is written into a shipped document.</li>
+<li>unverified: publishing an Artifact from a subagent. Publishing from the main session works (this plan's page). S3 tests the subagent path.</li>
+<li>existing defect, not this plan's: <code>vault/decisions/</code> holds two files numbered ADR-030.</li>
+<li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>v-reconcile.md</code> has no frontmatter description, <code>commands/v-loop/adapters/test-and-repair.md</code> has no path note, and three others).</li>
+<li>deferred: <code>lib/arch-check.sh</code> repeats one row-loop skeleton seven times and holds two functions over 40 lines. Extract a shared row iterator when a later profile adds tables.</li>
+<li>deferred: the spec gate checks form, not truth; a session can write plausible rows. S5 adds probes that compare the spec with the existing code.</li>
+</ul>
+<h2>Success criteria</h2>
+<p>&lt;!-- Criteria cover S1 and S2. Each later session adds its own criteria to its own plan. --&gt;</p>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+</thead>
+<tbody>
+<tr><td>SC-1</td><td>WHEN an operator opens <code>vault/research/ai-code-slop.md</code> THE SYSTEM SHALL show eight numbered mechanisms, each with a source URL and a <code>verified:</code> field</td><td>artifact</td><td>command</td></tr>
+<tr><td>SC-2</td><td>WHEN <code>bin/gate.sh arch</code> reads a spec that omits a required section or lacks <code>type: arch-spec</code> THE SYSTEM SHALL exit 1 with the message from <code>commands/_shared/architecture-spec.md</code>, and print <code>arch: ok</code> for a complete spec of either profile</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-3</td><td>WHEN a code spec has an untyped interface parameter, a table without a primary key, a foreign key without an index, or a <code>new</code> reuse row without a reason THE SYSTEM SHALL exit 1 and name the row</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-4</td><td>WHEN a harness spec lists a <code>new: no</code> path that is absent from disk THE SYSTEM SHALL exit 1 and name the path</td><td>functional</td><td>command</td></tr>
+<tr><td>SC-5</td><td>WHEN <code>bin/gate.sh all &lt;plan&gt; --phase propose</code> runs on this plan THE SYSTEM SHALL print <code>arch: ok</code>, and WHEN a profiled repo has a plan with no <code>arch_spec</code> or a profile mismatch THE SYSTEM SHALL exit 1</td><td>delivery</td><td>command</td></tr>
+<tr><td>SC-6</td><td>WHEN <code>bin/doc-lint.sh --list-caps</code> runs THE SYSTEM SHALL list type <code>arch-spec</code>, both templates and both fixtures SHALL pass, and a 310-line spec SHALL fail</td><td>functional</td><td>command</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Decisions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>D-1 A plan is four files: <code>plans/&lt;slug&gt;.md</code> for agents, <code>plans/&lt;slug&gt;.arch.md</code> for structure, the trail, and a generated human artifact</td><td>probes need structured input, and the human view renders from it</td></tr>
+<tr><td>D-2 A profile is a data file pair <code>arch-profiles/&lt;name&gt;.tsv</code> and <code>.md</code>, found in the repo first and then in the framework, and loaded only when named; <code>arch_profile</code> in <code>VAULT.md</code> names it; absent means <code>none</code>; this repo declares <code>harness</code></td><td>a new project type is a new file and no code change; <code>dod_profile</code> is <code>code</code> in every repo, including this harness repo</td></tr>
+<tr><td>D-3 A script renders the human page from the plan and its spec, and a gate re-renders it and compares it byte for byte with the file on disk</td><td>a function of the plan and spec cannot omit a diagram, and one comparison proves the page is present, current and untampered</td></tr>
+<tr><td>D-4 The probe kit lives in this framework: <code>bin/probe.sh</code> and <code>probes/</code></td><td>probes run while an agent plans and reviews; <code>vault-quality-gates</code> runs at push time</td></tr>
+<tr><td>D-5 A probe never installs a tool; a missing tool prints <code>absent: &lt;project-scope install command&gt;</code></td><td>global installs and package changes need consent</td></tr>
+<tr><td>D-6 A probe finding blocks only when a tool run produced it; model-only observations stay advisory</td><td>existing grounding rule</td></tr>
+<tr><td>D-7 The spec and plan-time stages belong to <code>/v-team</code> and <code>/v-pm</code>. The review panels of <code>/v-team</code>, <code>/v-work</code> and <code>/v-cr</code> stay separate commands; each reads probe results through its existing review step</td><td>the operator keeps three commands with their own flows; <code>/v-do</code> is unchanged</td></tr>
+<tr><td>D-8 A rule written from a review comment is accepted with a firing bad fixture, a silent good fixture and a recorded finding count on the current repo</td><td>prevents rules that never fire or fire everywhere</td></tr>
+<tr><td>D-9 A repo's ruleset is its project vault <code>indications/</code> plus rule files in the repo; probes run the rule files and each indication names its probe</td><td><code>rule-inventory.md</code> scores this framework's own rules and is the wrong store for another repo</td></tr>
+<tr><td>D-12 Turning comments into rules is an on-demand skill, <code>/v-rule</code>, that no command calls by default</td><td>the knowledge is needed only after a review that left comments</td></tr>
+<tr><td>D-13 <code>/v-rule</code> accepts comments only from the operator's own forge account</td><td>anyone can comment on a public PR, and an accepted comment becomes a rule</td></tr>
+<tr><td>D-15 Every master plan carries a <code>## Cross-session contracts</code> table (id, contract, produced by, consumed by, shape), and a gate refuses a master plan where a dependency between two sessions carries no contract, or a contract names a session that does not exist</td><td>a session that consumes another's output otherwise redefines its shape, and later sessions then disagree</td></tr>
+<tr><td>D-14 Outside <code>--sandbox</code>, <code>/v-cr</code> runs only probes marked <code>executes-repo-code: no</code></td><td>ADR-009: <code>/v-cr</code> never runs pull-request code, and some analyzers load repo config that executes</td></tr>
+<tr><td>D-10 The plan-time stage adds at most 50% to the token cost of a <code>/v-team</code> PROPOSE; S5 measures the baseline and reports the delta</td><td>longer planning is only worth it when its cost is bounded</td></tr>
+<tr><td>D-11 A spec is type <code>arch-spec</code>, cap 300 lines</td><td>a 10-table feature estimates at 190 to 230 lines, and it sits beside a 300-line plan</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Cross-session contracts</h2>
+<p>Each later session plans its own work items. These shapes are fixed now, so a session that consumes one does not redefine it. The producing session may add columns, never rename or drop one.</p>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>contract</th><th>produced by</th><th>consumed by</th><th>shape</th></tr>
+</thead>
+<tbody>
+<tr><td>C-1</td><td>spec format</td><td>S2</td><td>S3, S5, S6</td><td><code>commands/_shared/architecture-spec.md</code></td></tr>
+<tr><td>C-2</td><td>probe finding row</td><td>S4</td><td>S5, S7, S8</td><td>TSV <code>probe file line severity rule message</code>; exit 0 clean, 1 findings, 2 could not run</td></tr>
+<tr><td>C-3</td><td>probe registry <code>probes/registry.tsv</code></td><td>S4</td><td>S5, S7, S8, S9</td><td>columns <code>id stack stage detect run parser cost executes-repo-code install</code>; <code>stage</code> is <code>plan</code>, <code>diff</code> or <code>review</code>; a missing tool reports <code>absent: &lt;project-scope install command&gt;</code></td></tr>
+<tr><td>C-4</td><td>probe commands</td><td>S4</td><td>S5, S7</td><td><code>bin/probe.sh list</code>, <code>detect</code>, <code>run &lt;stage&gt;</code>, <code>diff</code>, <code>scale</code></td></tr>
+<tr><td>C-5</td><td>indication-to-probe link</td><td>S7</td><td>S8</td><td>optional <code>probe: &lt;registry id&gt;</code> in an indication's frontmatter</td></tr>
+<tr><td>C-6</td><td>rule file location</td><td>S8</td><td>S7, S9</td><td><code>probes/rules/&lt;slug&gt;.&lt;ext&gt;</code> in the target repo, plus one registry row</td></tr>
+<tr><td>C-7</td><td>human page and its check</td><td>S3</td><td>S5, S6</td><td><code>bin/render-human.sh &lt;plan&gt;</code> writes <code>&lt;plan&gt;.human.html</code>; <code>bin/gate.sh human &lt;plan&gt;</code> prints <code>human: ok &lt;page&gt;</code> when the page equals a fresh render and <code>human_plan</code> is a link</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Sessions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>scope</th><th>depends</th></tr>
+</thead>
+<tbody>
+<tr><td>S1</td><td>research doc, ADR-031, indication</td><td></td></tr>
+<tr><td>S2</td><td>arch spec contract, <code>gate.sh arch</code>, PROPOSE and approval wiring</td><td>S1</td></tr>
+<tr><td>S3</td><td>human plan page: <code>bin/render-human.sh</code>, <code>gate.sh human</code>, the <code>human_plan</code> link and its <code>file:</code> fallback, wired into <code>/v-team</code>; the master page regenerated</td><td>S2</td></tr>
+<tr><td>S4</td><td>probe kit core: <code>bin/probe.sh</code>, <code>probes/registry.tsv</code>, harness probes, <code>probe.sh scale</code>, schema duplicate-column, index and naming probes, similar-method probe, verified tool list</td><td>S1</td></tr>
+<tr><td>S5</td><td>plan-time probes: auditor agents, longer planning stage, cost delta per D-10</td><td>S3, S4</td></tr>
+<tr><td>S6</td><td>master plan template with a required <code>## Cross-session contracts</code> table and its artifact, <code>gate.sh master</code> (D-15, E-3), <code>/v-pm</code> and <code>(f3)</code> in <code>commands/v-team/steps/03-propose-loop.md</code> write and read it, sub-plan ordering gate</td><td>S2, S3</td></tr>
+<tr><td>S7</td><td>probe results as a panel input: <code>commands/_shared/critic-panel.md</code> runs <code>bin/probe.sh diff</code> in its ground-first stage; <code>/v-team</code> execute, <code>/v-cr</code> review (D-14) and <code>/v-work</code> review read it; each indication names its probe</td><td>S4</td></tr>
+<tr><td>S8</td><td><code>/v-rule</code> skill: operator comments in, indication plus rule file plus fixtures out (D-8, D-12, D-13)</td><td>S4, S7</td></tr>
+<tr><td>S9</td><td>stack packs for Laravel, Nuxt, Flutter, Python and SQL, validated on <code>recycling-api</code> and one Nuxt repo</td><td>S4, S5</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="mermaid">
+flowchart TD
+    S1["S1 research doc, ADR-031, indication"]
+    S2["S2 arch spec contract, gate.sh arch, PROPOSE and"]
+    S3["S3 human plan page: bin/render-human.sh, gate.sh"]
+    S4["S4 probe kit core: bin/probe.sh,"]
+    S5["S5 plan-time probes: auditor agents, longer"]
+    S6["S6 master plan template with a required"]
+    S7["S7 probe results as a panel input:"]
+    S8["S8 /v-rule skill: operator comments in, indication"]
+    S9["S9 stack packs for Laravel, Nuxt, Flutter, Python"]
+    S1 --> S2
+    S2 --> S3
+    S1 --> S4
+    S3 --> S5
+    S4 --> S5
+    S2 --> S6
+    S3 --> S6
+    S4 --> S7
+    S4 --> S8
+    S7 --> S8
+    S4 --> S9
+    S5 --> S9
+</pre>
+<h2>Diagrams</h2>
+<h3>How a plan is produced after this work</h3>
 <pre class="mermaid">
 flowchart TB
     A["Clarify and research (today)"] --> B["Baseline probes on the existing code (S4, S5)"]
@@ -86,126 +180,101 @@ flowchart TB
     D -- "no: fix the spec" --> C
     D -- "yes" --> E["Independent auditors run probes on the spec (S5)"]
     E --> F["Reviewer panel (today)"]
-    F --> G["Human plan artifact, generated and verified (S3)"]
+    F --> G["Human plan page, rendered and gated (S3)"]
     G --> H(["You approve"])
     H --> I["Implement (today)"]
     I --> J["Probes run on the diff, results go to the panel (S7)"]
     J --> K["Review panel, first round already partly fixed (today)"]
 </pre>
-      </div>
-      <figcaption>Steps marked "today" exist now. Each S-number is the session that builds the step. The review panel step exists three times and stays three commands: <code>/v-team</code>, <code>/v-work</code> and <code>/v-cr</code>. Each reads the same probe results.</figcaption>
-    </figure>
-  </section>
-
-  <section aria-labelledby="asks">
-    <h2 id="asks">Your seven asks and where each lands</h2>
-    <div class="scroll">
-      <table>
-        <thead><tr><th>Ask</th><th>Delivered by</th><th>Note</th></tr></thead>
-        <tbody>
-          <tr><td>1. Human-readable plan with schema graph, data-flow graph, interface signatures</td><td><span class="tag now">S2</span> <span class="tag">S3</span></td><td>S2 defines the checked data; S3 renders it as this kind of page</td></tr>
-          <tr><td>2. Master plan with a plan per sub-step, ordered across repos</td><td><span class="tag">S6</span></td><td>Every master plan must carry a table of the shapes one session hands to the next; a gate refuses one without it</td></tr>
-          <tr><td>3. Deterministic probes run by independent agents before the plan is shown</td><td><span class="tag">S4</span> <span class="tag">S5</span> <span class="tag">S9</span></td><td>Duplicate columns, missing indexes, similar methods, naming, complexity</td></tr>
-          <tr><td>4. Longer planning so execution needs less attention</td><td><span class="tag now">S2</span> <span class="tag">S5</span></td><td>Spec becomes a required gate; cost capped at +50% of PROPOSE</td></tr>
-          <tr><td>5. Probes after execution, and review comments become rules</td><td><span class="tag">S7</span> <span class="tag">S8</span></td><td>S7: probe results reach every panel. S8: <code>/v-rule</code>, on demand, turns your comments into rules</td></tr>
-          <tr><td>6. Human plan is an Artifact linked from the AI plan</td><td><span class="tag">S3</span></td><td><code>human_plan</code> key already reserved in the plan frontmatter</td></tr>
-          <tr><td>7. Works for non-code work such as AI harness repos</td><td><span class="tag now">S2</span> <span class="tag">S4</span></td><td>Second spec profile: file tree, load order, size budgets, config points</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section aria-labelledby="road">
-    <h2 id="road">Session order</h2>
-    <figure>
-      <div class="scroll">
+<p>The review panel exists three times and stays three commands: <code>/v-team</code>, <code>/v-work</code> and <code>/v-cr</code>. Each reads the same probe results.</p>
+<h3>Your review comments become rules, on demand (S8)</h3>
 <pre class="mermaid">
 flowchart LR
-    S1["S1 Research, ADR, rule"] --> S2["S2 Spec contract and gate"]
-    S2 --> S3["S3 Human plan artifact"]
-    S1 --> S4["S4 Probe kit core"]
-    S3 --> S5["S5 Plan-time auditors"]
-    S4 --> S5
-    S2 --> S6["S6 Master plan and v-pm"]
-    S3 --> S6
-    S4 --> S7["S7 Probe results in panels"]
-    S4 --> S8["S8 /v-rule skill"]
-    S7 --> S8
-    S4 --> S9["S9 Stack packs"]
-    S5 --> S9
+    A["You comment on a pull request or in a session"] --> B["/v-rule, when you call it"]
+    B --> C{"Can a tool decide it?"}
+    C -- "yes" --> D["Indication in the project vault, a rule file, a firing and a silent example"]
+    C -- "no" --> E["Indication text only, or dropped with the reason"]
+    D --> F["Repo ruleset"]
+    F --> G["Probes run it on every later diff (S7)"]
 </pre>
-      </div>
-      <figcaption>S1 and S2 run in this session. An arrow means the target reads what the source produces.</figcaption>
-    </figure>
-  </section>
-
-  <section aria-labelledby="contracts">
-    <h2 id="contracts">Cross-session contracts: part of the framework, not only this plan</h2>
-    <p>From S6 on, every master plan must have this table. A dependency between two sessions with no contract row is refused by a gate, because the consuming session would otherwise invent the shape it receives. The table below is this plan's own. Each later session runs <code>/v-team</code> on its own row, reads this plan, and writes its own spec, work items and success criteria for you to approve. The master plan holds no file-level tasks on purpose. What it does fix are the shapes one session hands to the next.</p>
-    <div class="scroll">
-      <table>
-        <thead><tr><th>Contract</th><th>Made by</th><th>Used by</th><th>Shape</th></tr></thead>
-        <tbody>
-          <tr><td>Spec format</td><td>S2</td><td>S3, S5, S6</td><td>One shared document</td></tr>
-          <tr><td>Probe finding row</td><td>S4</td><td>S5, S7, S8</td><td><code>probe file line severity rule message</code>; exit 0 clean, 1 findings, 2 could not run</td></tr>
-          <tr><td>Probe registry</td><td>S4</td><td>S5, S7, S8, S9</td><td>Per-probe stack, stage, command, cost, whether it executes repo code, install command</td></tr>
-          <tr><td>Probe commands</td><td>S4</td><td>S5, S7</td><td><code>list</code>, <code>detect</code>, <code>run</code>, <code>diff</code>, <code>scale</code></td></tr>
-          <tr><td>Indication-to-probe link</td><td>S7</td><td>S8</td><td>Optional <code>probe:</code> key in an indication</td></tr>
-          <tr><td>Rule file location</td><td>S8</td><td>S7, S9</td><td><code>probes/rules/</code> in the target repo plus one registry row</td></tr>
-          <tr><td>Human page check</td><td>S3</td><td>S5, S6</td><td>A gate that finds every spec element in the page</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section aria-labelledby="spec">
-    <h2 id="spec">What a spec looks like, for a code feature</h2>
-    <p>This is the example the gate is tested against. The same content is what future plans will show you as pictures and signature tables.</p>
-    <div class="cols">
-      <figure class="pane">
-        <h3>Database schema</h3>
-<pre class="mermaid">
-erDiagram
-    orders ||--o{ order_lines : has
-    orders {
-        uuid id PK
-        text status
-    }
-    order_lines {
-        uuid id PK
-        uuid order_id FK
-        int qty
-    }
-</pre>
-        <figcaption>The gate refuses a table with no primary key and a foreign key with no index.</figcaption>
-      </figure>
-      <figure class="pane">
-        <h3>Data flow with interface parameters</h3>
-<pre class="mermaid">
-flowchart TB
-    A["OrderController.store(request: StoreOrderRequest)"] -->|"StoreOrderRequest"| B["OrderService.place(orderId: string, qty: int)"]
-    B -->|"Order"| C["OrderRepository.save(order: Order)"]
-</pre>
-        <figcaption>Every arrow carries the type that crosses it.</figcaption>
-      </figure>
-    </div>
-    <div class="scroll" style="margin-top:16px">
-      <table>
-        <thead><tr><th>Interface</th><th>Method</th><th>Params</th><th>Returns</th><th>Throws</th><th>Layer</th></tr></thead>
-        <tbody>
-          <tr><td>OrderController</td><td>store</td><td><code>request: StoreOrderRequest</code></td><td>JsonResponse</td><td>-</td><td>http</td></tr>
-          <tr><td>OrderService</td><td>place</td><td><code>orderId: string, qty: int</code></td><td>Order</td><td>OutOfStock</td><td>service</td></tr>
-          <tr><td>OrderRepository</td><td>save</td><td><code>order: Order</code></td><td>void</td><td>-</td><td>data</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p style="margin-top:10px">The spec also holds a reuse map (which existing symbol each need extends, or what was searched before writing something new) and size budgets per file.</p>
-  </section>
-
-  <section aria-labelledby="s2">
-    <h2 id="s2">S2 in this repo: the gate and where it plugs in</h2>
-    <figure>
-      <div class="scroll">
+<p>Nothing calls <code>/v-rule</code> by default. It reads only comments from your own account, because anyone can comment on a public pull request.</p>
+<h2>Operator requests</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>request</th><th>sessions</th><th>note</th></tr>
+</thead>
+<tbody>
+<tr><td>1. A human-readable plan with a schema graph, a data-flow graph and interface signatures</td><td>S2, S3</td><td>S2 defines the checked data; S3 renders it as a page</td></tr>
+<tr><td>2. A master plan with a plan per sub-step, ordered across repos</td><td>S6</td><td>every master plan carries a table of the shapes one session hands to the next, and a gate refuses one without it</td></tr>
+<tr><td>3. Deterministic probes run by independent agents before the plan is shown</td><td>S4, S5, S9</td><td>duplicate columns, missing indexes, similar methods, naming, complexity</td></tr>
+<tr><td>4. Longer planning so execution needs less attention</td><td>S2, S5</td><td>the spec is a required gate, and the added cost is capped at 50% of PROPOSE</td></tr>
+<tr><td>5. Probes after execution, and review comments become rules</td><td>S7, S8</td><td>S7 puts probe results in every panel; S8 is the on-demand rule skill</td></tr>
+<tr><td>6. The human plan is an Artifact linked from the agent plan</td><td>S3</td><td>the <code>human_plan</code> key holds the link</td></tr>
+<tr><td>7. It works for non-code work such as AI harness repos</td><td>S2, S4</td><td>a second profile: file tree, load order, size budgets, config points</td></tr>
+</tbody>
+</table>
+</div>
+<h2>File tree</h2>
+<pre><code>
+bin/gate.sh                                   gains `arch`, and calls it from `all --phase propose|approve`
+bin/doc-lint.sh                               gains type arch-spec, cap 300
+lib/arch-check.sh                             new, every check behind `gate.sh arch`
+lib/shared-module-rules.tsv                   one owned-rule row for the new shared module
+commands/_shared/architecture-spec.md         new, owns the section list and the rules
+commands/v-team.md                            approval gate runs `gate.sh arch`
+commands/v-team/steps/03-propose-loop.md      drafts the spec in (a), runs the gate in (g)
+arch-profiles/code.tsv, code.md               new, the code profile: sections and starting text
+arch-profiles/harness.tsv, harness.md         new, the harness profile
+templates/plan.md                             gains arch_spec and human_plan keys
+templates/VAULT.md                            gains optional arch_profile key
+VAULT.md                                      declares arch_profile: harness
+tests/unit/gate.bats                          one case per refusal
+tests/fixtures/arch/                          two complete specs; defects derived inline
+vault/research/ai-code-slop.md                new, eight mechanisms with sources
+vault/decisions/ADR-031-architecture-first-planning.md   new
+vault/indications/architecture-before-code.md            new
+</code></pre>
+<h2>Files</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
+</thead>
+<tbody>
+<tr><td>bin/gate.sh</td><td>no</td><td>refuses a session that skipped a required step</td><td>on-demand</td></tr>
+<tr><td>bin/doc-lint.sh</td><td>no</td><td>checks that a document is well formed</td><td>on-demand</td></tr>
+<tr><td>lib/arch-check.sh</td><td>yes</td><td>holds every check behind the arch subcommand</td><td>on-demand</td></tr>
+<tr><td>lib/shared-module-rules.tsv</td><td>no</td><td>lists the rules each shared module owns</td><td>never-by-agent</td></tr>
+<tr><td>commands/_shared/architecture-spec.md</td><td>yes</td><td>states which sections and columns a spec needs</td><td>on-demand</td></tr>
+<tr><td>commands/v-team.md</td><td>no</td><td>dispatcher for the team lifecycle</td><td>always</td></tr>
+<tr><td>commands/v-team/steps/03-propose-loop.md</td><td>no</td><td>the PROPOSE step of the team lifecycle</td><td>on-demand</td></tr>
+<tr><td>arch-profiles/code.tsv</td><td>yes</td><td>lists the sections and rules of the code profile</td><td>on-demand</td></tr>
+<tr><td>arch-profiles/code.md</td><td>yes</td><td>starting text for a code-profile spec</td><td>on-demand</td></tr>
+<tr><td>arch-profiles/harness.tsv</td><td>yes</td><td>lists the sections and rules of the harness profile</td><td>on-demand</td></tr>
+<tr><td>arch-profiles/harness.md</td><td>yes</td><td>starting text for a harness-profile spec</td><td>on-demand</td></tr>
+<tr><td>templates/plan.md</td><td>no</td><td>starting text for a plan</td><td>on-demand</td></tr>
+<tr><td>templates/VAULT.md</td><td>no</td><td>starting text for a repo's config</td><td>on-demand</td></tr>
+<tr><td>VAULT.md</td><td>no</td><td>this repo's config</td><td>always</td></tr>
+<tr><td>tests/unit/gate.bats</td><td>no</td><td>tests every gate subcommand</td><td>never-by-agent</td></tr>
+<tr><td>tests/unit/document-standard.bats</td><td>no</td><td>tests the document linter</td><td>never-by-agent</td></tr>
+<tr><td>vault/decisions/_inventory.md</td><td>no</td><td>lists every decision record</td><td>on-demand</td></tr>
+<tr><td>vault/indications/_index.md</td><td>no</td><td>lists every working rule</td><td>on-demand</td></tr>
+<tr><td>checks/arch-SC-1.sh</td><td>yes</td><td>decides success criterion SC-1</td><td>never-by-agent</td></tr>
+<tr><td>checks/arch-SC-2.sh</td><td>yes</td><td>decides success criterion SC-2</td><td>never-by-agent</td></tr>
+<tr><td>checks/arch-SC-3.sh</td><td>yes</td><td>decides success criterion SC-3</td><td>never-by-agent</td></tr>
+<tr><td>checks/arch-SC-4.sh</td><td>yes</td><td>decides success criterion SC-4</td><td>never-by-agent</td></tr>
+<tr><td>checks/arch-SC-5.sh</td><td>yes</td><td>decides success criterion SC-5</td><td>never-by-agent</td></tr>
+<tr><td>checks/arch-SC-6.sh</td><td>yes</td><td>decides success criterion SC-6</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/arch/code-complete.arch.md</td><td>yes</td><td>a valid code-profile spec</td><td>never-by-agent</td></tr>
+<tr><td>tests/fixtures/arch/harness-complete.arch.md</td><td>yes</td><td>a valid harness-profile spec</td><td>never-by-agent</td></tr>
+<tr><td>vault/research/ai-code-slop.md</td><td>yes</td><td>why agents write messy code, with sources</td><td>on-demand</td></tr>
+<tr><td>vault/decisions/ADR-031-architecture-first-planning.md</td><td>yes</td><td>records the four structural decisions</td><td>on-demand</td></tr>
+<tr><td>vault/indications/architecture-before-code.md</td><td>yes</td><td>the working rule for PROPOSE sessions</td><td>on-demand</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
     A["PROPOSE step (a)"] -->|"name: string"| B["arch-profiles/name.md"]
@@ -215,116 +284,78 @@ flowchart LR
     E -->|"file: path, repo: path"| F["approval gate"]
     G["VAULT.md arch_profile"] -->|"key: string"| D
 </pre>
-      </div>
-      <figcaption>The gate runs twice: when the plan is finalised and again at the approval gate, so a session cannot skip it by omitting the spec.</figcaption>
-    </figure>
-    <div class="cols" style="margin-top:16px">
-      <div class="pane">
-        <h3>Code profile sections</h3>
-        <ul><li>Data model</li><li>Data flow</li><li>Interfaces</li><li>Layers and placement</li><li>Reuse map</li><li>Size budgets</li></ul>
-      </div>
-      <div class="pane">
-        <h3>Harness profile sections</h3>
-        <ul><li>File tree</li><li>Files</li><li>Data flow</li><li>Interfaces</li><li>Load order</li><li>Reuse map</li><li>Size budgets</li><li>Config points</li></ul>
-      </div>
-      <div class="pane">
-        <h3>Profile source</h3>
-        <p><code>arch_profile: &lt;name&gt; | none</code> in the repo's <code>VAULT.md</code>. A profile is two data files, loaded only when named: the repo's own <code>arch-profiles/</code> first, then the framework's. <code>code</code> and <code>harness</code> ship; a new project type is a new file pair and no code change. Absent means <code>none</code>, so no existing repo is refused. This repo declares <code>harness</code>.</p>
-      </div>
-    </div>
-    <h3 style="margin-top:18px">Files changed or created</h3>
-    <div class="scroll">
-<pre class="tree">bin/gate.sh                                   + arch subcommand, called from all --phase propose|approve
-bin/doc-lint.sh                               + type arch-spec, cap 300 lines
-commands/_shared/architecture-spec.md         new: owns sections, columns, rules
-commands/v-team.md                            approval gate runs gate.sh arch
-commands/v-team/steps/03-propose-loop.md      drafts the spec in (a), gates it in (g)
-lib/arch-check.sh                             new: the checks behind gate.sh arch
-arch-profiles/&lt;name&gt;.tsv and .md            new: code and harness profiles, as data
-templates/plan.md, templates/VAULT.md         + arch_spec, human_plan, arch_profile keys
-VAULT.md                                      arch_profile: harness
-tests/unit/gate.bats                          one case per refusal
-tests/fixtures/arch/                          two complete specs
-vault/research/ai-code-slop.md                new: eight mechanisms, each with a source
-vault/decisions/ADR-031-...                   new: records the structural decisions
-vault/indications/architecture-before-code.md new: the working rule</pre>
-    </div>
-  </section>
-
-  <section aria-labelledby="rule">
-    <h2 id="rule">Your review comments become rules, on demand (S8)</h2>
-    <figure>
-      <div class="scroll">
-<pre class="mermaid">
-flowchart LR
-    A["You comment on a pull request or in a session"] --> B["/v-rule, when you call it"]
-    B --> C{"Can a tool decide it?"}
-    C -- "yes" --> D["Indication in the project vault plus a rule file plus a firing and a silent example"]
-    C -- "no" --> E["Indication text only, or dropped with the reason"]
-    D --> F["Repo ruleset"]
-    F --> G["Probes run it on every later diff (S7)"]
-</pre>
-      </div>
-      <figcaption>Nothing calls <code>/v-rule</code> by default. It reads only comments from your own account, because anyone can comment on a public pull request. A rule is accepted only if its bad example fires, its good example stays silent, and its finding count on the current repo is recorded.</figcaption>
-    </figure>
-  </section>
-
-  <section aria-labelledby="human">
-    <h2 id="human">What you check yourself, and what machines check</h2>
-    <div class="cols">
-      <div class="pane">
-        <h3>You, on the plan page</h3>
-        <ul>
-          <li>Does this solve the right problem, and is anything in scope that should not be?</li>
-          <li>Does the data model fit the domain: tables, keys, ownership of each field?</li>
-          <li>Does each piece of logic sit in the right layer?</li>
-          <li>Is each new abstraction earned, and does the reuse map name what already exists?</li>
-          <li>Which paths touch security or money?</li>
-        </ul>
-      </div>
-      <div class="pane">
-        <h3>Probes, before you see the plan</h3>
-        <ul>
-          <li>Spec completeness, typed parameters, keys and indexes (S2)</li>
-          <li>Duplicate columns, duplicate methods, naming (S4, S5)</li>
-          <li>Complexity, layering rules, dead code (S4, S8)</li>
-          <li>Passing tests do not prove coherence: in one study 97.0% of structural failures evaded type checking and 100% evaded tests and static security scans</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="warn" aria-labelledby="risk">
-    <h3 id="risk">Open points and unverified claims</h3>
-    <ul>
-      <li>Longer planning reducing rework has no controlled study behind it. The plan targets reuse, layering and data model, where agents fail most, and caps the added cost at 50% of PROPOSE.</li>
-      <li>Twelve probe-tool claims (licences, JSON flags, Dart and Vue support) are unverified. S4 checks each before a probe is registered.</li>
-      <li>Most research figures came through a summarising tool. S1 re-opens each source before quoting it.</li>
-      <li>Publishing an Artifact from a subagent is untested. S3 tests it and falls back to a local HTML file.</li>
-      <li>Two decision records already share the number ADR-030. This is an existing defect, not caused by this plan.</li>
-    </ul>
-  </section>
-
-  <section aria-labelledby="dec">
-    <h2 id="dec">Decisions this plan records</h2>
-    <div class="scroll">
-      <table>
-        <thead><tr><th>Decision</th><th>Reason</th></tr></thead>
-        <tbody>
-          <tr><td>A plan is four files: agent plan, architecture spec, process record, this human artifact</td><td>Probes need structured input; the human page renders from it</td></tr>
-          <tr><td>A profile is a data-file pair loaded by name, named by a new <code>arch_profile</code> key; absent means none</td><td>A new project type needs no code change. <code>dod_profile</code> is <code>code</code> in all 13 repos, this harness repo included</td></tr>
-          <tr><td>Human page is generated from a template and verified by a gate</td><td>Hand-written pages omit diagrams silently</td></tr>
-          <tr><td>Probe kit lives in this framework, not in <code>vault-quality-gates</code></td><td>Probes run while planning and reviewing; that plugin runs at push time</td></tr>
-          <tr><td>A probe never installs a tool</td><td>Global installs and package changes need your consent</td></tr>
-          <tr><td>Every master plan carries a cross-session contracts table, checked by a gate</td><td>A session that consumes another's output must not redefine its shape</td></tr>
-          <tr><td>Only a tool-produced finding blocks</td><td>Existing rule: model-only observations stay advisory</td></tr>
-          <tr><td>Spec and plan-time stages belong to <code>/v-team</code> and <code>/v-pm</code>; the three review panels stay separate commands</td><td>You keep three flows, and <code>/v-work</code> stays the cheap default</td></tr>
-          <tr><td>Rules from review comments need a firing and a silent fixture</td><td>Prevents rules that never fire or fire everywhere</td></tr>
-          <tr><td>A repo's ruleset is its <code>indications/</code> plus rule files</td><td>The framework's rule inventory scores this framework only</td></tr>
-          <tr><td><code>/v-rule</code> is an on-demand skill and reads only your comments</td><td>Not always needed; a public commenter must not be able to add a rule</td></tr>
-          <tr><td><code>/v-cr</code> outside <code>--sandbox</code> runs only probes that do not execute repo code</td><td>It never runs pull-request code today</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+<h2>Interfaces</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
+</thead>
+<tbody>
+<tr><td>gate.sh</td><td>arch</td><td>file: path, repo: path</td><td>exit code 0, 1 or 2</td><td>-</td><td>cli</td></tr>
+<tr><td>gate.sh</td><td>all</td><td>plan: path, phase: string, repo: path</td><td>exit code 0, 1 or 2</td><td>-</td><td>cli</td></tr>
+<tr><td>gate.sh</td><td>vault_key</td><td>file: path, key: string</td><td>value: string</td><td>-</td><td>function</td></tr>
+<tr><td>doc-lint.sh</td><td>lint</td><td>file: path</td><td>exit code 0 or 1</td><td>-</td><td>cli</td></tr>
+<tr><td>gate.sh</td><td>human</td><td>plan: path, repo: path</td><td>exit code 0, 1 or 2</td><td>-</td><td>cli</td></tr>
+<tr><td>render-human.sh</td><td>render</td><td>plan: path, repo: path, stdout: flag</td><td>page file or html on stdout</td><td>exit 2</td><td>cli</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Load order</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
+</thead>
+<tbody>
+<tr><td>PROPOSE step (a)</td><td>commands/_shared/architecture-spec.md</td><td>2500</td></tr>
+<tr><td>PROPOSE step (a)</td><td>the named profile's .md and .tsv in arch-profiles/</td><td>2000</td></tr>
+<tr><td>PROPOSE step (g)</td><td>bin/gate.sh</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Reuse map</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>split a table into cells</td><td>bin/gate.sh table_rows</td><td>reuse</td><td>already handles escaped pipes; one table per <code>##</code> section</td></tr>
+<tr><td>read frontmatter</td><td>bin/gate.sh frontmatter_get</td><td>reuse</td><td>already reads leading frontmatter</td></tr>
+<tr><td>read a VAULT.md key</td><td>bin/gate.sh cmd_config</td><td>new</td><td><code>vault_key</code> returns the raw value; changing cmd_config would alter how <code>test_command</code> values containing <code>#</code> read; searched bin/gate.sh for other readers</td></tr>
+<tr><td>document type caps</td><td>bin/doc-lint.sh cap_for_type</td><td>extend</td><td>one new type, one new line</td></tr>
+<tr><td>test fixtures</td><td>tests/unit/gate.bats</td><td>reuse</td><td>defects are written inline per test</td></tr>
+<tr><td>review comment to rule</td><td>vault/indications/_index.md</td><td>reuse</td><td>session S8 writes a normal indication; no second rule store</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Size budgets</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>path</th><th>max lines</th></tr>
+</thead>
+<tbody>
+<tr><td>bin/gate.sh</td><td>900</td></tr>
+<tr><td>bin/doc-lint.sh</td><td>720</td></tr>
+<tr><td>lib/arch-check.sh</td><td>450</td></tr>
+<tr><td>commands/_shared/architecture-spec.md</td><td>150</td></tr>
+<tr><td>arch-profiles/code.md</td><td>120</td></tr>
+<tr><td>arch-profiles/harness.md</td><td>120</td></tr>
+<tr><td>vault/research/ai-code-slop.md</td><td>250</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Config points</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>key</th><th>file</th><th>default</th></tr>
+</thead>
+<tbody>
+<tr><td>arch_profile</td><td>VAULT.md</td><td>none</td></tr>
+<tr><td>arch_spec</td><td>plans/slug.md frontmatter</td><td>absent</td></tr>
+</tbody>
+</table>
+</div>
 </main>

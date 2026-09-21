@@ -1233,6 +1233,14 @@ arch_refused() {
     arch_refused "unknown section kind list" "" "${TMP}/a.arch.md" --repo "${r}"
 }
 
+@test "arch: an @review line in a profile is a checklist entry, not a missing section" {
+    local r; r=$(mkarchrepo r46 "arch_profile: code")
+    mkdir -p "${r}/arch-profiles"
+    printf '@review\tIs this the right problem?\nNotes\ttable\ttopic:nonempty\n' > "${r}/arch-profiles/code.tsv"
+    printf -- '---\ntype: arch-spec\nprofile: code\nplan: x\n---\n\n## Notes\n\n| topic |\n|---|\n| one |\n' > "${TMP}/a.arch.md"
+    arch_ok "${TMP}/a.arch.md" --repo "${r}"
+}
+
 @test "arch: only the profile a spec names is loaded, so another profile's file may be broken" {
     local r; r=$(mkarchrepo r45 "arch_profile: code")
     mkdir -p "${r}/arch-profiles"

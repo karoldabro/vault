@@ -99,6 +99,24 @@ teardown() {
     grep -q 'arch_spec: <same-slug>.arch.md' "${f}"
 }
 
+@test "the human page is rendered, published, recorded and gated in the propose loop and at the approval gate" {
+    local f="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -q 'render-human.sh' "${f}"
+    grep -q 'human_plan' "${f}"
+    grep -q 'gate.sh human' "${f}"
+    grep -q 'file:<page name>' "${f}"
+    grep -q 'human-plan.md' "${f}"
+    grep -q 'gate.sh human' "${VAULT_ROOT}/commands/v-team.md"
+}
+
+@test "the human plan contract, renderer, gate library and page skeleton exist" {
+    [ -f "${VAULT_ROOT}/commands/_shared/human-plan.md" ]
+    [ -x "${VAULT_ROOT}/bin/render-human.sh" ]
+    for p in lib/human-render.sh lib/human-check.sh templates/human-plan.html templates/human-plan-sections.tsv; do
+        [ -f "${VAULT_ROOT}/${p}" ]
+    done
+}
+
 @test "the architecture spec contract and both templates exist" {
     [ -f "${VAULT_ROOT}/commands/_shared/architecture-spec.md" ]
     for p in code harness; do

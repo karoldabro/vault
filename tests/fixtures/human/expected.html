@@ -1,0 +1,191 @@
+<title>fixture — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+</style>
+
+<main>
+<h1>fixture — plan</h1>
+<h2>Check these yourself</h2>
+<ul>
+<li>Does the data model fit the domain: the tables, the keys and who owns each field?</li>
+<li>Does each piece of logic sit in the layer where it belongs?</li>
+<li>Is each new abstraction earned, and does the reuse map name what already exists?</li>
+<li>Which paths touch security or money, and are they all in the interfaces?</li>
+<li>Is anything in scope that should not be, or missing that should be?</li>
+</ul>
+<h2>Task</h2>
+<p>Session S3 fixture.</p>
+<p>Second paragraph with <code>code</code> and a second line.</p>
+<h2>Open &amp; deferred</h2>
+<ul>
+<li>needs the operator: approve the fixture.</li>
+<li>deferred: nothing else.</li>
+</ul>
+<h2>Success criteria</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+</thead>
+<tbody>
+<tr><td>SC-1</td><td>WHEN it runs THE SYSTEM SHALL render</td><td>functional</td><td>command</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Decisions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>D-1 A script renders the page</td><td>a function of the plan cannot omit a diagram</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Sessions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>scope</th><th>depends</th></tr>
+</thead>
+<tbody>
+<tr><td>S1</td><td>first</td><td></td></tr>
+<tr><td>S2</td><td>second</td><td>S1</td></tr>
+<tr><td>S3</td><td>third</td><td>S1, S2</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="mermaid">
+flowchart TD
+    S1["S1 first"]
+    S2["S2 second"]
+    S3["S3 third"]
+    S1 --> S2
+    S1 --> S3
+    S2 --> S3
+</pre>
+<h2>Data model</h2>
+<pre class="mermaid">
+erDiagram
+    orders ||--o{ order_lines : has
+    orders {
+        uuid id PK
+        text status
+    }
+    order_lines {
+        uuid id PK
+        uuid order_id FK
+        int qty
+    }
+</pre>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>table</th><th>column</th><th>type</th><th>null</th><th>key</th><th>index</th><th>references</th></tr>
+</thead>
+<tbody>
+<tr><td>orders</td><td>id</td><td>uuid</td><td>no</td><td>PK</td><td>pk_orders</td><td></td></tr>
+<tr><td>orders</td><td>status</td><td>text</td><td>no</td><td></td><td>ix_orders_status</td><td></td></tr>
+<tr><td>order_lines</td><td>id</td><td>uuid</td><td>no</td><td>PK</td><td>pk_order_lines</td><td></td></tr>
+<tr><td>order_lines</td><td>order_id</td><td>uuid</td><td>no</td><td>FK</td><td>ix_order_lines_order_id</td><td>orders.id</td></tr>
+<tr><td>order_lines</td><td>qty</td><td>int</td><td>no</td><td></td><td>-</td><td></td></tr>
+</tbody>
+</table>
+</div>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    A["OrderController.store(request: StoreOrderRequest)"] -->|StoreOrderRequest| B["OrderService.place(orderId: string, qty: int)"]
+    B -->|Order| C["OrderRepository.save(order: Order)"]
+</pre>
+<h2>Interfaces</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
+</thead>
+<tbody>
+<tr><td>OrderController</td><td>store</td><td>request: StoreOrderRequest</td><td>JsonResponse</td><td>-</td><td>http</td></tr>
+<tr><td>OrderService</td><td>place</td><td>orderId: string, qty: int</td><td>Order</td><td>OutOfStock</td><td>service</td></tr>
+<tr><td>OrderRepository</td><td>save</td><td>order: Order</td><td>void</td><td>-</td><td>data</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Layers &amp; placement</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>logic</th><th>layer</th><th>file</th></tr>
+</thead>
+<tbody>
+<tr><td>request validation</td><td>http</td><td>app/Http/Requests/StoreOrderRequest.php</td></tr>
+<tr><td>stock rule and order placement</td><td>service</td><td>app/Services/OrderService.php</td></tr>
+<tr><td>persistence</td><td>data</td><td>app/Repositories/OrderRepository.php</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Reuse map</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
+</thead>
+<tbody>
+<tr><td>transactional save</td><td>app/Repositories/BaseRepository.php</td><td>extend</td><td>shares transaction handling</td></tr>
+<tr><td>order number</td><td>-</td><td>new</td><td>searched app/ for <code>Number</code>; no generator exists</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Size budgets</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>path</th><th>max lines</th><th>max method lines</th></tr>
+</thead>
+<tbody>
+<tr><td>app/Services/OrderService.php</td><td>200</td><td>30</td></tr>
+<tr><td>app/Repositories/OrderRepository.php</td><td>120</td><td>25</td></tr>
+</tbody>
+</table>
+</div>
+</main>

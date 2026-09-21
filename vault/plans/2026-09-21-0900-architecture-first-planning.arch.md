@@ -5,7 +5,54 @@ plan: 2026-09-21-0900-architecture-first-planning
 tags: [arch-spec]
 ---
 
-# architecture-first-planning — architecture spec (sessions S1 and S2)
+# architecture-first-planning — architecture spec (sessions S1 to S3)
+
+## Diagrams
+
+### How a plan is produced after this work
+
+```mermaid
+flowchart TB
+    A["Clarify and research (today)"] --> B["Baseline probes on the existing code (S4, S5)"]
+    B --> C["Draft the architecture spec (S2)"]
+    C --> D{"gate.sh arch passes? (S2)"}
+    D -- "no: fix the spec" --> C
+    D -- "yes" --> E["Independent auditors run probes on the spec (S5)"]
+    E --> F["Reviewer panel (today)"]
+    F --> G["Human plan page, rendered and gated (S3)"]
+    G --> H(["You approve"])
+    H --> I["Implement (today)"]
+    I --> J["Probes run on the diff, results go to the panel (S7)"]
+    J --> K["Review panel, first round already partly fixed (today)"]
+```
+
+The review panel exists three times and stays three commands: `/v-team`, `/v-work` and `/v-cr`. Each reads the same probe results.
+
+### Your review comments become rules, on demand (S8)
+
+```mermaid
+flowchart LR
+    A["You comment on a pull request or in a session"] --> B["/v-rule, when you call it"]
+    B --> C{"Can a tool decide it?"}
+    C -- "yes" --> D["Indication in the project vault, a rule file, a firing and a silent example"]
+    C -- "no" --> E["Indication text only, or dropped with the reason"]
+    D --> F["Repo ruleset"]
+    F --> G["Probes run it on every later diff (S7)"]
+```
+
+Nothing calls `/v-rule` by default. It reads only comments from your own account, because anyone can comment on a public pull request.
+
+## Operator requests
+
+| request | sessions | note |
+|---------|----------|------|
+| 1. A human-readable plan with a schema graph, a data-flow graph and interface signatures | S2, S3 | S2 defines the checked data; S3 renders it as a page |
+| 2. A master plan with a plan per sub-step, ordered across repos | S6 | every master plan carries a table of the shapes one session hands to the next, and a gate refuses one without it |
+| 3. Deterministic probes run by independent agents before the plan is shown | S4, S5, S9 | duplicate columns, missing indexes, similar methods, naming, complexity |
+| 4. Longer planning so execution needs less attention | S2, S5 | the spec is a required gate, and the added cost is capped at 50% of PROPOSE |
+| 5. Probes after execution, and review comments become rules | S7, S8 | S7 puts probe results in every panel; S8 is the on-demand rule skill |
+| 6. The human plan is an Artifact linked from the agent plan | S3 | the `human_plan` key holds the link |
+| 7. It works for non-code work such as AI harness repos | S2, S4 | a second profile: file tree, load order, size budgets, config points |
 
 ## File tree
 
@@ -83,6 +130,8 @@ flowchart LR
 | gate.sh | all | plan: path, phase: string, repo: path | exit code 0, 1 or 2 | - | cli |
 | gate.sh | vault_key | file: path, key: string | value: string | - | function |
 | doc-lint.sh | lint | file: path | exit code 0 or 1 | - | cli |
+| gate.sh | human | plan: path, repo: path | exit code 0, 1 or 2 | - | cli |
+| render-human.sh | render | plan: path, repo: path, stdout: flag | page file or html on stdout | exit 2 | cli |
 
 ## Load order
 

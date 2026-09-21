@@ -40,8 +40,11 @@ that run while an agent plans and reviews answer a different question at a diffe
 3. **`bin/gate.sh arch` checks the spec** against `commands/_shared/architecture-spec.md`. It runs when
    the plan is finalised and again at the `/v-team` approval gate, so a session cannot skip it by
    omitting the spec.
-4. **The human page is generated from a committed template and verified by a gate** that finds every
-   spec table, interface and diagram in it. A generator emits, a checker confirms.
+4. **A script renders the human page and a gate compares it.** `bin/render-human.sh` writes
+   `<plan>.human.html` from the plan and its spec, with no model in the loop. `bin/gate.sh human`
+   re-renders the page and compares it byte for byte with the file on disk, so one check proves the page
+   is present, current and untampered. The page shows only what a person reads at approval, so a status
+   flip or a written verdict never makes it stale.
 5. **The probe kit lives in this framework**: `bin/probe.sh` and `probes/registry.tsv`, built in a later
    session and not yet present. A probe never
    installs a tool. A missing tool reports `absent: <project-scope install command>` and waits.

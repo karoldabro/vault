@@ -1,6 +1,12 @@
 # profile: code. For a feature that stores data and exposes interfaces: an API, a service, an app with a database.
 # Format and the validator and rule library: commands/_shared/architecture-spec.md. The starting text is code.md beside this file.
 # section	kind	columns	rules
+# @review	one plain sentence a person confirms before approving (shown on the human page)
+@review	Does the data model fit the domain: the tables, the keys and who owns each field?
+@review	Does each piece of logic sit in the layer where it belongs?
+@review	Is each new abstraction earned, and does the reuse map name what already exists?
+@review	Which paths touch security or money, and are they all in the interfaces?
+@review	Is anything in scope that should not be, or missing that should be?
 Data model	table,na	table:ident column:ident type:nonempty null:enum(yes|no) key:enum(PK|FK|UQ|) index:any references:any	pk-per-table fk-index
 Data flow	fence:mermaid
 Interfaces	table	interface:nonempty method:nonempty params:any returns:nonempty throws:any layer:nonempty	params-typed

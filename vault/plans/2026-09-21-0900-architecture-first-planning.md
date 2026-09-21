@@ -97,7 +97,7 @@ columns, check order, messages) is `commands/_shared/architecture-spec.md`.
 |----------|--------|--------|
 | D-1 A plan is four files: `plans/<slug>.md` for agents, `plans/<slug>.arch.md` for structure, the trail, and a generated human artifact | probes need structured input, and the human view renders from it | vault/decisions/ADR-031-architecture-first-planning.md |
 | D-2 A profile is a data file pair `arch-profiles/<name>.tsv` and `.md`, found in the repo first and then in the framework, and loaded only when named; `arch_profile` in `VAULT.md` names it; absent means `none`; this repo declares `harness` | a new project type is a new file and no code change; `dod_profile` is `code` in every repo, including this harness repo | vault/decisions/ADR-031-architecture-first-planning.md |
-| D-3 The human artifact is generated from a committed template and verified by a gate that finds every spec element in it | generators emit, checkers confirm | vault/decisions/ADR-031-architecture-first-planning.md |
+| D-3 A script renders the human page from the plan and its spec, and a gate re-renders it and compares it byte for byte with the file on disk | a function of the plan and spec cannot omit a diagram, and one comparison proves the page is present, current and untampered | vault/decisions/ADR-031-architecture-first-planning.md |
 | D-4 The probe kit lives in this framework: `bin/probe.sh` and `probes/` | probes run while an agent plans and reviews; `vault-quality-gates` runs at push time | vault/decisions/ADR-031-architecture-first-planning.md |
 | D-5 A probe never installs a tool; a missing tool prints `absent: <project-scope install command>` | global installs and package changes need consent | local |
 | D-6 A probe finding blocks only when a tool run produced it; model-only observations stay advisory | existing grounding rule | vault/decisions/ADR-003-tool-grounded-findings.md |
@@ -180,7 +180,7 @@ does not redefine it. The producing session may add columns, never rename or dro
 | C-4 | probe commands | S4 | S5, S7 | `bin/probe.sh list`, `detect`, `run <stage>`, `diff`, `scale` |
 | C-5 | indication-to-probe link | S7 | S8 | optional `probe: <registry id>` in an indication's frontmatter |
 | C-6 | rule file location | S8 | S7, S9 | `probes/rules/<slug>.<ext>` in the target repo, plus one registry row |
-| C-7 | human page check | S3 | S5, S6 | `bin/gate.sh human <plan>` finds every spec table, interface and diagram in the page |
+| C-7 | human page and its check | S3 | S5, S6 | `bin/render-human.sh <plan>` writes `<plan>.human.html`; `bin/gate.sh human <plan>` prints `human: ok <page>` when the page equals a fresh render and `human_plan` is a link |
 
 ## Sessions
 
@@ -188,7 +188,7 @@ does not redefine it. The producing session may add columns, never rename or dro
 |----|-------|---------|--------|---------|------|----------|
 | S1 | research doc, ADR-031, indication | /v-work | done | | 2026-09-21 | `checks/arch-SC-1.sh` exits 0; `vault/decisions/ADR-031-architecture-first-planning.md` written |
 | S2 | arch spec contract, `gate.sh arch`, PROPOSE and approval wiring | /v-team | done | S1 | 2026-09-21 | `checks/arch-SC-2.sh` to `-6.sh` exit 0; `./tests/run.sh tests/unit/gate.bats` 93 of 93 |
-| S3 | human plan artifact: template, renderer step, `gate.sh human`, `human_plan` link; falls back to a local HTML file when publishing fails | /v-team | todo | S2 | 2026-09-21 | |
+| S3 | human plan page: `bin/render-human.sh`, `gate.sh human`, the `human_plan` link and its `file:` fallback, wired into `/v-team`; the master page regenerated | /v-team | done | S2 | 2026-09-21 | the ten human-page checks exit 0; `./tests/run.sh tests/unit/human-plan.bats` 22 of 22 |
 | S4 | probe kit core: `bin/probe.sh`, `probes/registry.tsv`, harness probes, `probe.sh scale`, schema duplicate-column, index and naming probes, similar-method probe, verified tool list | /v-team | todo | S1 | 2026-09-21 | |
 | S5 | plan-time probes: auditor agents, longer planning stage, cost delta per D-10 | /v-team | todo | S3, S4 | 2026-09-21 | |
 | S6 | master plan template with a required `## Cross-session contracts` table and its artifact, `gate.sh master` (D-15, E-3), `/v-pm` and `(f3)` in `commands/v-team/steps/03-propose-loop.md` write and read it, sub-plan ordering gate | /v-team | todo | S2, S3 | 2026-09-21 | |

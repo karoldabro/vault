@@ -26,6 +26,8 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 - `bin/gate.sh arch <file> [--repo <root>]`: the contract, section list, check order and message text are in `commands/_shared/architecture-spec.md`. Exit 0 prints `arch: ok <spec>`, exit 1 prints `REFUSED arch <spec>: <problem> [<row>]` per defect, exit 2 means an unreadable file or bad option.
 - `bin/gate.sh all <plan> --phase propose|approve [--repo <root>]` runs `arch` after `criteria`.
 - `arch_profile: <name>|none` in `VAULT.md`; absent means `none`. `<name>` is a profile in `arch-profiles/`, the repo's own first and then the framework's; `code` and `harness` ship. A new project type is a `<name>.tsv` and `<name>.md` pair. `arch_spec: <slug>.arch.md` and `human_plan: <url>` in plan frontmatter.
+- `bin/render-human.sh <plan>` writes `<plan>.human.html` from the plan and its spec, and `bin/gate.sh human <plan>` checks it; `all --phase approve` runs the check after `arch`. The rules are in `commands/_shared/human-plan.md`.
+- A profile's `.tsv` may carry `@review<TAB>sentence` lines; the page lists them under "Check these yourself". `templates/human-plan-sections.tsv` lists the plan sections and columns the page shows.
 - doc-lint type `arch-spec`, cap 300 lines. Decision record: `vault/decisions/ADR-031-architecture-first-planning.md`.
 
 ## Behaviors & rules
@@ -39,7 +41,8 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 ## Coupling
 - `commands/v-team.md` Step 4 and `commands/v-team/steps/03-propose-loop.md` (a) and (g) name the gate; `tests/unit/v-team.bats` guards that text.
 - `bin/doc-lint.sh` types a `*.arch.md` file as `arch-spec` when frontmatter gives no type.
-- `bin/gate.sh` `check_is_claimed_elsewhere` skips `*.arch.md`.
+- `bin/gate.sh` `check_is_claimed_elsewhere` skips `*.arch.md`. `bin/gate.sh` runs `main` only when executed, so `bin/render-human.sh` sources its helpers.
+- `commands/v-team/steps/03-propose-loop.md` (g) renders, publishes and records the page; `commands/v-team.md` Step 4 gates it again; `tests/unit/v-team.bats` guards that text.
 - `lib/shared-module-rules.tsv` lists the contract module as an owner.
 
 ## Gotchas

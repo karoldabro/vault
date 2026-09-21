@@ -19,7 +19,9 @@
 #         bin/gate.sh recurrence [file]        every defect repair has a test that failed before it
 #         bin/gate.sh arch     <file> [--repo <root>]   the architecture spec is complete; the
 #                                              contract is commands/_shared/architecture-spec.md
-#         bin/gate.sh all      <plan> --phase <propose|approve|close> [--repo <root>]
+#         bin/gate.sh human    <plan> [--repo <root>]   the page beside a plan is present, current
+#                                              and linked; commands/_shared/human-plan.md
+#         bin/gate.sh all     <plan> --phase <propose|approve|close> [--repo <root>]
 #         bin/gate.sh --help
 #
 # A `how: command` criterion names a COMMITTED SCRIPT, never a command typed into the plan. The
@@ -44,7 +46,8 @@
 
 set -euo pipefail
 
-GATE_VAULT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GATE_SELF="$(readlink -f "${BASH_SOURCE[0]:-$0}" 2>/dev/null || printf '%s' "${BASH_SOURCE[0]:-$0}")"
+GATE_VAULT_ROOT="$(cd "$(dirname "$GATE_SELF")/.." && pwd)"
 
 # Guarded, because a caller that lost this library must still run every built-in check. `cmd_config`
 # tests for the function before using it.
@@ -59,6 +62,12 @@ if [ -r "${GATE_VAULT_ROOT}/lib/arch-check.sh" ]; then
     . "${GATE_VAULT_ROOT}/lib/arch-check.sh"
 fi
 
+# `cmd_human`: the page beside a plan is present, current and linked.
+if [ -r "${GATE_VAULT_ROOT}/lib/human-check.sh" ]; then
+    # shellcheck source=../lib/human-check.sh
+    . "${GATE_VAULT_ROOT}/lib/human-check.sh"
+fi
+
 US=$'\037'          # cell separator for parsed rows; never appears in markdown
 violations=0
 notes=0
@@ -70,7 +79,7 @@ note()   { printf '  note     %s\n' "$*" >&2; notes=$((notes + 1)); }
 die()    { printf 'gate: %s\n' "$*" >&2; exit 2; }
 
 usage() {
-    sed -n '2,32p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,36p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 # ---------------------------------------------------------------------------- parsing
@@ -765,6 +774,7 @@ main() {
         recurrence) cmd_recurrence "${1:-}" ;;
         verdict)  cmd_verdict "${1:-}" "${2:-}" ;;
         arch)     cmd_arch "$@" ;;
+        human)    cmd_human "$@" ;;
         all)
             local plan=${1:-} phase="" archargs=()
             shift || true
@@ -777,7 +787,8 @@ main() {
             done
             case "$phase" in
                 propose) cmd_criteria "$plan"; cmd_arch "$plan" ${archargs[@]+"${archargs[@]}"} ;;
-                approve) cmd_criteria "$plan"; cmd_arch "$plan" ${archargs[@]+"${archargs[@]}"}; cmd_coverage "$plan" ;;
+                approve) cmd_criteria "$plan"; cmd_arch "$plan" ${archargs[@]+"${archargs[@]}"}
+                         cmd_human "$plan" ${archargs[@]+"${archargs[@]}"}; cmd_coverage "$plan" ;;
                 # `coverage` is deliberately NOT in the close phase. `verdict` already requires every
                 # criterion to be MET with evidence there, and a plan with no `## Work items` table
                 # — which is what `/v-do` writes — would exit 2 and short-circuit the whole close.
@@ -795,4 +806,7 @@ main() {
     exit 0
 }
 
-main "$@"
+# Run only when executed. Sourced by bin/render-human.sh, which reuses the helpers above.
+if [ "${BASH_SOURCE[0]:-$0}" = "$0" ]; then
+    main "$@"
+fi

@@ -106,6 +106,12 @@ in the document rather than a verdict on the work.
 spec is missing or breaks its contract: fix it, then present. Exit 2 means a file could not be read:
 stop as an error. The check passes silently in a repo whose `VAULT.md` declares no `arch_profile`.
 
+**Then check the human page:** `$VAULT_FRAMEWORK_PATH/bin/gate.sh human <plan>`. Exit 1 means the page
+is missing, stale or not linked; a page that is not linked needs publishing and a `human_plan` value, as
+in `03-propose-loop.md`. If the plan or the spec changed after the page was made, run
+`bin/render-human.sh <plan>`, publish the file again to the same link, then re-run the gate. The
+decision you present names the page link in one line.
+
 A gate whose conditions are written after the evidence arrives is a rubber stamp. This one is
 computed from the plan the operator is about to be shown.
 
