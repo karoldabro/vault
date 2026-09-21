@@ -94,15 +94,17 @@ teardown() {
 @test "the propose loop instantiates the spec from the shared contract and gates it at finalise" {
     local f="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
     grep -q 'architecture-spec.md' "${f}"
-    grep -q 'templates/arch.md' "${f}"
+    grep -q 'arch-profiles/' "${f}"
     grep -q 'gate.sh arch' "${f}"
     grep -q 'arch_spec: <same-slug>.arch.md' "${f}"
 }
 
 @test "the architecture spec contract and both templates exist" {
     [ -f "${VAULT_ROOT}/commands/_shared/architecture-spec.md" ]
-    [ -f "${VAULT_ROOT}/templates/arch.md" ]
-    [ -f "${VAULT_ROOT}/templates/arch-harness.md" ]
+    for p in code harness; do
+        [ -f "${VAULT_ROOT}/arch-profiles/${p}.tsv" ]
+        [ -f "${VAULT_ROOT}/arch-profiles/${p}.md" ]
+    done
     grep -q '^arch_spec:' "${VAULT_ROOT}/templates/plan.md"
 }
 

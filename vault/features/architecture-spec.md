@@ -10,7 +10,7 @@ tags: [feature, planning, gates]
 # architecture-spec
 
 ## Scope
-A `/v-team` plan in a repo that declares `arch_profile: code` or `harness` carries a sibling structure spec, `plans/<slug>.arch.md`. `bin/gate.sh arch` checks it before any work item exists and again at the approval gate.
+A `/v-team` plan in a repo that declares an `arch_profile` other than `none` carries a sibling structure spec, `plans/<slug>.arch.md`. `bin/gate.sh arch` checks it before any work item exists and again at the approval gate.
 
 Built: the spec contract, the gate, the two templates and the propose and approval wiring.
 
@@ -25,7 +25,7 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 ## Contracts
 - `bin/gate.sh arch <file> [--repo <root>]`: the contract, section list, check order and message text are in `commands/_shared/architecture-spec.md`. Exit 0 prints `arch: ok <spec>`, exit 1 prints `REFUSED arch <spec>: <problem> [<row>]` per defect, exit 2 means an unreadable file or bad option.
 - `bin/gate.sh all <plan> --phase propose|approve [--repo <root>]` runs `arch` after `criteria`.
-- `arch_profile: code|harness|none` in `VAULT.md`; absent means `none`. `arch_spec: <slug>.arch.md` and `human_plan: <url>` in plan frontmatter.
+- `arch_profile: <name>|none` in `VAULT.md`; absent means `none`. `<name>` is a profile in `arch-profiles/`, the repo's own first and then the framework's; `code` and `harness` ship. A new project type is a `<name>.tsv` and `<name>.md` pair. `arch_spec: <slug>.arch.md` and `human_plan: <url>` in plan frontmatter.
 - doc-lint type `arch-spec`, cap 300 lines. Decision record: `vault/decisions/ADR-031-architecture-first-planning.md`.
 
 ## Behaviors & rules

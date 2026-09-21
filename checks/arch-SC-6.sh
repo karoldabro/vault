@@ -14,10 +14,10 @@ run() {
     [ -z "$word" ] || printf "%s" "$out" | grep -qF -- "$word" || { printf "gate %s: output lacks: %s\n%s\n" "$*" "$word" "$out"; exit 1; }
 }
 
-need "$root/templates/arch.md"; need "$root/templates/arch-harness.md"
+need "$root/arch-profiles/code.md"; need "$root/arch-profiles/harness.md"
 caps=$("$root/bin/doc-lint.sh" --list-caps)
 printf '%s\n' "$caps" | grep -q '^arch-spec ' || { printf 'type arch-spec not listed by --list-caps\n'; exit 1; }
-for f in templates/arch.md templates/arch-harness.md tests/fixtures/arch/code-complete.arch.md tests/fixtures/arch/harness-complete.arch.md; do
+for f in arch-profiles/code.md arch-profiles/harness.md tests/fixtures/arch/code-complete.arch.md tests/fixtures/arch/harness-complete.arch.md; do
     "$root/bin/doc-lint.sh" "$root/$f" >/dev/null 2>&1 || { printf '%s fails doc-lint\n' "$f"; exit 1; }
 done
 { sed -n '1,/^## Data model/p' "$fx/code-complete.arch.md"; for i in $(seq 1 310); do printf 'line %s\n' "$i"; done; } > "$tmp/long.arch.md"

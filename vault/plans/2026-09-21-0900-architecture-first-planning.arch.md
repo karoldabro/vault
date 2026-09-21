@@ -17,8 +17,8 @@ lib/shared-module-rules.tsv                   one owned-rule row for the new sha
 commands/_shared/architecture-spec.md         new, owns the section list and the rules
 commands/v-team.md                            approval gate runs `gate.sh arch`
 commands/v-team/steps/03-propose-loop.md      drafts the spec in (a), runs the gate in (g)
-templates/arch.md                             new, code profile
-templates/arch-harness.md                     new, harness profile
+arch-profiles/code.tsv, code.md               new, the code profile: sections and starting text
+arch-profiles/harness.tsv, harness.md         new, the harness profile
 templates/plan.md                             gains arch_spec and human_plan keys
 templates/VAULT.md                            gains optional arch_profile key
 VAULT.md                                      declares arch_profile: harness
@@ -40,8 +40,10 @@ vault/indications/architecture-before-code.md            new
 | commands/_shared/architecture-spec.md | yes | states which sections and columns a spec needs | on-demand |
 | commands/v-team.md | no | dispatcher for the team lifecycle | always |
 | commands/v-team/steps/03-propose-loop.md | no | the PROPOSE step of the team lifecycle | on-demand |
-| templates/arch.md | yes | starting text for a code-profile spec | on-demand |
-| templates/arch-harness.md | yes | starting text for a harness-profile spec | on-demand |
+| arch-profiles/code.tsv | yes | lists the sections and rules of the code profile | on-demand |
+| arch-profiles/code.md | yes | starting text for a code-profile spec | on-demand |
+| arch-profiles/harness.tsv | yes | lists the sections and rules of the harness profile | on-demand |
+| arch-profiles/harness.md | yes | starting text for a harness-profile spec | on-demand |
 | templates/plan.md | no | starting text for a plan | on-demand |
 | templates/VAULT.md | no | starting text for a repo's config | on-demand |
 | VAULT.md | no | this repo's config | always |
@@ -65,7 +67,7 @@ vault/indications/architecture-before-code.md            new
 
 ```mermaid
 flowchart LR
-    A["PROPOSE step (a)"] -->|"template: path"| B["templates/arch.md or arch-harness.md"]
+    A["PROPOSE step (a)"] -->|"name: string"| B["arch-profiles/name.md"]
     B -->|"draft spec"| C["plans/slug.arch.md"]
     C -->|"file: path, repo: path"| D["gate.sh arch"]
     D -->|"exit code, refusal text"| E["PROPOSE step (g)"]
@@ -87,7 +89,7 @@ flowchart LR
 | trigger | loads | tokens-max |
 |---------|-------|------------|
 | PROPOSE step (a) | commands/_shared/architecture-spec.md | 2500 |
-| PROPOSE step (a) | templates/arch.md or templates/arch-harness.md | 1500 |
+| PROPOSE step (a) | the named profile's .md and .tsv in arch-profiles/ | 2000 |
 | PROPOSE step (g) | bin/gate.sh | 0 |
 
 ## Reuse map
@@ -109,8 +111,8 @@ flowchart LR
 | bin/doc-lint.sh | 720 |
 | lib/arch-check.sh | 450 |
 | commands/_shared/architecture-spec.md | 150 |
-| templates/arch.md | 120 |
-| templates/arch-harness.md | 120 |
+| arch-profiles/code.md | 120 |
+| arch-profiles/harness.md | 120 |
 | vault/research/ai-code-slop.md | 250 |
 
 ## Config points

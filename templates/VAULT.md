@@ -52,10 +52,11 @@ test_command: {{test_command}}
 lint_command: {{lint_command}}
 delivery_command: {{delivery_command}}
 <!-- Optional. Which architecture spec a `/v-team` plan must carry (contract:
-     commands/_shared/architecture-spec.md). `code`: data model, interfaces, layers. `harness`: file
-     tree, load order, size budgets, config points, for repos whose product is instructions or
-     configuration. `none`: no spec is required. An absent line means `none`, so no existing repo is
-     refused for lacking it. -->
+     commands/_shared/architecture-spec.md). The value names a profile in `arch-profiles/`, this repo's
+     own first and then the framework's. `code` (data model, interfaces, layers) and `harness` (file
+     tree, load order, size budgets, config points) ship; add a project type by adding a `<name>.tsv`
+     and `<name>.md` pair to this repo's `arch-profiles/`. `none`: no spec is required. An absent line
+     means `none`, so no existing repo is refused for lacking it. -->
 # arch_profile: none
 
 ## hooks

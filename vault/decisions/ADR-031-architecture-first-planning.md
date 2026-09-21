@@ -31,9 +31,12 @@ that run while an agent plans and reviews answer a different question at a diffe
    structure to build. `plans/<slug>.trail.md` records how the plan was reached. A generated human page
    is published as an Artifact and linked from the plan's `human_plan` key. Probes need structured
    input, and the human page renders from it.
-2. **The spec profile comes from `arch_profile` in the repo's `VAULT.md`**: `code`, `harness` or `none`.
-   An absent key means `none`, so no existing repo is refused. `dod_profile` cannot serve, because it is
-   `code` in every operator repo, including this harness repo.
+2. **A profile is data.** `arch-profiles/<name>.tsv` lists a project type's sections, columns and rules
+   and `<name>.md` is the starting text. The gate loads only the profile a spec names, from the repo's
+   own `arch-profiles/` first and then from the framework, so a new project type is a new file and no
+   code change. `arch_profile` in the repo's `VAULT.md` names it, or `none`; an absent key means `none`,
+   so no existing repo is refused. `dod_profile` cannot serve, because it is `code` in every operator
+   repo, including this harness repo.
 3. **`bin/gate.sh arch` checks the spec** against `commands/_shared/architecture-spec.md`. It runs when
    the plan is finalised and again at the `/v-team` approval gate, so a session cannot skip it by
    omitting the spec.

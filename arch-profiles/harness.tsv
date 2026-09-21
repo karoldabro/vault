@@ -1,0 +1,11 @@
+# profile: harness. For work whose product is instructions, commands, configuration or documents.
+# Format and the validator and rule library: commands/_shared/architecture-spec.md. The starting text is harness.md beside this file.
+# section	kind	columns	rules
+File tree	fence:any
+Files	table	path:nonempty new:enum(yes|no) purpose:nonempty loaded:enum(always|on-demand|never-by-agent)	path-exists-unless-new
+Data flow	fence:mermaid
+Interfaces	table	interface:nonempty method:nonempty params:any returns:nonempty throws:any layer:nonempty	params-typed
+Load order	table	trigger:nonempty loads:nonempty tokens-max:int(0-10000000)
+Reuse map	table	need:nonempty existing_symbol:any decision:enum(reuse|extend|new) reason:any	reuse-decision
+Size budgets	table	path:nonempty max_lines:int(1-100000) max_method_lines?:int(1-100000)
+Config points	table,na	key:nonempty file:nonempty default:nonempty

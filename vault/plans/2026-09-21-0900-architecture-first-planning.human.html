@@ -208,7 +208,7 @@ flowchart TB
       <div class="scroll">
 <pre class="mermaid">
 flowchart LR
-    A["PROPOSE step (a)"] -->|"template: path"| B["templates/arch.md or arch-harness.md"]
+    A["PROPOSE step (a)"] -->|"name: string"| B["arch-profiles/name.md"]
     B -->|"draft spec"| C["plans/slug.arch.md"]
     C -->|"file: path, repo: path"| D["gate.sh arch"]
     D -->|"exit code, refusal text"| E["PROPOSE step (g)"]
@@ -229,7 +229,7 @@ flowchart LR
       </div>
       <div class="pane">
         <h3>Profile source</h3>
-        <p><code>arch_profile: code | harness | none</code> in the repo's <code>VAULT.md</code>. Absent means <code>none</code>, so no existing repo is refused. This repo declares <code>harness</code>.</p>
+        <p><code>arch_profile: &lt;name&gt; | none</code> in the repo's <code>VAULT.md</code>. A profile is two data files, loaded only when named: the repo's own <code>arch-profiles/</code> first, then the framework's. <code>code</code> and <code>harness</code> ship; a new project type is a new file pair and no code change. Absent means <code>none</code>, so no existing repo is refused. This repo declares <code>harness</code>.</p>
       </div>
     </div>
     <h3 style="margin-top:18px">Files changed or created</h3>
@@ -239,7 +239,8 @@ bin/doc-lint.sh                               + type arch-spec, cap 300 lines
 commands/_shared/architecture-spec.md         new: owns sections, columns, rules
 commands/v-team.md                            approval gate runs gate.sh arch
 commands/v-team/steps/03-propose-loop.md      drafts the spec in (a), gates it in (g)
-templates/arch.md, templates/arch-harness.md  new: the two profiles
+lib/arch-check.sh                             new: the checks behind gate.sh arch
+arch-profiles/&lt;name&gt;.tsv and .md            new: code and harness profiles, as data
 templates/plan.md, templates/VAULT.md         + arch_spec, human_plan, arch_profile keys
 VAULT.md                                      arch_profile: harness
 tests/unit/gate.bats                          one case per refusal
@@ -311,7 +312,7 @@ flowchart LR
         <thead><tr><th>Decision</th><th>Reason</th></tr></thead>
         <tbody>
           <tr><td>A plan is four files: agent plan, architecture spec, process record, this human artifact</td><td>Probes need structured input; the human page renders from it</td></tr>
-          <tr><td>Profile comes from a new <code>arch_profile</code> key, absent means none</td><td><code>dod_profile</code> is <code>code</code> in all 13 repos, this harness repo included</td></tr>
+          <tr><td>A profile is a data-file pair loaded by name, named by a new <code>arch_profile</code> key; absent means none</td><td>A new project type needs no code change. <code>dod_profile</code> is <code>code</code> in all 13 repos, this harness repo included</td></tr>
           <tr><td>Human page is generated from a template and verified by a gate</td><td>Hand-written pages omit diagrams silently</td></tr>
           <tr><td>Probe kit lives in this framework, not in <code>vault-quality-gates</code></td><td>Probes run while planning and reviewing; that plugin runs at push time</td></tr>
           <tr><td>A probe never installs a tool</td><td>Global installs and package changes need your consent</td></tr>

@@ -37,9 +37,10 @@ marker or a revision log. The trail carries everything about how the design got 
 doesn't exist, create it (warn once; add `add_folders: [plans]` to `VAULT.md` so it's recognised) —
 don't halt.
 
-**Architecture spec.** When the repo's `VAULT.md` declares `arch_profile: code` or `harness`, read
-`$VAULT_FRAMEWORK_PATH/commands/_shared/architecture-spec.md`, instantiate
-`$VAULT_FRAMEWORK_PATH/templates/arch.md` (`code`) or `templates/arch-harness.md` (`harness`) into the
+**Architecture spec.** When the repo's `VAULT.md` declares an `arch_profile` other than `none`, read
+`$VAULT_FRAMEWORK_PATH/commands/_shared/architecture-spec.md` and that one profile's files, `<name>.tsv`
+and `<name>.md`, found in the repo's own `arch-profiles/` first and then in
+`$VAULT_FRAMEWORK_PATH/arch-profiles/`. Instantiate `<name>.md` into the
 sibling `<same-slug>.arch.md`, and set `arch_spec: <same-slug>.arch.md` in the plan's frontmatter (the
 file name only, no folder). Replace every placeholder in the spec. Fill the spec before any work item
 exists: work items follow from the structure, not the other way round. With no `arch_profile`, write

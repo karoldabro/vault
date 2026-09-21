@@ -96,7 +96,7 @@ columns, check order, messages) is `commands/_shared/architecture-spec.md`.
 | decision | reason | record |
 |----------|--------|--------|
 | D-1 A plan is four files: `plans/<slug>.md` for agents, `plans/<slug>.arch.md` for structure, the trail, and a generated human artifact | probes need structured input, and the human view renders from it | vault/decisions/ADR-031-architecture-first-planning.md |
-| D-2 The profile comes from `arch_profile` in `VAULT.md`; absent means `none`; this repo declares `harness` | `dod_profile` is `code` in every repo, including this harness repo | vault/decisions/ADR-031-architecture-first-planning.md |
+| D-2 A profile is a data file pair `arch-profiles/<name>.tsv` and `.md`, found in the repo first and then in the framework, and loaded only when named; `arch_profile` in `VAULT.md` names it; absent means `none`; this repo declares `harness` | a new project type is a new file and no code change; `dod_profile` is `code` in every repo, including this harness repo | vault/decisions/ADR-031-architecture-first-planning.md |
 | D-3 The human artifact is generated from a committed template and verified by a gate that finds every spec element in it | generators emit, checkers confirm | vault/decisions/ADR-031-architecture-first-planning.md |
 | D-4 The probe kit lives in this framework: `bin/probe.sh` and `probes/` | probes run while an agent plans and reviews; `vault-quality-gates` runs at push time | vault/decisions/ADR-031-architecture-first-planning.md |
 | D-5 A probe never installs a tool; a missing tool prints `absent: <project-scope install command>` | global installs and package changes need consent | local |
@@ -120,8 +120,8 @@ exists; the plan targets reuse, layering and data model, where agents fail most)
 
 | artifact | what requires it | who writes it | who reads it | missing or wrong |
 |---|---|---|---|---|
-| `templates/arch.md` | `bin/gate.sh arch` needs the code sections | PROPOSE session, one per plan | `bin/gate.sh arch`, reviewers, the S3 renderer | gate exits 1 and names the missing section |
-| `templates/arch-harness.md` | `bin/gate.sh arch` needs the harness sections | PROPOSE session | same as above | same as above |
+| `arch-profiles/code.tsv`, and one such file per profile | `bin/gate.sh arch` reads the section list of the profile a spec names | framework, or the repo in its own `arch-profiles/` | `lib/arch-check.sh` | an unknown name exits 1 naming the value; a broken line exits 1 naming the validator or kind |
+| `arch-profiles/code.md`, and one such file per profile | PROPOSE step (a) instantiates it into the spec | framework, or the repo | PROPOSE session, `bin/gate.sh arch`, the S3 renderer | an unedited copy exits 1 as a template placeholder |
 | `arch_spec` key in `templates/plan.md` | `bin/gate.sh arch` resolves a plan to its spec through it | PROPOSE session | `bin/gate.sh` | a profiled repo's plan without it exits 1 |
 | `arch_profile` key in `templates/VAULT.md` | `bin/gate.sh arch` reads the repo's profile | operator or `bin/vault-init.sh` | `bin/gate.sh` | absent means `none`, so no repo is refused for lacking it |
 | `commands/_shared/architecture-spec.md` | step (a) of `commands/v-team/steps/03-propose-loop.md` | S2 session | every PROPOSE session | step (a) has nothing to read; `tests/unit/v-team.bats` fails on the missing path |
@@ -142,8 +142,10 @@ exists; the plan targets reuse, layering and data model, where agents fail most)
 | W-9 | `checks/arch-SC-4.sh` | create | Write | written | SC-4 | exits 0 after W-15 | DONE |
 | W-10 | `checks/arch-SC-5.sh` | create | Write | written | SC-5 | exits 0 after W-15, W-20, W-21 | DONE |
 | W-11 | `checks/arch-SC-6.sh` | create | Write | written | SC-6 | exits 0 after W-12, W-13, W-16 | DONE |
-| W-12 | `templates/arch.md` | create | Write | code profile per `commands/_shared/architecture-spec.md`; `type: arch-spec`; no `status` key | SC-2, SC-3, SC-6 | `bin/doc-lint.sh templates/arch.md` exits 0 | DONE |
-| W-13 | `templates/arch-harness.md` | create | Write | harness profile per `commands/_shared/architecture-spec.md` | SC-4, SC-6 | `bin/doc-lint.sh templates/arch-harness.md` exits 0 | DONE |
+| W-12 | `arch-profiles/code.md` | create | Write | starting text of the code profile; `type: arch-spec`; no `status` key | SC-2, SC-3, SC-6 | `bin/doc-lint.sh arch-profiles/code.md` exits 0 | DONE |
+| W-13 | `arch-profiles/harness.md` | create | Write | starting text of the harness profile | SC-4, SC-6 | `bin/doc-lint.sh arch-profiles/harness.md` exits 0 | DONE |
+| W-30 | `arch-profiles/code.tsv` | create | Write | section list of the code profile, in the format of `commands/_shared/architecture-spec.md` | SC-2, SC-3 | `checks/arch-SC-3.sh` exits 0 | DONE |
+| W-31 | `arch-profiles/harness.tsv` | create | Write | section list of the harness profile | SC-2, SC-4 | `checks/arch-SC-4.sh` exits 0 | DONE |
 | W-14 | `commands/_shared/architecture-spec.md` | create | Write | owns sections, columns, check order and messages; each rule stated once | SC-2 | `bin/doc-lint.sh` exits 0 | DONE |
 | W-15 | `bin/gate.sh` | edit | Edit | source `lib/arch-check.sh` (W-27) and route `arch` to `cmd_arch`; `cmd_config` stays unchanged; `table_rows` treats only the first separator line as the separator; `all` calls `cmd_arch` in `propose` and `approve` and accepts `--repo`; `check_is_claimed_elsewhere` skips `*.arch.md`; reuse `table_rows`, `table_header`, `frontmatter_get`; widen the `usage` line window | SC-2 to SC-5 | `checks/arch-SC-2.sh` to `-5.sh` exit 0; `bin/gate.sh --help \| grep -c 'gate.sh arch'` is at least 1 | DONE |
 | W-16 | `bin/doc-lint.sh` | edit | Edit | type `arch-spec`, cap 300, in `cap_for_type`, `is_known_type` and `--list-caps`; infer the type for `*.arch.md` beside the `*.trail.md` case | SC-6 | `checks/arch-SC-6.sh` exits 0 | DONE |

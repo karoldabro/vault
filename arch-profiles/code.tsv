@@ -1,0 +1,9 @@
+# profile: code. For a feature that stores data and exposes interfaces: an API, a service, an app with a database.
+# Format and the validator and rule library: commands/_shared/architecture-spec.md. The starting text is code.md beside this file.
+# section	kind	columns	rules
+Data model	table,na	table:ident column:ident type:nonempty null:enum(yes|no) key:enum(PK|FK|UQ|) index:any references:any	pk-per-table fk-index
+Data flow	fence:mermaid
+Interfaces	table	interface:nonempty method:nonempty params:any returns:nonempty throws:any layer:nonempty	params-typed
+Layers & placement	table	logic:nonempty layer:nonempty file:nonempty
+Reuse map	table	need:nonempty existing_symbol:any decision:enum(reuse|extend|new) reason:any	reuse-decision
+Size budgets	table	path:nonempty max_lines:int(1-100000) max_method_lines?:int(1-100000)

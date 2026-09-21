@@ -1194,10 +1194,56 @@ arch_refused() {
     [[ "$output" == *"--repo needs a directory"* ]]
 }
 
+@test "arch: a repo adds its own project type as data, and the framework code is not touched" {
+    local r; r=$(mkarchrepo r40 "arch_profile: docs")
+    mkdir -p "${r}/arch-profiles"
+    printf '# profile: docs\n# section\tkind\tcolumns\trules\nOutline\ttable\theading:nonempty audience:enum(dev|ops)\nDiagram\tfence:mermaid\n' > "${r}/arch-profiles/docs.tsv"
+    printf -- '---\ntype: arch-spec\nprofile: docs\nplan: x\n---\n\n# t\n\n## Outline\n\n| heading | audience |\n|---|---|\n| Intro | dev |\n\n## Diagram\n\n```mermaid\nflowchart LR\n  A --> B\n```\n' > "${TMP}/d.arch.md"
+    arch_ok "${TMP}/d.arch.md" --repo "${r}"
+    variant "${TMP}/d.arch.md" "| Intro | dev |" "| Intro | qa |" "${TMP}/e.arch.md"
+    arch_refused "audience must be dev or ops" "Intro" "${TMP}/e.arch.md" --repo "${r}"
+    awk '/^## Diagram$/{s=1;next} /^## /{s=0} !s' "${TMP}/d.arch.md" > "${TMP}/f.arch.md"
+    arch_refused "missing section Diagram" "" "${TMP}/f.arch.md" --repo "${r}"
+    # the framework's own profiles are not consulted for a spec that names the repo's
+    variant "${TMP}/d.arch.md" "profile: docs" "profile: code" "${TMP}/g.arch.md"
+    arch_refused "profile differs" "" "${TMP}/g.arch.md" --repo "${r}"
+}
+
+@test "arch: a repo's profile of the same name replaces the framework's" {
+    local r; r=$(mkarchrepo r41 "arch_profile: code")
+    mkdir -p "${r}/arch-profiles"
+    printf 'Notes\ttable\ttopic:nonempty\n' > "${r}/arch-profiles/code.tsv"
+    printf -- '---\ntype: arch-spec\nprofile: code\nplan: x\n---\n\n## Notes\n\n| topic |\n|---|\n| one |\n' > "${TMP}/a.arch.md"
+    arch_ok "${TMP}/a.arch.md" --repo "${r}"
+    arch_refused "missing section Notes" "" "$(FX code-complete)" --repo "${r}"
+}
+
+@test "arch: a malformed profile name, a missing profile file and a broken profile line are refused" {
+    local r
+    r=$(mkarchrepo r42 "arch_profile: ../code")
+    arch_refused "invalid value" "../code" "$(FX code-complete)" --repo "${r}"
+    r=$(mkarchrepo r43 "arch_profile: nosuch")
+    arch_refused "invalid value" "nosuch" "$(FX code-complete)" --repo "${r}"
+    r=$(mkarchrepo r44 "arch_profile: code")
+    mkdir -p "${r}/arch-profiles"
+    printf 'Notes\ttable\ttopic:shiny\n' > "${r}/arch-profiles/code.tsv"
+    printf -- '---\ntype: arch-spec\nprofile: code\nplan: x\n---\n\n## Notes\n\n| topic |\n|---|\n| one |\n' > "${TMP}/a.arch.md"
+    arch_refused "unknown validator shiny" "" "${TMP}/a.arch.md" --repo "${r}"
+    printf 'Notes\tlist\ttopic:nonempty\n' > "${r}/arch-profiles/code.tsv"
+    arch_refused "unknown section kind list" "" "${TMP}/a.arch.md" --repo "${r}"
+}
+
+@test "arch: only the profile a spec names is loaded, so another profile's file may be broken" {
+    local r; r=$(mkarchrepo r45 "arch_profile: code")
+    mkdir -p "${r}/arch-profiles"
+    printf 'this line is not a profile\n' > "${r}/arch-profiles/other.tsv"
+    arch_ok "$(FX code-complete)" --repo "${r}"
+}
+
 @test "arch: a spec that still holds a template placeholder is refused, and both templates are" {
     local r; r=$(mkarchrepo r33 "dod_profile: code")
-    arch_refused "template placeholder" "" "${VAULT_ROOT}/templates/arch.md" --repo "${r}"
-    arch_refused "template placeholder" "" "${VAULT_ROOT}/templates/arch-harness.md" --repo "${r}"
+    arch_refused "template placeholder" "" "${VAULT_ROOT}/arch-profiles/code.md" --repo "${r}"
+    arch_refused "template placeholder" "" "${VAULT_ROOT}/arch-profiles/harness.md" --repo "${r}"
     variant "$(FX code-complete)" "| app/Services/OrderService.php | 200 | 30 |" "| path/to/Service.ext | 200 | 30 |" "${TMP}/a.arch.md"
     arch_refused "template placeholder" "" "${TMP}/a.arch.md" --repo "${r}"
 }
