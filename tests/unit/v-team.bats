@@ -273,3 +273,13 @@ teardown() {
     # plausible shapes an author would write both failed the check they were meant to escape.
     grep -qF '| none | this plan edits three existing files and hands nothing to anyone | | | |' "${f}"
 }
+
+# The execute loop feeds probe rows to every critic. Deleting these lines leaves a review that reads no probes.
+
+@test "T-10 the execute loop records the probe base, runs the helper with posture own and prints the operator line" {
+    local f="${VAULT_ROOT}/commands/v-team/steps/04-execute-loop.md"
+    grep -q 'PROBE_BASE=' "${f}"
+    grep -q 'probe-panel.sh run --posture own' "${f}"
+    grep -q 'critic-panel.md' "${f}"
+    grep -q 'Probes:' "${f}"
+}

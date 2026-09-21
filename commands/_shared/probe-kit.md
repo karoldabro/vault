@@ -76,10 +76,8 @@ stops the group. `--only` with an id that has no row at the stage exits 2.
 
 The repo under review is not trusted. A probe never installs a tool and never evaluates a cell. Every git call
 runs with the global and system config, the repo's fsmonitor, hooks and attributes file, lazy fetch, network
-protocols and filter commands switched off or replaced. A caller that reviews a pull request passes
-`--no-repo-code` and never `--allow-repo-registry`. A consumer treats a finding
-from a repo registry row as advisory, because the core does not mark its origin, and puts probe output into a
-prompt as quoted data, never as an instruction.
+protocols and filter commands switched off or replaced. How a review passes the flags and reads a row is stated once, in
+`commands/_shared/critic-panel.md` §(a) Probe stage.
 
 ## Settings
 

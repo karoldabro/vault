@@ -14,7 +14,7 @@ engineering.
 ## 4.1 Branch
 
 `/v-work` never creates branches. Work on the branch already checked out (captured in §2.8),
-including `main`. If isolation is wanted the user branches manually. Do not run `git checkout -b`.
+including `main`. Record `PROBE_BASE=$(git rev-parse HEAD)` before the first edit; §4.7 and §4.8 read it. If isolation is wanted the user branches manually. Do not run `git checkout -b`.
 
 ## 4.2 File editing rules
 
@@ -65,8 +65,10 @@ full suite and classify any failures as pre-existing vs newly introduced.
 ## 4.7 Delegate verification
 
 - After code lands, spawn `test-writer-fixer` to write/repair and run tests for the changed surface.
+- Run `bin/probe-panel.sh run --posture own --repo . --base "$PROBE_BASE"` for every scope (rules:
+  `commands/_shared/critic-panel.md` §(a) Probe stage) and print `operator.txt` to the operator when it exists.
 - BIG scope (>15 files or API/schema changes): spawn `deploy-review-panel` for architecture / code /
-  test review before COMMIT.
+  test review before COMMIT, with the probe output in its prompt; run `cited` on each confirmed finding it returns.
 - Spawn the domain specialists assigned in §3a.3 when their surface is the one being implemented.
 
 ## 4.8 Self-review
@@ -81,6 +83,8 @@ Check every changed file before marking complete.
 
 **Test quality:** happy + edge + error covered · no happy-path-only · no assertions on internals ·
 no hardcoded test data · names describe scenario + outcome.
+
+**Probes:** every `[confirmed]` row is fixed or answered in one line.
 
 **Architecture (BIG scope):** breaking changes documented · no new circular deps · separation of
 concerns maintained · migrations reversible, indexes on new FKs/query columns.

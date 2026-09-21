@@ -8,20 +8,30 @@
 #
 # It measures the index, not the rules: a listed slug is unreachable, not wrong.
 #
-# Usage:  bin/indication-route-audit.sh <index.md> [changed-files.tsv]
+# Usage:  bin/indication-route-audit.sh [--repo <root>] <index.md> [changed-files.tsv]
 #         bin/indication-route-audit.sh --help
+#
+# An indication may name its probe with `probe: <registry id>` in its frontmatter. The audit checks the id
+# against probes/registry.tsv of the framework and of the repo, and prints `unknown-probe <slug> <id>` when
+# neither holds it. The repo registry is found by --repo, or two directories above the index when that
+# directory holds VAULT.md and vault/indications; without it the line is `unchecked-probe` and does not fail.
 #
 # With no changed-file list, every glob-shaped row counts as routable. With one, the output also
 # separates the rows that reach a changed path from the rows that reach nothing in this diff.
 #
-# Exit 0 every row is reachable · 1 some row is unroutable · 2 bad input.
+# Exit 0 every row is reachable · 1 some row is unroutable or names an unknown probe · 2 bad input.
 set -uo pipefail
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(dirname "$here")
 
-usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,23p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
+repo_flag=""
+if [ "${1:-}" = "--repo" ]; then
+    [ -n "${2:-}" ] && [ -d "${2:-}" ] || { printf -- '--repo needs a directory\n' >&2; exit 2; }
+    repo_flag=$(cd "$2" && pwd); shift 2
+fi
 case "${1:-}" in
     -h|--help|'') usage; [ -n "${1:-}" ] && exit 0 || exit 2 ;;
 esac
@@ -93,4 +103,24 @@ grep '^unroutable' "$tmp/routes" | cut -f2 | sort | while IFS= read -r slug; do
     [ -n "$slug" ] && printf 'unroutable\t%s\n' "$slug"
 done
 
+# The probe key of each indication beside the index.
+idir=$(dirname "$index")
+repo_root="$repo_flag"
+if [ -z "$repo_root" ]; then
+    up=$(cd "$idir/../.." 2>/dev/null && pwd)
+    [ -n "$up" ] && [ -f "$up/VAULT.md" ] && [ -d "$up/vault/indications" ] && repo_root="$up"
+fi
+ids=$( { cat "$root/probes/registry.tsv"; [ -n "$repo_root" ] && cat "$repo_root/probes/registry.tsv" 2>/dev/null; } | awk -F'\t' '!/^#/ && NF {print $1}')
+probe_rc=0
+for f in "$idir"/*.md; do
+    [ -e "$f" ] || continue
+    slug=$(basename "$f" .md); [ "$slug" = _index ] && continue
+    id=$(tr -d '\r' < "$f" | awk 'NR==1 && !/^---[[:space:]]*$/ {exit} /^---[[:space:]]*$/ {n++; next} n==1 && /^probe:/ {sub(/^probe:[[:space:]]*/, ""); sub(/[[:space:]]*#.*$/, ""); gsub(/["'"'"']/, ""); print; exit}')
+    [ -n "$id" ] || continue
+    printf '%s\n' "$ids" | grep -qxF -- "$id" && continue
+    if [ -n "$repo_root" ]; then printf 'unknown-probe\t%s\t%s\n' "$slug" "$id"; probe_rc=1
+    else printf 'unchecked-probe\t%s\t%s\n' "$slug" "$id"; fi
+done
+
+[ "$rc" -ne 0 ] || rc=$probe_rc
 exit "$rc"

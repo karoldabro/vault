@@ -3,6 +3,7 @@ type: indication
 project: {{project}}
 slug: {{slug}}
 scope: repo
+probe:                 # optional: id of a row in probes/registry.tsv that checks this rule
 tags: [indication]
 ---
 

@@ -459,3 +459,8 @@ DIFF
     [ "$status" -eq 1 ]
     [[ "$output" == *"unexamined	1"* ]]
 }
+
+@test "T-12 the audit checks an indication's probe key against the registries" {
+    run "${VAULT_ROOT:-/code}/checks/probe-panel-SC-5.sh"
+    [ "$status" -eq 0 ] || { echo "$output"; false; }
+}

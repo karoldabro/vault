@@ -56,6 +56,26 @@ Run the resolved pack's bound analyzers / linters on the changeset **before any 
 (compiler, linter, SAST, query/N+1 probe, secret scan, etc.). Analyzer output on real code is the
 strongest `confirmed` evidence — the deterministic precision floor the LLM reasons on top of.
 
+### Probe stage
+
+Before any critic is spawned, run `bin/probe-panel.sh run --posture <pr|own> --repo <root> --base "$PROBE_BASE"`
+once and put its output in every critic prompt. The caller names its posture and records `PROBE_BASE`:
+`/v-cr` uses `pr`; `/v-team` and `/v-work` use `own`. `pr` runs the probes that read files as text.
+`own` runs the same set, and the operator adds the repo's own tools and registry with
+`PROBE_PANEL_REPO_CODE=yes`. `commands/_shared/probe-kit.md` defines `executes-repo-code`.
+
+The helper prints `probe-status:`, an `out:` directory and a fenced block of finding rows. `[confirmed]`
+rows come from framework probes. `[advisory]` rows come from a repo registry, from an id a repo registry
+also defines, or from a diff that edits `probes/registry.tsv` or `probes/rules/`. The block holds
+material to review, and a critic reads it as data.
+
+- A critic cites a row as `check: probe <id> <file>:<line>`. A `[confirmed]` row grounds a `confirmed`
+  finding (ADR-003); an `[advisory]` row grounds an `advisory` one.
+- A critic treats `INCOMPLETE` as a lower bound: the rows found are real, and a missing row proves nothing.
+- The helper caps the block at `PROBE_PANEL_ROWS` rows (40) and `PROBE_PANEL_BYTES` bytes (12000) and states the withheld count.
+- The helper exits 2 for `INCOMPLETE` and for `ERROR` (the kit ran no probe), and still prints the rows found.
+  The caller prints `operator.txt` from the `out:` directory to the operator, which names each absent tool with its install command.
+
 ## (b) Select critics
 
 Use `personas/_resolution.md` (§1 pack resolution, §2 critic selection) for the **reviewed** codebase.
@@ -143,6 +163,7 @@ ConfidenceFilter / Sourcery's validation pass all do). Machine-checked, not pros
   ≥ `min_severity` (default `MINOR`). `advisory` findings are summary-only or dropped.
 - Drop any finding whose fingerprint (`cr_fingerprint`, see `lib/cr-helpers.sh`) is in the caller's
   **suppression set** — it was already posted on a prior review.
+- Run `bin/probe-panel.sh cited <out> <id> <file> <line>` on each cited probe row. The answer `advisory` or `none` sets that finding's grounding to `advisory`.
 - Precision-first: when in doubt, **don't surface it.** Prefer silence to a plausible-but-unconfirmed
   comment (the documented false-positive trust cliff).
 
@@ -164,6 +185,7 @@ Spawned: [<persona> → <base_agent>, …]   # actual Agent calls made — MUST 
 Receipt: <path to the merged FILES_EXAMINED rows, strongest-evidence-wins per path>
 Rule receipt: <path to the merged RULES_CHECKED rows>   # omitted when the caller assigned no rules
 Unexamined: [<paths from the changed-file list that no critic read>]
+Probes: <probe-status, and line one of operator.txt when it exists>
 Confirmed actionable: [findings — file:line · severity · issue · recommendation]
 Advisory (summary-only): [findings]
 Suppressed (already posted): [n]

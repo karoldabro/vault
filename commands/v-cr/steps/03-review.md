@@ -15,6 +15,9 @@ Read `$VAULT_FRAMEWORK_PATH/commands/_shared/critic-panel.md` and execute it wit
 - **acceptance criteria**: the fetched task (step 2.3) — critics check *does the diff satisfy the ticket*;
 - **vault rules digest**: ADRs / indications / conventions (step 2.4) — critics respect project rules;
 - **suppression set**: the prior `v-cr` fingerprints (step 2.5).
+- **probe block**: record `PROBE_BASE=$(git merge-base <base ref> <head ref>)` from the refs step 2 gathered, then run
+  `bin/probe-panel.sh run --posture pr --repo <checkout> --base "$PROBE_BASE"` on the checkout of the pull request head
+  (rules: `_shared/critic-panel.md` §(a) Probe stage). With no checkout, skip the call and print `Probes: not run, no checkout`.
 
 The module handles the untrusted-input fencing, critic selection (`_resolution.md`, incl. the
 `correctness` bug-hunter lens + `skeptic` on high-risk diffs), parallel read-only spawn, the
@@ -58,7 +61,7 @@ source "$VAULT_FRAMEWORK_PATH/lib/cr-helpers.sh"
 read -r n_files adds dels changed_lines < <(cr_diff_stats < "$CR_CHANGED_FILES")
 ```
 Above the threshold (default ~1500 changed lines or >40 files), either **chunk by file/hunk** with a
-per-chunk critic budget, or **warn and require `--force`**. Enforce a per-review token ceiling
+per-chunk critic budget, or **warn and require `--force`**. A chunked review passes `--paths <file>` per chunk, so each critic receives the rows for its own paths. Enforce a per-review token ceiling
 (`VCR_MAX_TOKENS`, default ~200k) so cost is bounded and observable. Never silently truncate — say
 what was and wasn't reviewed. `$CR_CHANGED_FILES` is the path step 2 §2.1 wrote.
 
@@ -104,6 +107,7 @@ preference.
     examined clean · <U> not examined`, from §3.6. Three buckets, never two: a file nobody opened and
     a file checked and found clean are different claims, and merging them is what let a review report
     silence it had not earned. When `<U>` is above zero, name those paths in the summary;
+  - **probe line** — line one of `operator.txt` when it exists, else nothing; the summary carries no install text;
   - **test-posture line (mandatory)** — without `--sandbox`: `Tests: not executed (static review only —
     re-run with --sandbox to gate on tests)`; with `--sandbox`: `Tests: <pass | new-failure | red-unattributed>`;
   - **rule line (mandatory)** — `Rules: <c> checked · <a> n/a · <n> routed-unchecked · <m> no-match ·
@@ -164,6 +168,7 @@ Panel: <pack> → [critics]   (or GENERIC FALLBACK)
 Spawned: [<persona> → <base_agent>, …]   # actual Agent calls — MUST match [critics]; if empty, the panel did not run
 Coverage: <T> changed · <F> with findings · <C> examined clean · <U> NOT EXAMINED   # cr_coverage
 Unexamined: [<paths>]   ·   unexamined test files: <n>
+Probes: <line one of operator.txt | not run, no checkout>   # printed only when the run was incomplete
 Tests: <not executed (static review only) | pass | new-failure | red-unattributed>
 Rules: <c> checked · <a> n/a · <n> routed-unchecked · <m> no-match · <u> unroutable   # cr_rule_coverage
 Routed-unchecked: [<slugs>]   ·   bad anchors rejected: <k>

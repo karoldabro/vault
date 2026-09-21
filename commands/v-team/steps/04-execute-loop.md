@@ -18,7 +18,7 @@ the review loop converges — the internal review **rounds are non-hookable**. S
 
 Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/04-execute.md` and follow it verbatim: branch rule (§4.1), file-
 editing tool table (§4.2), supporting tools (§4.3), domain mindset (§4.4), per-unit loop (§4.5), and
-tests-after-each-phase (§4.6). The **converged plan** drives implementation order; implementers are the
+tests-after-each-phase (§4.6). Before the first edit, record `PROBE_BASE=$(git rev-parse HEAD)`; §5.3 reads it. The **converged plan** drives implementation order; implementers are the
 architect personas' `base_agent`s (e.g. `system-architect`/`backend-architect` for api-laravel).
 
 ## 5.2 Test triage (mutation-aware)
@@ -54,7 +54,9 @@ small scope (v-work §4.7 heuristic).
 Each round:
 1. **Analyzers first.** Run the personas' bound analyzers + the test suite on the **diff** before any
    critic opines (compiler, linter, SAST, query/N+1 probe, etc.). Findings on real code are the
-   strongest `confirmed` evidence — this is where grounding matters most.
+   strongest `confirmed` evidence — this is where grounding matters most. Also run
+   `bin/probe-panel.sh run --posture own --repo . --base "$PROBE_BASE"` and pass its output to every critic
+   (rules: `commands/_shared/critic-panel.md` §(a) Probe stage).
 2. **Spawn the same selected personas** (parallel, read-only) against the **git diff + changed-file
    list + analyzer output + converged plan**. Each checks: was my round-N recommendation honored? do my
    `must` tests exist? any new issue in the actual code? `target` is now `file:line`.
@@ -104,6 +106,7 @@ Test triage: [N implemented · N changed · N skipped]
 Tests: [only when something FAILED or was skipped — never "all passing"]
 Still open: [only when the review ended with something unresolved — say it in plain words,
              e.g. "the reviewers ran out of rounds with 2 things still open"]
+Probes: [only when operator.txt exists — print it verbatim]
 Vault docs: [written/updated alongside code]
 ```
 

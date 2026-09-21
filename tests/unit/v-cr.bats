@@ -291,3 +291,11 @@ setup() {
     grep -q 'source: pr-comment' /code/commands/v-cr/sandbox.md
     grep -q 'cr_is_recipe_key' /code/commands/v-cr/sandbox.md
 }
+
+@test "T-11 v-cr review runs the probe helper with posture pr, only on a checkout, and never names --allow-repo-registry" {
+    local f=/code/commands/v-cr/steps/03-review.md
+    grep -q -- '--posture pr' "${f}"
+    grep -qi 'no checkout' "${f}"
+    ! grep -q -- '--allow-repo-registry' "${f}"
+    grep -q 'Probe stage' /code/commands/_shared/critic-panel.md
+}
