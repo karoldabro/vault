@@ -17,7 +17,7 @@ probe_status() { printf '%s\n' "$*" >&2; }
 # probe_abort — stops the running job's process group and its watchdog. bin/probe.sh calls it on a signal.
 probe_abort() {
     [ -z "$PROBE_JOB" ] || { kill -TERM -- "-$PROBE_JOB" 2>/dev/null; sleep 1; kill -KILL -- "-$PROBE_JOB" 2>/dev/null; }
-    [ -z "$PROBE_WD" ] || kill "$PROBE_WD" 2>/dev/null
+    [ -z "$PROBE_WD" ] || kill -KILL "$PROBE_WD" 2>/dev/null
     return 0
 }
 
@@ -54,7 +54,7 @@ probe_exec() {
     PROBE_WD=$!
     wait "$PROBE_JOB" 2>/dev/null
     PROBE_RC=$?
-    kill "$PROBE_WD" 2>/dev/null; wait "$PROBE_WD" 2>/dev/null
+    kill -KILL "$PROBE_WD" 2>/dev/null; wait "$PROBE_WD" 2>/dev/null
     kill -KILL -- "-$PROBE_JOB" 2>/dev/null
     PROBE_JOB="" PROBE_WD=""
     [ -e "$out.timeout" ] && PROBE_RC=124

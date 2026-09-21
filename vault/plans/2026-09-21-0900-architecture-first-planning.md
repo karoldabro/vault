@@ -161,7 +161,7 @@ exists; the plan targets reuse, layering and data model, where agents fail most)
 
 ## Sequencing & dependencies
 Order: S1, S2, S3, S4, S5, S6, S7, S8, S9. S2 needs S1's ADR. S3 needs S2's spec. S5 needs S3 and S4.
-S6 needs S2 and S3. S7 needs S4. S8 needs S4 and S7. S9 needs S4 and S5. Within S2, W-14 (done) precedes W-12 and W-13. W-15 precedes W-16 only in review order; both
+S6 needs S2 and S3. S7 needs S4. S8 needs S4 and S7. S9 needs S4 and S5. S10 needs S8. Within S2, W-14 (done) precedes W-12 and W-13. W-15 precedes W-16 only in review order; both
 land in one commit.
 
 ## Cross-session contracts
@@ -175,8 +175,9 @@ does not redefine it. The producing session may add columns, never rename or dro
 | C-3 | probe registry `probes/registry.tsv` | S4 | S5, S7, S8, S9 | columns `id stack stage detect run parser cost executes-repo-code install`; `stage` is `plan`, `diff` or `review`; a missing tool reports `absent: <project-scope install command>` |
 | C-4 | probe commands | S4 | S5, S7 | `bin/probe.sh list`, `detect`, `run <stage>`, `diff`, `scale` |
 | C-5 | indication-to-probe link | S7 | S8 | optional `probe: <registry id>` in an indication's frontmatter |
-| C-6 | rule file location | S8 | S7, S9 | `probes/rules/<slug>.<ext>` in the target repo, plus one registry row |
+| C-6 | rule file location | S8 | S7, S9, S10 | `probes/rules/<slug>.grep` in the target repo, plus one registry row that `bin/rule-check.sh row` prints and `probes/rule-grep.sh` runs; the format and the row are in `commands/_shared/probe-kit.md` section Rule files |
 | C-7 | human page and its check | S3 | S5, S6 | `bin/render-human.sh <plan>` writes `<plan>.human.html`; `bin/gate.sh human <plan>` prints `human: ok <page>` when the page equals a fresh render and `human_plan` is a link |
+| C-8 | sandbox probe rows | S10 | S7 | four files in one directory, written by the host after the container exits: `framework.tsv` and `rules.tsv` hold C-2 rows, `framework.status` and `rules.status` hold the kit's status lines; `bin/probe-panel.sh` tags a row `[confirmed]` from the run that produced it and never from the file's content |
 
 ## Sessions
 
@@ -189,8 +190,9 @@ does not redefine it. The producing session may add columns, never rename or dro
 | S5 | plan-time probes: auditor agents, longer planning stage, cost delta per D-10 | /v-team | todo | S3, S4 | 2026-09-21 | |
 | S6 | master plan template with a required `## Cross-session contracts` table and its artifact, `gate.sh master` (D-15, E-3), `/v-pm` and `(f3)` in `commands/v-team/steps/03-propose-loop.md` write and read it, sub-plan ordering gate | /v-team | todo | S2, S3 | 2026-09-21 | |
 | S7 | probe results as a panel input: `commands/_shared/critic-panel.md` runs `bin/probe.sh diff` in its ground-first stage; `/v-team` execute, `/v-cr` review (D-14) and `/v-work` review read it; each indication names its probe | /v-team | done | S4 | 2026-09-21 | | `bin/gate.sh verdict vault/plans/2026-09-21-1330-probe-panel-input.md` reports SC-1 to SC-7 MET |
-| S8 | `/v-rule` skill: operator comments in, indication plus rule file plus fixtures out (D-8, D-12, D-13) | /v-team | todo | S4, S7 | 2026-09-21 | |
+| S8 | `/v-rule` skill: operator comments in, indication plus rule file plus fixtures out (D-8, D-12, D-13); `bin/rule-check.sh`, `probes/rule-grep.sh`, the Rule files section of `commands/_shared/probe-kit.md` | /v-team | done | S4, S7 | 2026-09-21 | `bin/gate.sh verdict vault/plans/2026-09-21-1430-v-rule.md` reports SC-1 to SC-8 MET |
 | S9 | stack packs for Laravel, Nuxt, Flutter, Python and SQL, validated on `recycling-api` and one Nuxt repo | /v-work | todo | S4, S5 | 2026-09-21 | |
+| S10 | sandbox probe stage `probe-sandbox`: `bin/probe-sandbox.sh`, `bin/probe.sh`, `bin/probe-panel.sh`, `lib/probe-scope.sh`, `lib/probe-registry.sh`, `lib/cr-sandbox.sh`, `commands/v-cr/sandbox.md`, `commands/v-cr/steps/02-gather.md`, `commands/v-cr/steps/03-review.md`, `commands/_shared/critic-panel.md`, `commands/_shared/probe-kit.md`, `vault/decisions/ADR-009-v-cr-sandboxed-execution.md`, `tests/unit/sandbox-probe.bats`, `tests/unit/cr-sandbox.bats`, `checks/sandbox-probe-SC-1.sh` to `-5.sh`; design in `vault/plans/2026-09-21-1430-v-rule.md` VR-4 and VR-5; `critic-panel.md` stays at 181 rule lines | /v-team | todo | S8 | 2026-09-21 | |
 
 ## Rollback
 Every change is additive. Revert the session commit. A repo without `arch_profile` reads as `none`, so

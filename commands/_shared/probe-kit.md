@@ -100,6 +100,34 @@ Environment variables and their defaults: `PROBE_TIMEOUT` 120, `PROBE_OUT_MAX` 5
 | `typos` | `typo` |
 | `claude-validate` | `plugin-<field>` |
 
+## Rule files
+
+`/v-rule` writes rules and `bin/rule-check.sh` checks and installs them. A rule is one data file, `probes/rules/<slug>.grep`, of `key: value` lines; `#` starts a comment. `probes/rule-grep.sh` runs it and never runs the file as code. A key outside the list, a repeated key or a bad value exits 2.
+
+- `glob`: one or more lines, each a shell `case` pattern matched against the whole repo-relative path. `*` also matches `/`. Several lines are alternatives. A glob has no leading `/` and no `..`.
+- `pattern`: one POSIX extended regular expression of at most 300 characters, run with `grep -E`.
+- `severity`: `error`, `warn` or `info`.
+- `message`: printable ASCII, 1 to 200 characters.
+
+The fixtures are `probes/rules/fixtures/<slug>/bad.<ext>`, which the rule must fire on, and `good.<ext>`, which it must not. The runner skips `probes/`.
+
+The registry row of a rule is generated and never typed. Its nine fields are:
+
+`<slug><TAB><stack><TAB>plan<TAB>test -f probes/rules/<slug>.grep<TAB>"$PROBE_FRAMEWORK/probes/rule-grep.sh" --check <slug> --rule probes/rules/<slug>.grep<TAB>native<TAB>S<TAB>yes<TAB>none`
+
+A row written by hand declares `yes` whenever its `run` is not this template, and names its install command. `bin/rule-check.sh` never runs or edits such a row.
+
+| command | prints |
+|---------|--------|
+| `rule-check.sh row` | the row above |
+| `rule-check.sh accept` | `accepted <slug>: <n> of <files> files at <sha>`, or `refused <slug>: <why>` with exit 1 |
+| `rule-check.sh install` | `wrote <path>` per file and `record: <n> of <files> files at <sha>` |
+| `rule-check.sh verify` | `ok`, `drift <slug>: <old> -> <new>`, `framework <id>`, `hand-written <id>`, `mislabelled <id>`, `orphan <slug> <id>` or `broken <slug>: <why>` |
+| `rule-check.sh own-comments` | the comments of the operator's user id as a JSON array |
+| `rule-grep.sh` | finding rows; `--fixture <file>` scans one file; `--count-files` prints the files the globs select |
+
+`accept` refuses a rule that fires more than `RULE_MAX_FINDINGS` times on the repo, and `verify` exits 1 for `orphan`, `mislabelled` and `broken`. Settings: `RULE_MAX_FINDINGS` (half of `PROBE_PANEL_ROWS`, so 20) and `PROBE_RULE_TIMEOUT` (10 seconds per batch of 500 files).
+
 ## Adding a probe
 
 1. Check the tool's flag and output against `vault/research/probe-tool-verification.md`, and record a new tool there first.

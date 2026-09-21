@@ -57,6 +57,7 @@ plugin uses the same name.
 | `/v-loop` | Works alone for hours, until every case has a verdict | You want to hand a long job over and leave |
 | `/v-pm` | Plans one feature across several repos at once | The feature crosses repo boundaries |
 | `/v-method` | Writes the stages, the tools, and what should stop them | The task is big and you don't know how to start |
+| `/v-rule` | Turns your own review comments into a checked rule | A review left a comment you want enforced next time |
 
 ### Look at it
 

@@ -4,6 +4,8 @@ project: {{project}}
 slug: {{slug}}
 scope: repo
 probe:                 # optional: id of a row in probes/registry.tsv that checks this rule
+probe_count:           # optional: written by /v-rule, `<n> of <files> files at <sha>` measured when the rule was accepted
+source:                # optional: `pr-comment` when the rule came from a review comment
 tags: [indication]
 ---
 
