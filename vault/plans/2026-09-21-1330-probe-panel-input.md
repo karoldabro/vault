@@ -7,7 +7,7 @@ status: executed
 process_record: 2026-09-21-1330-probe-panel-input.trail.md
 arch_spec: 2026-09-21-1330-probe-panel-input.arch.md
 human_plan: https://claude.ai/artifact/NLH3yrrdzuofH9qRbqHWs5
-session:
+session: vault/sessions/2026-09-21-1400-probe-panel-input-s7.md
 tags: [plan, probes, review-panel]
 ---
 
