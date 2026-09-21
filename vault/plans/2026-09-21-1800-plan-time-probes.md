@@ -7,7 +7,7 @@ status: executed
 process_record: 2026-09-21-1800-plan-time-probes.trail.md
 arch_spec: 2026-09-21-1800-plan-time-probes.arch.md
 human_plan: https://claude.ai/artifact/UZUDyo6UYBEZMqA5Gw2wDt
-session:
+session: vault/sessions/2026-09-21-1800-plan-time-probes-s5.md
 tags: [plan, probes, architecture, v-team]
 ---
 

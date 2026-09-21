@@ -37,11 +37,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-21-1800-plan-time-probes-s5]] — Add a plan-time probe stage and reuse auditor to /v-team PROPOSE with a 50% cost tier
 - [[sessions/2026-09-21-1600-sandbox-probe-s10]] — S10 sandbox probe stage for /v-cr --sandbox
 - [[sessions/2026-09-21-1430-v-rule-s8]] — the /v-rule skill and the sandbox probe split (S8)
 - [[sessions/2026-09-21-1400-probe-panel-input-s7]] — probe rows feed the review panels of v-team, v-cr and v-work (S7)
 - [[sessions/2026-09-21-1317-probe-kit-core-s4]] — Build the probe kit core and verify its tool claims (S4)
-- [[sessions/2026-09-21-1130-human-plan-page-and-profiles]] — Architecture spec profiles as data; S3 human plan page renderer, gate and wiring
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center for one or more repos: rules REQ-NN with axis tags, a glossary, and decision/state tables. Adds the single-repo `requirements/` category. The id chain reaches the established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)
