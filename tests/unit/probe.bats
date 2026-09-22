@@ -418,3 +418,58 @@ CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY, email TEXT);'
     rrun broken
     [ "$status" -eq 2 ]; [[ $stderr == *"failed: broken: exit 1 with no output"* ]]
 }
+
+@test "T-40: stack_packs gates a stack not listed, and an empty value falls back to detect alone" {
+    printf 'sql-row\tsql\tplan\ttrue\ttrue\tnative\tS\tno\tnone\n' >> "${REPO}/probes/registry.tsv"
+    printf 'laravel-row\tlaravel\tplan\ttrue\ttrue\tnative\tS\tno\tnone\n' >> "${REPO}/probes/registry.tsv"
+    printf 'stack_packs: sql\n' > "${REPO}/VAULT.md"
+    pr list --repo "${REPO}" --allow-repo-registry
+    [[ $output == *"sql-row"* ]]; [[ $output != *"laravel-row"* ]]
+    printf 'stack_packs:\n' > "${REPO}/VAULT.md"
+    pr list --repo "${REPO}" --allow-repo-registry
+    [[ $output == *"sql-row"* ]]; [[ $output == *"laravel-row"* ]]
+}
+
+@test "T-41: parse_phpstan_json and parse_phparkitect_json turn their real fixture into finding rows" {
+    run bash -c '. "$1/lib/probe-parsers.sh"; parse_phpstan_json phpstan-row /x < "$2/phpstan.json"' _ "${VAULT_ROOT}" "${FX}"
+    [ "$status" -eq 0 ]
+    [ "${lines[0]}" = "phpstan-row${TAB}app/Http/Controllers/SeoMediaController.php${TAB}151${TAB}error${TAB}method.notFound${TAB}Call to an undefined method Illuminate\\Database\\Eloquent\\Builder<Illuminate\\Database\\Eloquent\\Model>::notBanned()." ]
+    run bash -c '. "$1/lib/probe-parsers.sh"; parse_phparkitect_json arkitect-row /x < "$2/phparkitect.json"' _ "${VAULT_ROOT}" "${FX}"
+    [ "$status" -eq 0 ]
+    [[ ${lines[0]} == "arkitect-row${TAB}app/Domain/User.php${TAB}8${TAB}error${TAB}arkitect${TAB}"* ]]
+}
+
+@test "T-42: parse_ruff_json and parse_dart_machine turn their real fixture into finding rows" {
+    run bash -c '. "$1/lib/probe-parsers.sh"; parse_ruff_json ruff-row /x < "$2/ruff.json"' _ "${VAULT_ROOT}" "${FX}"
+    [ "$status" -eq 0 ]
+    [[ ${lines[0]} == "ruff-row${TAB}bad.py${TAB}1${TAB}error${TAB}F401${TAB}"* ]]
+    run bash -c '. "$1/lib/probe-parsers.sh"; parse_dart_machine dart-row /x < "$2/dart-analyze.txt"' _ "${VAULT_ROOT}" "${FX}"
+    [ "$status" -eq 0 ]
+    [[ ${lines[0]} == "dart-row${TAB}lib/main.dart${TAB}126${TAB}warn${TAB}UNUSED_LOCAL_VARIABLE${TAB}"* ]]
+}
+
+@test "T-43: vault-init.sh writes stack_packs on a Laravel+SQL fixture tree" {
+    local code="${TMP}/code"
+    mkdir -p "${code}/database/migrations"
+    git -C "${code}" init --quiet --initial-branch=main 2>/dev/null || git -C "${code}" init --quiet
+    git -C "${code}" config user.email test@local; git -C "${code}" config user.name test
+    printf '{"require": {"laravel/framework": "^11.0"}}' > "${code}/composer.json"
+    printf 'CREATE TABLE users (id INT);\n' > "${code}/database/migrations/001_users.sql"
+    echo hello > "${code}/README.md"
+    git -C "${code}" add -A; git -C "${code}" commit --quiet -m init
+    ( cd "${code}" && VAULT_HOME="${TMP}/home/vault" VAULT_FRAMEWORK_PATH="${VAULT_ROOT}" \
+        "${VAULT_ROOT}/bin/vault-init.sh" --in-repo )
+    grep -qx 'stack_packs: laravel, sql' "${code}/VAULT.md"
+}
+
+@test "T-44: a repo with no stack_packs key runs every row exactly as before this plan" {
+    addrow sql-row plan true true
+    pr list --repo "${REPO}" --allow-repo-registry
+    [[ $output == *"sql-row"* ]]
+}
+
+@test "T-45: parse_tsc_text turns the real vue-tsc fixture into one finding row" {
+    run bash -c '. "$1/lib/probe-parsers.sh"; parse_tsc_text tsc-row /x < "$2/vue-tsc.txt"' _ "${VAULT_ROOT}" "${FX}"
+    [ "$status" -eq 0 ]
+    [ "${lines[0]}" = "tsc-row${TAB}bad.ts${TAB}1${TAB}error${TAB}TS2322${TAB}Type 'string' is not assignable to type 'number'." ]
+}

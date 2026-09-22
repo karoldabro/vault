@@ -84,6 +84,23 @@ export PROBE_NO_REPO_CODE=$nocode PROBE_MAXRANK=3
 
 rows=$(probe_registry "$repo" "$allow") || exit 2
 
+# probe_vault_key <repo> <key>: the raw value of the first `key:` line of <repo>/VAULT.md, CR and
+# padding removed. Returns 1 when the file or the key is absent, so a caller can tell absent from
+# empty. Kept local to this file rather than sourced from lib/arch-check.sh, which states it is
+# "Sourced by gate.sh, never run on its own" and depends on gate.sh's own helpers.
+probe_vault_key() {
+    local file="$1/VAULT.md" key=$2 line
+    [ -f "$file" ] && [ -r "$file" ] || return 1
+    line=$(awk -v k="$key" 'index($0, k ":") == 1 { print; exit }' "$file")
+    [ -n "$line" ] || return 1
+    line=${line#*:}
+    line=${line%$'\r'}
+    line="${line#"${line%%[![:space:]]*}"}"
+    printf '%s' "${line%"${line##*[![:space:]]}"}"
+}
+STACK_PACKS=$(probe_vault_key "$repo" stack_packs 2>/dev/null || true)
+STACK_PACKS=$(printf '%s' "$STACK_PACKS" | tr -d ' ')
+
 file_list() {
     if [ "$cmd" = diff ]; then
         if [ -n "$clist" ]; then probe_filter_list "$repo" "$PROBE_FILES.skipped" < "$clist" | LC_ALL=C sort -z > "$PROBE_FILES"
@@ -103,6 +120,12 @@ each_row() { # each_row <function> — calls it with the ten fields of every row
     while IFS=$'\t' read -r origin id stack st detect run parser cost trust install; do
         [ -n "$id" ] || continue
         [ -z "$only" ] || [ "$id" = "$only" ] || continue
+        if [ -n "$STACK_PACKS" ]; then
+            case $stack in
+                any|harness) ;;
+                *) case ",$STACK_PACKS," in *",$stack,"*) ;; *) continue ;; esac ;;
+            esac
+        fi
         "$1" "$origin" "$id" "$stack" "$st" "$detect" "$run" "$parser" "$cost" "$trust" "$install"
     done <<< "$rows"
 }

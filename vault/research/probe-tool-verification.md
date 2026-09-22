@@ -34,9 +34,9 @@ run: `dcm analyze` and `dcm check-code-duplication` accept `--reporter json` (ht
 ### PHPArkitect
 verdict: verified
 url: https://raw.githubusercontent.com/phparkitect/arkitect/main/src/CLI/Command/Check.php
-date: 2026-09-21
+date: 2026-09-22
 quote: Output format: text (default), json, gitlab
-run: source read by an agent. Package `phparkitect/phparkitect` version 1.3.0; exit 1 on violations. No captured output yet, so session S9 adds the row.
+run: `phparkitect/phparkitect` 1.3.0.0 installed and run for real in a scratch project (session S9). The config file must `return static function (Config $config): void { ... $config->add($classSet, ...$rules); }` — `Config::for()` does not exist. Rule construction is `Rule::allClasses()->that(...)->should(new NotDependsOnTheseNamespaces([...]))->because(...)`; the namespace-list expressions take an `array`, not a `string`. `check --format=json` on one deliberate violation (a `App\Domain` class depending on `App\Infra`) printed `{"totalViolations": 1, "details": {"<FQCN>": [{"error": "...", "line": N}]}}` — keyed by fully-qualified class name, with **no file path field at all**. `probes/rules/fixtures/phparkitect` (`tests/fixtures/probe/phparkitect.json`) holds the captured payload; `parse_phparkitect_json` derives the file path from the FQCN under the Laravel `App\` → `app/` PSR-4 convention, since this row is Laravel-only.
 
 ### tbls lint JSON output
 verdict: refuted
@@ -78,7 +78,7 @@ verdict: partly
 url: https://pmd.github.io/pmd/pmd_userdocs_cpd.html
 date: 2026-09-21
 quote: --minimum-tokens is required and --language defaults to Java (agent's reading of the page).
-run: PMD 7 syntax is `pmd cpd --minimum-tokens N --language X --format F --dir PATH`. Formats are text, xml, xmlold, csv, csv_with_linecount_per_file, vs and markdown, with no json. Exit 4 means duplicates and `--no-fail-on-violation` changes it. It needs a JRE. No captured output yet, so session S9 adds the row.
+run: PMD 7 syntax is `pmd cpd --minimum-tokens N --language X --format F --dir PATH`. Formats are text, xml, xmlold, csv, csv_with_linecount_per_file, vs and markdown, with no json. Exit 4 means duplicates and `--no-fail-on-violation` changes it. It needs a JRE. No captured output yet. Session S9 (`vault/plans/2026-09-22-0900-stack-packs.md`) is a Laravel/Nuxt/Flutter/Python stack-pack session. It does not add this row. Cross-language duplicate detection is a different job from a stack pack and stays open for a future session.
 
 ### typos on PyPI
 verdict: verified
@@ -101,6 +101,35 @@ date: 2026-09-21
 quote: Validate a plugin or marketplace manifest, or the skills, agents, and commands in a directory
 run: `claude plugin validate --help` on version 2.1.278. `--json` prints a report with `manifest` and `contents[]` entries, each holding `errors` and `warnings`. Exit 0 on success and 1 on an invalid manifest, tested on this repo and on a broken manifest. `--strict` treats warnings as errors.
 
+### PHPStan JSON output
+verdict: verified
+url: https://phpstan.org/user-guide/output-format
+date: 2026-09-22
+quote: json — minified JSON without whitespace.
+run: PHPStan 2.x, `--error-format=json --no-progress`, run for real inside `recycling-api`'s own `server` docker image (session S9; the host's PHP 8.3.11 is too old for that repo's `composer.lock`, which needs PHP >=8.4.1). Real output is `{"totals": {"errors": N, "file_errors": N}, "files": {"<path>": {"errors": N, "messages": [{"message": "...", "line": N, "ignorable": bool, "identifier": "..."}]}}, "errors": [...]}`. There is no severity/level field on a message — only `ignorable`. `tests/fixtures/probe/phpstan.json` holds the captured payload (path normalized to repo-relative).
+
+### ruff --output-format json
+verdict: verified
+url: https://docs.astral.sh/ruff/settings/
+date: 2026-09-22
+quote: --output-format json produces machine-readable output.
+run: ruff 0.16.8 installed in a scratch `.venv-probes` (session S9, same convention as the `typos` row) and run against a file with an unused import and an unused local variable. Real output is a JSON array of `{"filename": <absolute path>, "location": {"row": N, "column": N}, "code": "...", "message": "...", "severity": "error", ...}`. `tests/fixtures/probe/ruff.json` holds the captured payload (path normalized to repo-relative).
+
+### dart analyze --format=machine (Flutter/Dart)
+verdict: partly
+url: https://github.com/flutter/flutter/issues/95090
+date: 2026-09-22
+quote: --format=machine parameter (pipe-delimited: SEVERITY|TYPE|ERROR_CODE|FILE_PATH|LINE|COLUMN|LENGTH|ERROR_MESSAGE)
+run: `flutter analyze` on Flutter 3.44.4 has **no `--format` flag at all** — refuted for that command specifically (`Could not find an option named "--format"`, exit 64). The underlying `dart analyze --format=machine` (Dart SDK bundled with Flutter) does carry it and was run for real, in a scratch `flutter create` project (session S9) with an unused local variable and a stray `print`. Real output: `WARNING|STATIC_WARNING|UNUSED_LOCAL_VARIABLE|lib/main.dart|126|7|11|...` and `INFO|LINT|AVOID_PRINT|lib/main.dart|125|3|5|...`, one line per finding, pipe-delimited, matching the documented column order. `probes/registry.tsv` runs `dart analyze`, never `flutter analyze --format=machine`. `tests/fixtures/probe/dart-analyze.txt` holds the captured payload.
+
+### vue-tsc --noEmit diagnostic text (Nuxt)
+verdict: refuted (original claim), verified (actual format)
+url: https://github.com/nuxt/cli/blob/main/packages/nuxi/src/commands/typecheck.ts
+date: 2026-09-22
+quote: (no JSON or machine-readable mode documented for vue-tsc or nuxi typecheck)
+run: the original draft assumed TypeScript's colon-dash pretty form, `path:line:col - error TSxxxx: message` — that is the TTY-only "pretty" form. Piped (as `bin/probe.sh` always runs a tool), TypeScript defaults to non-pretty. vue-tsc 3.3.11 (pinned to `typescript@5.6`; `typescript@7.0.2` breaks vue-tsc's internal `require.resolve('./lib/tsc')` — a real, current incompatibility, noted for the install command) was run for real, in a scratch project, against `const x: number = "not a number";`. Real, piped output: `bad.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.` — the parenthesized form, one line per diagnostic, no JSON. `tests/fixtures/probe/vue-tsc.txt` holds the captured payload.
+
 ## Refs
 - `probes/registry.tsv`: every tool row names a tool that has a section here.
 - `vault/plans/2026-09-21-1130-probe-kit-core.md`: decision D-9 requires this file.
+- `vault/plans/2026-09-22-0900-stack-packs.md`: session S9, adds the PHPStan, PHPArkitect, ruff, dart analyze and vue-tsc rows above.

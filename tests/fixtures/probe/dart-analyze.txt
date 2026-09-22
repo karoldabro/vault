@@ -1,0 +1,2 @@
+WARNING|STATIC_WARNING|UNUSED_LOCAL_VARIABLE|lib/main.dart|126|7|11|The value of the local variable 'unusedLocal' isn't used.
+INFO|LINT|AVOID_PRINT|lib/main.dart|125|3|5|Don't invoke 'print' in production code.

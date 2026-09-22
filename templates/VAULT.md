@@ -59,6 +59,14 @@ delivery_command: {{delivery_command}}
      means `none`, so no existing repo is refused for lacking it. -->
 # arch_profile: none
 
+## probes
+<!-- Which `probes/registry.tsv` `stack` ids this repo treats as applicable, written by
+     `bin/vault-init.sh` and confirmed by you. Auto-detected from marker files at onboarding; edit by
+     hand to add a stack the detector missed or drop one that doesn't apply here (an analyzer not
+     installed, or a false-positive marker). Omit the key, or leave it empty, to fall back to every
+     row's own `detect` cell alone — the behavior of every repo onboarded before this key existed. -->
+stack_packs: {{stack_packs}}
+
 ## hooks
 <!-- Per-project, per-step instruction (prose only; never run as a shell command, there is no `run:`
      syntax). Both /v-work and /v-team honor them: read once at step 1, carried through the run. The 14

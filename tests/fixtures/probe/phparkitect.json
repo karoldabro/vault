@@ -1,0 +1,11 @@
+{
+    "totalViolations": 1,
+    "details": {
+        "App\\Domain\\User": [
+            {
+                "error": "depends on App\\Infra\\Database, but should not depend on these namespaces: App\\Infra because domain must not depend on infrastructure",
+                "line": 8
+            }
+        ]
+    }
+}

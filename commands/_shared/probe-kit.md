@@ -26,6 +26,13 @@ A repo registry is read only under `--allow-repo-registry`, and only as a regula
 and `--no-repo-code` skips them. A registry that is the framework's own file loads once. A repeated
 `id`+`stage`, a line without nine fields or a value outside its list exits 2 and names the line.
 
+A repo's `VAULT.md` `stack_packs` key (comma separated `stack` ids) gates every row whose `stack` is
+not `any` or `harness`: a row whose `stack` is absent from the list is skipped before its `detect`
+cell ever runs, with no `ran:`/`absent:` line. The key absent, or empty after its colon, changes
+nothing — every row's own `detect` cell alone decides applicability, the behavior of every repo
+onboarded before this key existed. `bin/vault-init.sh` writes it at onboarding from the same marker
+files `commands/v-work/steps/01-analyze.md` §1.3 uses; the operator edits it by hand after.
+
 ## Cells
 
 `detect` and `run` run with `bash -c` in the repo, with these variables exported: `PROBE_REPO`,

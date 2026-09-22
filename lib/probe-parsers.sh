@@ -61,3 +61,74 @@ parse_claude_validate() {
         probe_finding "$id" "$f" 0 "$sev" "$rule" "$msg"
     done
 }
+
+# phpstan --error-format=json: files.<path>.messages[] with message, line, identifier. No severity
+# field on a message (only ignorable); every message is treated as severity error.
+parse_phpstan_json() {
+    local id=$1 repo=$2 f l ident msg
+    command -v jq >/dev/null 2>&1 || return 3
+    jq -r '.files // {} | to_entries[] as $e | $e.value.messages[]
+        | [$e.key, (.line // 0 | tostring), (.identifier // ""), .message] | map(. // "") | join("\u001f")' |
+    while IFS=$'\037' read -r f l ident msg; do
+        f=${f#"$repo"/}; f=${f#./}
+        probe_finding "$id" "$f" "$l" error "${ident:-phpstan}" "$msg"
+    done
+}
+
+# phparkitect check --format=json: {"details": {"<FQCN>": [{"error", "line"}]}}, keyed by class name —
+# no file field at all. Laravel-only row: a class under App\ maps to app/ (Laravel's own PSR-4
+# convention). A class outside App\ is skipped; this parser cannot name its file.
+parse_phparkitect_json() {
+    local id=$1 repo=$2 fqcn l msg f
+    command -v jq >/dev/null 2>&1 || return 3
+    jq -r '.details // {} | to_entries[] as $e | $e.value[]
+        | [$e.key, (.line // 0 | tostring), .error] | map(. // "") | join("\u001f")' |
+    while IFS=$'\037' read -r fqcn l msg; do
+        case $fqcn in
+            'App\'*)
+                f="app/${fqcn#App\\}"
+                f=$(printf '%s' "$f" | tr '\\' '/')
+                probe_finding "$id" "${f}.php" "$l" error arkitect "$msg"
+                ;;
+        esac
+    done
+}
+
+# ruff check --output-format json: array of {filename, location:{row,column}, code, message, severity}.
+parse_ruff_json() {
+    local id=$1 repo=$2 f l sev code msg
+    command -v jq >/dev/null 2>&1 || return 3
+    jq -r '.[] | [.filename, (.location.row // 0 | tostring), (.severity // "error"), .code, .message] | map(. // "") | join("\u001f")' |
+    while IFS=$'\037' read -r f l sev code msg; do
+        f=${f#"$repo"/}; f=${f#./}
+        case $sev in error) ;; *) sev=warn ;; esac
+        probe_finding "$id" "$f" "$l" "$sev" "$code" "$msg"
+    done
+}
+
+# dart analyze --format=machine: SEVERITY|TYPE|CODE|PATH|LINE|COL|LEN|MESSAGE, one line per finding.
+# A literal pipe inside PATH or MESSAGE is backslash-escaped by the tool; this split does not unescape
+# it, so a finding whose path or message holds a real "|" is a known miss.
+parse_dart_machine() {
+    local id=$1 repo=$2
+    awk -F'|' '
+        NF < 8 { next }
+        { sev = ($1 == "ERROR") ? "error" : ($1 == "WARNING") ? "warn" : "info"
+          printf "%s\t%s\t%s\t%s\t%s\n", $4, $5, sev, $3, $8 }
+    ' | while IFS=$'\t' read -r f l sev code msg; do
+        f=${f#"$repo"/}; f=${f#./}
+        probe_finding "$id" "$f" "$l" "$sev" "$code" "$msg"
+    done
+}
+
+# vue-tsc/tsc --noEmit, piped (non-TTY, so TypeScript's non-pretty form): one line per diagnostic,
+# path(line,col): error|warning TSxxxx: message.
+parse_tsc_text() {
+    local id=$1 repo=$2
+    sed -E -n 's/^(.+)\(([0-9]+),[0-9]+\): (error|warning) (TS[0-9]+): (.*)$/\1\t\2\t\3\t\4\t\5/p' |
+    while IFS=$'\t' read -r f l sev code msg; do
+        f=${f#"$repo"/}; f=${f#./}
+        case $sev in error) ;; *) sev=warn ;; esac
+        probe_finding "$id" "$f" "$l" "$sev" "$code" "$msg"
+    done
+}

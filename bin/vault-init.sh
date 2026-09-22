@@ -247,6 +247,30 @@ detect_dod_commands() {
     delivery_command="absent: name the command that runs the real system end to end"
 }
 
+# Which probes/registry.tsv stack ids this repo looks like it has, from the same marker files as
+# `commands/v-work/steps/01-analyze.md` §1.3's stack table. Empty when none are recognized, so the
+# written key falls back to every row's own `detect` cell (never a guessed "absent: ..." sentence,
+# which would read as a deliberate zero-stacks declaration instead of an unrecognized repo).
+detect_stack_packs() {
+    local repo="$1" packs=""
+    if [ -f "${repo}/composer.json" ] && grep -q '"laravel/framework"' "${repo}/composer.json" 2>/dev/null; then
+        packs="${packs:+${packs}, }laravel"
+    fi
+    if ls "${repo}"/nuxt.config.* >/dev/null 2>&1; then
+        packs="${packs:+${packs}, }nuxt"
+    fi
+    if [ -f "${repo}/pubspec.yaml" ]; then
+        packs="${packs:+${packs}, }flutter"
+    fi
+    if [ -f "${repo}/pyproject.toml" ] || [ -f "${repo}/requirements.txt" ]; then
+        packs="${packs:+${packs}, }python"
+    fi
+    if { find "${repo}/database" "${repo}/migrations" "${repo}/db" "${repo}/schema" -name '*.sql' 2>/dev/null || true; ls "${repo}/schema.sql" 2>/dev/null || true; } | grep -q .; then
+        packs="${packs:+${packs}, }sql"
+    fi
+    stack_packs="${packs}"
+}
+
 #------------------------------------------------------------------------------
 # VAULT.md in code repo (records where the vault lives + per-repo config)
 #------------------------------------------------------------------------------
@@ -256,17 +280,20 @@ if [ "${no_vault_md}" -eq 0 ]; then
         echo "  VAULT.md already present — leaving it untouched."
     else
         detect_dod_commands "${code_repo}"
+        detect_stack_packs "${code_repo}"
         sed -e "s|{{slug}}|${slug}|g" \
             -e "s|^vault_path: ./vault|vault_path: ${vault_path_value}|" \
             -e "s|{{dod_profile}}|${dod_profile}|" \
             -e "s|{{test_command}}|${test_command}|" \
             -e "s|{{lint_command}}|${lint_command}|" \
             -e "s|{{delivery_command}}|${delivery_command}|" \
+            -e "s|{{stack_packs}}|${stack_packs}|" \
             "${VAULT_ROOT}/templates/VAULT.md" > "${vault_md}"
         echo "  VAULT.md definition-of-done, confirm or edit these:"
         printf '    %-18s %s\n' "test_command" "${test_command}" \
                                  "lint_command" "${lint_command}" \
-                                 "delivery_command" "${delivery_command}"
+                                 "delivery_command" "${delivery_command}" \
+                                 "stack_packs" "${stack_packs:-(none detected)}"
     fi
 fi
 

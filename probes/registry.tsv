@@ -11,3 +11,8 @@ sql-fk-index	sql	plan	{ find database migrations db schema -name '*.sql' 2>/dev/
 sql-naming	sql	plan	{ find database migrations db schema -name '*.sql' 2>/dev/null; ls schema.sql 2>/dev/null; } | grep -q .	"$PROBE_FRAMEWORK/probes/sql-schema.sh" --check sql-naming	native	S	no	none
 similar-symbols	any	plan	find . \( -name '*.sh' -o -name '*.php' -o -name '*.py' -o -name '*.go' -o -name '*.js' -o -name '*.ts' -o -name '*.vue' \) -not -path './.git/*' -not -path './node_modules/*' -not -path './vendor/*' | grep -q .	"$PROBE_FRAMEWORK/probes/similar-symbols.sh" --check similar-symbols	native	S	no	none
 spec-symbols	any	plan	test -n "$PROBE_SPEC"	"$PROBE_FRAMEWORK/probes/similar-symbols.sh" --check spec-symbols	native	S	no	none
+laravel-phpstan	laravel	diff	test -f composer.json && grep -q '"laravel/framework"' composer.json	vendor/bin/phpstan analyse --error-format=json --no-progress .	parse_phpstan_json	M	yes	composer require --dev phpstan/phpstan
+laravel-arkitect	laravel	diff	test -f composer.json && grep -q '"laravel/framework"' composer.json && test -f phparkitect.php	vendor/bin/phparkitect check --format=json	parse_phparkitect_json	S	yes	composer require --dev phparkitect/phparkitect
+nuxt-tsc	nuxt	diff	test -f nuxt.config.ts -o -f nuxt.config.js -o -f nuxt.config.mjs	vue-tsc --noEmit	parse_tsc_text	S	yes	npm install -D vue-tsc typescript
+dart-analyze	flutter	diff	test -f pubspec.yaml	dart analyze --format=machine	parse_dart_machine	S	yes	install the Flutter SDK, which bundles dart: https://docs.flutter.dev/get-started/install
+python-ruff	python	diff	test -f pyproject.toml -o -f requirements.txt -o -f setup.py	ruff check --output-format json .	parse_ruff_json	S	yes	python3 -m venv .venv-probes && .venv-probes/bin/pip install ruff
