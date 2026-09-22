@@ -254,7 +254,7 @@ master plan, exit 1 names each defect, such as a dependency that lacks a contrac
 names each contract whose producer is not `done`. Fix the tables or finish the producer first, and read
 exit 2 as a file that could not be read.
 
-When step (b2) ran, run `$VAULT_FRAMEWORK_PATH/bin/plan-probes.sh verify <out>`, adding `<out>/auditor-reuse.tsv` when the auditor ran. Exit 1 prints `open:` rows: fix the spec and repeat step (b2), or list each row in the `Open` field so the operator can accept it. Exit 2 means step (b2) did not run.
+When step (b2) ran, run `$VAULT_FRAMEWORK_PATH/bin/plan-probes.sh verify <out>`, adding `<out>/auditor-<id>.tsv` for every auditor of `commands/_shared/plan-probes.md`'s `## Auditors` table that ran. Exit 1 prints `open:` rows: fix the spec and repeat step (b2), or list each row in the `Open` field so the operator can accept it. Exit 2 means step (b2) did not run.
 
 **Human page.** Skip this block when the plan names no `arch_spec`, as in a repo with no
 `arch_profile`. Otherwise read `$VAULT_FRAMEWORK_PATH/commands/_shared/human-plan.md`, then run

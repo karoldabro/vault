@@ -106,6 +106,8 @@ Environment variables and their defaults: `PROBE_TIMEOUT` 120, `PROBE_OUT_MAX` 5
 | `sql-naming` | `naming-snake-case`, `naming-glossary` |
 | `similar-symbols` | `similar-symbol`, `duplicate-symbol-tokens` |
 | `spec-symbols` | `reuse-path-missing`, `reuse-symbol-missing`, `reuse-map-unreadable` |
+| `spec-tables` | `dup-column-in-table`, `dup-column-set`, `column-drift`, `fk-no-index` |
+| `spec-naming` | `naming-snake-case`, `naming-glossary` |
 | `lizard` | `high-complexity`, `long-function`, `many-parameters` |
 | `typos` | `typo` |
 | `claude-validate` | `plugin-<field>` |

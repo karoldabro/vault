@@ -2,7 +2,7 @@
 # plan-probes.sh — the tier, verify and measure steps of the plan-time probe stage of /v-team PROPOSE.
 #
 # Usage:  bin/plan-probes.sh budget --critics <n> --rounds <n> --block <file> --out <dir>
-#         bin/plan-probes.sh verify <out-dir> [<auditor-rows-file>]
+#         bin/plan-probes.sh verify <out-dir> [<auditor-rows-file>...]
 #         bin/plan-probes.sh measure <transcript.jsonl> --from <timestamp> --to <timestamp>
 #         bin/plan-probes.sh probes
 #         bin/plan-probes.sh auditors
@@ -52,8 +52,10 @@ settings() {
 }
 
 # The plan-time probes and the auditors that read them. Questions: commands/_shared/plan-probes.md.
-PLAN_PROBES="similar-symbols spec-symbols"
-AUDITORS="reuse${T}similar-symbols spec-symbols"
+PLAN_PROBES="similar-symbols spec-symbols spec-tables spec-naming"
+AUDITORS="reuse${T}similar-symbols spec-symbols
+data-model${T}spec-tables
+naming${T}spec-naming"
 
 pp_budget() {
     local critics="" rounds="" block="" out=""
@@ -73,13 +75,18 @@ pp_budget() {
     [ -n "$out" ] || die "--out is required"
     [ -f "$block" ] && [ -r "$block" ] || die "--block needs a readable file: $block"
 
-    local bytes bt n aud=0 base limit_pct added_block added_full added tier pct note id
+    local bytes bt n aud=0 base limit_pct added_block added_full added tier pct note id aname probes trig
     bytes=$(wc -c < "$block" | tr -d ' ')
     bt=$(( (bytes + PLAN_PROBE_BYTES_PER_TOKEN - 1) / PLAN_PROBE_BYTES_PER_TOKEN ))
     n=$((critics * rounds))
-    for id in $PLAN_PROBES; do
-        if grep -q "^$id$T" "$block"; then aud=1; fi
-    done
+    while IFS=$T read -r aname probes; do
+        [ -n "$aname" ] || continue
+        trig=0
+        for id in $probes; do
+            if grep -q "^$id$T" "$block"; then trig=1; fi
+        done
+        aud=$((aud + trig))
+    done <<< "$AUDITORS"
     base=$((PLAN_PROBE_BASE_TOKENS + PLAN_PROBE_CRITIC_TOKENS * n))
     limit_pct=$PLAN_PROBE_LIMIT_PERCENT
     added_block=$((bt * (n + 1)))
@@ -103,12 +110,13 @@ pp_budget() {
 }
 
 pp_verify() {
-    local out=${1:-} rows=${2:-}
+    local out=${1:-}
     [ -n "$out" ] || die "verify needs <out-dir>"
+    shift || true
     [ -d "$out" ] && [ -r "$out" ] || die "not a readable directory: $out"
     [ -r "$out/tier.txt" ] || die "$out/tier.txt is missing: run 'plan-probes.sh budget' first"
     case $(head -1 "$out/tier.txt" | tr -d '\r') in full|block-only|skip) ;; *) die "$out/tier.txt holds no tier" ;; esac
-    [ -z "$rows" ] || [ -r "$rows" ] || die "not a readable file: $rows"
+    local rows; for rows in "$@"; do [ -r "$rows" ] || die "not a readable file: $rows"; done
     local g open=0
     for g in confirmed advisory; do [ -e "$out/$g.tsv" ] || : > "$out/$g.tsv" 2>/dev/null || true; done
 
@@ -121,8 +129,10 @@ pp_verify() {
         printf 'open: %s %s:%s %s\n' "$(printf '%s' "$p" | clean)" "$(printf '%s' "$f" | clean)" "$(printf '%s' "$l" | clean)" "$(printf '%s' "$m" | clean)"
     done < <(cat "$out/confirmed.tsv" 2>/dev/null)
 
-    # An auditor line is kept only when its row equals a block row byte for byte and its verdict is on the list.
-    if [ -n "$rows" ]; then
+    # Each auditor line is kept only when its row equals a block row byte for byte and its verdict is on the
+    # list. Applied to every rows-file independently, in argument order; dropped counts sum across all of them.
+    local total_dropped=0 kept_probes; kept_probes=$(mktemp "${TMPDIR:-/tmp}/plan-probes.XXXXXX") || die "cannot create a temp file"
+    for rows in "$@"; do
         local dropped kept; kept=$(mktemp "${TMPDIR:-/tmp}/plan-probes.XXXXXX") || die "cannot create a temp file"
         LC_ALL=C awk -F'\t' -v OFS='\t' '
             FILENAME == ARGV[1] { block[$0] = 1; next }
@@ -135,8 +145,8 @@ pp_verify() {
               print v, row }
         ' <(cat "$out/confirmed.tsv" "$out/advisory.tsv" 2>/dev/null) "$rows" > "$kept"
         strip < "$kept"
+        LC_ALL=C awk -F'\t' '{ print $2 }' "$kept" >> "$kept_probes"
         rm -f "$kept"
-        # a repeated valid line counts as kept once, so dropped = lines that are neither kept nor repeats of a kept line
         dropped=$(LC_ALL=C awk -F'\t' '
             FILENAME == ARGV[1] { block[$0] = 1; next }
             { line = $0; if (line == "") next
@@ -145,8 +155,23 @@ pp_verify() {
               d++ }
             END { print d + 0 }
         ' <(cat "$out/confirmed.tsv" "$out/advisory.tsv" 2>/dev/null) "$rows")
-        [ "$dropped" -eq 0 ] || printf 'note: %s auditor lines were dropped: not a block row or not a valid verdict\n' "$dropped"
-    fi
+        total_dropped=$((total_dropped + dropped))
+    done
+    [ "$total_dropped" -eq 0 ] || printf 'note: %s auditor lines were dropped: not a block row or not a valid verdict\n' "$total_dropped"
+
+    # A triggered auditor (one of its probes has a block row) with no kept line of its own: nothing
+    # represented it among the rows-files passed, and that verdict silently never reaches the operator.
+    local aname probes id triggered has_kept
+    while IFS=$T read -r aname probes; do
+        [ -n "$aname" ] || continue
+        triggered=0; has_kept=0
+        for id in $probes; do
+            if grep -q "^$id$T" "$out/confirmed.tsv" "$out/advisory.tsv" 2>/dev/null; then triggered=1; fi
+            if grep -qx "$id" "$kept_probes" 2>/dev/null; then has_kept=1; fi
+        done
+        [ "$triggered" -eq 0 ] || [ "$has_kept" -eq 1 ] || printf 'note: the %s auditor triggered but no rows-file for it was passed to verify\n' "$(printf '%s' "$aname" | clean)"
+    done <<< "$AUDITORS"
+    rm -f "$kept_probes"
 
     # A tool that is absent or a run that is incomplete: the panel wrote the reason to operator.txt.
     if [ -s "$out/operator.txt" ]; then

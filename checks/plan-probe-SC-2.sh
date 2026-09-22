@@ -69,7 +69,8 @@ c=$(run "$tmp/crlf.arch.md" | cut -f3-); [ "$c" = "$(printf '%s\n' "$out" | cut 
 mkdir -p "$tmp/outside"; cp "$spec" "$tmp/outside/y.arch.md"
 o=$(run "$tmp/outside/y.arch.md"); printf '%s\n' "$o" | cut -f2 | sort -u | grep -qx 'y.arch.md' || fail "external spec not named by its base name: $o"
 # the row is registered and listed
-"$root/bin/probe.sh" list --repo "$root" | grep -q "^spec-symbols${T}plan${T}S${T}framework${T}ok" || fail "bin/probe.sh list does not show spec-symbols as ok"
+listout=$("$root/bin/probe.sh" list --repo "$root")
+printf '%s\n' "$listout" | grep -q "^spec-symbols${T}plan${T}S${T}framework${T}ok" || fail "bin/probe.sh list does not show spec-symbols as ok"
 # no spec: no rows
 none=$("$probe" --check spec-symbols --repo "$repo" 2>&1); [ -z "$none" ] || fail "no spec gave rows: $none"
 exit 0

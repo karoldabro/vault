@@ -473,3 +473,96 @@ CREATE TABLE IF NOT EXISTS users (id INT PRIMARY KEY, email TEXT);'
     [ "$status" -eq 0 ]
     [ "${lines[0]}" = "tsc-row${TAB}bad.ts${TAB}1${TAB}error${TAB}TS2322${TAB}Type 'string' is not assignable to type 'number'." ]
 }
+
+# --- S11: spec-tables / spec-naming (TB-1..19 of vault/plans/2026-09-22-1023-spec-reading-probes.md) ---
+
+@test "T-46: spec-tables fires dup-column-set, column-drift and fk-no-index on the bad fixture, nothing on clean, nothing without --spec" {
+    mkdir -p "${REPO}/database"; cp "${FX}/schema-bad.sql" "${REPO}/database/schema.sql"
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-bad.arch.md" --only spec-tables
+    [ "$status" -eq 1 ]
+    [ "$(printf '%s\n' "$output" | grep -c dup-column-set)" -ge 1 ]
+    [ "$(printf '%s\n' "$output" | grep -c column-drift)" -eq 2 ]
+    [ "$(printf '%s\n' "$output" | grep -c fk-no-index)" -eq 1 ]
+    [ "$(printf '%s\n' "$output" | awk -F"${TAB}" '{print $1}' | sort -u)" = spec-tables ]
+
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-clean.arch.md" --only spec-tables
+    [ "$status" -eq 0 ]; [ -z "$output" ]
+
+    pr run plan --repo "${REPO}" --only spec-tables
+    [ "$status" -eq 0 ]; [ -z "$output" ]
+}
+
+@test "T-47: spec-naming fires naming-snake-case and naming-glossary on the bad fixture, nothing on clean" {
+    printf '# banned\tpreferred\nclient\tcustomer\n' > "${REPO}/probes/glossary.tsv"
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-bad.arch.md" --only spec-naming
+    [ "$status" -eq 1 ]
+    [[ $output == *"naming-snake-case"*"table Orders is not lower snake_case"* ]]
+    [[ $output == *"naming-glossary"*"client_note"*"client"*"customer"* ]]
+
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-clean.arch.md" --only spec-naming
+    [ "$status" -eq 0 ]; [ -z "$output" ]
+}
+
+@test "T-48: spec-tables prints nothing when the spec has no Data model table, even though the real schema alone already trips sql-dup-columns" {
+    mkdir -p "${REPO}/database"; cp "${FX}/schema-bad.sql" "${REPO}/database/schema.sql"
+    pr run plan --repo "${REPO}" --only sql-dup-columns
+    [ "$status" -eq 1 ]
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-no-data-model.arch.md" --only spec-tables
+    [ "$status" -eq 0 ]; [ -z "$output" ]
+}
+
+@test "T-49: a spec table sharing a real table's name still gets column-drift, citing the spec file" {
+    mkdir -p "${REPO}/database"; cp "${FX}/schema-bad.sql" "${REPO}/database/schema.sql"
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-bad.arch.md" --only spec-tables
+    [ "$status" -eq 1 ]
+    [[ $output == *"spec-tables${TAB}spec-data-model-bad.arch.md"*"column-drift"*"column email is declared with different types"* ]]
+}
+
+@test "T-50: sql-dup-columns and sql-fk-index run with --spec present but ignore it, byte-identical to no --spec" {
+    mkdir -p "${REPO}/database"; cp "${FX}/schema-bad.sql" "${REPO}/database/schema.sql"
+    pr run plan --repo "${REPO}" --only sql-dup-columns; without_dup="$output"
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-bad.arch.md" --only sql-dup-columns; with_dup="$output"
+    [ "$without_dup" = "$with_dup" ]
+    pr run plan --repo "${REPO}" --only sql-fk-index; without_fk="$output"
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-bad.arch.md" --only sql-fk-index; with_fk="$output"
+    [ "$without_fk" = "$with_fk" ]
+}
+
+@test "T-51: spec-naming does not re-report a real-only table's naming defect under its own id" {
+    schema 'CREATE TABLE BadReal (id INT PRIMARY KEY);'
+    pr run plan --repo "${REPO}" --only sql-naming
+    [ "$status" -eq 1 ]
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-clean.arch.md" --only spec-naming
+    [ "$status" -eq 0 ]; [ -z "$output" ]
+}
+
+@test "T-52: id-column-no-fk is suppressed under spec_mode but still fires for real SQL" {
+    schema 'CREATE TABLE t (a INT, b_id INT);'
+    pr run plan --repo "${REPO}" --only sql-fk-index
+    [[ $output == *"id-column-no-fk"* ]]
+    mkdir -p "${REPO}/database"; cp "${FX}/schema-bad.sql" "${REPO}/database/schema.sql"
+    pr run plan --repo "${REPO}" --spec "${FX}/spec-data-model-bad.arch.md" --only spec-tables
+    [[ $output != *"id-column-no-fk"* ]]
+}
+
+@test "T-53: a spec table declaring the same column twice fires dup-column-in-table (round-2 diff-review correctness-r1)" {
+    local spec="${REPO}/spec-dup.arch.md"
+    printf -- '---\ntype: arch-spec\nprofile: harness\n---\n# t\n\n## Data model\n\n| table | column | type | null | key | index | references |\n|-|-|-|-|-|-|-|\n| widgets | id | uuid | no | PK | pk_widgets | |\n| widgets | name | text | no | | - | |\n| widgets | name | varchar(50) | no | | - | |\n' > "$spec"
+    pr run plan --repo "${REPO}" --spec "$spec" --only spec-tables
+    [ "$status" -eq 1 ]
+    [[ $output == *"dup-column-in-table"*"column name appears twice in table widgets"* ]]
+}
+
+@test "T-54: a spec table that exactly re-declares a same-named real table produces no dup-column-set, but a genuine drift still does (round-2 diff-review correctness-r2)" {
+    schema 'CREATE TABLE customers (id INT PRIMARY KEY, name TEXT, email TEXT, status TEXT);'
+    local spec="${REPO}/spec-exact.arch.md"
+    printf -- '---\ntype: arch-spec\nprofile: harness\n---\n# t\n\n## Data model\n\n| table | column | type | null | key | index | references |\n|-|-|-|-|-|-|-|\n| customers | id | int | no | PK | pk_customers | |\n| customers | name | text | no | | - | |\n| customers | email | text | no | | - | |\n| customers | status | text | no | | - | |\n' > "$spec"
+    pr run plan --repo "${REPO}" --spec "$spec" --only spec-tables
+    [ "$status" -eq 0 ]; [ -z "$output" ]
+
+    sed -i 's/| customers | email | text | no | | - | |/| customers | email | varchar(255) | no | | - | |/' "$spec"
+    pr run plan --repo "${REPO}" --spec "$spec" --only spec-tables
+    [ "$status" -eq 1 ]
+    [[ $output == *"column-drift"*"email is declared with different types"*"(real)"*"(spec)"* ]]
+    [[ $output != *"dup-column-set"* ]]
+}

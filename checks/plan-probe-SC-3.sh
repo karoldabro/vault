@@ -51,8 +51,9 @@ printf 'banana\n' > "$out2/tier.txt"; "$pp" verify "$out2" >/dev/null 2>&1; rc=$
 mk "$tmp/o3"; printf 'Probes: INCOMPLETE, 1 absent, 0 skipped, 0 failed\ninstall: python3 -m venv .venv-probes\n' > "$tmp/o3/operator.txt"
 r=$("$pp" verify "$tmp/o3" 2>/dev/null)
 printf '%s\n' "$r" | grep -q '^note: .*absent' && printf '%s\n' "$r" | grep -q '^note: install: python3' || fail "operator.txt did not become notes: $r"
-# a clean block prints nothing
-mk "$tmp/o4"; printf '%s\n' "$C2" > "$tmp/o4/confirmed.tsv"; r=$("$pp" verify "$tmp/o4" 2>/dev/null); [ -z "$r" ] || fail "a clean run printed: $r"
+# a clean block prints nothing extraneous, but a triggered auditor with no rows-file passed still gets its note (S11)
+mk "$tmp/o4"; printf '%s\n' "$C2" > "$tmp/o4/confirmed.tsv"; r=$("$pp" verify "$tmp/o4" 2>/dev/null)
+[ "$r" = "note: the reuse auditor triggered but no rows-file for it was passed to verify" ] || fail "a clean run with a triggered auditor and no rows-file printed: $r"
 # the tier does not change what tools found
 printf 'skip\n' > "$out1/tier.txt"; "$pp" verify "$out1" >/dev/null 2>&1; rc=$?; [ "$rc" -eq 1 ] || fail "tier skip hid a confirmed error (exit $rc)"
 exit 0

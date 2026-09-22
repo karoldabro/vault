@@ -54,9 +54,42 @@ grade() { run "${VAULT_ROOT}/checks/plan-probe-SC-$1.sh"; [ "$status" -eq 0 ] ||
 }
 
 @test "budget prints its settings error on stderr and the probes and auditors lists are stable" {
-    run "${PP}" probes; [ "$status" -eq 0 ]; [ "$output" = "$(printf 'similar-symbols\nspec-symbols')" ]
-    run "${PP}" auditors; [ "$status" -eq 0 ]; [ "$output" = "reuse${T}similar-symbols spec-symbols" ]
+    run "${PP}" probes; [ "$status" -eq 0 ]; [ "$output" = "$(printf 'similar-symbols\nspec-symbols\nspec-tables\nspec-naming')" ]
+    run "${PP}" auditors; [ "$status" -eq 0 ]
+    [ "$output" = "$(printf 'reuse%ssimilar-symbols spec-symbols\ndata-model%sspec-tables\nnaming%sspec-naming' "$T" "$T" "$T")" ]
     run "${PP}" nonsense; [ "$status" -eq 2 ]
+}
+
+@test "budget counts two distinct triggered auditors, not the probes that triggered them" {
+    one="${TMP}/one"; two="${TMP}/two"
+    { printf 'similar-symbols%sf%s1%swarn%sr%sm\n' "$T" "$T" "$T" "$T" "$T"; printf 'unknown-idx%sf%s1%swarn%sr%sm\n' "$T" "$T" "$T" "$T" "$T"; } > "$one"
+    { printf 'similar-symbols%sf%s1%swarn%sr%sm\n' "$T" "$T" "$T" "$T" "$T"; printf 'spec-tables%sf%s1%swarn%sr%sm\n' "$T" "$T" "$T" "$T" "$T"; } > "$two"
+    [ "$(wc -c < "$one")" -eq "$(wc -c < "$two")" ]
+    a1=$("${PP}" budget --critics 1 --rounds 1 --block "$one" --out "${TMP}/o1" | sed -n 's/^projected: added=\([0-9]*\).*/\1/p')
+    a2=$("${PP}" budget --critics 1 --rounds 1 --block "$two" --out "${TMP}/o2" | sed -n 's/^projected: added=\([0-9]*\).*/\1/p')
+    [ "$((a2 - a1))" -eq 36000 ]
+}
+
+@test "verify applies the keep rule to three rows files independently, sums dropped lines, and notes a triggered auditor with no file passed" {
+    d="${TMP}/o"; mkdir -p "${d}"; printf 'full\n' > "${d}/tier.txt"
+    row1="spec-tables${T}f${T}1${T}warn${T}dup-column-set${T}m"
+    row2="spec-naming${T}f${T}2${T}warn${T}naming-snake-case${T}m"
+    row3="similar-symbols${T}f${T}3${T}warn${T}similar-symbol${T}m"
+    printf '%s\n%s\n%s\n' "$row1" "$row2" "$row3" > "${d}/advisory.tsv"; : > "${d}/confirmed.tsv"
+    printf 'applies\t%s\n' "$row1" > "${TMP}/r1"
+    printf 'does-not-apply\t%s\n' "$row2" > "${TMP}/r2"
+    printf 'unclear\t%s\nbogus\tnot-a-block-row\n' "$row3" > "${TMP}/r3"
+    run "${PP}" verify "${d}" "${TMP}/r1" "${TMP}/r2" "${TMP}/r3"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"applies${T}${row1}"* ]]
+    [[ "$output" == *"does-not-apply${T}${row2}"* ]]
+    [[ "$output" == *"unclear${T}${row3}"* ]]
+    [[ "$output" == *"note: 1 auditor lines were dropped"* ]]
+    [[ "$output" != *"note: the naming auditor triggered"* ]]
+
+    run "${PP}" verify "${d}" "${TMP}/r1"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"note: the naming auditor triggered but no rows-file for it was passed to verify"* ]]
 }
 
 @test "the propose step names the three commands, and the stage text keeps the rules in one home" {

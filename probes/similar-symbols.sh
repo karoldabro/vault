@@ -21,7 +21,9 @@ export LC_ALL=C
 PROBE_FRAMEWORK=${PROBE_FRAMEWORK:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}
 . "$PROBE_FRAMEWORK/lib/probe-emit.sh"
 . "$PROBE_FRAMEWORK/lib/probe-scope.sh"
+. "$PROBE_FRAMEWORK/lib/probe-md-table.sh"
 probe_native_init "$@"
+REUSE_MAP_HEADING='^## Reuse map[ \t]*(\(.*\))?[ \t]*$'
 
 if [ "$A_CHECK" = spec-symbols ]; then
     [ -n "$A_SPEC" ] || exit 0
@@ -29,19 +31,13 @@ if [ "$A_CHECK" = spec-symbols ]; then
     case $specp in "$repop"/*) sfile=${specp#"$repop"/} ;; *) sfile=$(basename "$specp") ;; esac
     rows="$TMP/spec-rows"; found="$TMP/spec-found"; : > "$found"
     [ -f "$A_SPEC" ] || probe_die "--spec needs a regular file"
-    LC_ALL=C tr -d '\r' < "$A_SPEC" | LC_ALL=C awk -F'|' '
-        $0 ~ /^## Reuse map[ \t]*(\(.*\))?[ \t]*$/ { on = 1; next }
-        on && /^## / { exit }
-        on && /^\|/ {
-            line = $0; gsub(/\\\|/, "\001", line)
-            if (!hdr) { n = split(line, c, "|")
-                for (i = 1; i <= n; i++) { h = tolower(c[i]); gsub(/^[ \t]+|[ \t]+$/, "", h); gsub(/_/, " ", h); if (h == "existing symbol") si = i; if (h == "decision") di = i }
-                hdr = 1; if (!si || !di) { print NR "\t\001unreadable"; exit }
-                next }
-            if (line ~ /^\|[- |:]*\|$/) next
-            n = split(line, c, "|"); dc = tolower(c[di]); sc = c[si]
-            gsub(/^[ \t]+|[ \t]+$/, "", dc); gsub(/^[ \t]+|[ \t]+$/, "", sc); gsub(/[*`]/, "", dc); gsub(/\001/, "|", sc)
-            if (dc == "reuse" || dc == "extend") print NR "\t" sc }
+    md_table_rows "$A_SPEC" "$REUSE_MAP_HEADING" | LC_ALL=C awk -F'\t' '
+        NR == 1 {
+            for (i = 2; i <= NF; i++) { if ($i == "existing symbol") si = i; if ($i == "decision") di = i }
+            if (!si || !di) { print "0\t\001unreadable"; exit }
+            next }
+        { dc = tolower($di); sc = $si; gsub(/[*`]/, "", dc)
+          if (dc == "reuse" || dc == "extend") print $1 "\t" sc }
     ' > "$rows"
     set -f
     while IFS=$'\t' read -r ln cell; do
@@ -75,18 +71,11 @@ probe_files "$repo" "$TMP/full" || exit 2
 needs="$TMP/needs"; : > "$needs"
 [ -z "$A_NAMES" ] || printf '%s\n' "$A_NAMES" | tr ',' '\n' | sed 's/^ *//; s/ *$//' | grep -v '^$' >> "$needs"
 if [ -n "$A_SPEC" ]; then
-    LC_ALL=C awk -F'|' '
-        $0 == "## Reuse map" { on = 1; next }
-        on && /^## / { exit }
-        on && /^\|/ {
-            if (!hdr) { n = split($0, c, "|")
-                for (i = 1; i <= n; i++) { h = c[i]; gsub(/^[ \t]+|[ \t]+$/, "", h); if (tolower(h) == "need") ni = i; if (tolower(h) == "decision") di = i }
-                hdr = 1; next }
-            if ($0 ~ /^\|[- |:]*\|$/) next
-            n = split($0, c, "|"); nd = c[ni]; dc = c[di]
-            gsub(/^[ \t]+|[ \t]+$/, "", nd); gsub(/^[ \t]+|[ \t]+$/, "", dc)
-            if (dc == "new" && nd != "") print nd }
-    ' "$A_SPEC" >> "$needs"
+    md_table_rows "$A_SPEC" "$REUSE_MAP_HEADING" | LC_ALL=C awk -F'\t' '
+        NR == 1 { for (i = 2; i <= NF; i++) { if ($i == "need") ni = i; if ($i == "decision") di = i }; next }
+        { nd = $ni; dc = $di
+          if (dc == "new" && nd != "") print nd }
+    ' >> "$needs"
 fi
 
 symbols="$TMP/symbols"; : > "$symbols"
