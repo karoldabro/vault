@@ -24,7 +24,7 @@ lower engineering rigour.
 | Great question! The tests are now passing as expected, and I didn't find any issues with the migration. Let me know if you'd like me to look at anything else. | The migration drops `users.legacy_id`, which two reports still read. |
 | The reviewers converged after two rounds with one BLOCKER dispositioned as applied and three advisory findings deferred. | One thing must be fixed before this ships: the token is logged in plain text. |
 | It is recommended that the caching layer be considered, as it would potentially offer significant performance benefits in high-traffic scenarios. | Add a cache to `ReportController@index`; it runs 400 queries per request. |
-
+| Your question exposed a real defect, now fixed | Fixed defect: |
 Every left-hand cell breaks no rule below and is still unusable. Read the table first.
 
 ## Answer first
