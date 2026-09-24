@@ -40,67 +40,26 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>v-rule — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
-<p>Session S8 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Build the on-demand <code>/v-rule</code> skill: it turns the operator's own review comments into an indication, a rule file, two fixtures and one registry row (contracts C-5 and C-6). Design how <code>/v-cr --sandbox</code> runs repo-code probes, record it as decisions, and split its build into session S10. Keywords: <code>/v-rule</code>, rule file, fixture, finding count, own-account filter, <code>probe:</code> key, sandbox probes.</p>
-<h2>Open &amp; deferred</h2>
+<p>Session S8 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Build the on-demand <code>/v-rule</code> skill: it turns the operator's own review comments into an indication, a rule file, two fixtures and one registry row (contracts C-5 and C-6). Design how <code>/v-cr --sandbox</code> runs repo-code probes, record it as decisions, and split its build into session S10.</p>
+<h2>Needs your decision</h2>
 <ul>
 <li>needs the operator: approve the split of scope B into S10 (VR-8), and the data-file rule format <code>.grep</code> (VR-2).</li>
-<li>deferred: S10 builds the sandbox probes. Its file list is in the master plan S10 row; the design is VR-4 and VR-5.</li>
-<li>deferred: rule formats beyond <code>.grep</code> (ast-grep, semgrep). This machine has neither tool (<code>command -v ast-grep semgrep</code>, 2026-09-21); S9 adds a stack pack that may need one.</li>
-<li>unverified: GitHub returns a numeric <code>user.id</code> and a <code>type</code> for a comment author, and <code>GET /user</code> returns <code>id</code>. <code>commands/v-rule.md</code> step 1 runs <code>gh api user --jq .id</code> and stops when it prints no number.</li>
-<li>accepted limit: <code>/v-rule</code> supports GitHub only. <code>list_comments</code> in <code>commands/v-cr/adapters.md</code> returns a login and no numeric id, so Bitbucket comments cannot be matched to the operator by id.</li>
-<li>accepted limit: a process that swaps a directory for a symlink between the link check of <code>install</code> and its write can redirect one write. One session runs at a time on the operator's machine.</li>
-<li>accepted limit: a review of a diff that holds the new rule files lists every probe row <code>[advisory]</code> until the operator commits them (<code>commands/_shared/critic-panel.md</code> §(a)).</li>
-<li>existing defect, not this plan's: <code>bin/rule-count.sh</code> reports 181 rule lines against a budget of 173. This session adds no line to a counted file.</li>
-<li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>document-standard.bats</code> two cases, <code>plugin-install.bats</code> two path notes, <code>research-clarify.bats</code> the PROPOSE output contract).</li>
 </ul>
-<h2>Success criteria</h2>
-<p>&lt;!-- Checks are written before the work and exit 2 with "not written yet" until the file they grade exists. --&gt;</p>
+<h2>Defaults taken for you</h2>
 <div class="scroll">
 <table>
 <thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+<tr><th>question</th><th>answer</th></tr>
 </thead>
 <tbody>
-<tr><td>SC-1</td><td>WHEN <code>probes/rule-grep.sh</code> reads a rule file THE SYSTEM SHALL print C-2 rows for matching files outside <code>probes/</code>, print none for a clean fixture, and exit 2 for a rule with a bad severity, a repeated or unknown key, a tab in the message, an absolute glob, an unclosed regex, a <code>..</code> path or a symlink</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN <code>bin/rule-check.sh accept</code> runs THE SYSTEM SHALL accept a rule only with a firing bad fixture, a silent good fixture, a glob that selects a file and at most 20 findings, print <code>accepted &lt;slug&gt;: &lt;n&gt; of &lt;files&gt; files at &lt;sha&gt;</code>, and write nothing to the repo</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN <code>bin/rule-check.sh install</code> runs THE SYSTEM SHALL write the rule file, two fixtures and one template registry row and nothing else, and refuse an invalid slug, stack or fixture extension, a non-git target, a symlinked registry, directory or rule file, the framework's own registry, a repeated id and a rule that fails accept</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN <code>bin/rule-check.sh verify</code> reads an indication THE SYSTEM SHALL print <code>ok</code>, <code>drift</code>, <code>framework</code>, <code>hand-written</code>, <code>mislabelled</code>, <code>orphan</code> or <code>broken</code> with the exit code of VR-6 and change no file</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-5</td><td>WHEN <code>bin/rule-check.sh own-comments</code> filters forge comments THE SYSTEM SHALL keep only comments whose user id equals the operator id and whose type is <code>User</code>, drop a body holding a <code>&lt;!-- v-cr:</code> marker and a comment posted through an app, and exit 2 for a malformed id, non-JSON input or a forge error object</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-6</td><td>WHEN a rule is installed and a review runs through <code>bin/probe-panel.sh</code> THE SYSTEM SHALL list its row <code>[advisory]</code> under <code>own</code> with <code>PROBE_PANEL_REPO_CODE=yes</code> and run it under neither <code>own</code> without the variable nor <code>pr</code></td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-7</td><td>WHEN an operator opens <code>commands/v-rule.md</code>, <code>commands/_shared/probe-kit.md</code>, <code>README.md</code> and the master plan THE SYSTEM SHALL show the skill with its own-account rule and approval gate, the rule format in one home, no review command calling <code>/v-rule</code>, and the master plan rows S8, S10, C-6 and C-8</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-8</td><td>WHEN the unit suite runs THE SYSTEM SHALL pass <code>tests/unit/rule.bats</code>, <code>probe.bats</code>, <code>probe-panel.bats</code>, <code>v-team.bats</code>, <code>v-cr.bats</code> and <code>cr-rule-routing.bats</code>, and the full suite SHALL fail only the 5 tests that fail on <code>HEAD</code></td><td>delivery</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<p>&lt;!-- Ids VR-n are local to this plan; D-n names a decision of the master plan. --&gt;</p>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>VR-1 <code>/v-rule</code> writes only these files, and only after the operator approves the drafted set. Repo: <code>probes/rules/&lt;slug&gt;.grep</code>, <code>probes/rules/fixtures/&lt;slug&gt;/bad.&lt;ext&gt;</code>, <code>probes/rules/fixtures/&lt;slug&gt;/good.&lt;ext&gt;</code> and one appended row of <code>probes/registry.tsv</code>. Project vault: <code>indications/&lt;slug&gt;.md</code> and one row of <code>indications/_index.md</code>. It edits no source file, no other registry row and no <code>VAULT.md</code>, and it never commits. A repo without <code>probes/registry.tsv</code> gets one holding a comment header and the new row. The slug matches <code>^[a-z0-9][a-z0-9-]{0,39}$</code> and differs from every framework registry id. The stack is one of <code>any harness sql php laravel nuxt flutter python node</code>. The extension matches <code>^[a-z0-9]{1,8}$</code> and is the same for both fixtures. <code>install</code> refuses a target that is not a git repository, that is the framework checkout, or whose registry or any path component is a symlink. It writes each file through <code>mktemp</code> and <code>mv -T</code>, and re-runs the accept gate on the bytes it writes</td><td>a fixed write set is what an operator can approve in one look. Comment text reaches the rules digest only through the indication, and the indication does not exist before approval. The slug lands in a registry cell that the kit runs with <code>bash -c</code>, so it is validated as data. A rename replaces a symlink and never follows it</td></tr>
-<tr><td>VR-2 A rule file is data: <code>probes/rules/&lt;slug&gt;.grep</code> holds the keys <code>glob</code>, <code>pattern</code>, <code>severity</code> and <code>message</code>, and the framework's <code>probes/rule-grep.sh</code> runs it with <code>LC_ALL=C grep -E</code>, once over the file list under one <code>timeout</code> of <code>PROBE_RULE_TIMEOUT</code>. The runner refuses any other key, a leading <code>/</code> in a glob, and a message that is not printable ASCII of at most 200 characters. <code>bin/rule-check.sh</code> builds the row from a template, and the model never types a row. Posture: <code>own</code> runs the row with <code>PROBE_PANEL_REPO_CODE=yes</code>, <code>pr</code> never runs it on the host, <code>/v-cr --sandbox</code> runs it in the container (S10). A row written by hand declares <code>yes</code> whenever its <code>run</code> is not the template, and names its install command. <code>verify</code> calls the kit only for a row equal to the template, reports any other row <code>hand-written</code>, prints <code>mislabelled</code> for one that says <code>no</code>, and edits neither</td><td>a comment is untrusted, so the model may draft a pattern and nothing else. A script could run anything, and one bounded <code>grep</code> cannot. The kit counts repo rows as <code>yes</code> whatever the cell says, so <code>yes</code> keeps <code>list</code> and the docs true and <code>no</code> would be a mislabel. A hand-written row is code, so <code>verify</code> never executes it</td></tr>
-<tr><td>VR-3 <code>accept</code> counts findings with <code>probes/rule-grep.sh --check &lt;slug&gt; --rule &lt;draft rule&gt; --repo &lt;repo&gt; | wc -l</code>, and the files the globs select with <code>probes/rule-grep.sh --count-files</code>. It records <code>&lt;n&gt; of &lt;files&gt; files at &lt;sha7&gt;</code> as <code>probe_count</code> in the indication. It refuses more findings than <code>RULE_MAX_FINDINGS</code>, default half of <code>PROBE_PANEL_ROWS</code> (20), a glob that selects no file and an unclosed regex. Zero findings is accepted</td><td>half of a critic's 40-row block is the most one rule may take. A rule above it fires everywhere and crowds out every other probe. A rule that guards new code finds nothing today</td></tr>
-<tr><td>VR-4 <code>/v-cr --sandbox</code> runs the kit in containers of the S0 envelope. The host builds <code>/framework</code> as a read-only copy of <code>git archive HEAD bin lib probes</code>, never the framework root, so <code>vault/</code> and <code>.git</code> stay outside. It mounts the throwaway clone read-only at <code>/repo</code>, the base rules at <code>/rules</code> and a tmpfs at <code>/tmp</code>, with <code>network: none</code>, an empty environment and the S0 caps. Run 1 runs framework rows. Run 2 runs each template row of the merge base with <code>--only &lt;id&gt;</code>. Hand-written repo rows do not run in the sandbox; the status names them <code>skipped</code>. The host resolves the merge base to a sha, removes <code>probes/</code> from the clone, and writes the base's registry and <code>*.grep</code> files with <code>git cat-file blob</code> into <code>/rules</code>. A base without <code>probes/</code> skips run 2 and prints <code>Probes: no base rules</code>. The image comes from <code>VCR_SANDBOX_MAP</code> (user or global), never from an indication. The host passes changed files with <code>--changed-list</code>, so no git runs in the container, and each container has a host wall-clock timeout and the S7 label-based removal. Rows leave through stdout and stderr, cut at <code>PROBE_OUT_MAX</code> bytes. The host passes each stream through the six-field check of <code>probe_check_rows</code>, drops rows whose id is not a row of that run, scrubs with <code>cr_redact_runtime</code>, and writes <code>framework.tsv</code>, <code>framework.status</code>, <code>rules.tsv</code> and <code>rules.status</code> (C-8). A row without a <code>ran:</code> line reads <code>INCOMPLETE</code></td><td>everything a container prints can be forged by the code it ran, so only two byte streams leave it and the host re-checks each row. An allowlist copy keeps vault files out of reach. The base copy blocks a pull request from editing the rules that judge it, and <code>cat-file</code> skips attribute filters. A hand-written row runs pull-request code, so it never shares a container with a template row</td></tr>
-<tr><td>VR-5 <code>bin/probe-panel.sh run --posture sandbox --rows-from &lt;dir&gt;</code> tags each row on the host from the run that produced it, never from the container's output. <code>framework.tsv</code> rows are <code>[confirmed]</code>, because the container sets <code>PROBE_TOOLS_FROM=image</code>, which stops the kit adding the repo's tool directories to <code>PATH</code>. <code>rules.tsv</code> rows are <code>[confirmed]</code>, because run 2 executes only template rows. A container failure prints <code>INCOMPLETE</code> and never runs a <code>yes</code> probe on the host. S10 adds the variable, the posture, <code>--rows-from</code>, <code>--changed-list</code>, <code>--rules-dir</code>, the envelope key and an ADR-009 addendum; none exists today</td><td>the finding row has no origin, so the run supplies it. A template row of the base is a framework-run pattern check that the pull request cannot edit, so it is as reliable as a merged framework probe. ADR-009 stands: no repo code runs outside the envelope, and no output counts as an instruction</td></tr>
-<tr><td>VR-6 <code>verify</code> reads an indication's <code>probe:</code> key and prints one line. An id absent from the repo registry prints <code>framework &lt;id&gt;</code> when the framework registry holds it, else <code>orphan &lt;slug&gt; &lt;id&gt;</code> and exit 1. A row that is not the template prints <code>mislabelled &lt;id&gt;</code> with exit 1 when it says <code>no</code>, else <code>hand-written &lt;id&gt;</code>. A template row prints <code>broken &lt;slug&gt;: &lt;reason&gt;</code> with exit 1 when its rule file or a fixture check fails, else <code>drift &lt;slug&gt;: &lt;old&gt; -&gt; &lt;new&gt;</code> when the count changed, else <code>ok &lt;slug&gt; &lt;n&gt; of &lt;files&gt; files at &lt;sha&gt;</code>. Every other line exits 0. On an orphan <code>/v-rule</code> recreates nothing silently: it drafts a rule from the indication's <code>## Rule</code> and <code>## Examples</code>, runs the accept gate, and offers three choices: write the rule, drop the <code>probe:</code> key, or leave it. <code>/v-rule</code> passes <code>--repo</code> to <code>bin/indication-route-audit.sh</code>, so it never meets <code>unchecked-probe</code></td><td>C-5 defines the key and S8 consumes it. An orphan is a rule whose check vanished, and recreating it unasked would turn an indication's text into code</td></tr>
-<tr><td>VR-7 <code>/v-rule</code> reads only comments whose numeric <code>user.id</code> equals <code>gh api --hostname &lt;pr host&gt; user --jq .id</code> and whose <code>user.type</code> is <code>User</code>, through <code>bin/rule-check.sh own-comments</code>. The filter drops a body holding <code>&lt;!-- v-cr:</code> and any comment with <code>performed_via_github_app</code>. The skill reads issue comments, review comments and review bodies with <code>--paginate --slurp</code>. It shows the operator each body fenced as data with its <code>updated_at</code>, and the operator confirms that an edited body is theirs. It stores the comment URL and no body text, stamps <code>source: pr-comment</code>, drafts in a <code>mktemp -d</code> directory, writes nothing until the operator approves, drafts at most 3 rules per run and supports GitHub only</td><td>anyone can comment on a public pull request, and a login can be renamed while an id cannot. <code>/v-cr</code> posts markers built from the hostile diff under the operator's account. A maintainer can edit a comment, so the operator approves the body they see. <code>source: pr-comment</code> keeps the indication out of the sandbox recipe (S0)</td></tr>
-<tr><td>VR-8 Scope B is session S10, not part of S8. S8 touches 20 files: 8 graders, 8 product files, the master plan, and this plan with its spec and record. S10 lists 15 files in the master plan row (W-16). One session near 34 files is past the ~15 at which a unit wants splitting (<code>commands/v-team/steps/03-propose-loop.md</code> (f3))</td><td>sessions near 49 files dropped work permanently. S10 needs the row template S8 fixes, so it depends on S8</td></tr>
+<tr><td>Does scope B fit this session?</td><td>no; it is session S10, recorded in VR-8</td></tr>
+<tr><td>Which posture runs a rule file?</td><td>own with the variable, and the sandbox; recorded in VR-2</td></tr>
 </tbody>
 </table>
 </div>
@@ -115,31 +74,6 @@ README.md                                existing, gains one command row
 tests/unit/rule.bats                     new
 checks/rule-SC-1.sh to rule-SC-8.sh      new, decide the eight criteria
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>commands/v-rule.md</td><td>yes</td><td>steps of the review-to-rule skill</td><td>on-demand</td></tr>
-<tr><td>bin/rule-check.sh</td><td>yes</td><td>decides accept, installs the rule files, reads a probe key back, filters comments by user id</td><td>on-demand</td></tr>
-<tr><td>probes/rule-grep.sh</td><td>yes</td><td>runs one declarative rule file and prints finding rows</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>no</td><td>states the kit contract and the rule-file format</td><td>on-demand</td></tr>
-<tr><td>templates/indication.md</td><td>no</td><td>starting text of an indication</td><td>on-demand</td></tr>
-<tr><td>README.md</td><td>no</td><td>lists the commands</td><td>on-demand</td></tr>
-<tr><td>tests/unit/rule.bats</td><td>yes</td><td>tests the runner, the checker and the text guards</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-1.sh</td><td>yes</td><td>decides criterion SC-1</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-2.sh</td><td>yes</td><td>decides criterion SC-2</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-3.sh</td><td>yes</td><td>decides criterion SC-3</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-4.sh</td><td>yes</td><td>decides criterion SC-4</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-5.sh</td><td>yes</td><td>decides criterion SC-5</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-6.sh</td><td>yes</td><td>decides criterion SC-6</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-7.sh</td><td>yes</td><td>decides criterion SC-7</td><td>never-by-agent</td></tr>
-<tr><td>checks/rule-SC-8.sh</td><td>yes</td><td>decides criterion SC-8</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -155,77 +89,13 @@ flowchart LR
     B -->|"indication: markdown"| H["project vault indications"]
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>rule-check.sh</td><td>own-comments</td><td>operator_id: int</td><td>the comments of that user id as JSON</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>rule-check.sh</td><td>accept</td><td>repo: path, slug: string, rule: path, bad: path, good: path</td><td><code>accepted &lt;slug&gt;: &lt;n&gt; of &lt;files&gt; files at &lt;sha&gt;</code> or a refusal, exit 0 or 1</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>rule-check.sh</td><td>install</td><td>repo: path, slug: string, draft: path, stack: string</td><td>written paths and the record line, exit 0 or 1</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>rule-check.sh</td><td>verify</td><td>repo: path, slug: string, indication: path</td><td>one status line, exit 0 or 1</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>rule-check.sh</td><td>row</td><td>slug: string, stack: string</td><td>the template registry row</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>rule-grep.sh</td><td>run</td><td>check: string, rule: path, repo: path, fixture: path, count_files: bool</td><td>finding rows, exit 0 or 1</td><td>exit 2</td><td>cli</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td>the operator calls <code>/v-rule</code></td><td>commands/v-rule.md</td><td>3000</td></tr>
-<tr><td>the skill drafts a rule</td><td>commands/_shared/probe-kit.md</td><td>3000</td></tr>
-<tr><td>the skill checks a draft</td><td>bin/rule-check.sh</td><td>0</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>print a finding row</td><td>lib/probe-emit.sh probe_finding</td><td>reuse</td><td>the runner builds rows with it, as every native probe does</td></tr>
-<tr><td>start a native probe</td><td>lib/probe-emit.sh probe_native_init</td><td>reuse</td><td>it parses <code>--check</code>, <code>--repo</code> and the file list</td></tr>
-<tr><td>list the files a probe may read</td><td>lib/probe-scope.sh probe_files</td><td>reuse</td><td>it drops symlinks and control-byte names</td></tr>
-<tr><td>refuse a symlinked registry</td><td>lib/probe-scope.sh probe_safe_file</td><td>reuse</td><td>it checks a regular file inside the repo</td></tr>
-<tr><td>count the files of a repo</td><td>bin/probe.sh scale</td><td>reuse</td><td>it prints the file count the panel already uses</td></tr>
-<tr><td>run a rule through the kit</td><td>bin/probe.sh run plan</td><td>reuse</td><td><code>verify</code> proves the wiring with the same call a review makes</td></tr>
-<tr><td>check a <code>probe:</code> id against registries</td><td>bin/indication-route-audit.sh</td><td>reuse</td><td><code>verify</code> prints the same orphan the audit reports</td></tr>
-<tr><td>read a frontmatter key</td><td>-</td><td>new</td><td>searched lib and bin: <code>gate.sh frontmatter_get</code> cannot be sourced without its <code>set -e</code> and <code>lib/cr-helpers.sh</code> reads index cells only, so a short awk reads one key</td></tr>
-<tr><td>filter comments by user id</td><td>-</td><td>new</td><td>searched lib and bin for a comment filter; <code>cr_rule_route</code> routes rules and reads no comment</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/rule-check.sh</td><td>200</td></tr>
-<tr><td>probes/rule-grep.sh</td><td>120</td></tr>
-<tr><td>commands/v-rule.md</td><td>130</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>150</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>key</th><th>file</th><th>default</th></tr>
-</thead>
-<tbody>
-<tr><td>RULE_MAX_FINDINGS</td><td>environment</td><td>half of PROBE_PANEL_ROWS</td></tr>
-<tr><td>PROBE_RULE_TIMEOUT</td><td>environment</td><td>10</td></tr>
-</tbody>
-</table>
-</div>
+<ul>
+<li><code>rule-check.sh.own-comments(operator_id: int): the comments of that user id as JSON</code>, throws <code>exit 2</code></li>
+<li><code>rule-check.sh.accept(repo: path, slug: string, rule: path, bad: path, good: path): `accepted &lt;slug&gt;: &lt;n&gt; of &lt;files&gt; files at &lt;sha&gt;` or a refusal, exit 0 or 1</code>, throws <code>exit 2</code></li>
+<li><code>rule-check.sh.install(repo: path, slug: string, draft: path, stack: string): written paths and the record line, exit 0 or 1</code>, throws <code>exit 2</code></li>
+<li><code>rule-check.sh.verify(repo: path, slug: string, indication: path): one status line, exit 0 or 1</code>, throws <code>exit 2</code></li>
+<li><code>rule-check.sh.row(slug: string, stack: string): the template registry row</code>, throws <code>exit 2</code></li>
+<li><code>rule-grep.sh.run(check: string, rule: path, repo: path, fixture: path, count_files: bool): finding rows, exit 0 or 1</code>, throws <code>exit 2</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-21-1430-v-rule.md</code> · architecture spec: <code>2026-09-21-1430-v-rule.arch.md</code></p>
 </main>

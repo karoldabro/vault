@@ -1,12 +1,6 @@
 # profile: harness. For work whose product is instructions, commands, configuration or documents.
 # Format and the validator and rule library: commands/_shared/architecture-spec.md. The starting text is harness.md beside this file.
 # section	kind	columns	rules
-# @review	one plain sentence a person confirms before approving (shown on the human page)
-@review	Does each file have one purpose, and is any file doing two jobs?
-@review	Is anything loaded every time that could load only when needed?
-@review	Do the size budgets fit what each file must hold?
-@review	Is each rule stated once and referenced elsewhere, not repeated?
-@review	Is anything hardcoded that should be a setting or a data file, and the reverse?
 File tree	fence:any
 Files	table	path:nonempty new:enum(yes|no) purpose:nonempty loaded:enum(always|on-demand|never-by-agent)	path-exists-unless-new
 Data flow	fence:mermaid

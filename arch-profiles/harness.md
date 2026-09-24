@@ -33,7 +33,8 @@ path/to/new-file.ext            new
 
 ## Data flow
 
-<!-- How control and data move between the files above. Every arrow names what crosses it. -->
+<!-- How control and data move between the files above. Every arrow names what crosses it. A node
+     names a file or a step; parameters belong in Interfaces, and the human page drops them from labels. -->
 
 ```mermaid
 flowchart LR

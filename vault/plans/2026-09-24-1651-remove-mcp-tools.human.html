@@ -40,62 +40,18 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>remove-mcp-tools — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
-<p>Remove all support for the claude-mem memory plugin, the MorphLLM Fast Apply MCP and the Graphify code graph from the vault framework — installer, uninstaller, commands, playbook, guides, tests, decisions and history — keep Serena as an optional developer tool, and add <code>docs/uninstall-removed-tools.md</code> telling a user how to remove all three from their machine. Keywords: claude-mem, MorphLLM, Graphify, Serena, setup.sh, install profile, tool-playbook, uninstall.</p>
-<h2>Open &amp; deferred</h2>
+<p>Remove all support for the claude-mem memory plugin, the MorphLLM Fast Apply MCP and the Graphify code graph from the vault framework — installer, uninstaller, commands, playbook, guides, tests, decisions and history — keep Serena as an optional developer tool, and add <code>docs/uninstall-removed-tools.md</code> telling a user how to remove all three from their machine.</p>
+<h2>Needs your decision</h2>
 <ul>
 <li>needs the operator: approve the plan, including the two edits outside the repo, <code>~/.claude/CLAUDE.md</code> and the memory file.</li>
 <li>deferred to the operator: the Graphify hooks and <code>graphify-out/</code> folders in 7 repos, this one included; <code>docs/uninstall-removed-tools.md</code> lists the commands.</li>
-<li>deferred: the plugin version in <code>.claude-plugin/plugin.json</code> stays 1.9.0; a release bump is its own <code>chore(release)</code> commit, as every earlier release was.</li>
-<li>pre-existing: 9 unit tests fail on the base commit <code>c23d9b1</code> as well, among them the doc-lint cases in the open <code>vault/reports/2026-09-14-2021-doclint-*</code> reports; this plan does not fix them.</li>
-<li>flaky, not this plan's: the graded tests in <code>tests/unit/plan-probes.bats</code> (T-1 to T-11) pass and fail between runs of the same commit. One SC-5 run failed on T-10; it then passed alone and in the next full run.</li>
-<li>deferred: other project vaults under <code>~/vault/&lt;slug&gt;/</code> may still mention claude-mem; this plan changes only this repo and the two operator files.</li>
 </ul>
-<h2>Success criteria</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
-</thead>
-<tbody>
-<tr><td>SC-1</td><td>WHEN <code>checks/mcp-purge-SC-1.sh</code> greps every tracked and untracked file THE SYSTEM SHALL find no mention of claude-mem, MorphLLM, Graphify or <code>bun</code> outside the uninstall guide, ADR-032, this plan's files and checks, and this session's capture</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN a user runs <code>setup.sh --full --dry-run</code>, <code>setup.sh --light --dry-run</code> and <code>setup.sh --with-claude-mem</code> against a fresh HOME THE SYSTEM SHALL reach the Serena step under <code>--full</code> only, install no removed tool under either, and reject <code>--with-claude-mem</code>, <code>--with-graphify</code> and <code>--minimal</code> with exit 2</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN a user opens <code>docs/uninstall-removed-tools.md</code> THE SYSTEM SHALL give the exact command for removing the claude-mem plugin, its marketplace and data directory, the MorphLLM MCP, <code>bun</code>, and Graphify with its hooks and output folders, plus a command that shows each is gone</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN an agent reads the Serena section of <code>tool-playbook.md</code> THE SYSTEM SHALL state that Serena is optional, and <code>lib/installers.sh</code> SHALL still install it</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-5</td><td>WHEN <code>tests/run.sh tests/unit</code> runs in Docker THE SYSTEM SHALL fail no test that passes on the base commit <code>c23d9b1</code></td><td>functional</td><td>command</td></tr>
-<tr><td>SC-6</td><td>WHEN <code>bin/doc-lint.sh</code> and <code>bin/gate.sh all &lt;plan&gt; --phase approve</code> run on this plan THE SYSTEM SHALL exit 0</td><td>functional</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td><code>tool-playbook.md</code> keeps its section numbers; the two deleted sections leave gaps</td><td><code>templates/VAULT.md</code> copies cite §6 into every project vault, and a renumber cannot reach them</td></tr>
-<tr><td><code>--minimal</code> exits 2 rather than aliasing <code>--light</code></td><td>old names are deleted outright, never kept as stubs</td></tr>
-<tr><td>The framework prescribes no memory plugin, no edit MCP and no code graph; Serena is the one optional developer tool</td><td>the operator removed them; Graphify ran in 3 of 2388 Claude sessions</td></tr>
-<tr><td>Two install profiles: <code>--light</code> (no optional tools, the default) and <code>--full</code> (Serena); <code>--minimal</code> is deleted</td><td>with claude-mem gone, light and minimal install the same thing</td></tr>
-<tr><td>Readers of <code>install_mode</code> treat any value but <code>full</code> as "no developer tools"</td><td>an existing <code>install_mode: minimal</code> keeps working</td></tr>
-<tr><td>Project-wired MCPs (task trackers, PostHog, BOE, CRM) stay</td><td>operator answer Q-1</td></tr>
-<tr><td>History is purged, and the one session named after claude-mem is renamed</td><td>operator answer Q-2</td></tr>
-</tbody>
-</table>
-</div>
 <h2>File tree</h2>
 <pre><code>
 setup.sh                                        existing, loses the claude-mem and Graphify steps and --minimal
@@ -109,120 +65,6 @@ vault/decisions/ADR-032-remove-memory-and-edit-mcps.md   new
 checks/mcp-purge-SC-1.sh … SC-6.sh              new
 vault/sessions/2026-06-19-1526-setup-zstd-fixes.md       new name for an existing session
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>.gitignore</td><td>no</td><td>files git ignores</td><td>on-demand</td></tr>
-<tr><td>INSTALL.md</td><td>no</td><td>install instructions for a user</td><td>on-demand</td></tr>
-<tr><td>bin/vault-init.sh</td><td>no</td><td>onboard a repo into the vault</td><td>on-demand</td></tr>
-<tr><td>bin/vault-sync.sh</td><td>no</td><td>one framework script</td><td>on-demand</td></tr>
-<tr><td>bin/vault-uninstall.sh</td><td>no</td><td>remove what setup.sh installed</td><td>on-demand</td></tr>
-<tr><td>commands/v-ask.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-capture.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-cr.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-cr/steps/02-gather.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-do.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-guide.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-init.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-loop.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-pm.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-pm/steps/02-load-context.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-pm/steps/05-capture.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-setup.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-team.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-work.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-work/steps/02-load-context.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-work/steps/03-propose.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-work/steps/04-execute.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-work/steps/05-commit-capture.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>lib/installers.sh</td><td>no</td><td>per-tool check and install functions plus the doctor</td><td>on-demand</td></tr>
-<tr><td>personas/api-laravel.md</td><td>no</td><td>one reviewer persona</td><td>on-demand</td></tr>
-<tr><td>personas/flutter.md</td><td>no</td><td>one reviewer persona</td><td>on-demand</td></tr>
-<tr><td>personas/nuxt.md</td><td>no</td><td>one reviewer persona</td><td>on-demand</td></tr>
-<tr><td>prompts/consolidate-into-indications.md</td><td>no</td><td>a reusable prompt</td><td>on-demand</td></tr>
-<tr><td>scripts/detect-stack.sh</td><td>no</td><td>one helper script</td><td>on-demand</td></tr>
-<tr><td>sessions/2026-06-02-1156-v-guide-command.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>setup.sh</td><td>no</td><td>umbrella installer; choose the profile and run each tool step</td><td>on-demand</td></tr>
-<tr><td>templates/project-moc.md</td><td>no</td><td>a template copied into project vaults</td><td>on-demand</td></tr>
-<tr><td>templates/vault.gitignore</td><td>no</td><td>a template copied into project vaults</td><td>on-demand</td></tr>
-<tr><td>tests/e2e/Dockerfile.ubuntu</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/e2e/autoinstall.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/e2e/run.sh</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/integration/setup.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/integration/vault-sync.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/integration/vault-uninstall.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/gitignore.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/plugin-install.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/setup-autoinstall.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/v-pm.bats</td><td>no</td><td>tests for the installer or a command</td><td>never-by-agent</td></tr>
-<tr><td>tool-playbook.md</td><td>no</td><td>when and how an agent uses each optional tool</td><td>on-demand</td></tr>
-<tr><td>vault-guide.md</td><td>no</td><td>the framework process guide</td><td>on-demand</td></tr>
-<tr><td>vault/.gitignore</td><td>no</td><td>one framework document</td><td>on-demand</td></tr>
-<tr><td>vault/_feature-index.md</td><td>no</td><td>a vault index</td><td>on-demand</td></tr>
-<tr><td>vault/_moc.md</td><td>no</td><td>a vault index</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-005-installer-auto-exec.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-007-light-siblings-guardrail.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-008-v-cr-remote-pr-review.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-020-claude-code-plugin-distribution.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-021-install-profiles.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-022-vault-git-autosync.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-026-mechanical-session-gates.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/_inventory.md</td><td>no</td><td>one architecture decision record</td><td>on-demand</td></tr>
-<tr><td>vault/features/install-distribution.md</td><td>no</td><td>one feature dossier</td><td>on-demand</td></tr>
-<tr><td>vault/features/vault-git-sync.md</td><td>no</td><td>one feature dossier</td><td>on-demand</td></tr>
-<tr><td>vault/indications/_index.md</td><td>no</td><td>one working rule or its index</td><td>on-demand</td></tr>
-<tr><td>vault/indications/light-command-siblings.md</td><td>no</td><td>one working rule or its index</td><td>on-demand</td></tr>
-<tr><td>vault/indications/per-user-installer-no-sudo.md</td><td>no</td><td>one working rule or its index</td><td>on-demand</td></tr>
-<tr><td>vault/indications/tools-suggestions-not-rules.md</td><td>no</td><td>one working rule or its index</td><td>on-demand</td></tr>
-<tr><td>vault/indications/verify-plugin-marketplace-qualifier.md</td><td>no</td><td>one working rule or its index</td><td>on-demand</td></tr>
-<tr><td>vault/plans/2026-06-18-1518-setup-auto-install.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-06-18-1518-setup-auto-install.trail.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-06-19-1106-v-cr-command.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-06-22-1152-framework-hooks-tools-rename.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-07-04-1030-v-family-usage-audit-retiering.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-07-20-1030-team-presentation-vault-commands.trail.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-08-04-install-profiles-light-full.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-08-04-vault-git-autosync.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-01-1000-vcr-delivery-and-coverage.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-01-1000-vcr-delivery-and-coverage.trail.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-04-0900-mechanical-session-gates.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-14-1327-framework-extension-points.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-21-1130-probe-kit-core.arch.md</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-21-1130-probe-kit-core.human.html</td><td>no</td><td>one plan or its process record</td><td>never-by-agent</td></tr>
-<tr><td>vault/research/subagent-token-economics.md</td><td>no</td><td>one research note</td><td>on-demand</td></tr>
-<tr><td>vault/sessions/2026-06-18-1518-setup-auto-install.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>vault/sessions/2026-06-19-0831-setup-sudo-deadlock-fix.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>vault/sessions/2026-06-19-1114-light-command-siblings.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>vault/sessions/2026-06-22-1152-framework-hooks-tools-rename.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>vault/sessions/2026-06-29-1233-humanize-docs.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>vault/sessions/2026-07-04-1115-v-family-usage-audit-retiering.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>vault/sessions/2026-08-04-1339-install-profiles-light-full.md</td><td>no</td><td>one session record</td><td>never-by-agent</td></tr>
-<tr><td>vault/indications/gate-prompts-on-stdin-tty.md</td><td>no</td><td>one working rule or its index</td><td>on-demand</td></tr>
-<tr><td>commands/v-method.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-reconcile.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>commands/v-team/steps/03-propose-loop.md</td><td>no</td><td>instructions for one command or step</td><td>on-demand</td></tr>
-<tr><td>vault/indications/installer-dry-run-seam.md</td><td>no</td><td>one working rule</td><td>on-demand</td></tr>
-<tr><td>tests/integration/vault-sync.bats</td><td>no</td><td>tests for vault sync</td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/gitignore.bats</td><td>no</td><td>tests for the gitignore templates</td><td>never-by-agent</td></tr>
-<tr><td>tests/e2e/run.sh</td><td>no</td><td>the e2e test runner</td><td>never-by-agent</td></tr>
-<tr><td>tests/e2e/Dockerfile.ubuntu</td><td>no</td><td>the e2e test image</td><td>never-by-agent</td></tr>
-<tr><td>vault/.gitignore</td><td>no</td><td>files git ignores in this vault</td><td>never-by-agent</td></tr>
-<tr><td>vault/sessions/2026-06-19-1526-setup-zstd-fixes.md</td><td>yes</td><td>one session record, renamed from its old claude-mem name</td><td>never-by-agent</td></tr>
-<tr><td>docs/uninstall-removed-tools.md</td><td>yes</td><td>tell a user how to remove the dropped tools from their machine</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-032-remove-memory-and-edit-mcps.md</td><td>yes</td><td>record that the framework prescribes no memory plugin, edit MCP or code graph</td><td>on-demand</td></tr>
-<tr><td>checks/mcp-purge-SC-1.sh</td><td>yes</td><td>grade SC-1</td><td>never-by-agent</td></tr>
-<tr><td>checks/mcp-purge-SC-2.sh</td><td>yes</td><td>grade SC-2</td><td>never-by-agent</td></tr>
-<tr><td>checks/mcp-purge-SC-3.sh</td><td>yes</td><td>grade SC-3</td><td>never-by-agent</td></tr>
-<tr><td>checks/mcp-purge-SC-4.sh</td><td>yes</td><td>grade SC-4</td><td>never-by-agent</td></tr>
-<tr><td>checks/mcp-purge-SC-5.sh</td><td>yes</td><td>grade SC-5</td><td>never-by-agent</td></tr>
-<tr><td>checks/mcp-purge-SC-6.sh</td><td>yes</td><td>grade SC-6</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -233,64 +75,9 @@ flowchart LR
     U -->|"reads"| D["docs/uninstall-removed-tools.md"]
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>setup.sh</td><td>cli</td><td>profile: --light or --full, tool: --with-serena, mode: --dry-run or --yes</td><td>exit code</td><td>exit 2 on an unknown flag</td><td>cli</td></tr>
-<tr><td>bin/vault-uninstall.sh</td><td>cli</td><td>scope: --tools</td><td>exit code</td><td>-</td><td>cli</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td>a command step reaches a tool choice</td><td>tool-playbook.md</td><td>4000</td></tr>
-<tr><td>a user removes the old tools</td><td>docs/uninstall-removed-tools.md</td><td>1500</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>install Serena</td><td>lib/installers.sh install_serena</td><td>reuse</td><td>unchanged</td></tr>
-<tr><td>remove Serena</td><td>bin/vault-uninstall.sh --tools</td><td>extend</td><td>loses its graphifyy and plugin steps</td></tr>
-<tr><td>grade a criterion</td><td>checks/stack-packs-SC-7.sh</td><td>extend</td><td>same exit-code contract, copied per plan as every plan does</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>docs/uninstall-removed-tools.md</td><td>120</td></tr>
-<tr><td>tool-playbook.md</td><td>200</td></tr>
-<tr><td>vault/decisions/ADR-032-remove-memory-and-edit-mcps.md</td><td>80</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>key</th><th>file</th><th>default</th></tr>
-</thead>
-<tbody>
-<tr><td>install_mode</td><td>~/vault/_global/config.md</td><td>light</td></tr>
-</tbody>
-</table>
-</div>
+<ul>
+<li><code>setup.sh.cli(profile: --light or --full, tool: --with-serena, mode: --dry-run or --yes): exit code</code>, throws <code>exit 2 on an unknown flag</code></li>
+<li><code>bin/vault-uninstall.sh.cli(scope: --tools): exit code</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-24-1651-remove-mcp-tools.md</code> · architecture spec: <code>2026-09-24-1651-remove-mcp-tools.arch.md</code></p>
 </main>

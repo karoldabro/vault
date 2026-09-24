@@ -10,6 +10,5 @@ fail() { printf '%s\n' "$*"; exit 1; }
 out=$(cd "$root" && "$gate" human "$plan" 2>&1); rc=$?
 [ "$rc" -eq 0 ] || fail "gate human refused this plan (exit $rc): $out"
 printf '%s' "$out" | grep -qF 'human: ok' || fail "no human: ok line: $out"
-grep -qF 'Check these yourself' "$page" || fail "the real page has no review checklist"
 grep -qF '<pre class="mermaid">' "$page" || fail "the real page holds no diagram"
 exit 0

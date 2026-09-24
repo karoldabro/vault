@@ -10,18 +10,36 @@ human_plan: https://claude.ai/artifact/LHVhsU2fsQWNFpJTH6NKuC
 
 ## Task
 Session S3 fixture.
+Keywords: kwfixture, kwpage.
 
 Second paragraph with `code` and a second line.
 
 ## Open & deferred
 - needs the operator: approve the fixture.
 - deferred: nothing else.
+- **blocked, api:** waits on the api.
+- open: agent work on
+  two lines.
+- user-visible: the list shows ten rows.
+
+| # | item | state |
+|---|------|-------|
+| O1 | pick a colour | Needs the Operator |
+| O2 | internal budget | accepted |
+
+## Open questions
+
+| id | question | blocks | searched | status | answer |
+|----|----------|--------|----------|--------|--------|
+| Q-1 | which name? | no | vault | defaulted | the short one |
+| Q-2 | which port? | yes | vault | answered | 8080 |
 
 ## Success criteria
 
 | id | criterion | kind | how | check | expect | verdict | evidence |
 |----|-----------|------|-----|-------|--------|---------|----------|
 | SC-1 | WHEN it runs THE SYSTEM SHALL render | functional | command | `checks/x.sh` | exit 0 | | |
+| SC-2 | WHEN a person opens it THE SYSTEM SHALL read well | delivery | observed | open the page | reads well | | |
 
 ## Decisions
 

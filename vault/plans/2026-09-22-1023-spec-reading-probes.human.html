@@ -40,65 +40,13 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>spec-reading-probes — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
 <p>Add the native probes <code>spec-tables</code> and <code>spec-naming</code> and the auditors <code>data-model</code> and <code>naming</code> that <code>commands/_shared/plan-probes.md</code> names but does not yet define, so the plan-time probe stage compares a draft spec's <code>## Data model</code> table with the repo's real SQL, the way <code>spec-symbols</code> already compares a draft's Reuse map with real code.</p>
-<p>Keywords: probes, spec-tables, spec-naming, data-model, naming, auditors, plan-probes, sql-schema.</p>
-<h2>Open &amp; deferred</h2>
-<ul>
-<li>deferred: <code>bin/rule-count.sh</code> already prints 181 lines against a budget of 173, a pre-existing defect the master plan records as not this plan's (<code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code> line 34). This plan's Auditors rewrite is designed to be rule-line-neutral or negative (SC-8), but it does not close the existing 8-line gap.</li>
-<li>deferred: <code>sql-dup-columns</code>, <code>sql-fk-index</code> and <code>sql-naming</code> keep their own registry rows and keep reading only real SQL files. <code>spec-tables</code>/<code>spec-naming</code> are new, separate rows; nothing about the existing three rows' <code>detect</code> or <code>run</code> cells changes.</li>
-<li>accepted: <code>spec-tables</code> and <code>spec-naming</code> reuse the exact rule ids of <code>sql-dup-columns</code>/<code>sql-fk-index</code>/ <code>sql-naming</code> (<code>dup-column-in-table</code>, <code>dup-column-set</code>, <code>column-drift</code>, <code>fk-no-index</code>, <code>id-column-no-fk</code>, <code>naming-snake-case</code>, <code>naming-glossary</code>) rather than minting <code>spec-</code>-prefixed ones. The <code>probe</code> column of a finding row (<code>spec-tables</code> vs <code>sql-dup-columns</code>) already says whether the row came from the spec or from real SQL, so a second rule vocabulary would name the same defect twice.</li>
-<li>accepted: <code>column-drift</code> stays name-scoped, not table-scoped — a spec column and any same-named real column anywhere in the schema are compared, matching <code>sql-dup-columns</code>' existing behaviour on real files today (round 1, correctness-2). TB-10 pins this as intended, not a gap.</li>
-<li>deferred: no grader enforces any arch-spec's <code>## Size budgets</code> table today (round 1, quality-2 confirmed <code>lib/arch-check.sh</code> has no line-count logic) — a pre-existing, repo-wide gap this plan's own arch spec inherits but does not introduce; out of scope here.</li>
-</ul>
-<h2>Success criteria</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
-</thead>
-<tbody>
-<tr><td>SC-1</td><td>WHEN <code>bin/probe.sh list --repo &lt;repo&gt;</code> runs after the registry change THE SYSTEM SHALL print a <code>spec-tables</code> and a <code>spec-naming</code> line, both <code>stage</code> <code>plan</code>, both ending <code>ok</code>, and leave the <code>sql-dup-columns</code>, <code>sql-fk-index</code> and <code>sql-naming</code> lines unchanged</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN <code>probes/sql-schema.sh --check spec-tables --spec &lt;spec&gt;</code> runs on a spec whose Data model table duplicates a real table's column set, drifts a column's type against a same-named real table's column, and declares an FK column with no matching index THE SYSTEM SHALL print one <code>dup-column-set</code>, one <code>column-drift</code> and one <code>fk-no-index</code> row, each citing the spec file and line; print no <code>id-column-no-fk</code> row even for an unreferenced <code>_id</code> column; print nothing on a spec that breaks none of them; and print nothing WHEN the spec has no Data model table even if the real schema alone already trips these rules</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN <code>probes/sql-schema.sh --check spec-naming --spec &lt;spec&gt;</code> runs on a spec whose Data model table names a table in PascalCase and a column that the glossary bans THE SYSTEM SHALL print one <code>naming-snake-case</code> and one <code>naming-glossary</code> row citing the spec file and line, and print nothing on a spec that breaks neither</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN <code>commands/_shared/plan-probes.md</code> is read THE SYSTEM SHALL show one <code>## Auditors</code> section holding one shared envelope template and a three-row table naming <code>reuse</code>, <code>data-model</code> and <code>naming</code>, each row stating its exact <code>reads</code> set and one-sentence question (this plan's <code>## Auditor content</code> table, verbatim) and distinct from the other two rows' questions, and THE SYSTEM SHALL keep the <code>reuse</code> auditor's existing behaviour: started only when the block holds a <code>similar-symbols</code> or <code>spec-symbols</code> row, only at tier <code>full</code></td><td>functional</td><td>command</td></tr>
-<tr><td>SC-5</td><td>WHEN <code>bin/plan-probes.sh budget</code> runs on a block holding rows from two different auditors' probes THE SYSTEM SHALL project <code>auditors × 36000</code> counting each distinct triggered auditor once, not a fixed <code>36000</code> regardless of how many auditors would run</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-6</td><td>WHEN <code>bin/plan-probes.sh verify &lt;out&gt; &lt;rows-1&gt; &lt;rows-2&gt; &lt;rows-3&gt;</code> runs with more than one auditor-rows file THE SYSTEM SHALL apply the byte-for-byte block-row-plus-verdict-list keep rule to each file independently and print every kept line, and WHEN called with zero rows files THE SYSTEM SHALL behave exactly as before</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-7</td><td>WHEN <code>bin/probe-panel.sh run --stage plan --spec vault/plans/2026-09-22-1023-spec-reading-probes.arch.md --repo . --only spec-tables --only spec-naming</code> runs on this live repo, which has no real SQL, THE SYSTEM SHALL print a block of findings sourced only from this plan's own Data model table (none — the table above breaks no rule of its own), print one <code>probe-status: complete</code> line, and <code>./tests/run.sh tests/unit/probe.bats tests/unit/plan-probes.bats</code> SHALL pass every test</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-8</td><td>WHEN <code>commands/_shared/plan-probes.md</code>'s <code>## Auditors</code> section is measured by line count after this change THE SYSTEM SHALL show no net growth over its pre-change line count (a table plus one shared template covering three auditors, not three prose blocks)</td><td>functional</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>Extend <code>probes/sql-schema.sh</code> with <code>--check spec-tables|spec-naming</code> rather than a new probe file</td><td>the master plan's own Open &amp; deferred names this "the spec-reading part of <code>sql-*</code>"; the fact format and the three awk programs already exist and need no change, only a second fact source</td></tr>
-<tr><td>A spec-fact extractor turns the Data model table's rows into <code>T</code>/<code>C</code>/<code>K</code> lines tagged with their origin (<code>spec</code> or <code>real</code>). <code>sql-dup-columns</code> and <code>sql-fk-index</code> gain one boolean, <code>spec_mode</code>, set only when <code>A_CHECK</code> is <code>spec-tables</code> — never for the plain <code>sql-dup-columns</code>/<code>sql-fk-index</code> checks. When <code>spec_mode</code> is unset, every keyed structure (<code>have</code>, <code>cols</code>/<code>ncol</code>, <code>nty</code>/<code>tys</code>) keys by <code>(table,column)</code> exactly as today, with no origin component and no output gating — the plain checks are structurally untouched, not byte-identical by accident (round 2, correctness-6). When <code>spec_mode</code> is set (<code>spec-tables</code> only), the same structures key by <code>(table,column,origin)</code> instead — so a spec table sharing a real table's name gets its own first-occurrence-per-origin counted for both the drift check and the <code>cols</code>/<code>ncol</code> overlap-set used by <code>dup-column-set</code> (round 2, architect-4 confirmed the original fix covered <code>have</code>/<code>nty</code> but not <code>cols</code>/<code>ncol</code>) — and a finding is emitted only when at least one contributing fact is spec-derived, so a spec with no Data model table produces nothing even when the real schema alone already trips these rules. <code>spec-naming</code> runs the unchanged <code>sql-naming</code> program over spec-origin facts only (WI-2)</td><td>round 1 (architect-1, correctness-1) confirmed the original "zero changes" design drops genuine drift on a same-named table and lets pre-existing real-SQL defects leak into <code>spec-tables</code> output when the spec itself contributes nothing; round 2 (correctness-6, architect-4) confirmed the round-1 fix left the plain-vs-spec_mode boundary and the <code>cols</code>/<code>ncol</code> structures unspecified — reuse stays the shape, <code>spec_mode</code> is the single flag that keeps the plain checks untouched while widening <code>spec-tables</code>' keys</td></tr>
-<tr><td>The <code>## Auditors</code> rewrite states each new auditor's exact <code>reads</code> set and one-sentence question inline in the plan, not left to implementation: <code>data-model</code> reads <code>spec-tables</code> only, <code>naming</code> reads <code>spec-naming</code> only — mirroring <code>reuse</code>, which reads exactly the two probes it triages</td><td>round 1 (architect-3, consumer-2) confirmed two sessions implementing WI-4 from the prior draft would invent different envelope text, since <code>reads</code> was ambiguous between "the two new probes" and "the two new probes plus the three pre-existing <code>sql-*</code> ones"</td></tr>
-<tr><td>Factor the Reuse-map heading-locate-and-column-split routine <code>probes/similar-symbols.sh</code> already has into a shared function, and call it from the new Data-model-table extractor too</td><td>round 1 (quality-3) confirmed the new extractor would otherwise be a second from-scratch implementation of markdown-table parsing <code>similar-symbols.sh</code> already does, including its CRLF-strip and escaped-pipe handling (round 1, correctness-5)</td></tr>
-<tr><td><code>spec-tables</code>/<code>spec-naming</code> registry rows are <code>stack: any</code>, not <code>stack: sql</code>, gated by <code>detect: test -n "$PROBE_SPEC"</code> (identical to <code>spec-symbols</code>)</td><td>they must fire from the spec alone with no real SQL present — this repo is the proof case, per the master plan's own note that "the <code>sql-\*</code> probes ignore the spec and cannot fire in this repo, which has no SQL"</td></tr>
-<tr><td><code>commands/_shared/plan-probes.md</code>'s <code>## Auditors</code> section becomes one shared envelope template plus a three-row table (<code>reuse</code>, <code>data-model</code>, <code>naming</code>), replacing the current one-auditor prose block</td><td>three near-identical prose blocks is exactly the duplication the master plan's own deferred note flags for <code>lib/arch-check.sh</code>'s row-loop skeleton "when a later profile adds tables" (line 35); a table plus one template holds three auditors in fewer net lines than one auditor's current prose</td></tr>
-<tr><td><code>pp_budget</code>'s <code>aud</code> becomes a count of distinct triggered auditors (iterate the <code>AUDITORS</code> table, mark an auditor triggered when any of its listed probe ids has a block row, sum), not a 0/1 flag</td><td>PT-3 already states the intent ("counts the auditors itself from the rows in the block ... <code>auditors × 36000</code>"); the flag reads as a bug the moment a second auditor exists, which this plan adds two of</td></tr>
-<tr><td><code>pp_verify</code> takes zero or more <code>&lt;rows-file&gt;</code> arguments instead of exactly one</td><td>three auditors can each write <code>&lt;out&gt;/auditor-&lt;id&gt;.tsv</code>; step (g) of <code>03-propose-loop.md</code> must be able to pass every file that ran, not just <code>reuse</code>'s</td></tr>
-</tbody>
-</table>
-</div>
 <h2>File tree</h2>
 <pre><code>
 probes/sql-schema.sh                          existing, gains spec-tables and spec-naming checks
@@ -112,26 +60,6 @@ tests/unit/plan-probes.bats                    existing, pinned probes/auditors 
 tests/fixtures/probe/spec-data-model-bad.arch.md   new, a Data model table with one defect of each rule
 tests/fixtures/probe/spec-data-model-clean.arch.md new, a Data model table that breaks no rule
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>probes/sql-schema.sh</td><td>no</td><td>reads real SQL and, when <code>--spec</code> names a file, the spec's Data model table, into one fact stream and runs the existing checks over it</td><td>on-demand</td></tr>
-<tr><td>probes/registry.tsv</td><td>no</td><td>declares which probes exist, at which stage, and how to run them</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/plan-probes.md</td><td>no</td><td>owns the plan-time probe stage: tier, auditors, verify, the notes at the approval gate</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>no</td><td>owns the probe registry format and the checks-and-rules table</td><td>on-demand</td></tr>
-<tr><td>bin/plan-probes.sh</td><td>no</td><td>the tier, verify and measure commands the stage calls</td><td>on-demand</td></tr>
-<tr><td>commands/v-team/steps/03-propose-loop.md</td><td>no</td><td>step (b2) calls the stage; step (g) calls verify</td><td>on-demand</td></tr>
-<tr><td>tests/unit/probe.bats</td><td>no</td><td>unit coverage for <code>probes/*.sh</code></td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/plan-probes.bats</td><td>no</td><td>unit coverage for <code>bin/plan-probes.sh</code></td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/probe/spec-data-model-bad.arch.md</td><td>yes</td><td>a spec whose Data model table trips one row per new rule</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/probe/spec-data-model-clean.arch.md</td><td>yes</td><td>a spec whose Data model table trips nothing</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -144,60 +72,11 @@ flowchart LR
     G -->|"auditor-data-model.tsv, auditor-naming.tsv"| H["plan-probes.sh verify"]
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>sql-schema.sh</td><td>--check spec-tables</td><td>repo: path, spec: path</td><td>finding rows on stdout</td><td>exit 2 on usage error</td><td>cli</td></tr>
-<tr><td>sql-schema.sh</td><td>--check spec-naming</td><td>repo: path, spec: path</td><td>finding rows on stdout</td><td>exit 2 on usage error</td><td>cli</td></tr>
-<tr><td>plan-probes.sh</td><td>budget</td><td>critics: int, rounds: int, block: path, out: path</td><td>tier + projected + note lines, tier.txt</td><td>exit 2 on bad input</td><td>cli</td></tr>
-<tr><td>plan-probes.sh</td><td>verify</td><td>outdir: path, rowsfiles: path</td><td>open:/note: lines</td><td>exit 1 open row, exit 2 unreadable</td><td>cli</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td>step (b2) starts</td><td>commands/_shared/plan-probes.md</td><td>1500</td></tr>
-<tr><td>tier full, spec-tables or spec-naming rows present</td><td>the data-model or naming auditor envelope</td><td>2000</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>parse SQL text into T/C/K facts</td><td>lib/probe-sql.sh sql_facts</td><td>reuse</td><td>the spec's Data model table becomes one more fact source, read into the same three-letter format, so the checks below need no change</td></tr>
-<tr><td>duplicate/drift/missing-index checks over table facts</td><td>probes/sql-schema.sh sql-dup-columns, sql-fk-index awk</td><td>reuse</td><td>spec-tables feeds spec facts and real facts into the same awk programs, unchanged</td></tr>
-<tr><td>snake_case + glossary naming check</td><td>probes/sql-schema.sh sql-naming awk</td><td>reuse</td><td>spec-naming feeds spec facts into the same awk program, unchanged</td></tr>
-<tr><td>existence-style spec-vs-code probe pattern</td><td>probes/similar-symbols.sh --check spec-symbols</td><td>reuse</td><td>spec-tables/spec-naming follow the same shape: gated on <code>test -n "$PROBE_SPEC"</code>, native, stage plan, stack any</td></tr>
-<tr><td>Explore/haiku read-only auditor pattern</td><td>commands/_shared/plan-probes.md Auditor reuse envelope</td><td>extend</td><td>the reuse envelope becomes one shared template parameterised by id/reads/question, holding three rows instead of one prose block per auditor</td></tr>
-<tr><td>distinct-auditor cost counting</td><td>bin/plan-probes.sh pp_budget aud</td><td>extend</td><td>the current binary <code>aud</code> undercounts once a second independently-triggerable auditor exists; it becomes a count over the AUDITORS table</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>probes/sql-schema.sh</td><td>160</td></tr>
-<tr><td>commands/_shared/plan-probes.md</td><td>110</td></tr>
-<tr><td>bin/plan-probes.sh</td><td>240</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<p>n/a: no new setting — spec-tables/spec-naming reuse PROBE_SQL, PROBE_FILE_MAX and the existing glossary path</p>
+<ul>
+<li><code>sql-schema.sh.--check spec-tables(repo: path, spec: path): finding rows on stdout</code>, throws <code>exit 2 on usage error</code></li>
+<li><code>sql-schema.sh.--check spec-naming(repo: path, spec: path): finding rows on stdout</code>, throws <code>exit 2 on usage error</code></li>
+<li><code>plan-probes.sh.budget(critics: int, rounds: int, block: path, out: path): tier + projected + note lines, tier.txt</code>, throws <code>exit 2 on bad input</code></li>
+<li><code>plan-probes.sh.verify(outdir: path, rowsfiles: path): open:/note: lines</code>, throws <code>exit 1 open row, exit 2 unreadable</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-22-1023-spec-reading-probes.md</code> · architecture spec: <code>2026-09-22-1023-spec-reading-probes.arch.md</code></p>
 </main>

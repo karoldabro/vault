@@ -40,69 +40,26 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>plan-time-probes — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
-<p>Session S5 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Add a plan-time stage to <code>/v-team</code> PROPOSE. It runs probes on the draft spec and the repo and puts the rows in every critic envelope. Read-only auditors triage the rows. The stage costs at most 50% of a PROPOSE (D-10) and skips itself above that. Contracts used: C-1, C-2, C-3, C-4. Keywords: <code>plan-probes</code>, <code>probe-panel</code>, <code>--stage plan</code>, <code>spec-symbols</code>, <code>auditor</code>, <code>tier</code>, <code>fresh tokens</code>.</p>
-<h2>Open &amp; deferred</h2>
+<p>Session S5 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Add a plan-time stage to <code>/v-team</code> PROPOSE. It runs probes on the draft spec and the repo and puts the rows in every critic envelope. Read-only auditors triage the rows. The stage costs at most 50% of a PROPOSE (D-10) and skips itself above that. Contracts used: C-1, C-2, C-3, C-4.</p>
+<h2>Needs your decision</h2>
 <ul>
 <li>needs the operator: approve decisions PT-1 to PT-10, and rule on the two review findings this plan does not apply (the two minority lines below).</li>
-<li>minority: the size split. The plan touches 17 paths, past the ~15 at which a session drops work. They are 8 product and test files, 7 graders, the master plan, the rendered page and one owned-rule row. Session S11 takes the SQL probes and two auditors; the rest stays here because the graders are small and only <code>bin/plan-probes.sh</code> is large.</li>
-<li>minority: the reuse check stays a probe check and does not become a rule of <code>lib/arch-check.sh</code>. The gate is form-only by design, so a check of existence in code has a different owner.</li>
-<li>deferred: session S11 adds the <code>data-model</code> and <code>naming</code> auditors, the probes <code>spec-tables</code> and <code>spec-naming</code>, and the spec-reading part of <code>sql-*</code>. The <code>sql-*</code> probes ignore the spec and cannot fire in this repo, which has no SQL.</li>
-<li>deferred: <code>similar-symbols</code> noise beyond the stopword fix of W-10. The reuse auditor triages the rest.</li>
-<li>accepted limit: the 50% limit is a projection. With a block at its 12 KB cap and one auditor it stays under 22% for 1 to 5 critics over 1 to 3 rounds. <code>tier: skip</code> fires only on inputs outside those caps, and SC-4 proves the tiers on synthetic inputs.</li>
-<li>accepted limit: the constants come from two one-round PROPOSE runs. The round term is projected, and the <code>note:</code> says so. <code>bin/plan-probes.sh measure</code> is run by hand with an explicit window to refit them; the stage does not measure itself.</li>
-<li>accepted limit: cost counts fresh tokens (input, cache creation, output). Cache reads are recorded beside them and excluded, because a read costs a tenth of a fresh token.</li>
-<li>accepted limit: the auditor's tool set is stated in its envelope and not enforced. <code>verify</code> bounds what it can change: it prints only the block's own rows.</li>
-<li>unverified: the stage has not run inside a real <code>/v-team</code> session. SC-6 runs its scripts on two real specs; the spawn of the auditor is described in text and tested only through <code>verify</code>.</li>
-<li>existing defect, not this plan's: <code>bin/rule-count.sh --assert</code> fails on <code>HEAD</code> (181 rule lines, budget 173). This plan adds none.</li>
-<li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>document-standard.bats</code> two cases, <code>plugin-install.bats</code> two path notes, <code>research-clarify.bats</code> the PROPOSE output contract).</li>
 </ul>
-<h2>Success criteria</h2>
+<h2>Defaults taken for you</h2>
 <div class="scroll">
 <table>
 <thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+<tr><th>question</th><th>answer</th></tr>
 </thead>
 <tbody>
-<tr><td>SC-1</td><td>WHEN <code>bin/probe-panel.sh run --stage plan --spec &lt;spec&gt; --repo &lt;repo&gt; --only &lt;id&gt;</code> runs with no <code>--posture</code> and no <code>--base</code> THE SYSTEM SHALL print the review block format, tag framework rows <code>[confirmed]</code>, run only the named ids without repo code, print ERROR when an id has no row at the stage, exit 2 when <code>--posture</code> accompanies <code>--stage plan</code>, and WHEN <code>--stage</code> is absent THE SYSTEM SHALL behave as before</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN a Reuse-map row with decision <code>reuse</code> or <code>extend</code> has a cell whose first path token is absent, or whose later identifier token occurs as no whole word in that file, THE SYSTEM SHALL print a <code>reuse-path-missing</code> or <code>reuse-symbol-missing</code> <code>error</code> row naming the spec and the cell's line, print no row for the cells <code>bin/probe.sh run plan</code> and <code>lib/cr-sandbox.sh cr_sandbox_root, cr_sandbox_path_is_safe</code> of real specs, and name a spec outside the repo by its base name</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN <code>bin/plan-probes.sh verify &lt;out&gt; &lt;rows&gt;</code> runs THE SYSTEM SHALL exit 1 and print an <code>open:</code> line for each <code>[confirmed]</code> <code>error</code> row of the block, print the block's own copy of every auditor line whose whole row equals a block row and whose verdict is <code>applies</code>, <code>does-not-apply</code> or <code>unclear</code>, drop every other line, keep the exit code whatever the verdicts say, and exit 2 when <code>&lt;out&gt;/tier.txt</code> is missing</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN <code>bin/plan-probes.sh budget --critics &lt;n&gt; --rounds &lt;r&gt; --block &lt;file&gt; --out &lt;dir&gt;</code> projects the added cost THE SYSTEM SHALL print <code>tier: full</code> when it is at most 50% of the projected baseline, <code>tier: block-only</code> when only the block fits, <code>tier: skip</code> otherwise, one <code>note:</code> line for every tier except full, and write the tier to <code>&lt;dir&gt;/tier.txt</code></td><td>functional</td><td>command</td></tr>
-<tr><td>SC-5</td><td>WHEN <code>bin/plan-probes.sh measure</code> reads a transcript with repeated message ids, messages outside the window and a <code>subagents</code> directory THE SYSTEM SHALL count each id once, count only the window, include every subagent file, and print <code>fresh</code>, <code>cache_read</code> and <code>messages</code> per file and in total</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-6</td><td>WHEN the stage runs on this repo with the specs of <code>2026-09-21-1430-v-rule</code> and <code>2026-09-21-1600-sandbox-probe</code> THE SYSTEM SHALL project an added cost of at most 50% of the baseline recorded for each plan in Verified current state, and print the block bytes and both percentages</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-7</td><td>WHEN a session reads <code>commands/v-team/steps/03-propose-loop.md</code> THE SYSTEM SHALL find step (b2) naming <code>commands/_shared/plan-probes.md</code>, whose auditor ids equal <code>bin/plan-probes.sh auditors</code>, and <code>bin/rule-count.sh</code> SHALL print 181 rule lines with <code>commands/_shared/critic-panel.md</code> identical to commit <code>435a83e</code></td><td>functional</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>PT-1 The stage runs the probes <code>similar-symbols</code> and <code>spec-symbols</code>, with no path filter and the panel's 40-row cap. S5 adds <code>spec-symbols</code>. Session S11 adds <code>spec-tables</code>, <code>spec-naming</code> and the spec-reading part of <code>sql-*</code>; session S9 owns stack packs</td><td>these two compare the draft with existing code, and their useful rows point at code the spec does not list, so a filter by listed files would drop them. The <code>sql-*</code> probes ignore the spec and cannot fire in this repo. The hygiene probes (<code>md-links</code>, <code>dead-files</code>, <code>token-size</code>, <code>claude-validate</code>) describe the repo, not the draft</td></tr>
-<tr><td>PT-2 An <code>error</code> row of a <code>[confirmed]</code> probe blocks the plan at step (g); every other row informs. The operator may accept a named open row at the gate, so a wrong probe never traps a session. An auditor returns lines of the form verdict, tab, the six fields of a block row. <code>verify</code> prints the block's own copy of a matching row and drops any other line. A verdict changes no exit code and no severity</td><td>D-6: only a tool run blocks, and a row a model typed is not tool output</td></tr>
-<tr><td>PT-3 Cost is fresh tokens: input, cache creation and output, once per message id. <code>bin/plan-probes.sh measure</code> produces it. Baselines live in Verified current state and the constants in <code>bin/plan-probes.sh</code> settings. <code>budget</code> reads the critic count (personas selected at step (b)), the round count (<code>team_max_rounds</code>) and the block file; it counts the auditors itself from the rows in the block, then projects <code>block_tokens × (critics × rounds + 1) + auditors × 36000</code> against 50% of <code>390000 + 140000 × critics × rounds</code>, and picks <code>full</code>, <code>block-only</code> or <code>skip</code></td><td>PROPOSE cost is unknown when the stage starts, so the stage projects it from constants measured on two real runs</td></tr>
-<tr><td>PT-4 The approval block shows one line per exception and nothing on a clean run. The exceptions are: the stage skipped, run without the auditor, a tool absent, an open tool-confirmed defect. <code>budget</code> prints the first two notes; <code>verify</code> prints the other two, reading <code>&lt;out&gt;/operator.txt</code> for an absent tool. The lines go in the block's <code>Open</code> field</td><td>a clean run is normal and the operator's output contract reports exceptions only</td></tr>
-<tr><td>PT-5 One auditor exists now: <code>reuse</code>, which reads the rows of <code>similar-symbols</code> and <code>spec-symbols</code>. It is an <code>Explore</code> subagent on <code>haiku</code>, starts only when the block holds one of those rows, and reads code with Read and Grep only</td><td>its output is checkable against the block, so it goes to the cheaper model; with no rows it has nothing to triage. <code>data-model</code> and <code>naming</code> belong to S11 with the probes that read the spec</td></tr>
-<tr><td>PT-6 A tool that is absent prints <code>absent: &lt;id&gt;: &lt;install&gt;</code> in the block status. Its auditor is not started, the note names the id and the install command, and an absent tool never reads as clean. No plan-time probe has an install command today, so the rule waits for the S9 stack packs</td><td>D-5: a probe never installs a tool, and silence about a missing check reads as a pass</td></tr>
-<tr><td>PT-7 The stage runs only when the plan names an <code>arch_spec</code>; a repo without <code>arch_profile</code> gets no stage and no note</td><td>the auditor compares a draft spec with code; without a spec there is nothing to compare</td></tr>
-<tr><td>PT-8 <code>commands/_shared/plan-probes.md</code> owns the tier, the auditor, <code>verify</code> and the notes, and references <code>commands/_shared/critic-panel.md</code> section (a) for the block rules. <code>03-propose-loop.md</code> calls it, <code>probe-kit.md</code> owns the panel flags and probe rules, and <code>critic-panel.md</code> is not edited</td><td>one home per rule, and D-7 keeps the review panels separate commands</td></tr>
-<tr><td>PT-9 <code>spec-symbols</code> splits a Reuse-map cell on whitespace and commas. The first token that contains <code>/</code> is the path. Each later token that is an identifier is a symbol, checked as a whole word in that file. A cell with no path token is skipped. A spec outside the repo is named by its base name, since the core rejects an absolute file. The check runs before the symbol scan and needs <code>PROBE_SPEC</code></td><td>real cells hold <code>path sym, sym</code> and <code>path word word</code>; a per-token check gives no false row on them, and a repo with the vault elsewhere still gets rows</td></tr>
-<tr><td>PT-10 Edge contracts. <code>budget</code>: critics and rounds are integers of at least 1, block bytes convert to tokens rounded up, a projection equal to the limit is <code>full</code>, a number above 1000000000 exits 2, a setting that is not a number or <code>PLAN_PROBE_BYTES_PER_TOKEN</code> of 0 exits 2 naming it, an empty block is valid, a missing block exits 2, a missing <code>--out</code> directory is created. <code>measure</code>: both window ends are inclusive and compared as instants, a missing bound or <code>from</code> after <code>to</code> exits 2, a non-JSON line is skipped and counted on stderr, a missing usage field counts 0, a repeated id counts once at its largest <code>output_tokens</code>. <code>verify</code>: <code>tier.txt</code> holds <code>full</code>, <code>block-only</code> or <code>skip</code> or <code>verify</code> exits 2, a repeated auditor line prints once, a line with CRLF is dropped. <code>spec-symbols</code>: backticks and a trailing <code>.</code> or <code>,</code> are stripped from a token, the decision compares lower-case and trimmed, a non-ASCII symbol is skipped</td><td>the plan otherwise leaves each point to the implementer, and a test can pin only a stated value</td></tr>
+<tr><td>Does an auditor add rows the block lacks?</td><td>no; it returns block rows with a verdict, because a row a model typed is not tool output (PT-2)</td></tr>
+<tr><td>What <code>file</code> does a <code>spec-symbols</code> row carry when the spec lies outside the repo?</td><td>the spec's base name, since the core rejects an absolute file (PT-9)</td></tr>
 </tbody>
 </table>
 </div>
@@ -120,33 +77,6 @@ lib/shared-module-rules.tsv                            existing, gains one owned
 vault/plans/2026-09-21-0900-architecture-first-planning.md   existing, S5 row done, S11 row added
 checks/plan-probe-SC-1.sh to SC-7.sh                   new, decide the seven criteria
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/plan-probes.sh</td><td>yes</td><td>decides the stage tier, verifies auditor rows, measures tokens, lists the stage's probes and auditors</td><td>on-demand</td></tr>
-<tr><td>bin/probe-panel.sh</td><td>no</td><td>prints the probe block for the critics</td><td>on-demand</td></tr>
-<tr><td>probes/similar-symbols.sh</td><td>no</td><td>compares a spec's Reuse map with the code</td><td>on-demand</td></tr>
-<tr><td>probes/registry.tsv</td><td>no</td><td>lists every probe with its stage and cost</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/plan-probes.md</td><td>yes</td><td>contract of the plan-time stage</td><td>on-demand</td></tr>
-<tr><td>commands/v-team/steps/03-propose-loop.md</td><td>no</td><td>PROPOSE step of a team run</td><td>always</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>no</td><td>contract of the probe kit</td><td>on-demand</td></tr>
-<tr><td>lib/shared-module-rules.tsv</td><td>no</td><td>lists the rules each shared module owns</td><td>on-demand</td></tr>
-<tr><td>tests/unit/plan-probes.bats</td><td>yes</td><td>runs the graders and guards the new text</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.md</td><td>no</td><td>master plan and session tracker</td><td>on-demand</td></tr>
-<tr><td>checks/plan-probe-SC-1.sh</td><td>yes</td><td>decides criterion SC-1</td><td>never-by-agent</td></tr>
-<tr><td>checks/plan-probe-SC-2.sh</td><td>yes</td><td>decides criterion SC-2</td><td>never-by-agent</td></tr>
-<tr><td>checks/plan-probe-SC-3.sh</td><td>yes</td><td>decides criterion SC-3</td><td>never-by-agent</td></tr>
-<tr><td>checks/plan-probe-SC-4.sh</td><td>yes</td><td>decides criterion SC-4</td><td>never-by-agent</td></tr>
-<tr><td>checks/plan-probe-SC-5.sh</td><td>yes</td><td>decides criterion SC-5</td><td>never-by-agent</td></tr>
-<tr><td>checks/plan-probe-SC-6.sh</td><td>yes</td><td>decides criterion SC-6</td><td>never-by-agent</td></tr>
-<tr><td>checks/plan-probe-SC-7.sh</td><td>yes</td><td>decides criterion SC-7</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -162,79 +92,14 @@ flowchart LR
     G -->|"tool rows with verdicts, notes, exit code"| A
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/plan-probes.sh</td><td>budget</td><td>critics: int, rounds: int, block: path, out: path</td><td>tier line, a note line unless the tier is full, and out/tier.txt, exit 0</td><td>exit 2 on a bad number or an unreadable block</td><td>cli</td></tr>
-<tr><td>bin/plan-probes.sh</td><td>verify</td><td>out: path, rows: path</td><td>the block's own copy of each kept row with its verdict, open and note lines, exit 0 or 1</td><td>exit 2 on an unreadable directory or a missing out/tier.txt</td><td>cli</td></tr>
-<tr><td>bin/plan-probes.sh</td><td>measure</td><td>transcript: path, from: string, to: string</td><td>one line per file and a total, exit 0</td><td>exit 2 on an unreadable transcript</td><td>cli</td></tr>
-<tr><td>bin/plan-probes.sh</td><td>probes</td><td>-</td><td>the plan-time probe ids, one per line</td><td>-</td><td>cli</td></tr>
-<tr><td>bin/plan-probes.sh</td><td>auditors</td><td>-</td><td>auditor id and probe ids, tab separated</td><td>-</td><td>cli</td></tr>
-<tr><td>bin/probe-panel.sh</td><td>run</td><td>stage: string, spec: path, only: string, repo: path, out: path</td><td>the probe block, exit 0 or 2</td><td>exit 2 on a bad option</td><td>cli</td></tr>
-<tr><td>probes/similar-symbols.sh</td><td>--check</td><td>check: string, repo: path, spec: path</td><td>finding rows, exit 0, 1 or 2</td><td>exit 2 on a bad option</td><td>cli</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td>PROPOSE step (b2) starts</td><td>commands/_shared/plan-probes.md</td><td>1800</td></tr>
-<tr><td>the stage runs</td><td>the probe block</td><td>3000</td></tr>
-<tr><td>the reuse auditor starts</td><td>its envelope: the spec, its question and the block rows</td><td>4000</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>print the probe block for critics</td><td>bin/probe-panel.sh run</td><td>extend</td><td>gains --stage plan; a second printer would fork the block format</td></tr>
-<tr><td>tag rows confirmed or advisory</td><td>bin/probe-panel.sh run</td><td>reuse</td><td>the same tagging, row cap and byte cap apply</td></tr>
-<tr><td>confirm that an auditor row is in the block</td><td>bin/probe-panel.sh cited</td><td>extend</td><td>cited matches three fields, so verify reads the block's confirmed.tsv and advisory.tsv and compares the whole row</td></tr>
-<tr><td>run one probe against a spec</td><td>bin/probe.sh run</td><td>reuse</td><td>run plan --only &lt;id&gt; --spec already exists</td></tr>
-<tr><td>read a spec's Reuse map</td><td>probes/similar-symbols.sh</td><td>extend</td><td>spec-symbols reads the same table; a second reader would be one more table reader beside gate.sh, arch-check.sh, the renderer and similar-symbols</td></tr>
-<tr><td>check that a Reuse-map row names code that exists</td><td>lib/arch-check.sh reuse-decision</td><td>extend</td><td>the gate checks the form of the row and stays form-only by design; existence in code is a probe check, so the gate gains no rule</td></tr>
-<tr><td>project the token cost of a stage</td><td>-</td><td>new</td><td>searched bin, lib and scripts for tokens, cost and budget; only bin/probe.sh scale counts files and bin/rule-count.sh counts rule lines</td></tr>
-<tr><td>sum tokens in a session transcript</td><td>-</td><td>new</td><td>searched bin, lib, scripts, checks and tests for cache_creation and output_tokens; no file reads a transcript</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/plan-probes.sh</td><td>260</td></tr>
-<tr><td>commands/_shared/plan-probes.md</td><td>120</td></tr>
-<tr><td>tests/unit/plan-probes.bats</td><td>220</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>key</th><th>file</th><th>default</th></tr>
-</thead>
-<tbody>
-<tr><td>PLAN_PROBE_LIMIT_PERCENT</td><td>bin/plan-probes.sh</td><td>50</td></tr>
-<tr><td>PLAN_PROBE_BASE_TOKENS</td><td>bin/plan-probes.sh</td><td>390000</td></tr>
-<tr><td>PLAN_PROBE_CRITIC_TOKENS</td><td>bin/plan-probes.sh</td><td>140000</td></tr>
-<tr><td>PLAN_PROBE_AUDITOR_TOKENS</td><td>bin/plan-probes.sh</td><td>36000</td></tr>
-<tr><td>PLAN_PROBE_BYTES_PER_TOKEN</td><td>bin/plan-probes.sh</td><td>4</td></tr>
-</tbody>
-</table>
-</div>
+<ul>
+<li><code>bin/plan-probes.sh.budget(critics: int, rounds: int, block: path, out: path): tier line, a note line unless the tier is full, and out/tier.txt, exit 0</code>, throws <code>exit 2 on a bad number or an unreadable block</code></li>
+<li><code>bin/plan-probes.sh.verify(out: path, rows: path): the block's own copy of each kept row with its verdict, open and note lines, exit 0 or 1</code>, throws <code>exit 2 on an unreadable directory or a missing out/tier.txt</code></li>
+<li><code>bin/plan-probes.sh.measure(transcript: path, from: string, to: string): one line per file and a total, exit 0</code>, throws <code>exit 2 on an unreadable transcript</code></li>
+<li><code>bin/plan-probes.sh.probes(): the plan-time probe ids, one per line</code></li>
+<li><code>bin/plan-probes.sh.auditors(): auditor id and probe ids, tab separated</code></li>
+<li><code>bin/probe-panel.sh.run(stage: string, spec: path, only: string, repo: path, out: path): the probe block, exit 0 or 2</code>, throws <code>exit 2 on a bad option</code></li>
+<li><code>probes/similar-symbols.sh.--check(check: string, repo: path, spec: path): finding rows, exit 0, 1 or 2</code>, throws <code>exit 2 on a bad option</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-21-1800-plan-time-probes.md</code> · architecture spec: <code>2026-09-21-1800-plan-time-probes.arch.md</code></p>
 </main>

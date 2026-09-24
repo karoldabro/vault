@@ -26,7 +26,7 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 - `bin/gate.sh all <plan> --phase propose|approve [--repo <root>]` runs `arch` after `criteria`.
 - `arch_profile: <name>|none` in `VAULT.md`; absent means `none`. `<name>` is a profile in `arch-profiles/`, the repo's own first and then the framework's; `code` and `harness` ship. A new project type is a `<name>.tsv` and `<name>.md` pair. `arch_spec: <slug>.arch.md` and `human_plan: <url>` in plan frontmatter.
 - `bin/render-human.sh <plan>` writes `<plan>.human.html` from the plan and its spec, and `bin/gate.sh human <plan>` checks it; `all --phase approve` runs the check after `arch`. The rules are in `commands/_shared/human-plan.md`.
-- A profile's `.tsv` may carry `@review<TAB>sentence` lines; the page lists them under "Check these yourself". `templates/human-plan-sections.tsv` lists the plan sections and columns the page shows.
+- `templates/human-plan-sections.tsv` lists the page blocks. From the plan it takes the operator's decisions, defaults, user-visible trade-offs and hand checks. From the spec it takes the data model as an `erDiagram`, the file tree, the data flow and the interface signatures. Every other section reaches the page only as its diagrams.
 - `bin/probe.sh list|detect|run <plan|review>|diff|scale` runs the deterministic probes of `probes/registry.tsv` on a repo and prints six-field findings; `probes/harness.sh`, `probes/sql-schema.sh` and `probes/similar-symbols.sh` are the native probes. `bin/probe-panel.sh run --posture pr|own` gives the review panels of `/v-team`, `/v-cr` and `/v-work` one fenced block of rows, under the rules of `commands/_shared/critic-panel.md` §(a). The contract is `commands/_shared/probe-kit.md`, and what each tool claim turned out to be is in `vault/research/probe-tool-verification.md`.
 - doc-lint type `arch-spec`, cap 300 lines. Decision record: `vault/decisions/ADR-031-architecture-first-planning.md`.
 
@@ -55,7 +55,7 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 - `scripts/completion-hook.sh` lists plans by `status: approved`, so a spec carries no `status` key.
 - A check script that pipes into `grep -q` under `pipefail` fails on SIGPIPE. Capture the output first.
 - `dod_profile` is `code` in every operator repo, so it cannot select the harness profile.
-- A page renders only the columns listed in `templates/human-plan-sections.tsv`; a column added to a plan section stays off the page until listed.
+- A page renders only the blocks and columns listed in `templates/human-plan-sections.tsv`; an Open & deferred item whose status names neither `operator` nor `user-visible` stays off the page.
 - A diagram line holding `click`, `href` or `javascript` is dropped from the page, so a label containing one of those words disappears too.
 
 ## Sessions

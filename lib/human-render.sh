@@ -5,7 +5,7 @@
 # format. This file implements them and states none of them again.
 #
 # It uses these from gate.sh and lib/arch-check.sh: GATE_VAULT_ROOT, die, frontmatter_get,
-# arch_fm_value, arch_profile_file, arch_trim.
+# arch_fm_value.
 #
 # The awk below is POSIX: no gensub, no \s, no dynamic regex, no `for (k in a)`, no locale call.
 
@@ -92,13 +92,60 @@ function cells(line, arr,   s, n, i) {
     for (i = 1; i <= n; i++) arr[i] = trim(subst(arr[i], "\001", "|"))
     return n
 }
-function want(name) { return colsel == "*" || index(" " colsel " ", " " name " ") > 0 }
-function flush_para() { if (para != "") { print "<p>" inline(para) "</p>"; para = "" } }
-function flush_item() { if (item != "") { print "<li>" inline(item) "</li>"; item = "" } }
-function close_list() { flush_item(); if (kind != "") { print "</" kind ">"; kind = "" } }
+function want(name) { return colsel == "*" || index(" " tolower(colsel) " ", " " tolower(name) " ") > 0 }
+function emit(s) { OUT = OUT s "\n" }
+function tok(s,   out, i, c, ok) {
+    ok = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
+    out = ""
+    for (i = 1; i <= length(s); i++) { c = substr(s, i, 1); out = out ((index(ok, c) > 0) ? c : "_") }
+    return (out == "") ? "_" : out
+}
+# norm: lower case, without * and backticks, for matching a status.
+function norm(s) { s = tolower(s); gsub(/[*`]/, "", s); return s }
+function hasword(s,   n, w, i) {
+    s = norm(s); n = split(mwords, w, "|")
+    for (i = 1; i <= n; i++) if (w[i] != "" && index(s, tolower(w[i])) > 0) return 1
+    return 0
+}
+# keep_item: whether a bullet or paragraph passes the match mode, judged on its text before the first colon.
+function keep_item(s,   i) {
+    if (mode != "match") return 1
+    s = norm(s); i = index(s, ":"); if (i > 0) s = substr(s, 1, i - 1)
+    return hasword(s)
+}
+# strip_params: inside double quotes, drop a parenthesis group that follows a letter, digit or _.
+function strip_params(ln,   out, i, c, inq, d, prev) {
+    out = ""; inq = 0; prev = ""
+    for (i = 1; i <= length(ln); i++) {
+        c = substr(ln, i, 1)
+        if (c == "\"") inq = !inq
+        if (inq && c == "(" && prev ~ /[A-Za-z0-9_]/) {
+            d = 1; i++
+            while (i <= length(ln) && d > 0) { c = substr(ln, i, 1); if (c == "(") d++; else if (c == ")") d--; else if (c == "\"") break ; i++ }
+            i--; out = out "()"; prev = ")"; continue
+        }
+        out = out c; prev = c
+    }
+    return out
+}
+function flush_para() {
+    if (para == "") return
+    if (mode == "task" && index(para, "Keywords:") > 0) { para = substr(para, 1, index(para, "Keywords:") - 1); sub(/[ \t]+$/, "", para) }
+    if (para != "" && keep_item(para)) { emit("<p>" inline(para) "</p>"); shown++ }
+    para = ""
+}
+function flush_item() {
+    if (item == "") return
+    if (keep_item(item)) {
+        if (kind != "" && !lopen) { emit("<" kind ">"); lopen = 1 }
+        emit("<li>" inline(item) "</li>"); shown++
+    }
+    item = ""
+}
+function close_list() { flush_item(); if (kind != "" && lopen) emit("</" kind ">"); kind = ""; lopen = 0 }
 function emit_graph(   i, j, n, d, id, key, sc, lbl, dep, seen, node) {
-    print "<pre class=\"mermaid\">"
-    print "flowchart TD"
+    emit("<pre class=\"mermaid\">")
+    emit("flowchart TD")
     split("", node)
     for (i = 1; i <= gn; i++) {
         id = gid[i]
@@ -106,7 +153,7 @@ function emit_graph(   i, j, n, d, id, key, sc, lbl, dep, seen, node) {
         node[id] = 1
         sc = plain(gscope[i], 48); lbl = id
         if (sc != "") lbl = id " " sc
-        print "    " safe_id(id) "[\"" lbl "\"]"
+        emit("    " safe_id(id) "[\"" lbl "\"]")
     }
     split("", seen)
     for (i = 1; i <= gn; i++) {
@@ -119,79 +166,123 @@ function emit_graph(   i, j, n, d, id, key, sc, lbl, dep, seen, node) {
             key = d " " id
             if (key in seen) continue
             seen[key] = 1
-            print "    " safe_id(d) " --> " safe_id(id)
+            emit("    " safe_id(d) " --> " safe_id(id))
         }
     }
-    print "</pre>"
+    emit("</pre>")
 }
 function close_table() {
-    if (tbl) {
-        print "</tbody>"; print "</table>"; print "</div>"
-        tbl = 0
-        if (secname == "Sessions" && gdcol > 0 && gicol > 0) emit_graph()
-    }
+    if (!tbl) return
+    if (topen) { emit("</tbody>"); emit("</table>"); emit("</div>") }
+    tbl = 0; topen = 0
+    if (tolower(secname) == "sessions" && gdcol > 0 && gicol > 0 && gn > 0) emit_graph()
 }
 function flush_all() { flush_para(); close_list(); close_table() }
-function table_row(line,   n, i, s) {
+function table_row(line,   n, i, s, cn, want_c, mc) {
     n = cells(line, C)
     if (!tbl) {
-        tbl = 1; tstage = 1; nh = n; gn = 0; gicol = 0; gscol = 0; gdcol = 0
-        print "<div class=\"scroll\">"; print "<table>"; print "<thead>"
-        s = "<tr>"
+        tbl = 1; tstage = 1; topen = 0; nh = n; gn = 0; gicol = 0; gscol = 0; gdcol = 0; mcol = 0
+        thead = "<tr>"
+        cn = split(mcols, want_c, "|")
         for (i = 1; i <= n; i++) {
+            H[i] = tolower(C[i])
             sel[i] = want(C[i])
-            if (C[i] == "id") gicol = i
-            if (C[i] == "scope") gscol = i
-            if (C[i] == "depends") gdcol = i
-            if (sel[i]) s = s "<th>" esc(C[i]) "</th>"
+            if (H[i] == "id") gicol = i
+            if (H[i] == "scope") gscol = i
+            if (H[i] == "depends") gdcol = i
+            if (sel[i]) thead = thead "<th>" esc(C[i]) "</th>"
         }
-        print s "</tr>"; print "</thead>"
+        for (mc = 1; mc <= cn && !mcol; mc++) for (i = 1; i <= n; i++) if (H[i] == tolower(want_c[mc])) { mcol = i; break }
+        thead = thead "</tr>"
         return
     }
     if (tstage == 1) {
-        tstage = 2; print "<tbody>"
+        tstage = 2
         if (line ~ /^\|[- |:]*\|[ \t]*$/) return
     }
+    if (mode == "er") { er_row(n); return }
+    if (mode == "signatures") { sig_row(n); return }
+    if (mode == "match") {
+        if (mcol > 0) { if (!hasword(C[mcol])) return }
+        else if (!hasword(line)) return
+    }
+    if (!topen) { emit("<div class=\"scroll\">"); emit("<table>"); emit("<thead>"); emit(thead); emit("</thead>"); emit("<tbody>"); topen = 1 }
     s = "<tr>"
     for (i = 1; i <= ((n > nh) ? n : nh); i++) if (i > nh || sel[i]) s = s "<td>" inline(C[i]) "</td>"
-    print s "</tr>"
+    emit(s "</tr>"); shown++
     if (gicol > 0 && gdcol > 0) {
         gn++; gid[gn] = C[gicol]; gdep[gn] = C[gdcol]
         gscope[gn] = (gscol > 0) ? C[gscol] : ""
     }
 }
+function colval(name,   i) { for (i = 1; i <= nh; i++) if (H[i] == name) return C[i]; return "" }
+# er_row: collect one Data model row; er_emit draws the diagram.
+function er_row(n,   t, k, r) {
+    t = tok(colval("table")); if (colval("table") == "") return
+    if (!(t in ent)) { ent[t] = ++ne; entn[ne] = t; natt[t] = 0 }
+    k = toupper(trim(colval("key"))); if (k == "UQ") k = "UK"; if (k != "PK" && k != "FK" && k != "UK") k = ""
+    natt[t]++; att[t, natt[t]] = "        " tok(colval("type")) " " tok(colval("column")) ((k != "") ? " " k : "")
+    r = trim(colval("references"))
+    if (r ~ /^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$/) { nrel++; rel[nrel] = "    " substr(r, 1, index(r, ".") - 1) " ||--o{ " t " : " tok(colval("column")) }
+}
+function er_emit(   i, j, t) {
+    if (ne == 0) { if (HW != "") { OUT = OUT HW; shown++ }; return }
+    emit("<pre class=\"mermaid\">"); emit("erDiagram")
+    for (i = 1; i <= nrel; i++) emit(rel[i])
+    for (i = 1; i <= ne; i++) {
+        t = entn[i]; emit("    " t " {")
+        for (j = 1; j <= natt[t]; j++) emit(att[t, j])
+        emit("    }")
+    }
+    emit("</pre>"); shown++
+}
+function sig_row(n,   p, s, th) {
+    p = trim(colval("params")); if (p == "-") p = ""
+    s = colval("interface") "." colval("method") "(" p "): " colval("returns")
+    th = trim(colval("throws"))
+    if (!sopen) { emit("<ul>"); sopen = 1 }
+    emit("<li><code>" esc(s) "</code>" ((th != "" && th != "-") ? ", throws <code>" esc(th) "</code>" : "") "</li>"); shown++
+}
+# block: render lines L[1..NL] under `mode` into OUT. Mermaid blocks always render, except in er mode.
 function block(   i, ln, t, fence) {
-    para = ""; item = ""; kind = ""; tbl = 0; fence = 0
+    para = ""; item = ""; kind = ""; lopen = 0; tbl = 0; topen = 0; fence = 0; sopen = 0
+    ne = 0; nrel = 0; split("", ent); HW = ""
     for (i = 1; i <= NL; i++) {
         ln = L[i]
         if (fence) {
-            if (ln ~ /^```/) { if (fence == 1) print "</pre>"; else print "</code></pre>"; fence = 0; continue }
+            if (ln ~ /^```/) { if (fence == 1) emit("</pre>"); else if (fence == 2) emit("</code></pre>"); else if (fence == 4) HW = HW "</pre>\n"; fence = 0; continue }
+            if (fence == 4) { if (!hostile(ln)) HW = HW escm(ln) "\n"; continue }
             if (fence == 1) {
                 if (hostile(ln)) continue
-                print escm(ln)
-            } else print esc(ln)
+                if (mode == "labels") ln = strip_params(ln)
+                emit(escm(ln))
+            } else if (fence == 2) emit(esc(ln))
             continue
         }
         if (ln ~ /^```/) {
             flush_all()
             t = trim(substr(ln, 4))
-            if (index(t, "mermaid") == 1) { fence = 1; print "<pre class=\"mermaid\">" }
-            else { fence = 2; print "<pre><code>" }
+            if (mode == "er") { if (index(t, "mermaid") == 1 && !skipdiag) { fence = 4; HW = HW "<pre class=\"mermaid\">\n" } else fence = 3 }
+            else if (index(t, "mermaid") == 1) { if (skipdiag) fence = 3; else { fence = 1; emit("<pre class=\"mermaid\">"); shown++ } }
+            else if (mode == "diagrams" || mode == "match") fence = 3
+            else { fence = 2; emit("<pre><code>"); shown++ }
             continue
         }
+        if (mode == "diagrams") continue
         if (ln ~ /^[ \t]*$/) { flush_all(); continue }
         if (ln ~ /^\|/) { flush_para(); close_list(); table_row(ln); continue }
         close_table()
-        if (ln ~ /^###+ /) { flush_all(); print "<h3>" inline(substr(ln, index(ln, " ") + 1)) "</h3>"; continue }
+        if (mode == "er" || mode == "signatures") continue
+        if (ln ~ /^###+ /) { flush_all(); if (mode != "match") { emit("<h3>" inline(substr(ln, index(ln, " ") + 1)) "</h3>"); shown++ }; continue }
         if (ln ~ /^[ \t]*[-*][ \t]+/) {
             flush_para()
-            if (kind != "ul") { close_list(); print "<ul>"; kind = "ul" }
+            if (kind != "ul") { close_list(); kind = "ul" }
             flush_item(); item = ln; sub(/^[ \t]*[-*][ \t]+/, "", item)
             continue
         }
         if (ln ~ /^[ \t]*[0-9]+\.[ \t]+/) {
             flush_para()
-            if (kind != "ol") { close_list(); print "<ol>"; kind = "ol" }
+            if (kind != "ol") { close_list(); kind = "ol" }
             flush_item(); item = ln; sub(/^[ \t]*[0-9]+\.[ \t]+/, "", item)
             continue
         }
@@ -199,66 +290,72 @@ function block(   i, ln, t, fence) {
         close_list()
         para = (para == "") ? trim(ln) : para " " trim(ln)
     }
-    if (fence == 1) print "</pre>"
-    else if (fence == 2) print "</code></pre>"
+    if (fence == 1) emit("</pre>")
+    else if (fence == 2) emit("</code></pre>")
+    else if (fence == 4) HW = HW "</pre>\n"
     flush_all()
+    if (sopen) emit("</ul>")
+    if (mode == "er") er_emit()
 }
-'
-
-# The plan sections, in the order of templates/human-plan-sections.tsv.
-HUMAN_AWK_PLAN='
-BEGIN {
+# section: render one block under a TSV row and print it with its heading when it shows anything.
+function section(heading, m,   f, n) {
+    n = split(m, f, ":")
+    mode = f[1]; mcols = ""; mwords = ""
+    if (mode == "match") { mcols = f[2]; mwords = f[3] }
+    if (mode != "all" && mode != "task" && mode != "match" && mode != "er" && mode != "signatures" && mode != "labels" && mode != "diagrams") { print "unknown mode " m " for " secname > "/dev/stderr"; exit 4 }
+    OUT = ""; shown = 0
+    block()
+    if (shown > 0) { print "<h2>" esc(heading) "</h2>"; printf "%s", OUT }
+}
+function load_tsv(src,   l, f, n) {
     while ((getline l < SECTSV) > 0) {
         if (l ~ /^#/ || l ~ /^[ \t]*$/) continue
         n = split(l, f, "\t")
-        ord[++no] = f[1]
-        cols[f[1]] = (n >= 2) ? subst(f[2], "_", " ") : "*"
+        if (f[1] != src) continue
+        nr++; rsec[nr] = f[2]; rmode[nr] = f[3]
+        rcols[nr] = (n >= 4 && f[4] != "") ? subst(f[4], "_", " ") : "*"
+        rhead[nr] = (n >= 5 && f[5] != "") ? f[5] : f[2]
+        listed[f[2]] = 1
     }
     close(SECTSV)
 }
-/^```/ { fenced = !fenced }
-!fenced && /^## / { cur = substr($0, 4); sub(/[ \t]+$/, "", cur); next }
-cur != "" { cnt[cur]++; bodyl[cur, cnt[cur]] = $0 }
-END {
-    for (k = 1; k <= no; k++) {
-        name = ord[k]
-        if (!(name in cnt)) continue
-        nb = 0
-        for (i = 1; i <= cnt[name]; i++) { L[i] = bodyl[name, i]; if (L[i] !~ /^[ \t]*$/) nb = 1 }
-        if (name == "Task" && nb) task_ok = 1
-        if (!nb) continue
-        NL = cnt[name]; colsel = cols[name]; secname = name
-        print "<h2>" esc(name) "</h2>"
-        block()
+# render_all: every TSV row whose section exists, then the diagrams of every unlisted section.
+function render_all(   k, i, name, nb) {
+    for (k = 1; k <= nr; k++) {
+        name = rsec[k]
+        if (!(name in secidx)) continue
+        load_sec(secidx[name])
+        colsel = rcols[k]; secname = name; skipdiag = (name in drawn); drawn[name] = 1
+        section(rhead[k], rmode[k])
     }
+    for (k = 1; k <= no; k++) {
+        if (ordn[k] in listed) continue
+        load_sec(k); colsel = "*"; secname = ordn[k]; skipdiag = 0
+        section(ordn[k], "diagrams")
+    }
+}
+function load_sec(k,   i) { NL = cnt[k] + 0; for (i = 1; i <= NL; i++) L[i] = bodyl[k, i] }
+'
+
+# The plan: every block of templates/human-plan-sections.tsv whose source is plan. Exit 3 means no Task text.
+HUMAN_AWK_PLAN='
+BEGIN { load_tsv("plan") }
+/^```/ { fenced = !fenced }
+!fenced && /^## / { cur = substr($0, 4); sub(/[ \t]+$/, "", cur); if (!(cur in secidx)) { secidx[cur] = ++no; ordn[no] = cur }; k = secidx[cur]; next }
+cur != "" { cnt[k]++; bodyl[k, cnt[k]] = $0; if (cur == "Task" && $0 !~ /^[ \t]*$/) task_ok = 1 }
+END {
     if (!task_ok) exit 3
+    render_all()
 }
 '
 
-# Every `## ` section of the spec, in file order, every column shown.
+# The spec: every block whose source is spec, then the diagrams of the sections the TSV does not list.
 HUMAN_AWK_SPEC='
+BEGIN { load_tsv("spec") }
 /^```/ { fenced = !fenced }
-!fenced && /^## / { cur = substr($0, 4); sub(/[ \t]+$/, "", cur); ordn[++no] = cur; next }
-no > 0 { cnt[no]++; bodyl[no, cnt[no]] = $0 }
-END {
-    for (k = 1; k <= no; k++) {
-        nb = 0
-        for (i = 1; i <= cnt[k] + 0; i++) { L[i] = bodyl[k, i]; if (L[i] !~ /^[ \t]*$/) nb = 1 }
-        if (!nb) continue
-        NL = cnt[k]; colsel = "*"; secname = ordn[k]
-        print "<h2>" esc(ordn[k]) "</h2>"
-        block()
-    }
-}
-'
-
-# The profile checklist: one list item per @review line.
-HUMAN_AWK_REVIEW='
-$1 == "@review" {
-    if (!n++) { print "<h2>Check these yourself</h2>"; print "<ul>" }
-    print "<li>" esc(substr($0, 9)) "</li>"
-}
-END { if (n) print "</ul>" }
+!fenced && /^## / { cur = substr($0, 4); sub(/[ \t]+$/, "", cur); if (!(cur in secidx)) { secidx[cur] = ++no; ordn[no] = cur }; k = secidx[cur]; next }
+no > 0 { cnt[k]++; bodyl[k, cnt[k]] = $0 }
+END { render_all() }
 '
 
 # Fill the skeleton: the title file into <!--TITLE--> and the body file in place of <!--BODY-->.
@@ -274,7 +371,7 @@ $0 == "<!--BODY-->" { while ((getline l < BODYFILE) > 0) print l; close(BODYFILE
 
 # human_render <plan> <repo> <stdout 0|1>
 human_render() {
-    local plan=$1 repo=$2 to_stdout=$3 tmp raw specraw spec as prof pf title page rc
+    local plan=$1 repo=$2 to_stdout=$3 tmp raw specraw spec as title page rc
     { [ -f "$plan" ] && [ -r "$plan" ]; } || die "cannot read: $plan"
     [ -r "$GATE_VAULT_ROOT/templates/human-plan.html" ] || die "missing: templates/human-plan.html"
     [ -r "$GATE_VAULT_ROOT/templates/human-plan-sections.tsv" ] || die "missing: templates/human-plan-sections.tsv"
@@ -290,9 +387,6 @@ human_render() {
     [ -f "$spec" ] && [ -r "$spec" ] || die "arch_spec names a file that does not exist: $as"
     tr -d '\r' < "$spec" > "$specraw"
 
-    prof=$(arch_trim "$(frontmatter_get "$specraw" profile)")
-    pf=""
-    if [ -n "$prof" ]; then pf=$(arch_profile_file "$prof" "$repo") || pf=""; fi
 
     title=$(awk '
         NR == 1 && $0 == "---" { fm = 1; next }
@@ -303,19 +397,24 @@ human_render() {
 
     printf '%s\n%s\n' "$HUMAN_AWK_LIB" "$HUMAN_AWK_PLAN" > "$tmp/plan.awk"
     printf '%s\n%s\n' "$HUMAN_AWK_LIB" "$HUMAN_AWK_SPEC" > "$tmp/spec.awk"
-    printf '%s\n%s\n' "$HUMAN_AWK_LIB" "$HUMAN_AWK_REVIEW" > "$tmp/review.awk"
     printf '%s\n%s\n' "$HUMAN_AWK_LIB" "$HUMAN_AWK_ASSEMBLE" > "$tmp/assemble.awk"
 
     : > "$tmp/body.html"
     printf '%s\n%s\n' "$HUMAN_AWK_LIB" 'BEGIN { getline t < TITLEFILE; print "<h1>" esc(t) "</h1>" }' > "$tmp/h1.awk"
     awk -v TITLEFILE="$tmp/title.txt" -f "$tmp/h1.awk" >> "$tmp/body.html"
-    if [ -n "$pf" ]; then awk -F'\t' -f "$tmp/review.awk" "$pf" >> "$tmp/body.html"; fi
     rc=0
     awk -v SECTSV="$GATE_VAULT_ROOT/templates/human-plan-sections.tsv" -f "$tmp/plan.awk" "$raw" \
         >> "$tmp/body.html" || rc=$?
     [ "$rc" -ne 3 ] || die "plan has no text under ## Task"
+    [ "$rc" -ne 4 ] || die "templates/human-plan-sections.tsv names an unknown mode"
     [ "$rc" -eq 0 ] || die "the renderer failed on $plan"
-    awk -f "$tmp/spec.awk" "$specraw" >> "$tmp/body.html"
+    awk -v SECTSV="$GATE_VAULT_ROOT/templates/human-plan-sections.tsv" -f "$tmp/spec.awk" "$specraw" \
+        >> "$tmp/body.html" || rc=$?
+    [ "$rc" -ne 4 ] || die "templates/human-plan-sections.tsv names an unknown mode"
+    [ "$rc" -eq 0 ] || die "the renderer failed on $spec"
+    printf '%s\n%s\n' "$(basename "$plan")" "$as" > "$tmp/footer.txt"
+    printf '%s\n%s\n' "$HUMAN_AWK_LIB" 'NR == 1 { p = $0 } NR == 2 { print "<p class=\"source\">Full plan: <code>" esc(p) "</code> · architecture spec: <code>" esc($0) "</code></p>" }' > "$tmp/footer.awk"
+    awk -f "$tmp/footer.awk" "$tmp/footer.txt" >> "$tmp/body.html"
     awk -v TITLEFILE="$tmp/title.txt" -v BODYFILE="$tmp/body.html" -f "$tmp/assemble.awk" \
         "$GATE_VAULT_ROOT/templates/human-plan.html" > "$tmp/page.html"
 

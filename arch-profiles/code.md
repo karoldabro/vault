@@ -36,12 +36,13 @@ erDiagram
 
 ## Data flow
 
-<!-- Every node names an interface method with its typed parameters. Every arrow names what crosses it. -->
+<!-- Every node names a component or its method, without parameters: they belong in Interfaces, and the
+     human page drops them from labels. Every arrow names what crosses it. -->
 
 ```mermaid
 flowchart LR
-    A["Controller.action(request: RequestType)"] -->|"RequestType"| B["Service.run(id: string)"]
-    B -->|"Result"| C["Repository.save(item: Result)"]
+    A["Controller.action"] -->|"RequestType"| B["Service.run"]
+    B -->|"Result"| C["Repository.save"]
 ```
 
 ## Interfaces

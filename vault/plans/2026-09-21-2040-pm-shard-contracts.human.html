@@ -40,57 +40,25 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>pm-shard-contracts — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
-<p>Session S12 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Give the <code>/v-pm</code> project shard the <code>depends</code> column and a <code>## Cross-session contracts</code> section. Seed both from <code>commands/v-pm/steps/04-seed-workspace.md</code>. Run <code>bin/gate.sh master</code> on each shard in <code>/v-pm status</code>. Extend the close duty of <code>commands/v-work/steps/05-commit-capture.md</code> to a plan that names <code>session_of</code>. Contract used: C-11. Keywords: <code>project-shard</code>, <code>depends</code>, <code>Cross-session contracts</code>, <code>gate.sh master</code>, <code>session_of</code>.</p>
-<h2>Open &amp; deferred</h2>
+<p>Session S12 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Give the <code>/v-pm</code> project shard the <code>depends</code> column and a <code>## Cross-session contracts</code> section. Seed both from <code>commands/v-pm/steps/04-seed-workspace.md</code>. Run <code>bin/gate.sh master</code> on each shard in <code>/v-pm status</code>. Extend the close duty of <code>commands/v-work/steps/05-commit-capture.md</code> to a plan that names <code>session_of</code>. Contract used: C-11.</p>
+<h2>Needs your decision</h2>
 <ul>
 <li>needs the operator: approve decisions PS-1 to PS-5.</li>
-<li>accepted limit: a shard that already exists in an operator vault has no <code>depends</code> column. <code>/v-pm status</code> prints one <code>Contract gap</code> line for it, and the gap clears when that project's next <code>/v-team</code> session runs step (f3) item 6 of <code>commands/v-team/steps/03-propose-loop.md</code>.</li>
-<li>accepted limit: <code>/v-pm status</code> runs the gate on open shards only, so a finished feature is not re-read.</li>
-<li>outside the planned file list: <code>commands/v-team/steps/03-propose-loop.md</code> step (f3) item 6 now inserts <code>depends</code> only when the header lacks it, since a freshly seeded shard has it.</li>
-<li>accepted limit: a seeded shard that keeps a literal <code>&lt;N&gt;</code> appetite or <code>REQ-NN</code> line passes the gate. No check reads those placeholders.</li>
-<li>unverified: the seed and status steps are prose that a <code>/v-pm</code> session follows. The graders check the text and run the gate on a shard built from the template; no test runs a <code>/v-pm</code> session.</li>
-<li>existing defect, not this plan's: <code>bin/rule-count.sh --assert</code> fails on <code>HEAD</code> (181 rule lines, budget 173). This plan adds none.</li>
-<li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>document-standard.bats</code> two, <code>plugin-install.bats</code> two, <code>research-clarify.bats</code> one).</li>
 </ul>
-<h2>Success criteria</h2>
+<h2>Defaults taken for you</h2>
 <div class="scroll">
 <table>
 <thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+<tr><th>question</th><th>answer</th></tr>
 </thead>
 <tbody>
-<tr><td>SC-1</td><td>WHEN a shard is instantiated from <code>templates/_features/project-shard.md</code> THE SYSTEM SHALL carry a <code>depends</code> column directly after <code>status</code> and a <code>## Cross-session contracts</code> section with the five columns of <code>templates/master-plan.md</code>, <code>bin/gate.sh master</code> SHALL print <code>master: ok</code> for the untouched instantiated template, for a header-only copy and for a copy with dependency rows and contract rows, SHALL exit 1 naming the pair when one contract row is deleted, and the <code>## Consumed contract</code> section SHALL equal the one at commit <code>af5f530</code></td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN a <code>/v-pm</code> session reads <code>commands/v-pm/steps/04-seed-workspace.md</code> THE SYSTEM SHALL find the <code>depends</code> column and the contracts section seeded with a header and no rows, and the rule that <code>/v-team</code> writes every row</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN a <code>/v-pm</code> session reads <code>commands/v-pm/steps/07-status.md</code> THE SYSTEM SHALL find that each open shard is checked with <code>gate.sh master</code> and that a refusal is reported as one exception line and nothing is printed for a clean shard</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN a session reads step 5.0 of <code>commands/v-work/steps/05-commit-capture.md</code> THE SYSTEM SHALL find the master-plan close duty naming <code>session_of</code> and <code>gate.sh master</code>, <code>bin/rule-count.sh</code> SHALL print 181 rule lines, and <code>tests/unit/v-pm.bats</code> SHALL guard the text of the four files</td><td>functional</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>PS-1 The shard Sessions header is <code>id scope command status depends REQ covered evidence last touched deviation</code>. The <code>## Cross-session contracts</code> section holds the five-column header and delimiter of <code>templates/master-plan.md</code> and a comment that points to that file for the column rules, says the section lists hand-offs between sessions and is not the API compared at Step 0, and says <code>/v-team</code> writes every row. Both tables keep the header and delimiter and drop the blank example row</td><td><code>depends</code> after <code>status</code> is the position step (f3) item 6 writes; the rules keep one home in <code>templates/master-plan.md</code>; a blank row contradicts "no rows"</td></tr>
-<tr><td>PS-2 <code>/v-pm</code> seeds three sections: <code>## Business rules to satisfy</code>, <code>## Sessions</code> and <code>## Cross-session contracts</code>. The seed step says the Sessions header is copied from the template, keeps its short wording, and points to step (f3) item 6 for who writes rows. Its Required output gains a <code>Shard contracts:</code> line</td><td>v-pm does not read the code, so it cannot know what one session hands another; the step (f3) procedure has one home</td></tr>
-<tr><td>PS-3 Section S.2 of <code>/v-pm status</code> runs <code>$VAULT_FRAMEWORK_PATH/bin/gate.sh master &lt;shard&gt; 2&gt;&amp;1</code> on each shard it opens. It drops the <code>master: ok</code> line and the <code>gate: N refusal(s)</code> line, turns each <code>REFUSED master</code> line into one <code>Contract gap</code> row of the S.5 digest under the <code>→&lt;proj&gt;</code> group, prints one line naming the shard on exit 2, and prints nothing for a clean shard. A shard whose header has no <code>depends</code> column prints one line: <code>Contract gap: &lt;feature&gt;/&lt;proj&gt; has no depends column; its /v-team session adds it</code>. A row with an empty id is not counted as a session</td><td>the digest reports exceptions only; the shard's own <code>/v-team</code> session is the one that can act, since <code>/v-pm</code> writes no session rows</td></tr>
-<tr><td>PS-4 Step 5.0 of <code>commands/v-work/steps/05-commit-capture.md</code> gains a bullet worded around <code>session_of</code>: open the file named before <code>#</code> (beside the plan, or an absolute path), find the Sessions row whose id follows <code>#</code>, set <code>status</code> to <code>done</code> and <code>date</code> to today, and fill <code>evidence</code> with the result of <code>gate.sh verdict &lt;plan&gt; --run</code>; stage the master file in the same commit and confirm with <code>gate.sh master &lt;master file&gt;</code>. A commit hash is not offered, since none exists at step 5.0</td><td>the ordering check of a later session reads that status, and nothing else writes it</td></tr>
-<tr><td>PS-5 <code>## Consumed contract</code> and <code>## Business rules to satisfy</code> are not edited</td><td>the Step 0 drift check diffs <code>## Consumed contract</code> against <code>contracts.md</code> field by field</td></tr>
+<tr><td>Where does the master-plan close duty live?</td><td>in step 5.0 of <code>commands/v-work/steps/05-commit-capture.md</code>, beside the feature-mode bullet, since the row of a master plan is not a feature shard row (PS-4)</td></tr>
 </tbody>
 </table>
 </div>
@@ -105,27 +73,6 @@ vault/plans/2026-09-21-0900-architecture-first-planning.md   existing, S12 row d
 vault/plans/2026-09-21-0900-architecture-first-planning.human.html   existing, re-rendered
 checks/shard-contracts-SC-1.sh to SC-4.sh              new, decide the four criteria
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>templates/_features/project-shard.md</td><td>no</td><td>source of every project shard</td><td>on-demand</td></tr>
-<tr><td>commands/v-pm/steps/04-seed-workspace.md</td><td>no</td><td>seeds a feature workspace</td><td>on-demand</td></tr>
-<tr><td>commands/v-pm/steps/07-status.md</td><td>no</td><td>prints the feature digest</td><td>on-demand</td></tr>
-<tr><td>commands/v-work/steps/05-commit-capture.md</td><td>no</td><td>close step of a work session</td><td>always</td></tr>
-<tr><td>tests/unit/v-pm.bats</td><td>no</td><td>guards the v-pm text</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.md</td><td>no</td><td>master plan and session tracker</td><td>on-demand</td></tr>
-<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.human.html</td><td>no</td><td>rendered page of the master plan</td><td>never-by-agent</td></tr>
-<tr><td>checks/shard-contracts-SC-1.sh</td><td>yes</td><td>decides criterion SC-1</td><td>never-by-agent</td></tr>
-<tr><td>checks/shard-contracts-SC-2.sh</td><td>yes</td><td>decides criterion SC-2</td><td>never-by-agent</td></tr>
-<tr><td>checks/shard-contracts-SC-3.sh</td><td>yes</td><td>decides criterion SC-3</td><td>never-by-agent</td></tr>
-<tr><td>checks/shard-contracts-SC-4.sh</td><td>yes</td><td>decides criterion SC-4</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -138,52 +85,8 @@ flowchart LR
     H -->|"producer status"| D
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/gate.sh</td><td>master</td><td>plan: path</td><td>master: ok, or REFUSED lines, exit 0 or 1</td><td>exit 2 on an unreadable file</td><td>cli</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td>/v-pm status opens a shard</td><td>bin/gate.sh through the step text</td><td>0</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>check a shard's dependencies</td><td>bin/gate.sh cmd_master</td><td>reuse</td><td>the shard has a Sessions table, so the gate reads it unchanged</td></tr>
-<tr><td>table rules for the contracts section</td><td>templates/master-plan.md</td><td>reuse</td><td>the shard copies its section; one home for the rules</td></tr>
-<tr><td>guard the text of a v-pm file</td><td>tests/unit/v-pm.bats</td><td>extend</td><td>the shard cases live there</td></tr>
-<tr><td>close duty of a master plan row</td><td>commands/_shared/definition-of-done.md</td><td>reuse</td><td>its F table stays for feature shards; the new bullet points at the gate instead of restating rows</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>templates/_features/project-shard.md</td><td>90</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<p>n/a: the change reads no setting.</p>
+<ul>
+<li><code>bin/gate.sh.master(plan: path): master: ok, or REFUSED lines, exit 0 or 1</code>, throws <code>exit 2 on an unreadable file</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-21-2040-pm-shard-contracts.md</code> · architecture spec: <code>2026-09-21-2040-pm-shard-contracts.arch.md</code></p>
 </main>

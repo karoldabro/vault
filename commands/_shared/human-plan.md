@@ -7,28 +7,59 @@ reads before approving. A script writes the page from the plan and the spec. A m
 ## Call and output
 
 `bin/render-human.sh <plan> [--repo <root>] [--stdout]` writes the page beside the plan. With
-`--stdout` it prints the same bytes and writes nothing. `--repo` defaults to the working directory and
-locates the profile the spec names, the repo's `arch-profiles/` first and then the framework's. Exit 2
-means the plan is unreadable, has no text under `## Task`, or a file the renderer needs is missing.
+`--stdout` it prints the same bytes and writes nothing. `--repo` is accepted so `bin/gate.sh human` can
+pass it on; the page does not depend on it. Exit 2 means the plan is unreadable, has no text under
+`## Task`, a file the renderer needs is missing, or the section list names an unknown mode.
 
 `bin/gate.sh human <plan> [--repo <root>]`. `all --phase approve` runs it after `arch`, with the same
 `--repo`.
 
 ## Page structure
 
-1. `<h1>`: the plan's title line.
-2. `<h2>Check these yourself</h2>` and one `<li>` per `@review` line of the spec's profile. The
-   heading is left out when the profile has none.
-3. The plan sections listed in `templates/human-plan-sections.tsv`, in that order. Each line of that
-   file is `section`, a tab, then the columns shown (`*` is all, an underscore stands for a space).
-   A section that is absent or has no body is left out. Columns not listed are left out, so a status
-   flip, a date, a verdict or evidence never changes the page. Frontmatter is never shown.
-4. A Sessions table with a `depends` column is followed by its graph.
-5. The spec sections in file order, every column shown. The spec's title and the text before its
-   first `## ` heading are left out.
+The page carries only what the operator supplies or judges. Everything a gate checks stays in the plan
+and the spec.
 
-Each section is `<h2>` with the escaped heading, then its body. A table is `<table>` with `<th>` cells
-from the header and `<td>` cells for every row, and a cell beyond the header is shown too. A mermaid
+1. `<h1>`: the plan's title line.
+2. One block per row of `templates/human-plan-sections.tsv`, in file order. A row is five tab-separated
+   fields: `source` (`plan` or `spec`), `section`, `mode`, `cols` and `heading`. `cols` is `*` or the
+   column names to keep, space-separated, with an underscore for a space inside a name. A block whose
+   section is absent, or whose mode keeps nothing, is left out with its heading. The `plan` rows come
+   first, then the `spec` rows.
+3. After each file's rows, every section of that file the list does not name, in file order, shown as
+   its heading and its mermaid blocks only. A section with no mermaid block is left out. This rule is
+   what keeps a diagram from ever missing the page.
+4. The last line names the plan's file name and the plan's `arch_spec` value as written.
+
+Frontmatter is never shown. The listed columns keep status flips, dates, verdicts and evidence off the
+page, so writing them never makes the page stale.
+
+## Modes
+
+- `all`: the section as written.
+- `task`: the section as written, less the text from `Keywords:` to the end of its paragraph.
+- `match:<columns>:<words>`: keeps an item that contains one of the `|`-separated words, ignoring case,
+  `*` and backticks. An item is a table row, a bullet with its indented continuation lines, or a
+  paragraph. A table row is judged on the first of the `|`-separated columns it has, or on its whole
+  text when it has none. A bullet or paragraph is judged on its text before the first `:`. `###`
+  headings are dropped.
+- `er`: draws the section's table as one mermaid `erDiagram` and drops everything else in the section,
+  hand-written diagrams included. A section with no table shows its hand-written diagrams instead. A token keeps `[A-Za-z0-9_]` and turns every other character into
+  `_`. `key` `UQ` becomes `UK`, and a key other than `PK`, `FK` or `UK` is dropped. A `references`
+  value of the form `table.column` draws `table ||--o{ <row table> : <column>`; any other value draws
+  nothing. The generated lines skip the mermaid line filter below, since every token is plain.
+- `signatures`: lists each table row as `interface.method(params): returns`, with `, throws <x>` when
+  `throws` is neither empty nor `-`. `params` of `-` prints as `()`.
+- `labels`: the section as written, except that inside a double-quoted string of a mermaid block a
+  parenthesis group that follows a letter, digit or `_` becomes `()`. `"Svc.run(id: int)"` becomes
+  `"Svc.run()"`, and `"step (a)"` stays.
+
+Every mode but `er` shows the section's mermaid blocks, under the first row that names the section only.
+`match` and `diagrams` drop every other fenced block.
+
+## Rendering
+
+Each block is `<h2>` with the escaped heading, then its body. A table is `<table>` with `<th>` cells
+from the header and `<td>` cells for every kept row, and a cell beyond the header is shown too. A mermaid
 fence is the opening tag `<pre class="mermaid">` alone on its line, the body, and `</pre>` alone on its
 line, and the body may be empty. Another fence is `<pre><code>`. A `~~~` fence and an indented code
 block are not recognised and render as paragraphs.
@@ -36,7 +67,7 @@ block are not recognised and render as paragraphs.
 Constructs that render: table, bullet list, numbered list, paragraph, bold, code span, and a
 `###` heading. An indented line that is not a bullet joins the item before it with a space, and an
 indented bullet is an item of the same flat list. Any other line renders as an escaped paragraph.
-`\|` in a cell is one pipe.
+`\|` in a cell is one pipe. A kept Sessions table with a `depends` column is followed by its graph.
 
 ## Escaping
 
@@ -61,11 +92,6 @@ within 48 characters at a word boundary.
 The renderer runs under `LC_ALL=C`, reads bodies from files rather than `awk -v`, never iterates
 with `for (k in a)`, writes no time, path or working directory, and ends the page with exactly one
 newline. The same plan and spec give the same bytes on every `awk`.
-
-## Profile checklist lines
-
-`@review`, a tab, then one plain sentence without `&`, `<`, `>`, a quote or a backtick, in a profile's
-`.tsv`. `bin/gate.sh arch` skips a line whose first field starts with `@`.
 
 ## Gate order
 

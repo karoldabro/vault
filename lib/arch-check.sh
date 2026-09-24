@@ -330,7 +330,7 @@ arch_check_spec() {
     done < <(grep '^## ' "$clean" | sort | uniq -d)
 
     while IFS=$'\t' read -r sec kind cols rules; do
-        case "$sec" in ''|\#*|@*) continue ;; esac
+        case "$sec" in ''|\#*) continue ;; esac
         if ! grep -qxF "## $sec" "$clean"; then arch_refuse "$spec" "missing section $sec"; continue; fi
         case "$kind" in
             fence:mermaid) arch_fence_check "$raw" "$sec" mermaid || arch_refuse "$spec" "section $sec has no mermaid block" ;;

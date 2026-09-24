@@ -1,8 +1,13 @@
-# The plan sections the human page shows, in order, and the columns of each. The rules are in commands/_shared/human-plan.md.
-# section	columns (* is all, an underscore stands for a space)
-Task	*
-Open & deferred	*
-Success criteria	id criterion kind how
-Decisions	decision reason
-Cross-session contracts	*
-Sessions	id scope depends
+# The page blocks, in page order. Rules: commands/_shared/human-plan.md.
+# source	section	mode	cols	heading
+plan	Task	task	*	Task
+plan	Open & deferred	match:status|state:operator	*	Needs your decision
+plan	Open & deferred	match:status|state:user-visible|user visible	*	Users will notice
+plan	Open questions	match:status:defaulted	question answer	Defaults taken for you
+plan	Success criteria	match:how:observed	id criterion check	Checks you run yourself
+plan	Sessions	all	id scope depends	Sessions
+plan	Cross-session contracts	all	*	Cross-session contracts
+spec	Data model	er	*	Data model
+spec	File tree	all	*	File tree
+spec	Data flow	labels	*	Data flow
+spec	Interfaces	signatures	*	Interfaces

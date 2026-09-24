@@ -11,7 +11,6 @@ out=$(cd "$root" && "$gate" human "$plan" 2>&1); rc=$?
 [ "$rc" -eq 0 ] || fail "gate human refused the master plan (exit $rc): $out"
 printf '%s' "$out" | grep -qF 'human: ok' || fail "no human: ok line: $out"
 n=$(grep -c '<pre class="mermaid">' "$page"); [ "$n" -ge 4 ] || fail "the regenerated master page holds $n diagrams, the master plan has 4"
-grep -qF 'Check these yourself' "$page" || fail "the master page has no review checklist"
 out=$(cd "$root" && "$gate" all "$plan" --phase approve 2>&1); rc=$?
 [ "$rc" -eq 0 ] || fail "approve phase refused the master plan (exit $rc): $out"
 printf '%s' "$out" | grep -qF 'human: ok' || fail "approve phase did not reach the human check: $out"

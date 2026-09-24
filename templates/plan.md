@@ -24,9 +24,12 @@ tags: [plan]
 
 ## Open & deferred
 <!-- The ONLY place open work lives, and it sits near the top so nobody reads 300 lines to find it.
-     open (undecided, blocks work) · blocked (waiting on something named) · needs the operator.
-     Then accepted deferrals: what is knowingly not being done, and why. Anything you could not
-     verify belongs here. When a line closes, delete it — never mark it done. -->
+     Start each item with its status and a colon: open (undecided, blocks work) · blocked (waiting on
+     something named) · needs the operator · user-visible (an accepted trade-off the product's users
+     will notice) · accepted · deferred. The human page shows only items whose status names
+     `operator` or `user-visible` (rules: commands/_shared/human-plan.md), so an operator decision
+     that says neither never reaches them. Anything you could not verify belongs here. When a line
+     closes, delete it — never mark it done. -->
 
 ## Open questions
 <!-- Read by `bin/gate.sh clarify`, which refuses while any `blocks: yes` row is still `open`.

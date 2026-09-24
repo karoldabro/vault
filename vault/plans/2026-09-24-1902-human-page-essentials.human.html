@@ -1,0 +1,108 @@
+<title>human-page-essentials — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
+</style>
+
+<main>
+<h1>human-page-essentials — plan</h1>
+<h2>Task</h2>
+<p>Cut the human plan page that <code>bin/render-human.sh</code> writes down to what only the operator can supply or judge. That is the decisions waiting on them, the defaults taken for them, the trade-offs users will notice, the checks they run by hand, the diagrams and the method signatures. Everything the gates already check stays in the agent plan and the spec.</p>
+<h2>Users will notice</h2>
+<ul>
+<li>user-visible: every existing <code>.human.html</code> page differs from a fresh render after this change. The 6 in-flight plans in <code>~/vault/givore/plans/</code> with <code>status: proposed</code> get a stale refusal from <code>bin/gate.sh human</code> at approval. Their session re-renders and republishes, as <code>commands/v-team.md</code> Step 4 already says.</li>
+</ul>
+<h2>Defaults taken for you</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>question</th><th>answer</th></tr>
+</thead>
+<tbody>
+<tr><td>Does the page keep the Decisions table?</td><td>no; a decision the operator must make is an Open item whose status names the operator</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Checks you run yourself</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>criterion</th><th>check</th></tr>
+</thead>
+<tbody>
+<tr><td>SC-7</td><td>WHEN the operator opens the preview of the value-gauge plan page THE SYSTEM SHALL show their decisions, user-visible trade-offs, hand checks, diagrams and signatures, and nothing a gate already checks</td><td>open the preview Artifact link; it fails when the operator names a block they do not need or a thing they need that is missing. <code>no-command: whether content is essential is the operator's judgement, and no detector can make it</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2>File tree</h2>
+<pre><code>
+templates/human-plan-sections.tsv        existing, rewritten as the four-field page list
+lib/human-render.sh                      existing, gains the modes and the diagram rule
+lib/arch-check.sh                        existing, loses the @ skip
+commands/_shared/human-plan.md           existing, page contract rewritten
+arch-profiles/code.tsv                   existing, loses @review lines
+arch-profiles/harness.tsv                existing, loses @review lines
+templates/plan.md                        existing, names the shown statuses
+checks/human-page-SC-1.sh .. SC-6.sh     new
+</code></pre>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    P["plan .md"] -->|"sections"| R["human_render"]
+    S["spec .arch.md"] -->|"sections + diagrams"| R
+    T["human-plan-sections.tsv"] -->|"blocks, modes"| R
+    R -->|"page HTML"| H["plan .human.html"]
+    H -->|"bytes"| G["gate.sh human"]
+    R -->|"fresh render"| G
+    H -->|"publish"| A["Artifact link"]
+</pre>
+<h2>Interfaces</h2>
+<ul>
+<li><code>bin/render-human.sh.render(plan: path, repo: path, stdout: flag): exit code</code>, throws <code>exit 2 on an unknown mode</code></li>
+<li><code>lib/human-render.sh.human_render(plan: path, repo: path, to_stdout: int): page HTML</code>, throws <code>die</code></li>
+<li><code>HUMAN_AWK_LIB.keep_item(text: string, words: string): bool</code></li>
+<li><code>HUMAN_AWK_LIB.er_diagram(rows: table): mermaid text</code></li>
+<li><code>HUMAN_AWK_LIB.signatures(rows: table): HTML list</code></li>
+<li><code>HUMAN_AWK_LIB.strip_params(line: string): mermaid line</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-24-1902-human-page-essentials.md</code> · architecture spec: <code>2026-09-24-1902-human-page-essentials.arch.md</code></p>
+</main>

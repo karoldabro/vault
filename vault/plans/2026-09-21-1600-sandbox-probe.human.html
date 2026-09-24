@@ -40,73 +40,26 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>sandbox-probe — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
-<p>Session S10 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Run the probes that execute repo code, and the repo's own rule files, inside the <code>/v-cr --sandbox</code> container, and tag their rows for the review panel (contracts C-2, C-3, C-6, C-8). Keywords: <code>probe-sandbox</code>, <code>probe-image</code>, <code>PROBE_TOOLS_FROM</code>, <code>--changed-list</code>, <code>--rows-from</code>, <code>framework.tsv</code>, <code>rules.tsv</code>.</p>
-<h2>Open &amp; deferred</h2>
+<p>Session S10 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. Run the probes that execute repo code, and the repo's own rule files, inside the <code>/v-cr --sandbox</code> container, and tag their rows for the review panel (contracts C-2, C-3, C-6, C-8).</p>
+<h2>Needs your decision</h2>
 <ul>
 <li>needs the operator: approve the five decisions SP-1 to SP-5, and the two departures from the S8 design that SP-6 and SP-7 record (mount layout, framework copy).</li>
-<li>size: this plan touches 29 files, past the ~15 at which a session drops work. The count is 11 product files, 3 test files, 2 fixtures and 7 graders.</li>
-<li>size: the other 6 files are this plan, its spec and its record, the master plan row, one row of the v-rule plan and <code>checks/rule-SC-7.sh</code>.</li>
-<li>size: the graders and fixtures are written, and every product file except <code>bin/probe-sandbox.sh</code> is a small edit.</li>
-<li>accepted limit: a tool that a pull request file can steer (<code>typos</code> reads <code>_typos.toml</code>, <code>claude</code> reads <code>plugin.json</code>) may print rows under its own id. They read <code>[confirmed]</code>; SP-3 limits the damage to that id and its message text.</li>
-<li>accepted limit: graders SC-2 to SC-4 test the driver's decisions against a test double of docker. Only SC-5 tests the envelope, with an image that holds git.</li>
-<li>accepted limit: a review with <code>--sandbox</code> and no probe image runs the <code>pr</code> posture and reads <code>Probes: sandbox not started</code>, and a review reads INCOMPLETE until the image holds every tool (SP-1, SP-2).</li>
-<li>accepted limit: a SIGKILL of the driver leaves its containers and work directory until <code>/v-cr --sandbox-gc</code> runs; a TERM or INT stops the container and removes both.</li>
-<li>accepted limit: the driver measures the tree before it copies it, so a hostile tree is bounded by the file and byte limits and not by the copy.</li>
-<li>unverified: no real <code>lizard</code> or <code>typos</code> image exists on this machine. <code>checks/sandbox-probe-SC-5.sh</code> runs real docker with <code>vault-tests:local</code>, which has neither, so it proves the path and the <code>absent:</code> report, not a tool row.</li>
-<li>existing defect, not this plan's: <code>bin/rule-count.sh --assert</code> fails on <code>HEAD</code> (181 rule lines, budget 173). This plan adds none.</li>
-<li>existing defect, not this plan's: 5 unit tests fail on <code>HEAD</code> (<code>document-standard.bats</code> two cases, <code>plugin-install.bats</code> two path notes, <code>research-clarify.bats</code> the PROPOSE output contract).</li>
 </ul>
-<h2>Success criteria</h2>
-<p>&lt;!-- Checks are written before the work and exit 2 with "not written yet" until the file they grade exists. --&gt;</p>
+<h2>Defaults taken for you</h2>
 <div class="scroll">
 <table>
 <thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+<tr><th>question</th><th>answer</th></tr>
 </thead>
 <tbody>
-<tr><td>SC-1</td><td>WHEN <code>bin/probe.sh diff</code> gets <code>--changed-list &lt;file&gt;</code> THE SYSTEM SHALL read the changed files from the list, run no git, drop an escaping, absolute or missing path, and exit 2 for an unreadable list, for <code>--base</code> beside it and for <code>run</code>; and WHEN <code>PROBE_TOOLS_FROM=image</code> is set THE SYSTEM SHALL keep the repo's tool directories out of PATH, and exit 2 for any other value</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN <code>bin/probe-sandbox.sh run</code> executes THE SYSTEM SHALL start one framework container and one container per template row with <code>--only</code>, each with the S0 envelope (no network, read-only, no capabilities, memory, cpu and pid limits, tmpfs <code>/tmp</code>, label, three environment variables), mount a framework copy holding <code>bin</code>, <code>lib</code> and <code>probes</code> and no <code>vault/</code> or <code>.git</code>, mount a repo copy with no <code>.git</code>, scrub the streams, stop a hung container by label, cut an oversize stream, remove its work directory, and write the four files of C-8</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN a base row is hand-written, a container prints a row or a ran line for an id that did not run, a container prints no ran line, the pull request edits the rules, a base id names a framework probe, a rule file is a link, the base has no <code>probes/</code>, a container fails or times out, or the image, docker or the <code>probe-image</code> key is missing THE SYSTEM SHALL run no repo script and no probe on the host, drop and report each forged row, and report each other case in the status lines of VR-4</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN <code>bin/probe-panel.sh run --posture sandbox --rows-from &lt;dir&gt;</code> reads the four files THE SYSTEM SHALL print each row <code>[confirmed]</code> from the file that held it, run no probe on the host, keep row text from moving a row or closing the fence, read a skipped, failed or missing status as INCOMPLETE with the operator line, read <code>no-rules:</code> as complete, and exit 2 for a missing <code>--rows-from</code>, for it beside another posture and for a missing directory</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-5</td><td>WHEN a review runs the probe stage with real docker and a real image THE SYSTEM SHALL write a framework row and a template-rule row, report the hand-written row skipped, leave no container or work directory, and let the panel print both rows <code>[confirmed]</code></td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-6</td><td>WHEN an operator opens <code>lib/cr-sandbox.sh</code>, <code>commands/v-cr/sandbox.md</code>, the two <code>/v-cr</code> steps, <code>commands/_shared/probe-kit.md</code>, <code>commands/_shared/critic-panel.md</code> and ADR-009 THE SYSTEM SHALL show the probe image as an envelope key no indication sets, the stage in one home, the no-fallback rule once, the addendum, and no more than 181 rule lines in the corpus</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-7</td><td>WHEN the unit suite runs THE SYSTEM SHALL pass <code>sandbox-probe.bats</code>, <code>cr-sandbox.bats</code>, <code>v-cr.bats</code>, <code>probe.bats</code>, <code>probe-panel.bats</code> and <code>rule.bats</code>, and the full suite SHALL fail only the 5 tests that fail on <code>HEAD</code></td><td>delivery</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<p>&lt;!-- Ids SP-n are local to this plan; VR-n names a decision of <code>vault/plans/2026-09-21-1430-v-rule.md</code>. --&gt;</p>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>SP-1 The probe image is named by the key <code>probe-image</code> of the user or global <code>VCR_SANDBOX_MAP</code>, built by the operator, and never built or pulled by the framework (<code>docker image inspect</code> first, then <code>--pull never</code>). It needs bash 4.4 or later, awk, grep, sed, coreutils (<code>timeout</code>, <code>od</code>, <code>sort</code>, <code>tr</code>, <code>cut</code>, <code>mktemp</code>), findutils and <code>jq</code>, plus <code>lizard</code> and <code>typos</code> for their rows and <code>claude</code> for <code>claude-validate</code>. <code>commands/v-cr/sandbox.md</code> S8 carries a sample Dockerfile. A tool the image lacks prints <code>absent: &lt;id&gt;: &lt;install&gt;</code>, the run reads INCOMPLETE, and the operator line reads <code>install: add the tool of &lt;id&gt; to the probe image</code>. A review reads INCOMPLETE until the image holds the tools of every row whose detect matches. There is no default image, and no key means the stage does not start. <code>cr_is_envelope_key</code> lists the key, so a repo file or an indication cannot set it</td><td>the container has no network, so nothing can install a tool at run time and an absent tool has to show as absent. A framework-built image would pin tool versions the operator never audited. A default image would run a name nobody chose. the kit expands empty arrays under <code>set -u</code>, which bash 4.4 accepts</td></tr>
-<tr><td>SP-2 No failure of the container path runs a repo-code probe on the host. The driver has no host-run path, and posture <code>sandbox</code> never calls <code>bin/probe.sh</code>. A container failure, a timeout and an oversize stream become <code>failed:</code> lines of that run (SP-10). A missing image, missing docker, missing <code>probe-image</code> key, missing merge base or an over-limit tree makes the driver print <code>probe-sandbox: &lt;reason&gt;</code> on stderr and exit 3 without starting a container. Step 3.1 then runs <code>--posture pr --repo "$SANDBOX_DIR"</code>, the clone of step 2.6, which skips every <code>yes</code> row and reads files as text; with no clone it prints <code>Probes: not run, no checkout</code>. A driver that exits 0 with failed containers is an incomplete run and has no fallback</td><td>a fallback that runs a <code>yes</code> row on the host runs pull request code exactly when the sandbox failed, which an attacker can cause by exhausting memory. <code>pr</code> is the review the operator gets without <code>--sandbox</code></td></tr>
-<tr><td>SP-3 There are three kinds of container: the native run (<code>--no-repo-code</code>, no <code>--only</code>), one run per framework row whose <code>executes-repo-code</code> is <code>yes</code> (<code>--only &lt;id&gt;</code>), and one run per template row of the base (<code>--only &lt;id&gt;</code>, <code>--allow-repo-registry</code>). The host keeps a row only when its id is a row of that run: the ids of the framework rows with <code>no</code> for the native run, and the one <code>--only</code> id otherwise. It splits each stream by field 1, passes each id's rows through <code>probe_check_rows</code>, and on a nonzero return discards all rows of that id and writes <code>failed: &lt;id&gt;: malformed row</code>. Rows of any other id are dropped and the run writes <code>failed: &lt;run&gt;: rows named an id that is not a row of this run: &lt;n&gt;</code>, where <code>&lt;run&gt;</code> is <code>framework</code> for the native run and the id otherwise. The native run drops the kit lines <code>skipped: &lt;id&gt;: runs repo code</code>, because the per-row runs cover those rows. A rule run needs a <code>ran: &lt;id&gt;:</code> line, because its detect cell is always true, and without one the host writes <code>failed: &lt;id&gt;: no ran line</code>. The other runs need none, because a row whose detect is false prints nothing</td><td>the finding row has no origin, so the run and the id are the only facts the host holds. One container per tool row limits a hijacked tool to forging rows under its own id</td></tr>
-<tr><td>SP-4 A base without <code>probes/registry.tsv</code> writes <code>no-rules: the merge base has no probes/registry.tsv</code> to <code>rules.status</code>, starts no rule container, and reads complete. A base row that is not the output of <code>rule-check.sh row</code> writes <code>skipped: &lt;id&gt;: hand-written row does not run in the sandbox</code>, whatever its stage. A base id that also names a framework probe writes <code>skipped: &lt;id&gt;: the id also names a framework probe</code>. A rule file that is not a regular blob (a link, or over 8192 bytes) writes <code>skipped: &lt;id&gt;: the rule file is not a regular file</code>. Rows past <code>PROBE_SANDBOX_RULES_MAX</code> write <code>skipped</code> for the rest. The driver writes a new one-row <code>registry.tsv</code> for each rule container, holding only the vetted template row, and never mounts the base file</td><td>a hand-written row at another stage with a template row's id would run under <code>--only</code>, and one malformed row would fail every rule container. A row that exists and did not run is a gap the critics have to know about</td></tr>
-<tr><td>SP-5 The operator sees three states. Ran: the terminal <code>Probes:</code> line reads <code>Probes: sandbox ran</code> and the forge comment has no probe line. Not started: <code>Probes: sandbox not started, &lt;reason&gt;</code> in both, and posture <code>pr</code> ran (SP-2). Incomplete: <code>Probes: INCOMPLETE, &lt;a&gt; absent, &lt;s&gt; skipped, &lt;f&gt; failed (sandbox)</code> in both, and the terminal adds the <code>install:</code> lines. The reason is the text after <code>probe-sandbox: </code> on the driver's stderr</td><td>the operator needs to tell "never ran" from "ran and lacks something", and the comment on the forge carries no install text</td></tr>
-<tr><td>SP-6 <code>/repo</code> is one copy of the files <code>probe_files</code> lists, without <code>.git</code>, shared by every container of the run. The driver creates <code>probes/</code> in it and mode-sets the roots to 755 and the files to <code>a+rX</code>, because Docker cannot create a mount point in a read-only mount and uid 65534 cannot read a 0700 directory. Each rule container mounts its one-row registry and rule file at <code>/repo/probes</code>. <code>/in</code> is a directory mount that holds <code>changed.list</code>, and every mount ends in <code>:ro</code>. The container command is <code>/framework/bin/probe.sh diff --repo /repo --changed-list /in/changed.list</code>, with <code>--no-repo-code</code>, <code>--only &lt;id&gt;</code> or <code>--only &lt;id&gt; --allow-repo-registry</code> as SP-3 says. VR-4 mounted the clone and <code>/rules</code>; a clone with <code>.git</code> makes <code>probe_files</code> return 2 in a container without git, and the template row names <code>probes/rules/&lt;slug&gt;.grep</code> relative to the repo</td><td>the copy holds exactly the files a probe may read, and no option like <code>--rules-dir</code> is needed</td></tr>
-<tr><td>SP-7 <code>/framework</code> is a copy of <code>bin</code>, <code>lib</code> and <code>probes</code> of the running framework tree made with <code>cp -RL</code>, not <code>git archive HEAD</code>. VR-4 named <code>git archive</code></td><td><code>HEAD</code> runs the committed code and not the code under test, and a plugin install has no <code>.git</code></td></tr>
-<tr><td>SP-8 <code>--base</code> is a full commit id of 40 or 64 hex digits. Step 2.6 records <code>PROBE_BASE</code> (moved from step 3.1) as the full id printed by <code>git merge-base</code> in the clone, after step S2 fetches the base branch with enough history for it. The driver checks that <code>git cat-file -t</code> reads <code>commit</code>, lists the base with <code>git ls-tree -z -l</code>, and reads each rule file by object id with <code>git cat-file blob</code>. It accepts a slug matching <code>^[a-z0-9][a-z0-9-]{0,39}$</code> and modes 100644 and 100755 up to 8192 bytes. A base commit missing from the clone makes the driver exit 3 with <code>the merge base is not in the clone</code></td><td>the clone is shallow, so the base can be missing, and the clone holds attacker objects</td></tr>
-<tr><td>SP-9 Posture <code>sandbox</code> tags every row <code>[confirmed]</code> and runs nothing on the host. A native row is a check of the framework on the pull request files. A tool row is a tool of the operator's image on those files, limited by SP-3 to its own id. A template row is a check written by the base, which the pull request cannot edit. <code>registry-edited</code> is not printed and nothing is demoted, because no row of the run comes from the pull request's registry. <code>--paths</code> and the row cap still apply. The reader of the four files is its own function in <code>bin/probe-panel.sh</code></td><td>VR-5 sets these tags; the run is the only source of origin</td></tr>
-<tr><td>SP-10 Each container starts as <code>docker run --rm --init --name &lt;sandbox-name&gt;-&lt;n&gt; --label com.vault.v-cr.sandbox=&lt;sandbox-name&gt; --network none --read-only --cap-drop ALL --security-opt no-new-privileges --ipc none --log-driver none --pull never --user 65534:65534 --memory &lt;m&gt; --memory-swap &lt;m&gt; --cpus &lt;c&gt; --pids-limit &lt;p&gt; --tmpfs /tmp:rw,noexec,nosuid,nodev,size=64m</code>, each flag and value as two words, then <code>-e PROBE_TOOLS_FROM=image</code>, <code>-e PROBE_TIMEOUT=&lt;n&gt;</code> and <code>-e PROBE_OUT_MAX=&lt;n&gt;</code>, the mounts, the image and the command. <code>VCR_SANDBOX_MAP</code> keys <code>memory</code> (default 1g), <code>cpus</code> (1) and <code>pids</code> (256) must be positive numbers with an optional unit and are clamped to 8g, 4 and 1024, and a value of 0 reads as the default. The host runs the docker client under <code>timeout</code> of <code>PROBE_SANDBOX_TIMEOUT</code> (180 seconds) and writes its two streams to files under <code>ulimit -f</code>, then cuts each at <code>PROBE_OUT_MAX</code> bytes before it scrubs. The status lines are <code>failed: &lt;run&gt;: container exit &lt;n&gt;</code>, <code>failed: &lt;run&gt;: timed out after &lt;s&gt; seconds</code> and <code>failed: &lt;run&gt;: printed more than &lt;PROBE_OUT_MAX&gt; bytes</code>. A container failure or timeout still exits 0. The host caps the copy at <code>PROBE_SANDBOX_FILES_MAX</code> (20000) files and <code>PROBE_SANDBOX_BYTES_MAX</code> (200000000) bytes, runs host git and the copy under <code>timeout</code>, copies with <code>cp --parents --no-dereference --no-preserve=all</code> from the NUL list, and stops starting containers after <code>PROBE_SANDBOX_TOTAL</code> (900) seconds, writing <code>skipped: &lt;id&gt;: the time budget is spent</code> for the rest. A path holding <code>:</code> or <code>,</code> is refused before it reaches <code>-v</code></td><td><code>ulimit -f</code> limits files and not pipes, and docker defines 0 as no limit</td></tr>
-<tr><td>SP-11 The container lists files with <code>find</code>, so the tools' whole-tree scans skip <code>vendor/</code> and <code>node_modules/</code>. A rule row scans a changed file under them, because the changed list goes through <code>probe_filter_list</code> only</td><td>the alternative is git in the container, which SP-6 excludes</td></tr>
-<tr><td>SP-12 <code>lib/probe-run.sh</code> is not edited: <code>probe_path</code> in <code>lib/probe-registry.sh</code> is the one place the repo tool directories join PATH. The work directory of the driver is <code>$(cr_sandbox_root)/&lt;sandbox-name&gt;-probe.XXXXXX</code>, a leaf of its own, so the clone at <code>$(cr_sandbox_root)/&lt;sandbox-name&gt;</code> is never removed by the driver</td><td>one home for the rule, and the critics still read the clone after the driver exits</td></tr>
+<tr><td>Is <code>lib/probe-run.sh</code> edited?</td><td>no; both callers read <code>probe_path</code>, so one edit covers them (SP-12)</td></tr>
+<tr><td>Does the sandbox posture also run the host <code>pr</code> posture?</td><td>no; the posture reads the rows of the run only (SP-9)</td></tr>
 </tbody>
 </table>
 </div>
@@ -129,39 +82,6 @@ tests/unit/v-cr.bats                       existing, gains and edits guards
 tests/fixtures/sandbox-probe/              new, a docker test double and a fixture repo builder
 checks/sandbox-probe-SC-1.sh to SC-7.sh    new, decide the seven criteria
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/probe-sandbox.sh</td><td>yes</td><td>runs the framework and template probes in containers and writes the four files</td><td>on-demand</td></tr>
-<tr><td>bin/probe.sh</td><td>no</td><td>runs probes; reads a changed-file list without git</td><td>on-demand</td></tr>
-<tr><td>bin/probe-panel.sh</td><td>no</td><td>prints the probe block for the critics</td><td>on-demand</td></tr>
-<tr><td>lib/probe-registry.sh</td><td>no</td><td>reads registries and finds each row's tool</td><td>on-demand</td></tr>
-<tr><td>lib/cr-sandbox.sh</td><td>no</td><td>pure helpers of the sandbox path</td><td>on-demand</td></tr>
-<tr><td>commands/v-cr/sandbox.md</td><td>no</td><td>contract of the sandbox path</td><td>on-demand</td></tr>
-<tr><td>commands/v-cr/steps/02-gather.md</td><td>no</td><td>gather step of a review</td><td>on-demand</td></tr>
-<tr><td>commands/v-cr/steps/03-review.md</td><td>no</td><td>review step of a review</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>no</td><td>contract of the probe kit</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/critic-panel.md</td><td>no</td><td>contract of the critic panel</td><td>always</td></tr>
-<tr><td>vault/decisions/ADR-009-v-cr-sandboxed-execution.md</td><td>no</td><td>decision record of the sandbox path</td><td>on-demand</td></tr>
-<tr><td>tests/unit/sandbox-probe.bats</td><td>yes</td><td>runs the graders and text guards</td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/cr-sandbox.bats</td><td>no</td><td>tests the pure sandbox helpers</td><td>never-by-agent</td></tr>
-<tr><td>tests/unit/v-cr.bats</td><td>no</td><td>guards the text of the review command</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/sandbox-probe/fake-docker.sh</td><td>yes</td><td>test double of docker</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/sandbox-probe/mk-repo.sh</td><td>yes</td><td>builds the fixture repo</td><td>never-by-agent</td></tr>
-<tr><td>checks/sandbox-probe-SC-1.sh</td><td>yes</td><td>decides criterion SC-1</td><td>never-by-agent</td></tr>
-<tr><td>checks/sandbox-probe-SC-2.sh</td><td>yes</td><td>decides criterion SC-2</td><td>never-by-agent</td></tr>
-<tr><td>checks/sandbox-probe-SC-3.sh</td><td>yes</td><td>decides criterion SC-3</td><td>never-by-agent</td></tr>
-<tr><td>checks/sandbox-probe-SC-4.sh</td><td>yes</td><td>decides criterion SC-4</td><td>never-by-agent</td></tr>
-<tr><td>checks/sandbox-probe-SC-5.sh</td><td>yes</td><td>decides criterion SC-5</td><td>never-by-agent</td></tr>
-<tr><td>checks/sandbox-probe-SC-6.sh</td><td>yes</td><td>decides criterion SC-6</td><td>never-by-agent</td></tr>
-<tr><td>checks/sandbox-probe-SC-7.sh</td><td>yes</td><td>decides criterion SC-7</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -175,90 +95,12 @@ flowchart LR
     F -->|"probe block: text"| G["critic panel"]
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>probe-sandbox.sh</td><td>run</td><td>repo: path, base: string, sandbox_name: string, out: path</td><td>four files in out; exit 0 ran, 3 not started</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>probe.sh</td><td>diff</td><td>repo: path, changed_list: path, only: string, allow_repo_registry: bool</td><td>finding rows on stdout and status lines on stderr</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>probe-panel.sh</td><td>run</td><td>posture: string, repo: path, base: string, rows_from: path, out: path, paths: path</td><td>probe block; exit 0 complete, 2 incomplete</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>cr-sandbox.sh</td><td>cr_sandbox_map_get</td><td>key: string</td><td>the value of the first key in VCR_SANDBOX_MAP</td><td>rc 1</td><td>lib</td></tr>
-<tr><td>cr-sandbox.sh</td><td>cr_probe_image</td><td>-</td><td>the probe image name</td><td>rc 1</td><td>lib</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td>a review runs with --sandbox</td><td>commands/v-cr/sandbox.md</td><td>4000</td></tr>
-<tr><td>step 2.6 provisions the sandbox</td><td>commands/v-cr/steps/02-gather.md</td><td>3000</td></tr>
-<tr><td>step 3.1 runs the probe block</td><td>commands/v-cr/steps/03-review.md</td><td>3500</td></tr>
-<tr><td>a critic panel starts</td><td>commands/_shared/critic-panel.md</td><td>4000</td></tr>
-<tr><td>the probe stage runs</td><td>bin/probe-sandbox.sh</td><td>0</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>the sandbox root and the teardown path guard</td><td>lib/cr-sandbox.sh cr_sandbox_root, cr_sandbox_path_is_safe</td><td>reuse</td><td>the work directory is a child of the root and is removed only after the guard</td></tr>
-<tr><td>scrub secrets from a stream</td><td>lib/cr-sandbox.sh cr_redact_runtime</td><td>reuse</td><td>contract C-8 names it</td></tr>
-<tr><td>check and rewrite finding rows</td><td>lib/probe-run.sh probe_check_rows</td><td>reuse</td><td>it enforces six fields and a safe file; the host calls it once per id</td></tr>
-<tr><td>list the files a probe may read</td><td>lib/probe-scope.sh probe_files</td><td>reuse</td><td>the host copies exactly these files into the mount</td></tr>
-<tr><td>list the changed files</td><td>lib/probe-scope.sh probe_changed</td><td>reuse</td><td>the host writes the list the container reads</td></tr>
-<tr><td>read a git object without filters</td><td>lib/probe-scope.sh probe_git</td><td>reuse</td><td>it switches off hooks, attributes and filters</td></tr>
-<tr><td>the template registry row</td><td>bin/rule-check.sh row</td><td>reuse</td><td>the host compares each base row with it</td></tr>
-<tr><td>read a value of VCR_SANDBOX_MAP</td><td>-</td><td>new</td><td>searched lib and commands for VCR_SANDBOX_MAP; only prose names it</td></tr>
-<tr><td>run a command in a container</td><td>-</td><td>new</td><td>searched bin and lib for docker run; only tests/run.sh runs docker, for the unit suite, and it applies no envelope</td></tr>
-<tr><td>the PATH of a cell</td><td>lib/probe-registry.sh probe_path</td><td>extend</td><td>one condition keeps the repo directories out under PROBE_TOOLS_FROM=image</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/probe-sandbox.sh</td><td>300</td></tr>
-<tr><td>bin/probe.sh</td><td>165</td></tr>
-<tr><td>bin/probe-panel.sh</td><td>250</td></tr>
-<tr><td>lib/cr-sandbox.sh</td><td>245</td></tr>
-<tr><td>commands/v-cr/sandbox.md</td><td>235</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>150</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>key</th><th>file</th><th>default</th></tr>
-</thead>
-<tbody>
-<tr><td>probe-image</td><td>VCR_SANDBOX_MAP</td><td>none, the stage does not start</td></tr>
-<tr><td>memory</td><td>VCR_SANDBOX_MAP</td><td>1g</td></tr>
-<tr><td>cpus</td><td>VCR_SANDBOX_MAP</td><td>1</td></tr>
-<tr><td>pids</td><td>VCR_SANDBOX_MAP</td><td>256</td></tr>
-<tr><td>PROBE_SANDBOX_TIMEOUT</td><td>environment</td><td>180 seconds per container</td></tr>
-<tr><td>PROBE_SANDBOX_RULES_MAX</td><td>environment</td><td>20 template rows</td></tr>
-<tr><td>PROBE_SANDBOX_FILES_MAX</td><td>environment</td><td>20000 files</td></tr>
-<tr><td>PROBE_SANDBOX_BYTES_MAX</td><td>environment</td><td>200000000 bytes</td></tr>
-<tr><td>PROBE_SANDBOX_TOTAL</td><td>environment</td><td>900 seconds for all containers</td></tr>
-<tr><td>PROBE_SANDBOX_DOCKER</td><td>environment</td><td>docker</td></tr>
-<tr><td>PROBE_TOOLS_FROM</td><td>environment</td><td>unset; image keeps repo tool directories out of PATH</td></tr>
-</tbody>
-</table>
-</div>
+<ul>
+<li><code>probe-sandbox.sh.run(repo: path, base: string, sandbox_name: string, out: path): four files in out; exit 0 ran, 3 not started</code>, throws <code>exit 2</code></li>
+<li><code>probe.sh.diff(repo: path, changed_list: path, only: string, allow_repo_registry: bool): finding rows on stdout and status lines on stderr</code>, throws <code>exit 2</code></li>
+<li><code>probe-panel.sh.run(posture: string, repo: path, base: string, rows_from: path, out: path, paths: path): probe block; exit 0 complete, 2 incomplete</code>, throws <code>exit 2</code></li>
+<li><code>cr-sandbox.sh.cr_sandbox_map_get(key: string): the value of the first key in VCR_SANDBOX_MAP</code>, throws <code>rc 1</code></li>
+<li><code>cr-sandbox.sh.cr_probe_image(): the probe image name</code>, throws <code>rc 1</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-21-1600-sandbox-probe.md</code> · architecture spec: <code>2026-09-21-1600-sandbox-probe.arch.md</code></p>
 </main>

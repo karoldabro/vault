@@ -40,70 +40,25 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>human-plan-page — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
-<p>Session S3 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. A script renders the human-readable plan page from a plan and its architecture spec. A gate checks that the page is present and current. The same session wires the page into <code>/v-team</code> and regenerates the master plan's page. Keywords: render-human, human_plan, gate human, mermaid, review checklist.</p>
-<h2>Open &amp; deferred</h2>
+<p>Session S3 of <code>vault/plans/2026-09-21-0900-architecture-first-planning.md</code>. A script renders the human-readable plan page from a plan and its architecture spec. A gate checks that the page is present and current. The same session wires the page into <code>/v-team</code> and regenerates the master plan's page.</p>
+<h2>Needs your decision</h2>
 <ul>
 <li>needs the operator: approve the scope and decisions D-1 to D-9 below.</li>
-<li>accepted change: the regenerated master page keeps its pipeline, rules-flow and data-flow diagrams, its session graph and its seven-requests table, moved into its spec. It loses the two illustration diagrams of an example order feature, the hand-written "what you are asked to approve" box and the prose paragraphs, which the terminal decision block carries.</li>
-<li>deferred: prose that explains a design in plain words. A session that wants an explanation writes it in the plan's Task.</li>
-<li>unverified: the renderer under BusyBox <code>awk</code>, which the test container uses. A committed golden page compared in the container and on the host tests this.</li>
-<li>unverified: publishing an Artifact from a subagent. The main session publishes.</li>
-<li>accepted limit: the gate cannot tell that the published Artifact equals the local page, and a <code>human_plan</code> URL proves only its shape.</li>
-<li>accepted limit: a page opened as a local file shows diagrams as source text, because the page holds no script.</li>
-<li>accepted limit: a diagram line whose label merely contains <code>click</code> or <code>href</code> is dropped with the hostile lines.</li>
-<li>deferred: <code>cmd_arch</code>, <code>cmd_human</code> and <code>bin/render-human.sh</code> each parse <code>--plan</code>/<code>--repo</code> arguments the same way, and <code>human_render</code> is long; extract a shared helper when a fourth command needs it.</li>
-<li>existing defect, not this plan's: <code>tests/unit/v-team.bats</code> lines 54 to 79 use a bare <code>! grep</code> in the middle of a test, which never fails a bats test.</li>
-<li>known limit: <code>bash -s human &lt;plan&gt; &lt; bin/gate.sh</code> finds no libraries, because <code>$0</code> is <code>bash</code>; run the file by path.</li>
 </ul>
-<h2>Success criteria</h2>
+<h2>Defaults taken for you</h2>
 <div class="scroll">
 <table>
 <thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
+<tr><th>question</th><th>answer</th></tr>
 </thead>
 <tbody>
-<tr><td>SC-1</td><td>WHEN <code>bin/render-human.sh</code> renders a plan with a spec THE SYSTEM SHALL write a page holding every spec section as an escaped heading, every mermaid block as a diagram, the first-column value of every spec table row, and the profile's review checklist</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN the spec changes after the page was rendered THE SYSTEM SHALL make <code>bin/gate.sh human</code> exit 1 and say the page is stale</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN a diagram is removed from the page THE SYSTEM SHALL make <code>bin/gate.sh human</code> exit 1 and name the first differing line</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN <code>human_plan</code> is empty, not an <code>https://claude.ai/artifact/&lt;id&gt;</code> URL, or a <code>file:</code> name other than the page's, or the page file is missing THE SYSTEM SHALL exit 1, and a valid URL or <code>file:</code> name SHALL pass</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-5</td><td>WHEN a spec cell or plan line holds markup such as <code>&lt;script&gt;</code> THE SYSTEM SHALL show it as text and the page SHALL hold no <code>&lt;script</code> tag</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-6</td><td>WHEN a plan has a Sessions table with a <code>depends</code> column THE SYSTEM SHALL draw the dependency graph as a mermaid flowchart with one bare <code>A --&gt; B</code> line per dependency</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-7</td><td>WHEN a spec mermaid line holds <code>click</code>, <code>%%</code>, <code>href</code>, <code>javascript</code> or <code>vbscript</code>, in any letter case, THE SYSTEM SHALL leave that line out of the page</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-8</td><td>WHEN <code>bin/gate.sh human</code> runs on this plan from the repo root THE SYSTEM SHALL print <code>human: ok</code> for a page this session rendered with the real profile</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-9</td><td>WHEN <code>bin/gate.sh all &lt;plan&gt; --phase approve</code> runs on the architecture-first master plan THE SYSTEM SHALL reach the human check and pass, and the regenerated master page SHALL hold the master plan's 4 diagrams: the pipeline, the session graph, the rules flow and the spec's data flow</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-10</td><td>WHEN a <code>/v-team</code> session reads its PROPOSE step and Step 4 THE SYSTEM SHALL tell it to render the page, publish it, record <code>human_plan</code> with a <code>file:</code> fallback, and run <code>bin/gate.sh human</code></td><td>functional</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>D-1 A script renders the page, with no model in the loop</td><td>a model omits diagrams silently and varies between runs; a function of the plan and spec cannot</td></tr>
-<tr><td>D-2 <code>bin/gate.sh human</code> re-renders the page in memory and compares it byte for byte with the file on disk</td><td>one check proves the page is present, current and untampered</td></tr>
-<tr><td>D-3 The page shows only what a person reads at approval. A column whitelist per plan section lives in <code>templates/human-plan-sections.tsv</code>, and status, date, verdict, evidence and frontmatter are left out</td><td>a status flip or a written verdict must not make the page stale</td></tr>
-<tr><td>D-4 A profile lists what a person must confirm as <code>@review&lt;TAB&gt;&lt;one plain sentence&gt;</code> lines in its <code>.tsv</code>, and the page shows them under "Check these yourself"</td><td>the checklist differs per project type and belongs with the profile</td></tr>
-<tr><td>D-5 The gate runs only when the plan names an <code>arch_spec</code>; a plan that names none is skipped, and <code>arch</code> already refuses it in a profiled repo</td><td>one refusal per defect</td></tr>
-<tr><td>D-6 Cells and prose escape <code>&amp;</code>, <code>&lt;</code> and <code>&gt;</code>; a mermaid body escapes only <code>&amp;</code> and <code>&lt;</code>; a mermaid line starting <code>click</code> or <code>%%</code>, or holding <code>javascript:</code>, is dropped; a generated graph holds only ids matching <code>^[A-Za-z0-9_-]+$</code> and quoted labels of plain characters</td><td>plan text is agent-written and never markup, and mermaid interprets directives itself</td></tr>
-<tr><td>D-7 The renderer is POSIX <code>awk</code> and bash, runs under <code>LC_ALL=C</code>, reads bodies from files, never iterates with <code>for (k in a)</code>, and ends the page with one newline</td><td>the same bytes on every awk and locale</td></tr>
-<tr><td>D-8 <code>bin/gate.sh</code> sources cleanly when run as a library: <code>main</code> runs only when the file is executed</td><td>the renderer needs <code>frontmatter_get</code> and the profile lookup without a second copy</td></tr>
-<tr><td>D-9 A fixed set of constructs renders in the plan sections: table, bullet list, numbered list, paragraph, bold, code span. Any other line renders as an escaped paragraph</td><td>plans use these constructs, and an unknown one must not break the page</td></tr>
+<tr><td>Does an LLM write the page, or a script?</td><td>a script; recorded in D-1</td></tr>
 </tbody>
 </table>
 </div>
@@ -127,38 +82,6 @@ tests/unit/human-plan.bats           new
 tests/fixtures/human/plan.md         new, a small plan
 tests/fixtures/human/expected.html   new, its page, rendered on the host
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/render-human.sh</td><td>yes</td><td>writes the human page for one plan</td><td>on-demand</td></tr>
-<tr><td>lib/human-render.sh</td><td>yes</td><td>converts plan and spec sections into page markup</td><td>on-demand</td></tr>
-<tr><td>lib/human-check.sh</td><td>yes</td><td>checks the page is present, current and linked</td><td>on-demand</td></tr>
-<tr><td>templates/human-plan.html</td><td>yes</td><td>holds the page skeleton and styles</td><td>on-demand</td></tr>
-<tr><td>templates/human-plan-sections.tsv</td><td>yes</td><td>lists the plan sections and columns the page shows</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/human-plan.md</td><td>yes</td><td>states the render rules and the gate</td><td>on-demand</td></tr>
-<tr><td>bin/gate.sh</td><td>no</td><td>refuses a session that skipped a required step</td><td>on-demand</td></tr>
-<tr><td>lib/arch-check.sh</td><td>no</td><td>checks an architecture spec against its profile</td><td>on-demand</td></tr>
-<tr><td>arch-profiles/code.tsv</td><td>no</td><td>lists the sections and rules of the code profile</td><td>on-demand</td></tr>
-<tr><td>arch-profiles/harness.tsv</td><td>no</td><td>lists the sections and rules of the harness profile</td><td>on-demand</td></tr>
-<tr><td>lib/shared-module-rules.tsv</td><td>no</td><td>lists the rules each shared module owns</td><td>never-by-agent</td></tr>
-<tr><td>commands/v-team.md</td><td>no</td><td>dispatcher for the team lifecycle</td><td>always</td></tr>
-<tr><td>commands/v-team/steps/03-propose-loop.md</td><td>no</td><td>the PROPOSE step of the team lifecycle</td><td>on-demand</td></tr>
-<tr><td>tests/unit/v-team.bats</td><td>no</td><td>guards the wiring of the team lifecycle</td><td>never-by-agent</td></tr>
-<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.md</td><td>no</td><td>the master plan this session belongs to</td><td>on-demand</td></tr>
-<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.arch.md</td><td>no</td><td>the master plan's structure spec</td><td>on-demand</td></tr>
-<tr><td>vault/plans/2026-09-21-0900-architecture-first-planning.human.html</td><td>no</td><td>the master plan's page, regenerated</td><td>on-demand</td></tr>
-<tr><td>vault/decisions/ADR-031-architecture-first-planning.md</td><td>no</td><td>records the structural decisions</td><td>on-demand</td></tr>
-<tr><td>vault/features/architecture-spec.md</td><td>no</td><td>the feature dossier for the spec and page</td><td>on-demand</td></tr>
-<tr><td>tests/unit/human-plan.bats</td><td>yes</td><td>tests the renderer and the gate</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/human/plan.md</td><td>yes</td><td>a small plan the tests render</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/human/expected.html</td><td>yes</td><td>the golden page the container test compares against</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -172,79 +95,13 @@ flowchart LR
     G -->|"exit code, refusal text"| A
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>render-human.sh</td><td>render</td><td>plan: path, repo: path, stdout: flag</td><td>page file or html on stdout</td><td>exit 2</td><td>cli</td></tr>
-<tr><td>gate.sh</td><td>human</td><td>plan: path, repo: path</td><td>exit code 0, 1 or 2</td><td>-</td><td>cli</td></tr>
-<tr><td>human-render.sh</td><td>render_page</td><td>plan: path, spec: path, profile: path</td><td>html: string</td><td>-</td><td>function</td></tr>
-<tr><td>human-render.sh</td><td>render_table</td><td>section: string, columns: string</td><td>html: string</td><td>-</td><td>function</td></tr>
-<tr><td>human-render.sh</td><td>render_graph</td><td>sessions: string</td><td>mermaid: string</td><td>-</td><td>function</td></tr>
-<tr><td>human-check.sh</td><td>cmd_human</td><td>plan: path, repo: path</td><td>exit code 0, 1 or 2</td><td>-</td><td>function</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td>the render runs</td><td>commands/_shared/human-plan.md</td><td>1500</td></tr>
-<tr><td>the render runs</td><td>templates/human-plan.html</td><td>0</td></tr>
-<tr><td>the render runs</td><td>templates/human-plan-sections.tsv</td><td>0</td></tr>
-<tr><td>the render runs</td><td>the named profile's .tsv in arch-profiles/</td><td>0</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>read frontmatter</td><td>bin/gate.sh frontmatter_get</td><td>reuse</td><td>already reads leading frontmatter; the script sources gate.sh</td></tr>
-<tr><td>find a profile file</td><td>lib/arch-check.sh arch_profile_file</td><td>reuse</td><td>repo first, then framework</td></tr>
-<tr><td>read a repo key</td><td>lib/arch-check.sh vault_key</td><td>reuse</td><td>returns the raw value</td></tr>
-<tr><td>split a table into cells for the gate</td><td>bin/gate.sh table_rows</td><td>reuse</td><td>handles escaped pipes; a test feeds one row to it and to the renderer</td></tr>
-<tr><td>page styles</td><td>vault/plans/2026-09-21-0900-architecture-first-planning.human.html</td><td>extend</td><td>its tokens become the skeleton</td></tr>
-<tr><td>markdown to html</td><td>-</td><td>new</td><td>searched bin, lib and commands for a converter; none exists</td></tr>
-<tr><td>split a table into html cells</td><td>-</td><td>new</td><td>table_rows joins cells with a control character for bash; html needs its own output</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/render-human.sh</td><td>80</td></tr>
-<tr><td>lib/human-render.sh</td><td>340</td></tr>
-<tr><td>lib/human-check.sh</td><td>120</td></tr>
-<tr><td>templates/human-plan.html</td><td>200</td></tr>
-<tr><td>commands/_shared/human-plan.md</td><td>120</td></tr>
-<tr><td>bin/gate.sh</td><td>900</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>key</th><th>file</th><th>default</th></tr>
-</thead>
-<tbody>
-<tr><td>human_plan</td><td>plans/slug.md frontmatter</td><td>empty</td></tr>
-<tr><td>@review</td><td>arch-profiles/name.tsv</td><td>no checklist</td></tr>
-<tr><td>section and column list</td><td>templates/human-plan-sections.tsv</td><td>Task, Open &amp; deferred, Success criteria, Decisions, Cross-session contracts, Sessions</td></tr>
-</tbody>
-</table>
-</div>
+<ul>
+<li><code>render-human.sh.render(plan: path, repo: path, stdout: flag): page file or html on stdout</code>, throws <code>exit 2</code></li>
+<li><code>gate.sh.human(plan: path, repo: path): exit code 0, 1 or 2</code></li>
+<li><code>human-render.sh.render_page(plan: path, spec: path, profile: path): html: string</code></li>
+<li><code>human-render.sh.render_table(section: string, columns: string): html: string</code></li>
+<li><code>human-render.sh.render_graph(sessions: string): mermaid: string</code></li>
+<li><code>human-check.sh.cmd_human(plan: path, repo: path): exit code 0, 1 or 2</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-21-1100-human-plan-page.md</code> · architecture spec: <code>2026-09-21-1100-human-plan-page.arch.md</code></p>
 </main>

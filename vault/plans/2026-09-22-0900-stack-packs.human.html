@@ -40,66 +40,17 @@ th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--lin
 th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
 pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
 pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
 </style>
 
 <main>
 <h1>stack-packs — plan</h1>
-<h2>Check these yourself</h2>
-<ul>
-<li>Does each file have one purpose, and is any file doing two jobs?</li>
-<li>Is anything loaded every time that could load only when needed?</li>
-<li>Do the size budgets fit what each file must hold?</li>
-<li>Is each rule stated once and referenced elsewhere, not repeated?</li>
-<li>Is anything hardcoded that should be a setting or a data file, and the reverse?</li>
-</ul>
 <h2>Task</h2>
-<p>Add probe-registry stack packs for Laravel (PHPStan + PHPArkitect), Nuxt (vue-tsc), Flutter (<code>dart analyze</code>) and Python (ruff) — SQL packs already exist from S4 — and let a repo declare which stack packs apply in its own <code>VAULT.md</code>, detected once at onboarding and hand-editable after, instead of every run re-guessing from scratch. Validate against <code>/home/kdabrow/workspace/recycling-api</code> (Laravel, real, via that repo's own Docker image) and <code>/home/kdabrow/workspace/nuxt/woonuxt</code> (Nuxt, real). Keywords: stack pack, probe registry, VAULT.md, onboarding detection, phpstan, phparkitect, ruff, dart analyze, vue-tsc.</p>
-<h2>Open &amp; deferred</h2>
+<p>Add probe-registry stack packs for Laravel (PHPStan + PHPArkitect), Nuxt (vue-tsc), Flutter (<code>dart analyze</code>) and Python (ruff) — SQL packs already exist from S4 — and let a repo declare which stack packs apply in its own <code>VAULT.md</code>, detected once at onboarding and hand-editable after, instead of every run re-guessing from scratch. Validate against <code>/home/kdabrow/workspace/recycling-api</code> (Laravel, real, via that repo's own Docker image) and <code>/home/kdabrow/workspace/nuxt/woonuxt</code> (Nuxt, real).</p>
+<h2>Needs your decision</h2>
 <ul>
 <li>needs the operator: approve the five analyzer choices (§Decisions), the <code>stack_packs</code> VAULT.md key design, and the one new file in <code>recycling-api</code> (§Work items W-16) before EXECUTE.</li>
-<li>deferred, not this plan's: <code>sql-dup-columns</code>/<code>sql-fk-index</code>/<code>sql-naming</code> only read <code>.sql</code> files. <code>recycling-api</code>'s migrations are Laravel PHP (<code>database/migrations/*.php</code>), so the existing SQL probes correctly find nothing there — not a bug this plan introduces, and parsing PHP migration calls is a separate, larger probe this plan does not build.</li>
-<li>deferred, not this plan's: <code>lib/arch-check.sh</code>'s <code>vault_key</code> helper is not extracted to a shared lib; <code>bin/probe.sh</code> gets its own three-line copy — see the Reuse map for why.</li>
-<li>deferred, not this plan's: <code>vault/research/probe-tool-verification.md</code> names PMD CPD as a pending addition for session S9. PMD CPD is cross-language duplicate detection, not a stack-specific analyzer, and stays out of this plan's scope; its entry now records that explicitly.</li>
-<li>unverified: <code>vue-tsc</code> is not installed in <code>woonuxt</code>, so SC-6 exercises the detect-and-<code>absent:</code> path, not a real findings run. Installing it there would mutate a repo outside this plan's declared scope, so this plan does not do it.</li>
-<li>every tool CLI flag and output format in §Decisions was confirmed by an actual run, not by documentation alone — see <code>vault/research/probe-tool-verification.md</code>.</li>
 </ul>
-<h2>Success criteria</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>id</th><th>criterion</th><th>kind</th><th>how</th></tr>
-</thead>
-<tbody>
-<tr><td>SC-1</td><td>WHEN <code>bin/probe.sh list</code> runs in this repo THE SYSTEM SHALL print five new rows (<code>laravel-phpstan</code>, <code>laravel-arkitect</code>, <code>nuxt-tsc</code>, <code>dart-analyze</code>, <code>python-ruff</code>)</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-2</td><td>WHEN <code>bin/probe.sh diff --repo /home/kdabrow/workspace/recycling-api --allow-repo-registry --only laravel-phpstan-docker --changed-list &lt;a file naming app/Http/Controllers/SeoMediaController.php&gt;</code> runs THE SYSTEM SHALL build and use that repo's own <code>server</code> Docker image, run real PHPStan inside it and print a <code>ran: laravel-phpstan-docker:</code> line</td><td>delivery</td><td>command</td></tr>
-<tr><td>SC-3</td><td>WHEN a repo's <code>VAULT.md</code> declares <code>stack_packs: sql</code> THE SYSTEM SHALL skip every row whose <code>stack</code> is <code>laravel</code>, <code>nuxt</code>, <code>flutter</code> or <code>python</code>, printing no <code>ran:</code>/<code>absent:</code> line for any of them</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-4</td><td>WHEN a repo's <code>VAULT.md</code> has no <code>stack_packs</code> key THE SYSTEM SHALL behave exactly as before this change — every row's own <code>detect</code> cell alone decides applicability</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-5</td><td>WHEN <code>bin/vault-init.sh</code> onboards a repo whose tree has <code>composer.json</code> naming <code>laravel/framework</code> and one <code>*.sql</code> file THE SYSTEM SHALL write <code>stack_packs: laravel, sql</code> into that repo's <code>VAULT.md</code></td><td>functional</td><td>command</td></tr>
-<tr><td>SC-6</td><td>WHEN <code>bin/probe.sh diff --repo /home/kdabrow/workspace/nuxt/woonuxt</code> runs THE SYSTEM SHALL detect Nuxt from <code>nuxt.config.ts</code> and report <code>absent: &lt;install&gt;</code> for <code>nuxt-tsc</code>, since <code>vue-tsc</code> is not installed there</td><td>functional</td><td>command</td></tr>
-<tr><td>SC-7</td><td>WHEN <code>bin/doc-lint.sh</code> and <code>bin/gate.sh all &lt;plan&gt; --phase approve</code> run on this plan THE SYSTEM SHALL exit 0</td><td>functional</td><td>command</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Decisions</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>Laravel gets two probes: <code>vendor/bin/phpstan analyse --error-format=json --no-progress</code>, parsed by a new <code>parse_phpstan_json</code>, and <code>vendor/bin/phparkitect check --format=json</code>, parsed by a new <code>parse_phparkitect_json</code></td><td><code>vault/research/probe-tool-verification.md</code> already committed session S9 to PHPArkitect (architecture-rule checking); PHPStan adds general bug-finding that needs no project-specific rule config, closing the gap PHPArkitect alone leaves on a repo with no <code>phparkitect.php</code></td></tr>
-<tr><td><code>parse_phpstan_json</code> reads <code>files.&lt;path&gt;.messages[].{line,message,identifier}</code> — there is no severity field, only <code>ignorable</code>; every message maps to severity <code>error</code></td><td>verified by a real run inside <code>recycling-api</code>'s <code>server</code> image (2026-09-22)</td></tr>
-<tr><td><code>parse_phparkitect_json</code> derives a finding's <code>file</code> from the fully-qualified class name under Laravel's own <code>App\</code> → <code>app/</code> PSR-4 convention, since PHPArkitect's JSON has no file field at all and this row is Laravel-only</td><td>verified by a real run in a scratch project (2026-09-22): <code>{"totalViolations": N, "details": {"&lt;FQCN&gt;": [{"error", "line"}]}}</code>, keyed by class, not path</td></tr>
-<tr><td>Python probe runs <code>ruff check --output-format json</code>, parsed by a new <code>parse_ruff_json</code></td><td>verified by a real run in a scratch venv (2026-09-22): a JSON array of <code>{"filename", "location": {"row", "column"}, "code", "message", "severity"}</code></td></tr>
-<tr><td>Flutter probe runs <code>dart analyze --format=machine</code>, parsed by a new <code>parse_dart_machine</code> — never <code>flutter analyze --format=machine</code>, which does not exist</td><td><code>flutter analyze</code> (Flutter 3.44.4) refused <code>--format</code> outright (<code>Could not find an option named "--format"</code>, exit 64) when run for real; <code>dart analyze --format=machine</code>, the bundled Dart SDK's own command, produced real pipe-delimited output (<code>SEVERITY|TYPE|CODE|PATH|LINE|COL|LEN|MESSAGE</code>)</td></tr>
-<tr><td>Nuxt probe runs <code>vue-tsc --noEmit</code>, parsed by a new <code>parse_tsc_text</code> matching <code>path(line,col): error|warning TSxxxx: message</code></td><td>verified by a real, piped (non-TTY) run in a scratch project (2026-09-22): TypeScript's parenthesized non-pretty form — pretty mode with the colon-dash form is TTY-only, and <code>bin/probe.sh</code> always pipes a tool's stdout</td></tr>
-<tr><td><code>recycling-api</code> gets one new file, <code>probes/registry.tsv</code>, with a repo-scoped <code>laravel-phpstan-docker</code> row scoped to <code>app/Http/Controllers</code> whose <code>run</code> cell is <code>docker compose run --rm --no-deps server vendor/bin/phpstan analyse --error-format=json --no-progress app/Http/Controllers 2&gt;/dev/null | sed 's#/app/##g'</code>, reusing the framework's <code>parse_phpstan_json</code></td><td>operator's stated choice ("use docker in the recycling_api repo") over picking a different delivery target; a whole-project scan (<code>.</code>) took over 10 minutes and still errored out — <code>app/Http/Controllers</code> alone runs in under two; the <code>sed</code> needs <code>g</code> because PHPStan's JSON is one line, so every <code>/app/</code> past the first must still be stripped; the shipped framework row stays plain (<code>vendor/bin/phpstan</code> on host) because most Laravel repos don't need Docker to match their own PHP version — this is <code>recycling-api</code>'s own environment quirk, expressed the way the registry contract already supports per-repo overrides</td></tr>
-<tr><td>SC-2's check script runs with <code>PROBE_TIMEOUT=180</code>, not the registry default of 120</td><td>a real PHPStan pass over <code>app/Http/Controllers</code>, inside a freshly started container, measured at 1m47s; the override lives in the check script, not the registry row, since most Laravel repos are smaller or run on bare host with no container start-up cost</td></tr>
-<tr><td>A repo's <code>VAULT.md</code> gets a new <code>## probes</code> section with a <code>stack_packs: &lt;comma-separated ids&gt;</code> key, written by <code>bin/vault-init.sh</code> and hand-editable, applied to every named-stack row (<code>laravel</code>, <code>nuxt</code>, <code>flutter</code>, <code>python</code>, <code>sql</code> — not <code>any</code>/<code>harness</code>)</td><td>operator's stated requirement: some repos install only a subset of analyzers, or a detected stack doesn't apply there; recording the decision once at onboarding beats re-guessing every run, and matches the existing <code>dod_profile</code> onboarding pattern</td></tr>
-<tr><td>Absent <code>stack_packs</code> key falls back to the pre-existing per-row <code>detect</code> cell alone</td><td>every repo onboarded before this key existed must keep working unchanged</td></tr>
-</tbody>
-</table>
-</div>
 <h2>File tree</h2>
 <pre><code>
 lib/probe-parsers.sh                                   existing, adds parse_phpstan_json, parse_phparkitect_json, parse_ruff_json, parse_dart_machine, parse_tsc_text
@@ -117,36 +68,6 @@ tests/fixtures/probe/vue-tsc.txt                        new, real vue-tsc --noEm
 checks/stack-packs-SC-1.sh to SC-7.sh                   new, decide the seven criteria
 recycling-api/probes/registry.tsv                       new, in the recycling-api repo: one repo-scoped row, laravel-phpstan-docker
 </code></pre>
-<h2>Files</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>new</th><th>purpose</th><th>loaded</th></tr>
-</thead>
-<tbody>
-<tr><td>lib/probe-parsers.sh</td><td>no</td><td>turns one external tool's stdout into probe finding rows</td><td>on-demand</td></tr>
-<tr><td>probes/registry.tsv</td><td>no</td><td>one row per probe: id, stack, stage, detect, run, parser, cost, executes-repo-code, install</td><td>on-demand</td></tr>
-<tr><td>bin/probe.sh</td><td>no</td><td>the probe CLI: list, detect, run, diff, scale</td><td>on-demand</td></tr>
-<tr><td>bin/vault-init.sh</td><td>no</td><td>onboards a repo: writes VAULT.md, including dod_profile and now stack_packs</td><td>on-demand</td></tr>
-<tr><td>templates/VAULT.md</td><td>no</td><td>source of every repo's VAULT.md, comments document each key</td><td>on-demand</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>no</td><td>the probe registry contract, binding on every row and reader</td><td>always</td></tr>
-<tr><td>tests/unit/probe.bats</td><td>no</td><td>probe kit unit tests</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/probe/phpstan.json</td><td>yes</td><td>fixture for parse_phpstan_json</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/probe/phparkitect.json</td><td>yes</td><td>fixture for parse_phparkitect_json</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/probe/ruff.json</td><td>yes</td><td>fixture for parse_ruff_json</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/probe/dart-analyze.txt</td><td>yes</td><td>fixture for parse_dart_machine</td><td>never-by-agent</td></tr>
-<tr><td>tests/fixtures/probe/vue-tsc.txt</td><td>yes</td><td>fixture for parse_tsc_text</td><td>never-by-agent</td></tr>
-<tr><td>checks/stack-packs-SC-1.sh</td><td>yes</td><td>decides criterion SC-1</td><td>never-by-agent</td></tr>
-<tr><td>checks/stack-packs-SC-2.sh</td><td>yes</td><td>decides criterion SC-2</td><td>never-by-agent</td></tr>
-<tr><td>checks/stack-packs-SC-3.sh</td><td>yes</td><td>decides criterion SC-3</td><td>never-by-agent</td></tr>
-<tr><td>checks/stack-packs-SC-4.sh</td><td>yes</td><td>decides criterion SC-4</td><td>never-by-agent</td></tr>
-<tr><td>checks/stack-packs-SC-5.sh</td><td>yes</td><td>decides criterion SC-5</td><td>never-by-agent</td></tr>
-<tr><td>checks/stack-packs-SC-6.sh</td><td>yes</td><td>decides criterion SC-6</td><td>never-by-agent</td></tr>
-<tr><td>checks/stack-packs-SC-7.sh</td><td>yes</td><td>decides criterion SC-7</td><td>never-by-agent</td></tr>
-<tr><td>recycling-api/probes/registry.tsv</td><td>yes</td><td>one repo-scoped probe row: run PHPStan inside recycling-api's own Docker image</td><td>never-by-agent</td></tr>
-</tbody>
-</table>
-</div>
 <h2>Data flow</h2>
 <pre class="mermaid">
 flowchart LR
@@ -159,79 +80,15 @@ flowchart LR
     F -->|"finding rows"| G["probe.sh stdout / gate.sh verdict"]
 </pre>
 <h2>Interfaces</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>interface</th><th>method</th><th>params</th><th>returns</th><th>throws</th><th>layer</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/probe.sh</td><td>probe_vault_key</td><td>file: path, key: string</td><td>the raw value after the first matching <code>key:</code> line, or nothing</td><td>returns 1 when the file or key is absent</td><td>cli</td></tr>
-<tr><td>bin/probe.sh</td><td>each_row (extended)</td><td>repo: path</td><td>skips a named-stack row not listed in <code>$repo/VAULT.md</code> stack_packs; unchanged when the key is absent</td><td>-</td><td>cli</td></tr>
-<tr><td>lib/probe-parsers.sh</td><td>parse_phpstan_json</td><td>id: string, repo: path, stdin: PHPStan JSON</td><td>finding rows via probe_finding</td><td>returns 3 when jq is absent</td><td>native</td></tr>
-<tr><td>lib/probe-parsers.sh</td><td>parse_phparkitect_json</td><td>id: string, repo: path, stdin: PHPArkitect JSON</td><td>finding rows via probe_finding, file derived from the FQCN under App\ -&gt; app/</td><td>returns 3 when jq is absent</td><td>native</td></tr>
-<tr><td>lib/probe-parsers.sh</td><td>parse_ruff_json</td><td>id: string, repo: path, stdin: ruff JSON array</td><td>finding rows via probe_finding</td><td>returns 3 when jq is absent</td><td>native</td></tr>
-<tr><td>lib/probe-parsers.sh</td><td>parse_dart_machine</td><td>id: string, repo: path, stdin: pipe-delimited lines</td><td>finding rows via probe_finding</td><td>-</td><td>native</td></tr>
-<tr><td>lib/probe-parsers.sh</td><td>parse_tsc_text</td><td>id: string, repo: path, stdin: <code>path(line,col): error TSxxxx: msg</code> lines</td><td>finding rows via probe_finding</td><td>-</td><td>native</td></tr>
-<tr><td>bin/vault-init.sh</td><td>stack detection block</td><td>cwd: path</td><td>writes <code>stack_packs: &lt;ids&gt;</code> to VAULT.md's ## probes section</td><td>-</td><td>cli</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Load order</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>trigger</th><th>loads</th><th>tokens-max</th></tr>
-</thead>
-<tbody>
-<tr><td><code>bin/probe.sh list|detect|run|diff</code> starts</td><td>probes/registry.tsv, lib/probe-parsers.sh</td><td>400</td></tr>
-<tr><td><code>bin/vault-init.sh</code> runs (onboarding)</td><td>repo marker files (composer.json, nuxt.config.*, pubspec.yaml, pyproject.toml, requirements.txt, *.sql)</td><td>200</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Reuse map</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>need</th><th>existing symbol</th><th>decision</th><th>reason</th></tr>
-</thead>
-<tbody>
-<tr><td>turn one tool's stdout into finding rows</td><td>lib/probe-parsers.sh parse_lizard_csv</td><td>extend</td><td>same file, same <code>parse_&lt;name&gt;(id, repo)</code> shape already used by lizard and typos</td></tr>
-<tr><td>emit one finding row</td><td>lib/probe-emit.sh probe_finding</td><td>reuse</td><td>every parser and native probe already calls this, never <code>printf</code></td></tr>
-<tr><td>read a VAULT.md key by first match</td><td>lib/arch-check.sh vault_key</td><td>new</td><td>arch-check.sh states in its own header "Sourced by gate.sh, never run on its own" and depends on gate.sh's <code>die</code>/<code>violations</code>/<code>frontmatter_get</code>; sourcing it into probe.sh would widen that contract for two self-contained lines, so <code>probe_vault_key</code> repeats the small awk helper instead — same tolerated duplication the master plan already records for arch-check.sh's row-loop</td></tr>
-<tr><td>stack marker detection</td><td>commands/v-work/steps/01-analyze.md §1.3 stack table</td><td>reuse</td><td>same marker files (composer.json+Laravel, package.json+nuxt, pubspec.yaml, pyproject.toml/requirements.txt) this repo already uses to detect a project's stack in ANALYZE</td></tr>
-<tr><td>gate a registry row on repo config</td><td>probes/registry.tsv detect cell (existing mechanism)</td><td>extend</td><td>stack_packs adds a second, VAULT.md-level gate in front of the per-row detect cell; detect still runs and still decides applicability when stack_packs is silent</td></tr>
-<tr><td>onboarding-detected, hand-editable VAULT.md key</td><td>templates/VAULT.md ## definition of done (dod_profile et al.)</td><td>reuse</td><td>same pattern: "written by bin/vault-init.sh and confirmed by you"</td></tr>
-<tr><td>run a repo's own tool inside that repo's own container</td><td>probes/registry.tsv <code>--allow-repo-registry</code> mechanism</td><td>reuse</td><td>the contract already lets a repo add its own rows; <code>laravel-phpstan-docker</code> is an ordinary repo-scoped row, not a new mechanism</td></tr>
-<tr><td>parse PHPStan JSON emitted from inside a container path (<code>/app/...</code>)</td><td>parse_phpstan_json (this plan, W-1)</td><td>reuse</td><td>the <code>recycling-api</code> row's own <code>run</code> cell strips the <code>/app/</code> prefix with <code>sed</code> before the parser ever sees it, so the parser stays container-agnostic</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Size budgets</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>path</th><th>max lines</th></tr>
-</thead>
-<tbody>
-<tr><td>bin/probe.sh</td><td>190</td></tr>
-<tr><td>lib/probe-parsers.sh</td><td>210</td></tr>
-<tr><td>bin/vault-init.sh</td><td>450</td></tr>
-<tr><td>probes/registry.tsv</td><td>22</td></tr>
-<tr><td>templates/VAULT.md</td><td>120</td></tr>
-<tr><td>commands/_shared/probe-kit.md</td><td>155</td></tr>
-<tr><td>tests/unit/probe.bats</td><td>520</td></tr>
-</tbody>
-</table>
-</div>
-<h2>Config points</h2>
-<div class="scroll">
-<table>
-<thead>
-<tr><th>key</th><th>file</th><th>default</th></tr>
-</thead>
-<tbody>
-<tr><td><code>stack_packs</code></td><td>a repo's <code>VAULT.md</code>, <code>## probes</code> section</td><td>none — every row's own <code>detect</code> cell alone decides applicability</td></tr>
-</tbody>
-</table>
-</div>
+<ul>
+<li><code>bin/probe.sh.probe_vault_key(file: path, key: string): the raw value after the first matching `key:` line, or nothing</code>, throws <code>returns 1 when the file or key is absent</code></li>
+<li><code>bin/probe.sh.each_row (extended)(repo: path): skips a named-stack row not listed in `$repo/VAULT.md` stack_packs; unchanged when the key is absent</code></li>
+<li><code>lib/probe-parsers.sh.parse_phpstan_json(id: string, repo: path, stdin: PHPStan JSON): finding rows via probe_finding</code>, throws <code>returns 3 when jq is absent</code></li>
+<li><code>lib/probe-parsers.sh.parse_phparkitect_json(id: string, repo: path, stdin: PHPArkitect JSON): finding rows via probe_finding, file derived from the FQCN under App\ -&gt; app/</code>, throws <code>returns 3 when jq is absent</code></li>
+<li><code>lib/probe-parsers.sh.parse_ruff_json(id: string, repo: path, stdin: ruff JSON array): finding rows via probe_finding</code>, throws <code>returns 3 when jq is absent</code></li>
+<li><code>lib/probe-parsers.sh.parse_dart_machine(id: string, repo: path, stdin: pipe-delimited lines): finding rows via probe_finding</code></li>
+<li><code>lib/probe-parsers.sh.parse_tsc_text(id: string, repo: path, stdin: `path(line,col): error TSxxxx: msg` lines): finding rows via probe_finding</code></li>
+<li><code>bin/vault-init.sh.stack detection block(cwd: path): writes `stack_packs: &lt;ids&gt;` to VAULT.md's ## probes section</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-09-22-0900-stack-packs.md</code> · architecture spec: <code>2026-09-22-0900-stack-packs.arch.md</code></p>
 </main>

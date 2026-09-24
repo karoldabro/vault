@@ -44,22 +44,148 @@ variant() {
     printf '%s\n' "${c/"$1"/"$2"}" > "$3"
 }
 
-@test "render: every spec section, diagram, table value and the review checklist reach the page" {
+@test "render: the listed blocks, every diagram and the footer reach the page, and gate-checked sections do not" {
     stage; render
     [ -f "${PAGE}" ]
-    while IFS= read -r h; do
-        esc=${h#\#\# }; esc=${esc//&/&amp;}
-        grep -qF "<h2>${esc}</h2>" "${PAGE}" || { echo "heading missing: ${h}"; return 1; }
-    done < <(grep '^## ' "${SPEC}")
-    [ "$(grep -c '<pre class="mermaid">' "${PAGE}")" -ge "$(grep -c '^```mermaid' "${SPEC}")" ]
+    for h in Task 'Needs your decision' 'Users will notice' 'Defaults taken for you' 'Checks you run yourself' Sessions 'Cross-session contracts' 'Data model' 'Data flow' Interfaces; do
+        grep -qF "<h2>${h}</h2>" "${PAGE}" || { echo "heading missing: ${h}"; return 1; }
+    done
+    for h in Decisions 'Layers &amp; placement' 'Reuse map' 'Size budgets' 'Success criteria' 'Open questions'; do absent "<h2>${h}</h2>" "${PAGE}"; done
+    absent 'Check these yourself' "${PAGE}"
     for v in orders order_lines OrderController OrderService OrderRepository; do grep -qF "${v}" "${PAGE}"; done
-    grep -qF 'Check these yourself' "${PAGE}"
-    grep -qF 'Does each piece of logic sit in the layer where it belongs?' "${PAGE}"
+    grep -qF '<p class="source">Full plan: <code>plan.md</code> · architecture spec: <code>../arch/code-complete.arch.md</code></p>' "${PAGE}"
+}
+
+@test "render: match keeps items naming the operator or user-visible in any style, and hides the rest whole" {
+    stage; render
+    grep -qF '<li>needs the operator: approve the fixture.</li>' "${PAGE}"
+    grep -qF '<td>Needs the Operator</td>' "${PAGE}"
+    grep -qF '<li>user-visible: the list shows ten rows.</li>' "${PAGE}"
+    for t in 'nothing else' 'waits on the api' 'agent work' 'two lines' 'internal budget' 'which port' 'THE SYSTEM SHALL render'; do absent "$t" "${PAGE}"; done
+    variant '- deferred: nothing else.' '- **needs operator** — bold near miss
+- `deferred to the operator`: backticked' "${PLAN}"
+    render
+    grep -qF 'bold near miss' "${PAGE}"
+    grep -qF 'backticked' "${PAGE}"
+    [ "$(grep -c 'pick a colour' "${PAGE}")" -eq 1 ]
+}
+
+@test "render: task mode cuts the Keywords text and keeps the rest of its paragraph" {
+    stage; render
+    grep -qF '<p>Session S3 fixture.</p>' "${PAGE}"
+    absent 'kwfixture' "${PAGE}"
+    variant 'Keywords: kwfixture, kwpage.' 'More text. Keywords: kwfixture, kwpage.' "${PLAN}"
+    render
+    grep -qF '<p>Session S3 fixture. More text.</p>' "${PAGE}"
+    absent 'kwpage' "${PAGE}"
+}
+
+@test "render: er mode replaces a hand-written diagram and makes every token plain" {
+    stage
+    variant '| orders | status | text | no | | ix_orders_status | |' '| orders | status | timestamp with time zone | no | UQ | ix_orders_status | |
+| public.events | click_count | decimal(10,2) | no | | - | - |' "${SPEC}"
+    render
+    [ "$(grep -c '^erDiagram$' "${PAGE}")" -eq 1 ]
+    absent 'orders ||--o{ order_lines : has' "${PAGE}"
+    grep -qF '    orders ||--o{ order_lines : order_id' "${PAGE}"
+    grep -qF '        timestamp_with_time_zone status UK' "${PAGE}"
+    grep -qF '    public_events {' "${PAGE}"
+    grep -qF '        decimal_10_2_ click_count' "${PAGE}"
+    absent ' ||--o{ public_events' "${PAGE}"
+}
+
+@test "render: an n/a data model draws no diagram and no heading" {
+    stage
+    awk '/^## Data model$/{print; print ""; print "n/a: no tables"; s=1; next} /^## /{s=0} !s' "${SPEC}" > "${TMP}/na.md"; cp "${TMP}/na.md" "${SPEC}"
+    render
+    absent '<h2>Data model</h2>' "${PAGE}"
+    absent 'erDiagram' "${PAGE}"
+}
+
+@test "render: signatures list each interface row, with throws and without params" {
+    stage
+    variant '| OrderRepository | save | order: Order | void | - | data |' '| OrderRepository | save | - | int \| null | - | data |' "${SPEC}"
+    render
+    grep -qF '<li><code>OrderService.place(orderId: string, qty: int): Order</code>, throws <code>OutOfStock</code></li>' "${PAGE}"
+    grep -qF '<li><code>OrderRepository.save(): int | null</code></li>' "${PAGE}"
+    absent '<th>interface</th>' "${PAGE}"
+}
+
+@test "render: labels mode empties a call's parameters inside quotes only" {
+    stage
+    variant 'flowchart LR' 'flowchart LR
+    P["PROPOSE step (a)"] --> Q["Svc.run(x: (int, int))"]
+    R(round node) --> P' "${SPEC}"
+    render
+    grep -qF 'A["OrderController.store()"]' "${PAGE}"
+    grep -qF 'P["PROPOSE step (a)"] --> Q["Svc.run()"]' "${PAGE}"
+    grep -qF 'R(round node) --> P' "${PAGE}"
+}
+
+@test "render: a diagram in a section the list does not name reaches the page alone" {
+    stage
+    printf '\n## Pipeline\n\nprose-pipeline\n\n```mermaid\nflowchart TD\n    X["pipeline-node"] --> Y\n```\n' >> "${SPEC}"
+    render
+    grep -qF '<h2>Pipeline</h2>' "${PAGE}"
+    grep -qF 'pipeline-node' "${PAGE}"
+    absent 'prose-pipeline' "${PAGE}"
+}
+
+@test "render: a diagram in a section two rows name is drawn once, and match drops a code fence" {
+    stage
+    variant '- deferred: nothing else.' '- deferred: nothing else.
+
+```mermaid
+flowchart TD
+    OD["open-diagram"] --> OE
+```
+
+```text
+code-in-open
+```' "${PLAN}"
+    render
+    [ "$(grep -c 'open-diagram' "${PAGE}")" -eq 1 ]
+    absent 'code-in-open' "${PAGE}"
+}
+
+@test "render: a data model with no table keeps its hand-written diagram" {
+    stage
+    awk '/^## Data model$/{print; print ""; print "```mermaid"; print "erDiagram"; print "    hand_only {"; print "        int id PK"; print "    }"; print "```"; s=1; next} /^## /{s=0} !s' "${SPEC}" > "${TMP}/er.md"; cp "${TMP}/er.md" "${SPEC}"
+    render
+    grep -qF '<h2>Data model</h2>' "${PAGE}"
+    grep -qF 'hand_only {' "${PAGE}"
+}
+
+@test "render: labels mode stops at a quote that closes inside an open parenthesis" {
+    stage
+    variant 'flowchart LR' 'flowchart LR
+    K["call(x"] --> L' "${SPEC}"
+    render
+    grep -qF 'K["call()"] --> L' "${PAGE}"
+}
+
+@test "render: a Sessions header in capitals still draws the graph" {
+    stage
+    variant '| id | scope | command | status | depends | date | evidence |' '| ID | Scope | command | status | Depends | date | evidence |' "${PLAN}"
+    render
+    grep -qF '    S1 --> S2' "${PAGE}"
+}
+
+@test "render: an unknown mode in the section list exits 2" {
+    mkdir -p "${TMP}/root/bin" "${TMP}/root/lib" "${TMP}/root/templates"
+    cp "${VAULT_ROOT}"/bin/render-human.sh "${VAULT_ROOT}"/bin/gate.sh "${TMP}/root/bin/"
+    cp "${VAULT_ROOT}"/lib/*.sh "${TMP}/root/lib/"
+    cp "${VAULT_ROOT}"/templates/human-plan.html "${TMP}/root/templates/"
+    printf 'plan\tTask\tshiny\t*\tTask\n' > "${TMP}/root/templates/human-plan-sections.tsv"
+    stage
+    run "${TMP}/root/bin/render-human.sh" "${PLAN}" --repo "${TMP}/repo"
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"unknown mode"* ]]
 }
 
 @test "render: markup in a cell or a plan line is shown as text and no script tag reaches the page" {
     stage
-    variant '| orders | status |' '| orders | <script>alert(1)</script> & "q" |' "${SPEC}"
+    variant '| OrderRepository | save | order: Order | void |' '| OrderRepository | save | order: Order | <script>alert(1)</script> & "q" |' "${SPEC}"
     variant 'Session S3 fixture.' 'Session <b>x</b> <script>y</script>.' "${PLAN}"
     render
     absent '<script' "${PAGE}"
@@ -118,14 +244,6 @@ variant() {
     [ "$(grep -cF -- ' --> ' "${PAGE}")" -eq 3 ]
 }
 
-@test "render: a profile with no @review line yields a page with no checklist" {
-    stage
-    mkdir -p "${TMP}/repo/arch-profiles"
-    grep -v '^@review' "${VAULT_ROOT}/arch-profiles/code.tsv" > "${TMP}/repo/arch-profiles/code.tsv"
-    render
-    absent 'Check these yourself' "${PAGE}"
-}
-
 @test "render: two renders are identical whatever the working directory, and equal the golden page" {
     stage
     render --stdout > "${TMP}/one.html"
@@ -138,19 +256,19 @@ variant() {
 
 @test "render: a plan missing one of the listed sections renders no heading for it" {
     stage
-    awk '/^## Decisions$/{s=1;next} /^## /{s=0} !s' "${PLAN}" > "${TMP}/nodec.md"; cp "${TMP}/nodec.md" "${PLAN}"
+    awk '/^## Open & deferred$/{s=1;next} /^## /{s=0} !s' "${PLAN}" > "${TMP}/noopen.md"; cp "${TMP}/noopen.md" "${PLAN}"
     render
-    absent '<h2>Decisions</h2>' "${PAGE}"
-    grep -qF '<h2>Success criteria</h2>' "${PAGE}"
+    absent '<h2>Needs your decision</h2>' "${PAGE}"
+    grep -qF '<h2>Checks you run yourself</h2>' "${PAGE}"
 }
 
 @test "render: an escaped pipe stays one cell, and the renderer and the gate split the row the same way" {
     stage
-    variant 'D-1 A script renders the page' 'D-1 a \| b' "${PLAN}"
+    variant '| C-1 | first output |' '| C-1 | a \| b |' "${PLAN}"
     render
-    grep -qF '<td>D-1 a | b</td>' "${PAGE}"
-    first=$(bash -c 'source "$1"; table_rows "$2" "## Decisions" | head -1 | cut -d"$(printf "\037")" -f1' _ "${GATE_SH}" "${PLAN}")
-    [ "${first}" = "D-1 a | b" ]
+    grep -qF '<td>a | b</td>' "${PAGE}"
+    first=$(bash -c 'source "$1"; table_rows "$2" "## Cross-session contracts" | sed -n 1p | cut -d"$(printf "\037")" -f2' _ "${GATE_SH}" "${PLAN}")
+    [ "${first}" = "a | b" ]
 }
 
 @test "render: bold, a numbered list, a nested bullet and a very long line render without breaking the page" {
@@ -181,7 +299,7 @@ A --> B %% see javascript:x' "${SPEC}"
     absent 'click A' "${PAGE}"
     absent '%%{' "${PAGE}"
     absent 'javascript:' "${PAGE}"
-    grep -qF 'orders ||--o{ order_lines : has' "${PAGE}"
+    grep -qF -- '-->|StoreOrderRequest|' "${PAGE}"
 }
 
 @test "render: a diagram line is left out whatever its letter case or position" {
@@ -195,7 +313,7 @@ JAVASCRIPT:alert(1)
 vbscript:x' "${SPEC}"
     render
     for t in 'evil.example' 'CLICK' 'Click' '%%{' 'JAVASCRIPT' 'vbscript'; do absent "$t" "${PAGE}"; done
-    grep -qF 'orders ||--o{ order_lines : has' "${PAGE}"
+    grep -qF -- '-->|StoreOrderRequest|' "${PAGE}"
 }
 
 @test "render: a repeated session id, the keyword end, a long scope and extra table cells are handled" {
@@ -203,7 +321,7 @@ vbscript:x' "${SPEC}"
     variant '| S3 | third | /v-team | todo | S1, S2 |' '| S3 | third | /v-team | todo | S1, S2 |
 | S1 | duplicate | /v-team | todo | |
 | end | closing scope with a very long description that must be cut at a word boundary somewhere | /v-team | todo | S3 |' "${PLAN}"
-    variant '| D-1 A script renders the page | a function of the plan cannot omit a diagram | local |' '| D-1 A script renders the page | a function of the plan cannot omit a diagram | local | extra cell |' "${PLAN}"
+    variant '| C-2 | second output | S2 | S3 | `bin/second.sh` prints one line |' '| C-2 | second output | S2 | S3 | `bin/second.sh` prints one line | extra cell |' "${PLAN}"
     render
     [ "$(grep -c '    S1\["' "${PAGE}")" -eq 1 ]
     grep -qF '    S1["S1 first"]' "${PAGE}"
@@ -254,7 +372,7 @@ vbscript:x' "${SPEC}"
 @test "human: a status flip, a date or a written verdict does not change the page" {
     stage; render
     variant '| S3 | third | /v-team | todo |' '| S3 | third | /v-team | done |' "${PLAN}"
-    variant '| SC-1 | WHEN it runs THE SYSTEM SHALL render | functional | command | `checks/x.sh` | exit 0 | | |' '| SC-1 | WHEN it runs THE SYSTEM SHALL render | functional | command | `checks/x.sh` | exit 0 | MET | `checks/x.sh` exited 0 |' "${PLAN}"
+    variant '| SC-2 | WHEN a person opens it THE SYSTEM SHALL read well | delivery | observed | open the page | reads well | | |' '| SC-2 | WHEN a person opens it THE SYSTEM SHALL read well | delivery | observed | open the page | reads well | MET | the operator read it |' "${PLAN}"
     run human
     [ "$status" -eq 0 ]
 }
