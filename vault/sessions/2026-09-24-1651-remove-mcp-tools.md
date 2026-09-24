@@ -27,6 +27,9 @@ Sequential and Magic MCPs from the framework, keep Serena optional, and give use
 - Removed the claude-mem and graphify lines from `~/.claude/CLAUDE.md` (backup at
   `~/.claude/CLAUDE.md.bak-2026-09-24`) and the claude-mem memory file.
 - Committed `457504c`. `checks/mcp-purge-SC-1.sh` to `SC-6.sh` all exit 0; the close gate passes.
+- Bumped `.claude-plugin/plugin.json` to 2.0.0 in `ecf8396`, a major version because setup flags were
+  removed. Committed the operator's pending `scripts/completion-hook.sh` fix (`21f35fc`) and
+  `output-styles/director.md` example row (`6856a38`), and pushed `main`.
 
 ## Learned
 - Graphify ran in 3 of 2388 Claude sessions on this machine; Serena tools ran 524 times in 26 sessions.
@@ -48,7 +51,6 @@ Sequential and Magic MCPs from the framework, keep Serena optional, and give use
   `~/.claude-mem` and the `thedotmack` marketplace exist, and 7 repos keep a graphify post-commit hook.
   This repo's untracked `graphify-out/` is no longer gitignored.
 - Other project vaults under `~/vault/` may still mention the removed tools.
-- The plugin version in `.claude-plugin/plugin.json` is still 1.9.0; a release bump is its own commit.
 
 ## Refs
 - [[../decisions/ADR-032-remove-memory-and-edit-mcps]] — the decision this session implemented.
