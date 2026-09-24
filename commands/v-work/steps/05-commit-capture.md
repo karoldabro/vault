@@ -85,10 +85,6 @@ on this machine) each get one line in the completion report. A failure here neve
 `/v-capture` pushes again after it writes the session file, which is what carries the capture itself
 to the remote; this step covers the vault docs written during EXECUTE.
 
-## 5.3 claude-mem
-
-No action — claude-mem auto-captures via its SessionEnd hook. `mcp-search` is read-only.
-
 ## 5.3a Problems found and left unfixed
 
 A failing, stale or plainly wrong thing this session found **outside the scope of the work it was

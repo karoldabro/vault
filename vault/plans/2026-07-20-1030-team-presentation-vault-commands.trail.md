@@ -46,7 +46,7 @@ transcripts.
 | 1 | A1 | audience | BLOCK | "do I maintain the notes?" fear unaddressed | Accepted — slide 2 states the AI writes the notes |
 | 1 | A2 | audience | BLOCK | payoff arrives too late | Accepted — teaser at end of slide 1 |
 | 1 | A3 | audience | BLOCK | 96% as headline is abstract/trust-risky | Accepted — human benefit leads, number demoted to support with its source named |
-| 1 | C1 | accuracy | ADV | 96% unsourced in docs (docs say ~100x / 100–2000 vs 20k tok) | Partially accepted — the number IS measured (claude-mem session stats, this repo), not fabricated |
+| 1 | C1 | accuracy | ADV | 96% unsourced in docs (docs say ~100x / 100–2000 vs 20k tok) | Partially accepted — the number IS measured (session stats, this repo), not fabricated |
 | 1 | C2 | accuracy | ADV | /v-do capture-off-by-default omitted | Accepted — parenthetical on slide 4 |
 | 1 | C3 | accuracy | ADV | /v-work small-job fast-path omitted | Accepted — parenthetical on slide 4 |
 | 1 | C4 | accuracy | ADV | /v-team also authors test plans | Accepted — added to slide 4's /v-team line |

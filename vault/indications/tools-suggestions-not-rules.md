@@ -11,7 +11,7 @@ tags: [indication, tooling]
 ## Rule
 Tool guidance in the framework is **suggestion, not gate** — Claude auto-selects the tool that fits; the
 cost hierarchy is a sensible default, not a hard rule. The exception is genuine **safety** notes (e.g.
-Morph's `// ... existing code ...` markers), which stay firm.
+[[guard-home-derived-deletes]]), which stay firm.
 
 ## Rationale
 Hard "always/never" tool-selection rules misfire on the cases they didn't anticipate and add friction;
@@ -20,9 +20,9 @@ feedback, 2026-06-22). Safety rules are different — they prevent data loss, so
 
 ## Examples
 - Do: "if the repo declares a tracker, that MCP is usually the best first source; otherwise fall back
-  naturally." / "Prefer the graph over grepping source for structural questions."
-- Don't: "NEVER grep source to answer a structural question." (selection rule stated as a mandate)
-- Keep firm: "always include `// ... existing code ...` markers" (safety, not selection).
+  naturally." / "Prefer Serena over grepping source for symbol questions when it is installed."
+- Don't: "NEVER grep source to answer a symbol question." (selection rule stated as a mandate)
+- Keep firm: "never `rm -rf` a `$HOME`-derived path unguarded" (safety, not selection).
 
 ## Applies-to
 `tool-playbook.md`, `commands/**` (tool-selection guidance), `VAULT.md` `tools` section.

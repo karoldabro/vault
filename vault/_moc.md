@@ -50,7 +50,6 @@ tags: [moc]
 - [[sessions/2026-06-22-1152-framework-hooks-tools-rename]] — add per-project VAULT.md `hooks` (14 instruction-only phases) + `tools` (task-tracker MCP) + step-1 `/rename` suggestion to both lifecycles (ADR-010)
 
 ## Code
-- Graph: `graphify/<repo>/graph.json` per sub-repo.
 - Repo roots: `<path-to-repo>`.
 
 ## External refs

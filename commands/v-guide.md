@@ -19,15 +19,6 @@ Run this once after building a feature. Share the guide path with every consumin
 
 ---
 
-## Tools
-
-| Tool | Health check | Fallback |
-|------|-------------|----------|
-| graphify | `graphify-out/graph.json` present in source repo | grep source repo for routes/models |
-| MorphLLM | (MCP — no runtime check) | `Write` / `Edit` |
-
----
-
 ## Step 1 — Resolve arguments
 
 Parse `$ARGUMENTS`:
@@ -51,8 +42,7 @@ Query cheapest-first. Stop when you have enough to fill the guide template.
 
 ### 2.1 Vault history
 ```
-search("<feature-slug> api endpoints data structures")     # claude-mem, if installed
-grep -ril "<feature-slug>" ~/vault/<source>/{sessions,decisions,features}/
+grep -ril "<feature-slug>" ~/vault/<source>/{sessions,decisions,features,indications}/
 ```
 Look for: prior sessions describing the feature, ADRs, pitfalls, API shapes already documented.
 
@@ -66,14 +56,11 @@ grep -ril "<feature-slug>" ~/vault/<source>/decisions/ 2>/dev/null
 ```
 Read every matching ADR for data shape decisions, enum definitions, versioning choices.
 
-### 2.4 Graphify (structural — source repo)
-If `<source-repo>/graphify-out/graph.json` exists:
+### 2.4 Source structure (source repo)
+When Serena is present, `find_symbol` the feature's controllers, models and enums. Otherwise grep:
 ```bash
-graphify query "<feature-slug> routes endpoints"
-graphify query "<feature-slug> models schema"
-graphify query "<feature-slug> enums constants"
+grep -ril "<feature-slug>" <source-repo>/app/Http/Controllers/ <source-repo>/routes/ 2>/dev/null | head -20
 ```
-Fallback: `grep -ril "<feature-slug>" <source-repo>/app/Http/Controllers/ <source-repo>/routes/ 2>/dev/null | head -20`
 
 ### 2.5 Fallback
 If all above come up thin, grep the source repo for the feature slug across routes, models, and request classes:
@@ -114,7 +101,7 @@ If a section cannot be determined from context, mark it `<!-- TODO: fill from so
 
 3. Save guide:
    - Target path: `~/vault/<source>/guides/<feature-slug>.md`
-   - Use MorphLLM `morph_edit` if available; fallback `Write`
+   - Use `Write` for a new guide and `Edit` for an existing one
 
 ---
 

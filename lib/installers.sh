@@ -81,11 +81,11 @@ run_shell() {
 have() { command -v "$1" >/dev/null 2>&1; }
 
 # Pull the well-known user-install bins onto PATH for THIS process, so check_*
-# and the doctor see tools installed earlier in the same run (uv/bun/pipx edit
-# shell rc files that only a fresh login shell would pick up).
+# and the doctor see tools installed earlier in the same run (uv edits shell rc
+# files that only a fresh login shell would pick up).
 ensure_session_path() {
     local d
-    for d in "${HOME}/.local/bin" "${HOME}/.bun/bin" "/usr/local/bin"; do
+    for d in "${HOME}/.local/bin" "/usr/local/bin"; do
         case ":${PATH}:" in
             *":${d}:"*) ;;
             *) [ -d "$d" ] && PATH="${d}:${PATH}" ;;
@@ -111,38 +111,6 @@ _priv() { [ "$(id -u)" -eq 0 ] || printf 'sudo'; }
 
 # apt_install <pkg...> — idempotent-ish; apt itself skips already-installed pkgs.
 apt_install() { run $(_priv) apt-get install -y "$@"; }
-
-# pick_python — echo the first python>=3.10 command on PATH, or return 1. pipx builds
-# each tool's venv with whatever `python3` it finds; on old hosts (WSL/Ubuntu 20.04 =
-# Python 3.8) packages that require >=3.10 resolve to nothing and pip reports the
-# baffling "No matching distribution found / from versions: none". Pinning a modern
-# interpreter avoids that trap.
-pick_python() {
-    local c v
-    for c in python3.13 python3.12 python3.11 python3.10 python3 python; do
-        have "$c" || continue
-        v="$("$c" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null)" || continue
-        case "$v" in
-            3.1[0-9]|3.[2-9][0-9]|[4-9].*|[1-9][0-9].*) printf '%s\n' "$c"; return 0 ;;
-        esac
-    done
-    return 1
-}
-
-# pipx_install <pkg> — pipx install pinned to a python>=3.10. Under dry-run, echo a
-# representative command even when no interpreter is present (transcript stability).
-pipx_install() {
-    local pkg="$1" py
-    py="$(pick_python || true)"
-    if [ -z "$py" ]; then
-        if _dry; then py="python3.12"; else
-            warn "no Python >=3.10 on PATH — pipx can't build ${pkg} (it needs >=3.10)."
-            warn "  install one, e.g.: $(_priv) apt-get install -y python3.12 python3.12-venv"
-            return 1
-        fi
-    fi
-    run pipx install "$pkg" --python "$py"
-}
 
 #------------------------------------------------------------------------------
 # Per-tool status tracking + continue-on-error wrapper
@@ -172,41 +140,6 @@ install_uv() {
 }
 
 #------------------------------------------------------------------------------
-# bun (bun.com) — needs unzip; claude-mem can use it
-#------------------------------------------------------------------------------
-check_bun() { ensure_session_path; have bun; }
-install_bun() {
-    if check_bun; then ok "bun present"; return 0; fi
-    # bun installer needs unzip; only reach for apt when it's actually usable.
-    if ! have unzip; then
-        if apt_available && sudo_available; then apt_install unzip || true
-        else warn "bun needs 'unzip' — install it manually"; fi
-    fi
-    run_shell "https://bun.com/install" "curl -fsSL https://bun.com/install | bash" || return 1
-    _dry && { ok "bun (dry-run)"; return 0; }
-    ensure_session_path
-    have bun && ok "bun installed" || { warn "bun not on PATH after install"; return 1; }
-}
-
-#------------------------------------------------------------------------------
-# pipx + graphify (PyPI graphifyy, binary `graphify`)
-#------------------------------------------------------------------------------
-check_graphify() { ensure_session_path; have graphify; }
-install_graphify() {
-    if check_graphify; then ok "graphify present"; return 0; fi
-    if ! have pipx; then
-        apt_install pipx || return 1
-        run pipx ensurepath || true
-        ensure_session_path
-    fi
-    pipx_install graphifyy || return 1
-    _dry && { ok "graphify (dry-run)"; info "per-repo: 'graphify hook install' (or /v-init)"; return 0; }
-    ensure_session_path
-    have graphify && ok "graphify installed" || { warn "graphify not on PATH after install"; return 1; }
-    info "per-repo: run 'graphify hook install' inside a repo (or let /v-init do it)"
-}
-
-#------------------------------------------------------------------------------
 # Serena (oraios/serena) — uv tool
 #------------------------------------------------------------------------------
 check_serena() { ensure_session_path; have serena || { have uv && uv tool list 2>/dev/null | grep -q 'serena-agent'; }; }
@@ -220,38 +153,12 @@ install_serena() {
 }
 
 #------------------------------------------------------------------------------
-# Claude Code plugins / marketplaces (scriptable `claude` CLI)
+# Claude Code CLI
 #------------------------------------------------------------------------------
-# Minimum claude CLI version exposing `plugin`/`mcp` subcommands.
-CLAUDE_MIN_VERSION="2.0.0"
 claude_cli_ok() {
     have claude || return 1
     # Probe the subcommand surface rather than trusting a version string alone.
     claude plugin --help >/dev/null 2>&1
-}
-_marketplace_add() {  # <repo> <grep-key>
-    local repo="$1" key="$2"
-    if claude plugin marketplace list 2>/dev/null | grep -qi "$key"; then
-        ok "marketplace ${key} already added"
-    else
-        run claude plugin marketplace add "$repo" || return 1
-    fi
-}
-_plugin_install() {  # <qualified-id> <grep-key>
-    local id="$1" key="$2"
-    if claude plugin list 2>/dev/null | grep -qi "$key"; then
-        ok "plugin ${key} already installed"
-    else
-        run claude plugin install "$id" --scope user || return 1
-    fi
-}
-install_claude_mem_plugin() {
-    _marketplace_add "thedotmack/claude-mem" "claude-mem" || return 1
-    # marketplace.json declares name "thedotmack" (plugin "claude-mem"), so the
-    # qualified id is claude-mem@thedotmack — NOT claude-mem@claude-mem. bun is
-    # auto-installed by claude-mem.
-    _plugin_install "claude-mem@thedotmack" "claude-mem" || return 1
-    ok "claude-mem plugin wired"
 }
 
 #------------------------------------------------------------------------------
@@ -327,25 +234,16 @@ doctor() {
     [ -f "${cfg}" ] && mode="$(sed -n 's/^install_mode:[[:space:]]*//p' "${cfg}" | head -1)"
     [ -n "${mode}" ] && info "install: ${mode}"
 
-    # Serena and Graphify ship only in the --full (developer) profile. An empty
-    # box next to them on a light install is expected, not a fault — the label
-    # says so, and neither has ever affected the exit code. See ADR-021.
+    # Serena ships only in the --full (developer) profile. An empty box next to
+    # it on a light install is expected, not a fault — the label says so, and it
+    # never affects the exit code. See ADR-021.
     _doctor_row "uv"                       have uv || true
-    _doctor_row "bun"                      have bun || true
-    _doctor_row "python >=3.10 (pipx)"     pick_python || true
-    _doctor_row "graphify (developer)"     have graphify || true
     _doctor_row "serena (developer)"       check_serena || true
-    if claude_cli_ok; then
-        _doctor_row "claude CLI"                       true
-        _doctor_row "  claude-mem plugin"  bash -c 'claude plugin list 2>/dev/null | grep -qi claude-mem' || true
-    else
-        _doctor_row "claude CLI" false || true
-    fi
+    _doctor_row "claude CLI"               claude_cli_ok || true
 
     if [ "${#TOOLS_FAILED[@]}" -gt 0 ]; then
         warn "install steps that failed: ${TOOLS_FAILED[*]}"
         failed_required=1
     fi
-    info "Restart Claude Code to load newly installed plugins/MCPs."
     return "${failed_required}"
 }

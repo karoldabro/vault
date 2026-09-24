@@ -24,22 +24,18 @@ including `main`. Record `PROBE_BASE=$(git rev-parse HEAD)` before the first edi
 |-----------|------|-----------|
 | Targeted single-location change | `Edit` | `sed`, `awk`, `python -c` |
 | Multiple changes in one file | `MultiEdit` | shell heredocs |
-| Bulk pattern edits across files | `MorphLLM morph_edit` | python scripts |
+| Bulk pattern edits across files | `Edit` per location | python scripts |
 | New file / complete rewrite | `Write` | `echo >`, `tee`, heredocs |
-| Symbol rename (project-wide) | Serena `rename_symbol` | `sed -i` across files |
-| Extract method / move function | Serena refactor tools | manual copy-paste |
+| Symbol rename (project-wide) | Serena `rename_symbol` when present, else `Edit` per call site | `sed -i` across files |
+| Extract method / move function | Serena refactor tools when present, else `Edit` | manual copy-paste |
 
-**MorphLLM** for multi-file edits, framework updates, style enforcement, mass replacements:
-`morph_edit(target_filepath, instructions, code_edit)` — **always include `// ... existing code ...`
-markers at both ends** of `code_edit` (omitting them deletes the rest of the file). **Serena** for
-dependency-tracked renames / extract-method. **Best combo:** Serena finds the semantic context →
-Morph applies the precise edit. Full rules + worked example: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §5.
+**Serena** for dependency-tracked renames / extract-method. Without Serena, find every call site with
+Grep before the first `Edit`. Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §4.
 
 ## 4.3 Supporting tools
 
-Framework/library docs → `Context7` (version-specific, not training guesses). 3+ interconnected
-components / root-cause analysis → `Sequential`. UI component → `Magic`. Browser E2E (login, forms,
-journeys) → `Playwright`. Full reference: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
+Framework/library docs → `WebFetch` the version-specific official docs rather than relying on training
+guesses. Full reference: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §7.
 
 ## 4.4 Domain mindset
 

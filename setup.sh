@@ -10,24 +10,21 @@
 #   2. Create the machine-layer dir (~/vault/_global/), config.md, coupled-groups.md.
 #   3. Detect Obsidian (hint only).
 #   4. Serena (--full / --with-serena): uv + serena-agent.
-#   5. claude-mem (--light / --full / --with-claude-mem): bun + claude-mem plugin.
-#   6. Graphify (--full / --with-graphify): pipx + graphifyy.
-#   7. Print per-repo onboarding instructions (vault-init).
-#   8. Run install.sh to symlink slash commands — SKIPPED under a plugin install,
+#   5. Print per-repo onboarding instructions (vault-init).
+#   6. Run install.sh to symlink slash commands — SKIPPED under a plugin install,
 #      where Claude Code already supplies them (see lib/plugin-detect.sh).
-#   9. Doctor pass — verify what landed; non-zero exit only if a required tool failed.
+#   7. Doctor pass — verify what landed; non-zero exit only if a required tool failed.
 #
-# Three install profiles (see ADR-021):
-#   --light    claude-mem only. The default, and what a normal user wants.
-#   --full     adds Serena + Graphify — developer tools for symbol navigation and
-#              the structural code graph. Costs uv, pipx and Python >=3.10.
-#   --minimal  no tools at all; scaffold + command links only.
+# Two install profiles (see ADR-021):
+#   --light    no optional tools; scaffold + command links. The default, and what
+#              a normal user wants.
+#   --full     adds Serena — the developer tool for symbol navigation. Costs uv.
 # With no flag and a terminal, setup.sh asks which one. Pass --yes to consent
 # non-interactively (CI/automation) — that lands on --light.
 #
-# Auto-install runs remote installers (uv/bun via the vendors' official
-# curl|sh scripts) and adds third-party Claude marketplaces — every source URL is
-# printed before it runs. See vault/decisions/ADR-005-installer-auto-exec.md.
+# Auto-install runs a remote installer (uv via the vendor's official curl|sh
+# script) — every source URL is printed before it runs. See
+# vault/decisions/ADR-005-installer-auto-exec.md.
 #
 # Environment overrides (used by tests; safe to ignore in real use):
 #   VAULT_HOME              default: $HOME/vault
@@ -48,9 +45,6 @@ export VAULT_SETUP_DRY_RUN="${VAULT_SETUP_DRY_RUN:-0}"
 . "${VAULT_ROOT}/lib/plugin-detect.sh"
 
 with_serena=0
-with_claude_mem=0
-with_graphify=0
-minimal=0
 assume_yes=0
 doctor_only=0
 # Which profile the user asked for: "" until a flag or the prompt settles it.
@@ -64,16 +58,13 @@ usage() {
 Usage: $0 [flags]
 
 Install profiles (asked interactively when you pass none):
-  --light             claude-mem only. The default — what a normal user needs.
-  --full              Adds Serena + Graphify: developer tools for symbol
-                      navigation and the structural code graph. Needs uv, pipx
-                      and Python >=3.10.
-  --minimal           No tools at all (base scaffold + command links only).
+  --light             No optional tools (base scaffold + command links). The
+                      default — what a normal user needs.
+  --full              Adds Serena, the developer tool for symbol navigation.
+                      Needs uv.
 
 Individual tools (override the profile):
   --with-serena       Serena language server (uv + serena-agent).
-  --with-claude-mem   claude-mem mcp-search plugin (bun + claude-mem).
-  --with-graphify     Graphify (pipx + graphifyy).
 
 Behaviour:
   --yes, -y           Consent to auto-install non-interactively (no prompt).
@@ -96,11 +87,8 @@ EOF
 while [ $# -gt 0 ]; do
     case "$1" in
         --with-serena)     with_serena=1; picked_tools=1 ;;
-        --with-claude-mem) with_claude_mem=1; picked_tools=1 ;;
-        --with-graphify)   with_graphify=1; picked_tools=1 ;;
         --light)           profile="light" ;;
         --full)            profile="full" ;;
-        --minimal)         profile="minimal"; minimal=1 ;;
         --yes|-y)          assume_yes=1 ;;
         --dry-run)         export VAULT_SETUP_DRY_RUN=1; assume_yes=1 ;;
         --doctor)          doctor_only=1 ;;
@@ -110,7 +98,7 @@ while [ $# -gt 0 ]; do
     shift
 done
 
-# Footgun guard: setup.sh installs PER-USER (uv/bun/plugins all land in $HOME).
+# Footgun guard: setup.sh installs PER-USER (uv and Serena land in $HOME).
 # Running it under sudo flips $HOME to /root, hides the user's `claude` from PATH, and
 # strands every per-user artifact in root's home. $SUDO_USER is set only when a non-root
 # user invokes sudo — genuine root (containers / CI, e.g. the e2e harness) has it unset,
@@ -131,15 +119,15 @@ fi
 #------------------------------------------------------------------------------
 # Resolve the install profile (ADR-021)
 #------------------------------------------------------------------------------
-# Serena and Graphify are DEVELOPER tools: they buy cheaper structural code work
-# and cost uv, pipx and Python >=3.10. A normal user of the framework never needs
-# them, so they ship only in --full. Four rules, in order:
+# Serena is a DEVELOPER tool: it buys cheaper symbol navigation and costs uv. A
+# normal user of the framework never needs it, so it ships only in --full. Three
+# rules, in order:
 #
-#   1. An explicit --light/--full/--minimal or any --with-* flag IS the answer.
+#   1. An explicit --light/--full or --with-serena flag IS the answer.
 #   2. No flag + a TTY            → ask.
-#   3. No flag + --yes            → light (consent given, take the default).
-#   4. No flag, no --yes, no TTY  → minimal. ADR-005's line holds: nothing is
-#                                   ever installed unattended without consent.
+#   3. Otherwise                  → light, which installs no tool, so ADR-005's
+#                                   line holds: nothing is ever installed
+#                                   unattended without consent.
 if [ -z "${profile}" ] && [ "${picked_tools}" -eq 0 ]; then
     reply=""
     if [ "${assume_yes}" -eq 1 ]; then
@@ -147,50 +135,31 @@ if [ -z "${profile}" ] && [ "${picked_tools}" -eq 0 ]; then
     elif [ -t 0 ] && { : </dev/tty; } 2>/dev/null; then
         # Gated on stdin being a terminal, not just on /dev/tty existing: a piped
         # or scripted run (curl | bash, CI, the test suite) has a controlling tty
-        # but nobody to answer, and must fall through to rule 4 rather than hang.
+        # but nobody to answer, and must fall through to rule 3 rather than hang.
         printf '\nWhich install?\n'
-        printf '  [1] Light (normal)     claude-mem only. Recommended.\n'
-        printf '  [2] Full (developer)   adds Serena + Graphify (uv, pipx, Python >=3.10).\n'
-        printf '  [3] Minimal            framework only, no tools.\n'
+        printf '  [1] Light (normal)     framework only, no optional tools. Recommended.\n'
+        printf '  [2] Full (developer)   adds Serena (uv).\n'
         printf 'Choice [1]: '
         read -r reply </dev/tty || reply=""
         case "${reply}" in
             2) profile="full" ;;
-            3) profile="minimal" ;;
             *) profile="light" ;;   # empty or unrecognised → the recommended one
         esac
     else
-        profile="minimal"
-        warn "No answer and no consent — installing no tools."
-        info "Choose explicitly next time: --light (recommended), --full, or --minimal."
-    fi
-    [ "${profile}" = "minimal" ] && minimal=1
-fi
-
-case "${profile}" in
-    light) with_claude_mem=1 ;;
-    full)  with_serena=1; with_claude_mem=1; with_graphify=1 ;;
-esac
-
-# --minimal beats every profile and every hand-picked tool.
-if [ "${minimal}" -eq 1 ]; then
-    with_serena=0
-    with_claude_mem=0
-    with_graphify=0
-fi
-
-# A hand-picked --with-* set with no profile flag is its own profile for the
-# purposes of the recorded install_mode: it is at least as capable as light, and
-# counts as full only when both developer tools landed.
-if [ -z "${profile}" ]; then
-    if [ "${with_serena}" -eq 1 ] && [ "${with_graphify}" -eq 1 ]; then
-        profile="full"
-    else
         profile="light"
+        info "No answer — light install, no optional tools. Add Serena later with --full."
     fi
 fi
 
-any_tool=$(( with_serena + with_claude_mem + with_graphify ))
+[ "${profile}" = "full" ] && with_serena=1
+
+# A hand-picked --with-serena with no profile flag records install_mode: full,
+# since Serena is the one developer tool.
+if [ -z "${profile}" ]; then
+    profile="full"
+fi
+
+any_tool=${with_serena}
 
 #------------------------------------------------------------------------------
 # Decide the install mode: AUTO (real install) vs HINT (print commands).
@@ -211,8 +180,8 @@ if [ "${any_tool}" -gt 0 ]; then
         auto=1; auto_reason="consented via --yes"
     else
         # Interactive consent.
-        printf '\nAuto-install will run vendor install scripts (uv/bun) and add\n'
-        printf 'third-party Claude marketplaces. Sources are printed as they run.\n'
+        printf '\nAuto-install will run the uv vendor install script.\n'
+        printf 'Sources are printed as they run.\n'
         printf 'Proceed with auto-install? [y/N] '
         reply=""
         if read -r reply </dev/tty 2>/dev/null && { [ "${reply}" = "y" ] || [ "${reply}" = "Y" ]; }; then
@@ -226,11 +195,11 @@ fi
 # Pre-warm sudo so the apt steps prompt for the password ONCE up front rather
 # than at each escalation point. Best-effort: only when we'll auto-install, aren't root,
 # have sudo, and it actually needs a password. A failed prime warns and continues — the
-# sudo-free tools (uv/bun/serena/plugins) still install regardless.
+# sudo-free tools (uv/serena) still install regardless.
 if [ "${auto}" -eq 1 ] && [ "${VAULT_SETUP_DRY_RUN}" != "1" ] \
    && [ "$(id -u)" -ne 0 ] && have sudo && ! sudo -n true 2>/dev/null; then
     info "Auto-install needs apt — you'll be prompted for your sudo password once."
-    sudo -v || warn "sudo not primed — apt-dependent tools (pipx/graphify) may be skipped."
+    sudo -v || warn "sudo not primed — missing base prerequisites may not install."
 fi
 
 #------------------------------------------------------------------------------
@@ -290,8 +259,8 @@ EOF
 fi
 
 # Record which profile this machine runs, so the commands know whether the
-# developer tools are *expected*. Without it a light machine reads as a broken
-# one and every structural question re-offers a Graphify install (ADR-021).
+# developer tool is *expected*. Without it a light machine reads as a broken
+# one and every symbol lookup re-offers a Serena install (ADR-021).
 # Rewritten on every run: re-running with a different profile must update it.
 if grep -q '^install_mode:' "${config_md}" 2>/dev/null; then
     existing_mode="$(sed -n 's/^install_mode:[[:space:]]*//p' "${config_md}" | head -1)"
@@ -368,44 +337,7 @@ if [ "${with_serena}" -eq 1 ]; then
 fi
 
 #------------------------------------------------------------------------------
-# Step 5 — claude-mem (--light / --full / --with-claude-mem)
-#------------------------------------------------------------------------------
-if [ "${with_claude_mem}" -eq 1 ]; then
-    section "claude-mem / mcp-search"
-    if [ "${auto}" -eq 1 ]; then
-        tool_try bun install_bun
-        if claude_cli_ok; then
-            tool_try claude-mem-plugin install_claude_mem_plugin
-        else
-            todo "claude CLI missing/old — install claude-mem manually:"
-            info "  claude plugin marketplace add thedotmack/claude-mem"
-            info "  claude plugin install claude-mem@thedotmack"   # qualified id — bare 'claude-mem' no-ops
-        fi
-    else
-        todo "Install bun + the claude-mem plugin:"
-        info "  curl -fsSL https://bun.com/install | bash"
-        info "  claude plugin marketplace add thedotmack/claude-mem"
-        info "  claude plugin install claude-mem@thedotmack"   # qualified id — bare 'claude-mem' no-ops
-    fi
-fi
-
-#------------------------------------------------------------------------------
-# Step 6 — Graphify (--full / --with-graphify) — developer tool
-#------------------------------------------------------------------------------
-if [ "${with_graphify}" -eq 1 ]; then
-    section "Graphify (developer)"
-    if [ "${auto}" -eq 1 ]; then
-        tool_try graphify install_graphify
-    else
-        todo "Install pipx, then Graphify:"
-        info "  sudo apt install -y pipx python3.12 python3.12-venv && pipx ensurepath"
-        info "  pipx install graphifyy --python python3.12   # needs Python >=3.10"
-    fi
-    info "Per-project graph: /v-init installs the post-commit hook (graphify hook install)."
-fi
-
-#------------------------------------------------------------------------------
-# Step 7 — Per-repo onboarding instructions
+# Step 5 — Per-repo onboarding instructions
 #------------------------------------------------------------------------------
 # The installer no longer writes a snippet into the user-owned ~/.claude/CLAUDE.md.
 # The framework path lives in $VAULT_FRAMEWORK_PATH (recorded below in config.md);
@@ -420,7 +352,7 @@ info "Optional (stable per-user): add to your shell profile —"
 info "  export VAULT_FRAMEWORK_PATH=\"${VAULT_ROOT}\""
 
 #------------------------------------------------------------------------------
-# Step 8 — install.sh (symlink slash commands)  (pure-local — never via run())
+# Step 6 — install.sh (symlink slash commands)  (pure-local — never via run())
 #------------------------------------------------------------------------------
 if [ "${SETUP_SKIP_INSTALL_SH}" -eq 1 ]; then
     section "install.sh (skipped via SETUP_SKIP_INSTALL_SH)"
@@ -435,7 +367,7 @@ else
 fi
 
 #------------------------------------------------------------------------------
-# Step 9 — Doctor (verify what landed; owns the exit code on auto-install)
+# Step 7 — Doctor (verify what landed; owns the exit code on auto-install)
 #------------------------------------------------------------------------------
 doctor_status=0
 if [ "${auto}" -eq 1 ]; then
@@ -445,13 +377,13 @@ fi
 section "Done"
 info "Install: ${profile}."
 if [ "${profile}" = "light" ]; then
-    info "Serena + Graphify were not installed — they are developer tools."
-    info "Add them later with: ${VAULT_ROOT}/setup.sh --full"
+    info "Serena was not installed — it is a developer tool."
+    info "Add it later with: ${VAULT_ROOT}/setup.sh --full"
 fi
 info "Re-run setup.sh anytime; it is idempotent."
 if [ "${auto}" -eq 1 ]; then
-    info "Open a fresh shell (exec \$SHELL -l) so new PATH entries (uv/bun/pipx) take effect"
-    info "before running graphify/serena from the terminal."
+    info "Open a fresh shell (exec \$SHELL -l) so new PATH entries (uv) take effect"
+    info "before running serena from the terminal."
 fi
 if [ "${#TOOLS_FAILED[@]}" -gt 0 ]; then
     warn "Some tools failed to install: ${TOOLS_FAILED[*]} — re-run or see hints above."

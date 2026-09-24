@@ -97,7 +97,7 @@ comments from write-holders are as safe as local ones.
 ## Open at close
 
 - Why the PR #190 summary post failed is unknown. A run that hit an execution limit mid-post is the
-  leading candidate — claude-mem observation 22377 records exactly that failure on another project's
+  leading candidate — observation 22377 records exactly that failure on another project's
   `/v-cr` cron. The read-back makes the next occurrence loud rather than silent.
 - Whether `/v-cr` under-reads large diffs is unmeasured. The re-run named in the plan's Sequencing
   section is the test.

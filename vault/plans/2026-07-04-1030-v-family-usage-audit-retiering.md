@@ -21,8 +21,7 @@ tags: [plan, meta, tiering, capture, token-economy, observability]
   tool-table × 5 + hooks boilerplate × 8 duplicated; do/work/team ladder conflates **trust** (gate) with
   **rigor** (critics) — the only route to any adversarial review was the full panel.
 - **Diagnostics**: the "extraction returned 0 memories" noise (77% of sessions) came from the memory
-  plugin's missing extraction config (16,382 errors); claude-mem separately missing
-  `pending_messages.retry_count` (migration bug); observability hook = 12 events × `uv run` subprocess,
+  plugin's missing extraction config (16,382 errors); observability hook = 12 events × `uv run` subprocess,
   Pre/PostToolUse = 87% of ~9.2k daily spawns; `events.db` 31.6 GB, unbounded.
 - **Community (2026)**: consensus is anti-bloat — heavy methodology only when a wrong decision is
   expensive to reverse; single-pass parallel review panels for routine work, convergence loops reserved;
@@ -39,7 +38,7 @@ tags: [plan, meta, tiering, capture, token-economy, observability]
 3. `afc17ee` chore(commands) — /v-migrate + /v-resume → `commands/attic/`; install.sh skips attic
    - `7503468` fix(capture-script) — octal guard in next-adr (found dogfooding this capture)
    - Machine-level (outside repo): Pre/PostToolUse observability hooks removed from
-     `~/.claude/settings.json`; `events.db` pruned to 60 days + VACUUM; claude-mem `retry_count` column added.
+     `~/.claude/settings.json`; `events.db` pruned to 60 days + VACUUM.
 
 ## Open at plan close
 

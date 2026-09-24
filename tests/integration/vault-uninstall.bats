@@ -75,25 +75,20 @@ uninstall() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/bin/vault-uninsta
     [ -d "${VAULT_HOME}/_global" ]
 }
 
-@test "--tools uninstalls vault tools via pipx/uv; default does not" {
-    stub pipx 'echo "pipx $*" >> '"${TEST_HOME}"'/toollog'
+@test "--tools uninstalls Serena via uv; default does not" {
     stub uv   'echo "uv $*"   >> '"${TEST_HOME}"'/toollog'
 
     uninstall --yes                       # no --tools
     [ ! -f "${TEST_HOME}/toollog" ]       # tools untouched
 
     uninstall --tools --yes
-    grep -q 'pipx uninstall graphifyy'  "${TEST_HOME}/toollog"
     grep -q 'uv tool uninstall serena-agent' "${TEST_HOME}/toollog"
 }
 
-# claude-mem@claude-mem was never a real id, so the uninstall silently no-opped
-# and left the plugin installed. The marketplace declares "thedotmack".
-@test "claude-mem is uninstalled under its real qualified id" {
+@test "uninstall never calls claude plugin uninstall" {
     stub claude 'echo "claude $*" >> '"${TEST_HOME}"'/pluginlog; exit 0'
-    uninstall --yes
-    grep -q 'plugin uninstall claude-mem@thedotmack' "${TEST_HOME}/pluginlog"
-    ! grep -q 'claude-mem@claude-mem' "${TEST_HOME}/pluginlog"
+    uninstall --tools --yes
+    [ ! -f "${TEST_HOME}/pluginlog" ] || ! grep -q 'plugin uninstall' "${TEST_HOME}/pluginlog"
 }
 
 # The purge target is ${VAULT_HOME}/_global, and VAULT_HOME defaults to

@@ -101,8 +101,9 @@ guidelines from `features/·processes/·architecture/` were already loaded in §
 Locate relevant code by symbol, not whole file — `get_symbols_overview()`, `find_symbol(...,
 include_body=false)`, `find_referencing_symbols()`. Understand existing patterns before proposing:
 how are similar classes/components structured, what base classes/traits/utilities are reused, what
-naming conventions and test layouts apply. If Serena is unavailable, surface it and fall back to
-graphify → Glob/Grep/LSP (don't silently read whole files). Playbook §4.
+naming conventions and test layouts apply. If Serena is installed but down, surface it and fall back
+to Glob/Grep/LSP (don't silently read whole files). If Serena is not installed, use Glob/Grep and say
+nothing. Playbook §4.
 
 ### 3a.2 Impact scope
 
@@ -158,8 +159,8 @@ cell with the criterion ids it advances.
 ### 3a.4 Implementation steps (dependency-ordered)
 
 Numbered, ordered **schema/models → services/logic → controllers/routes → views/components → tests**.
-Each step specifies: **File** (exact path), **Action** (class/method/logic summary), **Tool** (from
-`$VAULT_FRAMEWORK_PATH/tool-playbook.md` §5), **Pattern** (which existing pattern it follows, from 3a.1).
+Each step specifies: **File** (exact path), **Action** (class/method/logic summary), **Tool** (`Edit`,
+`Write`, or a Serena symbol edit per `$VAULT_FRAMEWORK_PATH/tool-playbook.md` §4), **Pattern** (which existing pattern it follows, from 3a.1).
 
 ### 3a.5 Test plan
 
@@ -208,9 +209,9 @@ user asked for a second opinion. **Skip** (one-line note) for single-file or mec
 Run dedupe for each candidate vault file **before** listing it:
 
 1. Extract slug + keywords.
-2. `search()` via claude-mem, plus grep over the vault.
-3. Grep `decisions/`, `features/`, `sessions/`, `processes/`, `architecture/` for the slug.
-4. Overlap with an existing doc `>60%` → mark `UPDATE existing` instead of `CREATE`.
+2. Grep `decisions/`, `features/`, `sessions/`, `indications/`, `processes/`, `architecture/` for the
+   slug and keywords.
+3. Overlap with an existing doc `>60%` → mark `UPDATE existing` instead of `CREATE`.
 
 Heavy dedupe-vs-recent-sessions and index reconciliation is handled at capture time by `/v-capture` —
 here just name what will be written.

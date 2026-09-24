@@ -37,7 +37,7 @@ Don't manufacture ADRs — only genuine decisions the planning actually made.
 The committed `requirements.md` **is** the durable record — domain glossary, business rules (REQ-NN)
 and the variant/state tables. Keep those tables in the file, not only the glossary and rules: they are
 the test-design fan-out's primary input, and grep over the vault is how each project's `/v-team` LOAD
-CONTEXT (`02-load-context.md` §2.1) finds them. claude-mem auto-captures on session end — no action.
+CONTEXT (`02-load-context.md` §2.1) finds them.
 
 ## 5.4 Commit + push
 Commit the whole `~/vault/_features/<feature>/` (workspace + planning-session record + any ADRs) with

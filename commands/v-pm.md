@@ -50,15 +50,13 @@ features, so a thread never orphans just because you didn't reopen the right ses
 
 ## Tools — preferred, force when present (never gating)
 The token-saving backbone from `/v-team`, plus the **Agent** tool for the planning panel. LOAD CONTEXT
-(Step 2) probes these and falls back to the next layer; it never halts.
+(Step 2) greps the vault and never halts.
 
 | Tool | Health check | Fallback if down |
 |------|-------------|------------------|
-| claude-mem | `search("test", limit=1)` via mcp-search | skip; note it |
-| graphify | `<repo>/graphify-out/graph.json` present | grep the repo |
-| Serena | `check_onboarding_performed()` | graphify → Glob/Grep |
+| Serena | `check_onboarding_performed()` | Glob/Grep |
 
-Search precedence (`CLAUDE.md`): vault → graph → source. Full rules:
+Search precedence: vault → source. Full rules:
 `$VAULT_FRAMEWORK_PATH/tool-playbook.md`. **Web research runs by default in `/v-pm`** — planning is
 where a wrong approach is cheapest to catch, and `/v-pm` runs rarely enough that the cost does not
 matter. `--no-research` opts out. `/v-work` and `/v-team` keep their novel-choices-only gate; see
@@ -87,7 +85,7 @@ into the project's own `requirements/` vault, skips the `_features/` workspace, 
 
 ### Step 2 — LOAD CONTEXT
 Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/02-load-context.md`, then execute. Vault-first, **across
-every participant's vault** + `_global` + `_features/` (claude-mem → graph → grep). Produces the
+every participant's vault** + `_global` + `_features/` (vault grep). Produces the
 context digest the panel plans from — so the PM grounds in accumulated project knowledge, not blindly.
 
 ### Step 3 — PLAN PANEL

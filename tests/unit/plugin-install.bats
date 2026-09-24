@@ -176,7 +176,7 @@ teardown() {
 @test "the detect hook installs nothing" {
     # It runs unattended at session start. Anything that mutates the machine there
     # would bypass the consent gate ADR-005 commits the installer to.
-    run grep -nE '^[^#]*\b(apt|apt-get|curl|wget|npm|pnpm|bun|pipx|uv|sudo)\b' \
+    run grep -nE '^[^#]*\b(apt|apt-get|curl|wget|npm|pnpm|pipx|uv|sudo)\b' \
         "${VAULT_ROOT}/scripts/detect-stack.sh"
     [ "$status" -ne 0 ] || { echo "detect hook has an install path: ${output}"; return 1; }
 }
@@ -187,13 +187,12 @@ teardown() {
     [[ "$output" == *"/v-setup"* ]]
 }
 
-@test "the detect hook never reports the developer tools as missing" {
-    # Serena and Graphify ship only in the --full profile, so on a normal light
-    # install their absence is the expected state. Naming them would report
-    # normality as a problem (ADR-021).
+@test "the detect hook never reports the developer tool as missing" {
+    # Serena ships only in the --full profile, so on a normal light install its
+    # absence is the expected state. Naming it would report normality as a
+    # problem (ADR-021).
     run "${VAULT_ROOT}/scripts/detect-stack.sh"
     [ "$status" -eq 0 ]
-    [[ "${output,,}" != *"graphify"* ]]
     [[ "${output,,}" != *"serena"* ]]
 }
 
@@ -224,7 +223,7 @@ teardown() {
 
 @test "install.sh still runs when an unrelated plugin is installed" {
     mkdir -p "${HOME}/.claude"
-    echo '{"enabledPlugins": {"claude-mem@some-marketplace": true}}' > "${HOME}/.claude/settings.json"
+    echo '{"enabledPlugins": {"other-plugin@some-marketplace": true}}' > "${HOME}/.claude/settings.json"
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
     [ -L "${HOME}/.claude/commands/v-work.md" ]

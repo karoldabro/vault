@@ -7,10 +7,6 @@ memory/parent/
 memory/auto-recall/
 memory/cache/
 
-# Graphify output — lives in the code repo, symlinked here.
-graphify/
-graphify-out/
-
 # Serena — per-host MCP state.
 serena/
 .serena/

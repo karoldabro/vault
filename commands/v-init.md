@@ -29,10 +29,7 @@ install (`$VAULT_FRAMEWORK_PATH`, default `~/workspace/vault`); it is **not** ve
    is overridden by `--no-vault-md` or the file already exists.
 8. Appends the slug to `~/vault/_global/coupled-groups.md`.
 9. Appends a "Vault memory stack" snippet to the code repo's `CLAUDE.md` (pointing at the global framework).
-10. Installs the graphify post-commit hook in the code repo (if `graphify` is present) so `graph.json`
-    stays fresh for free on every commit — letting `/v-work` answer structural questions from the graph
-    instead of grepping. Prints the one-time `graphify .` build command (not auto-run). Skip with `--no-graphify`.
-11. Makes the initial commit (global vaults only).
+10. Makes the initial commit (global vaults only).
 
 ## How to invoke
 
@@ -61,7 +58,6 @@ gh repo create karoldabro/vault.<slug> --private --source=. --push
 | `--framework-path PATH` | Override `$VAULT_FRAMEWORK_PATH` (the global framework install). |
 | `--no-vault-md` | Don't write `<code-repo>/VAULT.md`. |
 | `--no-claude-md` | Don't touch `<code-repo>/CLAUDE.md`. |
-| `--no-graphify` | Skip the graphify post-commit hook install. |
 | `--yes`, `-y` | Non-interactive. |
 
 ## Reversal

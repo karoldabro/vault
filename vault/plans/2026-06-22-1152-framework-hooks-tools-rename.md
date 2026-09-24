@@ -80,7 +80,7 @@ loop's outer boundary. All hooks optional, instruction-only.
    illustration, not a mandate. Also add a one-line framing note near the top of `tool-playbook.md`:
    "These are suggestions — Claude selects the tool that fits; the cost hierarchy is a sensible default,
    not a gate." Soften rigid tool-**selection** language (e.g. "never grep…") toward suggestion; keep
-   genuine **safety** notes intact (e.g. Morph `// ... existing code ...` markers).
+   genuine **safety** notes intact.
 
 6. **`templates/VAULT.md` + repo `VAULT.md`** — add commented `## hooks` (Jira `on_start` +
    `post_commit` example), `## tools` (Jira example), and `behaviour.suggest_rename: true`. Keep both in

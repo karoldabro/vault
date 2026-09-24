@@ -28,8 +28,8 @@ Read `~/workspace/vault/vault-guide.md` §6 and §7b first — they define what 
 ## Procedure
 
 You are consolidating scattered guidelines/patterns in the **{{SLUG}}** vault (`{{VAULT}}`) into
-`indications/`. Use the framework's token-saving tools (claude-mem `search`, Serena, grep
-fallback). Work in phases and **stop at the approval gate — do not write or move anything before it.**
+`indications/`. Use the framework's token-saving tools (grep over the vault, Serena when
+present). Work in phases and **stop at the approval gate — do not write or move anything before it.**
 
 ### Phase 0 — Safety (do this first)
 

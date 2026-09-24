@@ -15,8 +15,8 @@ for the password at the escalation point); require passwordless sudo only for no
 
 ## Rationale
 Wrapping a per-user installer in `sudo` flips `$HOME` to `/root`: user-scoped artifacts
-(uv/bun/pipx bins, `claude` plugins) land in root's home, invisible to the
-user, and the user's `claude` CLI drops off PATH so programmatic plugin install silently degrades.
+(uv and the tools it installs, `~/vault/_global/`) land in root's home, invisible to the
+user, and the user's `claude` CLI drops off PATH.
 Gating the auto path on *passwordless* sudo instead strands the common workstation user with
 hint-only output. Distinguish a human `sudo` invocation (`$SUDO_USER` set → refuse) from genuine
 container/CI root (`$SUDO_USER` unset → allow) so the e2e/root path keeps working.

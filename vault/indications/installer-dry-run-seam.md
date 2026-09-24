@@ -22,7 +22,7 @@ networked Ubuntu container. Routing only side-effects through `run()` (not local
 existing offline assertions (tool config written, symlinks made) green unchanged.
 
 ## Examples
-- Do: `run $(_priv) apt-get install -y pipx`; `run_shell "https://astral.sh/uv/install.sh" "curl -LsSf … | sh"`.
+- Do: `run $(_priv) apt-get install -y curl`; `run_shell "https://astral.sh/uv/install.sh" "curl -LsSf … | sh"`.
 - Do: post-install verification (`have uv`) guarded with `_dry || …` so dry-run doesn't false-fail.
 - Don't: write a tool config or call `install.sh` through `run()` — local scaffolding must run even in dry-run.
 - Don't: lean on the e2e for command correctness — it's slow/flaky; the dry-run unit suite owns that.

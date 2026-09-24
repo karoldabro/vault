@@ -65,8 +65,7 @@ would have cost more than the saving.
 
 **2. A verifier given a repo re-reads it once per item.** The grounding critic checked 57 drafts
 against live code with 79 tool calls and 126 turns, re-grepping the same tree each time. Building the
-symbol and path index once in the parent and passing it collapses this. A repo with `graphify` already
-has that index.
+symbol and path index once in the parent and passing it collapses this.
 
 **3. Shared context was sliced by corpus, not by need.** A 27K dedupe sheet went to all six extractors
 whole; each needed roughly a fifth. Small here, but it scales with agent count, not with the work.

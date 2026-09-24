@@ -196,10 +196,10 @@ teardown() {
 
 @test "push never stages gitignored local-only mounts" {
     make_vault_with_remote "${VAULT}" "${REMOTE}"
-    printf 'memory/\ngraphify/\n' > "${VAULT}/.gitignore"
-    mkdir -p "${VAULT}/memory" "${VAULT}/graphify"
+    printf 'memory/\nserena/\n' > "${VAULT}/.gitignore"
+    mkdir -p "${VAULT}/memory" "${VAULT}/serena"
     echo "local only" > "${VAULT}/memory/parent.md"
-    echo "local only" > "${VAULT}/graphify/graph.json"
+    echo "local only" > "${VAULT}/serena/state.yml"
     echo "real" > "${VAULT}/keep.md"
 
     run SYNC push "${VAULT}" -m "sweep"
@@ -208,7 +208,7 @@ teardown() {
     run git -C "${VAULT}" show --name-only --format= HEAD
     [[ "$output" == *"keep.md"* ]]
     [[ "$output" != *"memory/parent.md"* ]]
-    [[ "$output" != *"graphify/graph.json"* ]]
+    [[ "$output" != *"serena/state.yml"* ]]
 }
 
 @test "push does not sweep in a dirty parent directory" {

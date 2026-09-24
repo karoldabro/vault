@@ -3,11 +3,10 @@
 #
 # By default removes only the FRAMEWORK WIRING (reversible, no data loss):
 #   * command symlinks in ~/.claude/commands/ that point into this repo
-#   * the claude-mem Claude Code plugin
 #
 # Opt-in extras:
-#   --tools        also uninstall the vault-specific tools (graphifyy, serena-agent).
-#                  NEVER touches shared toolchains (uv/bun/node).
+#   --tools        also uninstall the vault-specific tool (serena-agent).
+#                  NEVER touches shared toolchains (uv/node).
 #   --purge-data   also delete $VAULT_HOME/_global — DESTRUCTIVE.
 #   --all          --tools + --purge-data.
 #
@@ -38,10 +37,9 @@ usage() {
 vault-uninstall.sh — reverse what setup.sh / install.sh wired up, in layers.
 
 By default removes only the framework wiring (reversible, no data loss):
-the command symlinks in ~/.claude/commands/ that point into this repo, and
-the claude-mem Claude Code plugin.
+the command symlinks in ~/.claude/commands/ that point into this repo.
 
-  --tools        also uninstall graphifyy + serena-agent (never uv/bun/node)
+  --tools        also uninstall serena-agent (never uv/node)
   --purge-data   also delete $VAULT_HOME/_global — DESTRUCTIVE
   --all          --tools + --purge-data
   --dry-run      echo every action instead of running it
@@ -49,6 +47,8 @@ the claude-mem Claude Code plugin.
   -h, --help     this text
 
 Project vaults (~/vault/<slug>/, in-repo vault/) and your repos are never touched.
+Tools older framework versions installed are removed by hand:
+docs/uninstall-removed-tools.md.
 EOF
 }
 
@@ -93,23 +93,10 @@ remove_command_symlinks() {
     ok "removed ${n} command symlink(s) → ${VAULT_ROOT}/commands"
 }
 
-
-remove_plugins() {
-    section "Claude Code plugins"
-    if ! claude_cli_ok; then info "claude CLI unavailable — uninstall plugins manually"; return 0; fi
-    # The qualified id is claude-mem@thedotmack (marketplace.json declares the
-    # marketplace name "thedotmack") — claude-mem@claude-mem silently no-ops.
-    run claude plugin uninstall claude-mem@thedotmack 2>/dev/null || true
-    ok "removed the claude-mem plugin (marketplace left intact)"
-}
-
 remove_tools() {
     section "Vault tools"
-    if have pipx; then
-        run pipx uninstall graphifyy 2>/dev/null || true
-    fi
     have uv && { run uv tool uninstall serena-agent 2>/dev/null || true; }
-    ok "removed graphifyy, serena-agent — left uv/bun/node intact"
+    ok "removed serena-agent — left uv/node intact"
 }
 
 purge_vault_data() {
@@ -135,7 +122,6 @@ purge_vault_data() {
 # Run
 #------------------------------------------------------------------------------
 remove_command_symlinks
-remove_plugins
 if [ "${with_tools}" -eq 1 ]; then remove_tools; fi
 if [ "${purge_data}" -eq 1 ]; then purge_vault_data; fi
 
@@ -143,7 +129,7 @@ section "Done"
 if [ "${CONSENT_MODE}" = "plan-only" ]; then
     warn "Nothing was changed (no consent). Re-run with --yes to apply, or --dry-run to preview."
 else
-    info "Restart Claude Code so the removed plugins/MCP unload."
+    info "Restart Claude Code so the removed commands unload."
     if [ "${purge_data}" -eq 0 ]; then
         info "Data kept. Re-run with --purge-data to also delete _global."
     fi

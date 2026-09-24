@@ -62,7 +62,7 @@ Environment: `VAULT_SYNC_CODE_REPO` (worktree compared against for exit 4, defau
   paths given → the vault dir as an explicit absolute pathspec, never `.` and never `-A`.
 - `push` with nothing staged → exit 0, no empty commit; edge: unpushed commits already present are
   still pushed.
-- Gitignored local-only mounts (`memory/`, `graphify/`, `serena/`) are never staged.
+- Gitignored local-only mounts (`memory/`, `serena/`) are never staged.
 - `--dry-run` prints every git command and leaves the worktree byte-identical.
 
 ## Coupling

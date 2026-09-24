@@ -51,7 +51,7 @@ Build `/v-cr` as a thin dispatcher + 5 steps (DETECT → GATHER → REVIEW → P
 7. **Stable idempotency.** Fingerprint = `sha256(file:rule:code_hash)` (never message text, never line
    number); resolve stale threads only when bot-authored with zero human replies.
 8. **Decouple PR identity from the local checkout.** Resolve the PR + the vault/persona pack from the
-   forge's base-repo identity; run local-only context layers (graph/Serena/CLAUDE.md) only when local
+   forge's base-repo identity; run local-only context layers (Serena/CLAUDE.md) only when local
    HEAD matches; fail loudly (not silently) when no pack resolves.
 9. **INVARIANT: never commit, push, or apply code.** Comments only; suggested fixes are advisory text.
 
@@ -64,7 +64,7 @@ contract is forge-agnostic so GitLab slots in later).
   one `adapters/<forge>.md`; the security posture is explicit and testable (`tests/unit/forge-detect.bats`,
   `tests/unit/v-cr.bats`).
 - **Harder / watch for:** prompt injection can never be fully prevented — the mandatory human POST gate
-  is the backstop, keep it. No whole-repo RAG yet, so grounding is diff + vault + (optional) graphify;
+  is the backstop, keep it. No whole-repo RAG yet, so grounding is diff + vault + (optional) Serena;
   don't claim parity with hosted tools. Learned suppression is manual (vault `indications/`), not a
   hosted DB. Large diffs need the chunk-or-warn guard to keep precision and cost bounded.
 - **Coupling:** `/v-cr` depends on `_shared/critic-panel.md`, `personas/_resolution.md`, and the vault

@@ -5,7 +5,7 @@
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
 Load all relevant context **before touching source code**. Query cheapest-first; stop as soon as
-you have enough. Each layer costs 10–100× less than reading source. **Graph before grep, symbol
+you have enough. Each layer costs 10–100× less than reading source. **Vault before source, symbol
 before full-file read.** Full per-tool rules + examples: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
 **Tools are preferred, not gating** — present → use it; down → health-check, warn once, fall back
@@ -33,20 +33,15 @@ subagents in parallel (single message, multiple `Agent` calls) instead of serial
 distinct focus (vault decisions/guidelines · code structure · tests). One Explore agent is enough for
 an isolated task with known files. Agents return conclusions; you keep the context lean.
 
-### 2.1 — claude-mem (project history — always first)
+### 2.1 — Vault recall (project history — always first)
 
-<!-- §2.2 held a memory tool that was dropped. The numbering gap is
-     deliberate — other files cite §2.3a/§2.3b/§2.3c by number. -->
+<!-- Sections 2.2 and 2.4 are unused. Other files cite §2.1, §2.3a, §2.3b and §2.3c
+     by number, so the numbers stay fixed. -->
 
-`search(query=<keywords>, limit=20)` → compact ID index (~100 tok). Climb to `timeline(anchor=<id>)`
-(~300 tok) then `get_observations(ids=[...])` (~1000 tok) only for promising hits. Filter by `type`
-(decision, bugfix, feature, refactor, discovery) and date when it narrows fast.
-
-**When claude-mem is absent** (it installs only with `setup.sh --full` / `--with-claude-mem`), say so
-once and go straight to grep over the vault:
-`grep -ril "<keyword>" <project-vault>/{decisions,sessions,indications,features}/`. Look for the same
-things either way: prior decisions in this area, known gotchas, related features already built,
-coupled projects (`~/vault/_global/coupled-groups.md`).
+Grep the vault with the Step-1 keywords:
+`grep -ril "<keyword>" <project-vault>/{decisions,sessions,indications,features}/`. Read only the hits.
+Look for prior decisions in this area, known gotchas, related features already built, and coupled
+projects (`~/vault/_global/coupled-groups.md`).
 
 ### 2.3 — Vault MOC + process guide
 
@@ -93,24 +88,14 @@ project specifics.) None declared → ask which tracker, or skip. MCP down → f
 surface it; never halt. This is how a repo declares "we use Jira" vs "we use Asana" so the lifecycle pulls
 the right ticket. See `tool-playbook.md` §6.
 
-### 2.4 — Graphify (structural orientation)
-
-`graph.json` is kept fresh by the per-project post-commit hook. For **any** structural question —
-what calls X, where is Y defined, which modules touch Z, dependency chains — query the graph before
-Serena or grep: `graphify query "<q>"`, `graphify path "A" "B"`.
-
-Graphify is a **developer-install tool** (`setup.sh --full`). If `graphify-out/graph.json` is missing,
-read `install_mode` from `~/vault/_global/config.md`: on `full` the per-repo hook is simply absent —
-surface it and offer `graphify hook install` + an initial `graphify .` build. On `light`/`minimal` the
-tool was never installed, so fall back to grep silently. Full rules:
-`$VAULT_FRAMEWORK_PATH/tool-playbook.md` §3.
-
 ### 2.5 — Serena (semantic navigation — if code change implied)
 
+For a structural question — what calls X, where is Y defined, which modules touch Z — use
 `get_symbols_overview(<file>)` for a file outline, `find_symbol(<name>)` to locate, and
 `find_referencing_symbols(<symbol>)` for impact. Orient before reading whole files. Serena is a
-**developer-install tool** like Graphify — absent on a `light` machine by design, so read the file and
-move on rather than reporting it missing. §4 of the playbook for full rules.
+**developer-install tool** — on a machine whose `install_mode` is not `full`, Serena is absent by
+design, so grep and read the file and move on rather than reporting it missing. §4 of the playbook for
+full rules.
 
 ### 2.6 — Recent sessions + decisions
 
@@ -158,7 +143,7 @@ costs ~20k tokens; a vault hit costs ~100–2000. Wrong default wastes 100×.
 ### Required output
 
 ```
-claude-mem: [layers used — key findings — or "nothing relevant" / "not installed, grepped the vault"]
+Vault recall: [key findings from the vault grep — or "nothing relevant"]
 MOC: [skimmed]
 Indications: [working rules loaded from indications/ — or "none matched"]
 Guidelines: [docs read from features/·processes/·architecture/ — or "none matched"]
@@ -166,7 +151,6 @@ Sessions: [top 3 mtime, brief topic each]
 Handoffs: [the newest open handoff — its slug, what it leaves to do, and anything it says not to touch]
 Reports: [open reports naming a file this task touches — slug + severity + the one sentence each]
 ADRs: [relevant IDs]
-Graph: [used — key findings — or "not available"]
 Serena: [used — symbols found — or "not applicable"]
 CLAUDE.md: [key overrides | none]
 Task tracker: [tracker queried + ticket pulled | none declared | n/a]

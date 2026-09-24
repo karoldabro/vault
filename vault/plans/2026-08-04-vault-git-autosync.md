@@ -113,7 +113,7 @@ Behaviour:
   repo's toplevel. Equal → the vault is in-repo (`vault_path: ./vault`, as in this framework repo).
 - `--dry-run` prints the git commands without running them, per
   [[installer-dry-run-seam]].
-- Local-only paths (`memory/`, `graphify/`, `serena/` — already gitignored per `templates/vault.gitignore`)
+- Local-only paths (`memory/`, `serena/` — already gitignored per `templates/vault.gitignore`)
   are never force-added.
 
 #### New — `commands/_shared/vault-sync.md`

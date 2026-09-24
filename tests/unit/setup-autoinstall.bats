@@ -39,97 +39,69 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
 #------------------------------------------------------------------------------
 # Transcript + ordering
 #------------------------------------------------------------------------------
-@test "dry-run --full emits every tool's canonical install command" {
+@test "dry-run --full emits the uv and Serena install commands" {
     stub_claude_empty
     run_setup --full --dry-run
     [ "$status" -eq 0 ]
     [[ "$output" == *"curl -LsSf https://astral.sh/uv/install.sh | sh"* ]]
     [[ "$output" == *"uv tool install -p 3.13 serena-agent"* ]]
-    [[ "$output" == *"curl -fsSL https://bun.com/install | bash"* ]]
-    [[ "$output" == *"pipx install graphifyy"* ]]
-    [[ "$output" == *"claude plugin marketplace add thedotmack/claude-mem"* ]]
-    # The marketplace name is "thedotmack" (from marketplace.json), not "claude-mem":
-    # the qualified id MUST be claude-mem@thedotmack or fresh installs fail.
-    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
+}
+
+@test "dry-run --full installs only Serena and its uv prerequisite" {
+    stub_claude_empty
+    run_setup --full --dry-run
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"claude plugin install"* ]]
+    [[ "$output" != *"claude plugin marketplace add"* ]]
+    [[ "$output" != *"pipx install"* ]]
+    [[ "$output" != *"https://bun.com"* ]]
+    # Old wrong serena flag must be gone.
+    [[ "$output" != *"serena-agent@latest"* ]]
 }
 
 #------------------------------------------------------------------------------
-# Install profiles (ADR-021) — light is the default; Serena + Graphify are the
-# developer tools and must appear ONLY under --full / an explicit --with-* flag.
+# Install profiles (ADR-021) — light is the default and installs no tool; Serena
+# is the developer tool and appears ONLY under --full / --with-serena.
 #------------------------------------------------------------------------------
-@test "--light installs claude-mem and neither developer tool" {
+@test "--light installs no tool" {
     stub_claude_empty
     run_setup --light --dry-run
     [ "$status" -eq 0 ]
-    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
-    [[ "$output" != *"uv tool install -p 3.13 serena-agent"* ]]
-    [[ "$output" != *"pipx install graphifyy"* ]]
+    [[ "$output" != *"uv tool install"* ]]
+    [[ "$output" != *"astral.sh"* ]]
+    [[ "$output" == *"install_mode: light"* ]]
 }
 
-@test "no profile flag with --yes resolves to light (claude-mem only)" {
+@test "no profile flag with --yes resolves to light" {
     stub_claude_empty
     # --dry-run implies --yes, so this is the scripted no-profile path.
     run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --dry-run </dev/null
     [ "$status" -eq 0 ]
-    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
+    [[ "$output" == *"install_mode: light"* ]]
     [[ "$output" != *"uv tool install -p 3.13 serena-agent"* ]]
-    [[ "$output" != *"pipx install graphifyy"* ]]
 }
 
 @test "no profile flag, no consent, no terminal installs nothing and names the flags" {
     stub_claude_empty
     run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" </dev/null
     [ "$status" -eq 0 ]
-    [[ "$output" != *"claude plugin install"* ]]
     [[ "$output" != *"uv tool install"* ]]
-    [[ "$output" != *"pipx install"* ]]
-    [[ "$output" == *"--light"* ]]
+    [[ "$output" == *"--full"* ]]
+    [[ "$output" == *"install_mode: light"* ]]
 }
 
-@test "an explicit --with-* flag is never overridden by the light default" {
+@test "an explicit --with-serena is never overridden by the light default" {
     stub_claude_empty
-    run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --with-graphify --dry-run </dev/null
+    run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --with-serena --dry-run </dev/null
     [ "$status" -eq 0 ]
-    [[ "$output" == *"pipx install graphifyy"* ]]
-    # Hand-picked means hand-picked: claude-mem was not asked for.
-    [[ "$output" != *"claude plugin install claude-mem@thedotmack"* ]]
+    [[ "$output" == *"uv tool install -p 3.13 serena-agent"* ]]
+    [[ "$output" == *"install_mode: full"* ]]
 }
 
-@test "--minimal beats --light (no tool installs at all)" {
-    stub_claude_empty
-    run_setup --light --minimal --dry-run
-    [ "$status" -eq 0 ]
-    [[ "$output" != *"claude plugin install claude-mem@thedotmack"* ]]
-    [[ "$output" != *"uv tool install"* ]]
-    [[ "$output" != *"pipx install"* ]]
-}
-
-@test "doctor labels Serena and Graphify as developer tools" {
+@test "doctor labels Serena as a developer tool" {
     run_setup --doctor
     [ "$status" -eq 0 ]
-    [[ "$output" == *"graphify (developer)"* ]]
     [[ "$output" == *"serena (developer)"* ]]
-}
-
-@test "pipx installs pin a Python interpreter (--python)" {
-    stub_claude_empty
-    run_setup --full --dry-run
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"pipx install graphifyy --python"* ]]
-}
-
-@test "pick_python picks a >=3.10 interpreter and rejects <3.10" {
-    # Stub every candidate as an old 3.8 first → none qualifies.
-    for c in python3.13 python3.12 python3.11 python3.10 python3 python; do
-        printf '#!/usr/bin/env bash\necho 3.8.10\n' > "${FAKEBIN}/${c}"; chmod +x "${FAKEBIN}/${c}"
-    done
-    ( set -euo pipefail; PATH="${FAKEBIN}:${PATH}"
-      . "${VAULT_ROOT}/lib/installers.sh"
-      if pick_python >/dev/null; then echo "old=picked-BAD"; else echo "old=rejected"; fi
-      printf '#!/usr/bin/env bash\necho 3.12\n' > "${FAKEBIN}/python3.12"; chmod +x "${FAKEBIN}/python3.12"
-      echo "new=$(pick_python)" ) > "${TEST_HOME}/out" 2>&1
-    grep -q 'old=rejected' "${TEST_HOME}/out"
-    grep -q 'new=python3.12' "${TEST_HOME}/out"
 }
 
 @test "dry-run prints each install via the [dry-run] marker (nothing really executed)" {
@@ -137,17 +109,6 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     run_setup --full --dry-run
     [ "$status" -eq 0 ]
     [[ "$output" == *"[dry-run]"* ]]
-}
-
-@test "dry-run uses corrected commands, not the old wrong ones" {
-    stub_claude_empty
-    run_setup --full --dry-run
-    [ "$status" -eq 0 ]
-    # Morph was dropped entirely.
-    [[ "$output" != *"morph"* ]]
-    [[ "$output" != *"razorback16"* ]]
-    # Old wrong serena flag must be gone.
-    [[ "$output" != *"serena-agent@latest"* ]]
 }
 
 #------------------------------------------------------------------------------
@@ -165,15 +126,13 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
     ! grep -q 'supersecret' "${TEST_HOME}/out"
 }
 
-@test "sudo is scoped to apt only — never prefixes curl/uv/bun/claude/pipx" {
+@test "sudo is scoped to apt only — never prefixes curl/uv/claude" {
     stub_claude_empty
     run_setup --full --dry-run
     [ "$status" -eq 0 ]
     [[ "$output" != *"sudo curl"* ]]
     [[ "$output" != *"sudo uv"* ]]
-    [[ "$output" != *"sudo bun"* ]]
     [[ "$output" != *"sudo claude"* ]]
-    [[ "$output" != *"sudo pipx"* ]]
 }
 
 @test "remote installer source URLs are printed for an audit trail" {
@@ -185,42 +144,19 @@ run_setup() { run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" "$@"; }
 
 @test "tools already on PATH are reported present and not reinstalled" {
     stub uv 'exit 0'
-    stub bun 'exit 0'
-    stub graphify 'exit 0'
+    stub serena 'exit 0'
     stub_claude_empty
-    run_setup --with-serena --with-graphify --with-claude-mem --dry-run
+    run_setup --with-serena --dry-run
     [ "$status" -eq 0 ]
     [[ "$output" == *"uv present"* ]]
-    [[ "$output" == *"graphify present"* ]]
+    [[ "$output" == *"serena present"* ]]
     # No install command should have been emitted for the present tools.
-    [[ "$output" != *"pipx install graphifyy"* ]]
-}
-
-@test "already-installed plugins are detected via claude plugin list (no re-add)" {
-    stub claude '
-case "$1 $2" in
-  "plugin --help") exit 0 ;;
-  "plugin list") echo "claude-mem@thedotmack"; exit 0 ;;
-  "plugin marketplace") echo "thedotmack"; exit 0 ;;
-esac
-exit 0'
-    run_setup --with-claude-mem --dry-run
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"already installed"* ]]
-    [[ "$output" != *"plugin install claude-mem"* ]]
+    [[ "$output" != *"uv tool install"* ]]
 }
 
 #------------------------------------------------------------------------------
 # Graceful degradation
 #------------------------------------------------------------------------------
-@test "claude CLI absent → plugin steps degrade to manual hints, exit 0" {
-    # No claude stub: the bare test image has no claude on PATH.
-    run_setup --with-claude-mem --dry-run
-    [ "$status" -eq 0 ]
-    [[ "$output" == *"claude CLI missing"* ]]
-    [[ "$output" == *"claude plugin install claude-mem@thedotmack"* ]]
-}
-
 @test "non-apt host without dry-run degrades to install hints, exit 0" {
     # Real (non dry-run) run on the alpine image: no apt-get → hint path.
     run env PATH="${FAKEBIN}:${PATH}" "${VAULT_ROOT}/setup.sh" --full --yes
@@ -317,10 +253,12 @@ exit 0'
     [[ "$output" != *"Machine layer"* ]]
 }
 
-@test "--with-morph is now an unknown flag (Morph dropped cleanly)" {
-    run_setup --with-morph
-    [ "$status" -ne 0 ]
-    [[ "$output" == *"Unknown flag"* ]]
+@test "flags for tools the framework no longer installs are unknown (exit 2)" {
+    for flag in --minimal --with-claude-mem --with-graphify; do
+        run_setup "$flag"
+        [ "$status" -eq 2 ]
+        [[ "$output" == *"Unknown flag"* ]]
+    done
 }
 
 @test "--dry-run implies non-interactive (never blocks on a consent prompt)" {

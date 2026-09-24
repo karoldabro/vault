@@ -10,7 +10,7 @@ tags: [indication, commands, lifecycle]
 
 ## Rule
 Light command variants are **single-file** (no `steps/` subdir — the whole body loads at once) and
-carry **no approval gate**. `/v-ask` is hard read-only (never `Edit`/`Write`/`Morph`/`git`/capture);
+carry **no approval gate**. `/v-ask` is hard read-only (never `Edit`/`Write`/`git`/capture);
 `/v-do` edits but has no propose/approve loop, guarded instead by a scope check. Treat the four as one
 escalation ladder — `/v-ask` → `/v-do` → `/v-work` → `/v-team` — and hand off up the ladder the moment
 scope or risk grows, rather than stretching a light command past its band.
@@ -23,7 +23,7 @@ cheap; the escalation ladder is what keeps them *safe* without a gate. Collapsin
 both purposes.
 
 ## Examples
-- Do: `/v-ask "where is the persona pack resolved?"` → answer from the vault and the graph, cite `personas/_resolution.md`, stop.
+- Do: `/v-ask "where is the persona pack resolved?"` → answer from the vault and the source, cite `personas/_resolution.md`, stop.
 - Do: `/v-do "rename this flag"` → edit, run tests on the changed surface, offer capture if notable.
 - Don't: use `/v-do` for a schema migration or cross-repo contract change — escalate to `/v-team`.
 - Don't: add a `commands/v-ask/steps/` subdir — light commands stay single-file.

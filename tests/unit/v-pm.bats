@@ -34,8 +34,6 @@ teardown() {
 
 @test "v-pm dispatcher has a tool health-check + fallback table and the search precedence" {
     grep -qi 'fallback'                     "${PM}"
-    grep -qi 'claude-mem'                   "${PM}"
-    grep -qi 'graphify'                     "${PM}"
     grep -qi 'precedence'                   "${PM}"
 }
 
@@ -117,12 +115,11 @@ teardown() {
 }
 
 @test "load-context is vault-first, ACROSS every participant vault, and emits a digest" {
-    grep -qi 'claude-mem\|grep'             "${STEPS}/02-load-context.md"
+    grep -qi 'grep'                         "${STEPS}/02-load-context.md"
     grep -qi 'every participant\|each participant\|participant' "${STEPS}/02-load-context.md"
     grep -qi '_global'                      "${STEPS}/02-load-context.md"
     grep -qi '_features'                    "${STEPS}/02-load-context.md"
     grep -qi 'digest'                       "${STEPS}/02-load-context.md"
-    grep -qi 'fallback'                     "${STEPS}/02-load-context.md"
     # cheapest-first precedence, no source reads here
     grep -qi 'cheapest-first\|precedence'   "${STEPS}/02-load-context.md"
 }

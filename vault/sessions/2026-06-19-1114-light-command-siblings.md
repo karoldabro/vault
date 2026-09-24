@@ -16,8 +16,8 @@ answers and small low-risk jobs.
 
 ## Did
 - Built two single-file commands (no step subdirs — "light" = whole file loads at once):
-  - [[../../commands/v-ask]] — read-only vault Q&A. Cheapest-first context load (claude-mem →
-    indications/MOC → graph → Serena → grep), cites sources, **never edits**; hands off to `/v-do`
+  - [[../../commands/v-ask]] — read-only vault Q&A. Cheapest-first context load (indications/MOC →
+    Serena → grep), cites sources, **never edits**; hands off to `/v-do`
     or `/v-work` when the answer implies a change.
   - [[../../commands/v-do]] — small change, no propose loop / no approval gate. A scope **guardrail**
     replaces the gate (architecture/schema/auth/billing/cross-repo → `/v-team`; >~5 files or unclear
@@ -36,7 +36,7 @@ answers and small low-risk jobs.
 - `install.bats` counts commands dynamically, not against a hardcoded number — adding commands is
   test-safe by design.
 - Design split that mattered: two commands, not one mode-switching command. `/v-ask` is hard
-  read-only (no `Edit`/`Write`/`Morph`/`git`); `/v-do`'s safety valve is the escalation guardrail,
+  read-only (no `Edit`/`Write`/`git`); `/v-do`'s safety valve is the escalation guardrail,
   which is what stands in for the dropped approval gate.
 - An untracked `vault/plans/2026-06-19-1106-v-cr-command.md` exists in the tree — not from this
   session; left alone.

@@ -6,11 +6,8 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Prereqs the installer expects to find or apt-install. bats runs the suite.
-# pipx is pre-installed so the graphify path exercises `pipx install` (not the apt
-# step) deterministically; setup.sh still apt-installs anything missing at runtime.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         bats git curl jq ca-certificates sudo unzip \
-        python3 python3-pip pipx \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code

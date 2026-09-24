@@ -26,46 +26,44 @@ teardown() {
     [[ "$output" == *"Unknown flag"* ]]
 }
 
-@test "--minimal creates VAULT_HOME/_global/coupled-groups.md" {
-    run "${VAULT_ROOT}/setup.sh" --minimal --yes
+@test "--light creates VAULT_HOME/_global/coupled-groups.md" {
+    run "${VAULT_ROOT}/setup.sh" --light --yes
     [ "$status" -eq 0 ]
     [ -d "${VAULT_HOME}/_global" ]
     [ -f "${VAULT_HOME}/_global/coupled-groups.md" ]
     grep -q "Coupled project groups" "${VAULT_HOME}/_global/coupled-groups.md"
 }
 
-@test "--minimal calls install.sh and symlinks commands" {
-    run "${VAULT_ROOT}/setup.sh" --minimal --yes
+@test "--light calls install.sh and symlinks commands" {
+    run "${VAULT_ROOT}/setup.sh" --light --yes
     [ "$status" -eq 0 ]
     [ -L "${HOME}/.claude/commands/v-work.md" ]
     [ -L "${HOME}/.claude/commands/v-capture.md" ]
 }
 
-@test "--minimal is idempotent (second run is a no-op for coupled-groups)" {
-    "${VAULT_ROOT}/setup.sh" --minimal --yes >/dev/null
+@test "--light is idempotent (second run is a no-op for coupled-groups)" {
+    "${VAULT_ROOT}/setup.sh" --light --yes >/dev/null
     cp "${VAULT_HOME}/_global/coupled-groups.md" "${TEST_HOME}/before"
-    "${VAULT_ROOT}/setup.sh" --minimal --yes >/dev/null
+    "${VAULT_ROOT}/setup.sh" --light --yes >/dev/null
     cmp -s "${TEST_HOME}/before" "${VAULT_HOME}/_global/coupled-groups.md"
 }
 
-@test "--minimal preserves existing coupled-groups.md (does not clobber)" {
+@test "--light preserves existing coupled-groups.md (does not clobber)" {
     mkdir -p "${VAULT_HOME}/_global"
     echo "USER CONTENT" > "${VAULT_HOME}/_global/coupled-groups.md"
-    run "${VAULT_ROOT}/setup.sh" --minimal --yes
+    run "${VAULT_ROOT}/setup.sh" --light --yes
     [ "$status" -eq 0 ]
     grep -q "USER CONTENT" "${VAULT_HOME}/_global/coupled-groups.md"
 }
 
-# --minimal must beat any tool flag. This case used to be parameterised on a
-# memory-tool flag; keeping the invariant covered after that flag was removed.
-@test "--minimal beats a tool flag (--with-graphify does nothing)" {
-    run "${VAULT_ROOT}/setup.sh" --with-graphify --minimal --yes
+@test "--light installs no tool" {
+    run "${VAULT_ROOT}/setup.sh" --light --yes
     [ "$status" -eq 0 ]
-    [[ "$output" != *"=== Graphify ==="* ]]
+    [[ "$output" != *"=== Serena"* ]]
 }
 
-# The chosen profile is recorded so the commands know whether Serena/Graphify are
-# meant to be there. Without it a light machine reads as a broken one (ADR-021).
+# The chosen profile is recorded so the commands know whether Serena is meant to
+# be there. Without it a light machine reads as a broken one (ADR-021).
 @test "--light records install_mode: light in the machine config" {
     run "${VAULT_ROOT}/setup.sh" --light --yes
     [ "$status" -eq 0 ]
@@ -80,14 +78,8 @@ teardown() {
     [ "$(grep -c '^install_mode:' "${VAULT_HOME}/_global/config.md")" -eq 1 ]
 }
 
-@test "--minimal records install_mode: minimal" {
-    run "${VAULT_ROOT}/setup.sh" --minimal --yes
-    [ "$status" -eq 0 ]
-    grep -q '^install_mode: minimal$' "${VAULT_HOME}/_global/config.md"
-}
-
 @test "prints per-repo onboarding instructions (vault-init / VAULT.md)" {
-    run "${VAULT_ROOT}/setup.sh" --minimal --yes
+    run "${VAULT_ROOT}/setup.sh" --light --yes
     [ "$status" -eq 0 ]
     [[ "$output" == *"bin/vault-init.sh"* ]]
     [[ "$output" == *"VAULT.md"* ]]
@@ -97,7 +89,7 @@ teardown() {
 @test "does not write into the user-owned ~/.claude/CLAUDE.md" {
     mkdir -p "${CLAUDE_HOME}"
     printf 'MY OWN CLAUDE.md\n' > "${CLAUDE_HOME}/CLAUDE.md"
-    run "${VAULT_ROOT}/setup.sh" --minimal --yes
+    run "${VAULT_ROOT}/setup.sh" --light --yes
     [ "$status" -eq 0 ]
     # The installer must leave the user's global CLAUDE.md exactly as it was.
     [ "$(cat "${CLAUDE_HOME}/CLAUDE.md")" = "MY OWN CLAUDE.md" ]

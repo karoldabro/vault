@@ -3,20 +3,17 @@
 # against the network inside a throwaway container. Opt-in only.
 #
 # Unlike tests/run.sh (offline alpine, :ro, non-root), this runs as root with
-# outbound network so apt / curl|sh / pipx actually execute. The repo is still
+# outbound network so apt / curl|sh / uv actually execute. The repo is still
 # mounted read-only — setup.sh writes only under $HOME, which is the writable
 # container-local /root.
 #
-# COVERAGE NOTE: this suite exercises the lightweight real installers (uv via
-# curl|sh, graphify via pipx). The `claude` plugin/marketplace paths are
-# deliberately NOT e2e-covered here — they are network-bound and the image ships
-# no `claude` CLI. Those paths are covered at the command-construction level by the offline
-# dry-run suite (tests/unit/setup-autoinstall.bats), not proven end-to-end.
+# COVERAGE NOTE: this suite exercises the real uv curl|sh installer and the
+# Serena install through uv.
 set -euo pipefail
 
 if [ "${VAULT_E2E:-0}" != "1" ]; then
     cat >&2 <<'EOF'
-e2e is disabled. It runs REAL network installs (apt, curl|sh, pipx) on a
+e2e is disabled. It runs REAL network installs (apt, curl|sh, uv) on a
 throwaway Ubuntu container and is slow. To run it:
 
     VAULT_E2E=1 make test-e2e

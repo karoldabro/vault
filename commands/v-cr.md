@@ -55,10 +55,10 @@ Usage:
 
 ## Tools — preferred, force when present (never gating)
 
-Same backbone as `/v-team` (claude-mem, Serena, MorphLLM, graphify) plus the **Agent** tool
-for the critic panel and the forge CLIs (`gh`, Bitbucket via REST). Backbone health checks + fallbacks:
-canonical table in `$VAULT_FRAMEWORK_PATH/tool-playbook.md` — one `/v-cr` delta: graphify's grep
-fallback is valid **only if local HEAD == the PR's repo/branch**. `/v-cr`-specific additions:
+Same backbone as `/v-team` (vault grep, Serena when present) plus the **Agent** tool for the critic
+panel and the forge CLIs (`gh`, Bitbucket via REST). Backbone health checks + fallbacks: canonical table
+in `$VAULT_FRAMEWORK_PATH/tool-playbook.md` — one `/v-cr` delta: Serena and a grep over local source are
+valid **only if local HEAD == the PR's repo/branch**. `/v-cr`-specific additions:
 
 | Tool | Health check | Fallback if down |
 |------|-------------|------------------|

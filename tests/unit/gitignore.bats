@@ -14,7 +14,7 @@ load "../helpers/setup.bash"
     local tpl="/code/templates/vault.gitignore"
     [ -f "${tpl}" ]
     grep -q 'memory/parent'                "${tpl}"
-    grep -q '^graphify/$'                  "${tpl}"
+    grep -q '^serena/$'                    "${tpl}"
     grep -q '\.obsidian/workspace\*\.json' "${tpl}"
 }
 

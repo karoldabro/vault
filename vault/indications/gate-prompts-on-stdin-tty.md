@@ -35,7 +35,7 @@ elif [ -t 0 ] && { : </dev/tty; } 2>/dev/null; then
     printf 'Choice [1]: '
     read -r reply </dev/tty || reply=""
 else
-    profile="minimal"          # conservative: install nothing unattended
+    profile="light"            # conservative: install nothing unattended
     warn "No answer and no consent — installing no tools."
 fi
 ```

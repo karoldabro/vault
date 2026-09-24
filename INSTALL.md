@@ -50,30 +50,29 @@ release, never per commit. `make release-check` fails when files that ship in th
 git clone git@github.com:karoldabro/vault.git ~/workspace/vault && cd ~/workspace/vault && ./setup.sh
 ```
 
-`setup.sh` is the installer. With no flags it asks which of the three tool sets you want.
+`setup.sh` is the installer. With no flags it asks which of the two installs you want.
 
-## Pick light, full, or minimal
+## Pick light or full
 
 | Install | Flag | You get | You give up |
 |---------|------|---------|-------------|
-| **Light** — recommended | `--light` | bun, claude-mem and its Claude Code plugin: memory recall across sessions | Questions about code structure fall back to grep, so they cost more tokens |
-| **Full** — for developers | `--full` | Everything in light, plus uv + Serena and pipx + Graphify: symbol navigation and a structural code graph, so code work is much cheaper | Vendor `curl \| sh` installs, apt, and Python 3.10 or newer |
-| Minimal | `--minimal` | The commands, nothing else | Every context lookup is grep |
+| **Light** — default | `--light` | The commands and the machine layer, no optional tools | Questions about code structure use grep, so they cost more tokens |
+| **Full** — for developers | `--full` | Everything in light, plus uv + Serena: symbol navigation, so code work is cheaper | A vendor `curl \| sh` install and apt |
 
-Serena and Graphify are developer tools. Take the light install if you use the vault for notes,
-decisions and session history rather than for working on code; every command works without them. Add
-them later with `./setup.sh --full`, which is safe to run repeatedly.
+Serena is a developer tool. Take the light install if you use the vault for notes, decisions and session
+history rather than for working on code; every command works without it. Add it later with
+`./setup.sh --full`, which is safe to run repeatedly.
 
 `setup.sh` records your choice as `install_mode` in `~/vault/_global/config.md`. That is how the commands
-know not to keep offering tools you chose not to install. With no terminal to answer, `--yes` selects
-light and passing nothing selects minimal; the installer never installs unattended without consent.
+know not to offer Serena on a machine whose `install_mode` is not `full`. With no terminal to answer, the
+installer selects light, which installs no tool.
 
 `setup.sh` then scaffolds `~/vault/_global/`, runs a health check, and links the slash commands into
 `~/.claude/commands/`. Restart Claude Code afterwards. It skips the linking step when the vault plugin is
 already installed, leaving the plugin's commands as the only copy.
 
-Run it as your normal user, never with `sudo`. Everything lands per-user: uv, bun and the plugins go into
-your `$HOME`. At the apt steps it asks for your sudo password once and escalates for you.
+Run it as your normal user, never with `sudo`. Everything lands per-user: uv and Serena go into your
+`$HOME`. At the apt steps it asks for your sudo password once and escalates for you.
 `sudo ./setup.sh` is refused, because it would point `$HOME` at `/root` and leave everything there. Set
 `VAULT_ALLOW_SUDO=1` if you mean it.
 
@@ -91,34 +90,19 @@ Auto-install asks before it touches anything, prints every remote URL it runs, a
 `--yes` skips the prompt. On a Mac, which has no apt, and non-interactively without passwordless sudo, it
 prints the exact commands instead of running them, so it never half-installs and never hangs.
 
-It does run vendor `curl | sh` scripts for uv and bun, and it adds a third-party Claude marketplace, and
-it prints every source first. `vault/decisions/ADR-005-installer-auto-exec.md` records why. MorphLLM Fast
-Apply is not installed for you, because it needs a paid API key.
+On a full install it runs the vendor `curl | sh` script for uv, and it prints every source first.
+`vault/decisions/ADR-005-installer-auto-exec.md` records why.
 
 ## Flags
 
 | Flag | What it does |
 |------|--------------|
-| `--light` | claude-mem only. Recommended — see [Pick light, full, or minimal](#pick-light-full-or-minimal). |
-| `--full` | Adds the developer tools: Serena and Graphify. |
-| `--minimal` | Framework only, no tools. Commands degrade without the tools. |
-| `--with-serena` / `--with-claude-mem` | Install one tool (uv + Serena, or bun + claude-mem). |
-| `--with-graphify` | Install pipx + Graphify. `/v-init` adds the per-project commit hook. |
+| `--light` | No optional tools. The default — see [Pick light or full](#pick-light-or-full). |
+| `--full` | Adds the developer tool: uv + Serena. |
+| `--with-serena` | Install uv + Serena alone. Records `install_mode: full`. |
 | `--yes`, `-y` | Say yes without prompting. For CI and automation. |
 | `--dry-run` | Print every command that would run, without running it. |
 | `--doctor` | Run the health check and exit. |
-
-## Python 3.10 or newer, for the full install only
-
-The pipx tool `graphifyy` needs Python 3.10 or newer. The installer picks up a `python3.12`, `3.11` or
-`3.10` from your PATH. On an older box such as WSL or Ubuntu 20.04, which ship Python 3.8, pipx fails
-with a misleading "No matching distribution found". Install a newer Python and re-run:
-
-```bash
-sudo apt install -y python3.12 python3.12-venv   # or the deadsnakes PPA
-```
-
-`--doctor` flags a missing 3.10-or-newer interpreter.
 
 ## Refresh after a pull
 
@@ -218,14 +202,15 @@ On a plugin install, `/plugin uninstall vault@kdabro-vault` removes the commands
 ./bin/vault-uninstall.sh --dry-run    # preview first
 ```
 
-By default it removes only the wiring: the command symlinks and the claude-mem plugin. To go further:
+By default it removes only the wiring: the command symlinks. To go further:
 
-- `--tools` also uninstalls `graphifyy` and `serena-agent`, never the shared uv, bun or node.
+- `--tools` also uninstalls `serena-agent`, never the shared uv or node.
 - `--purge-data` deletes `~/vault/_global`. This destroys data.
 - `--all` does both.
 
 Without `--yes` and with no terminal attached, it prints the plan and stops. It never touches your
-project vaults or your code repos.
+project vaults or your code repos. Tools an older framework version installed are removed by hand:
+[docs/uninstall-removed-tools.md](docs/uninstall-removed-tools.md).
 
 ## Tests
 
@@ -254,7 +239,7 @@ VAULT_E2E=1 make test-e2e
 ```
 
 It errors out unless `VAULT_E2E=1` is set. It builds from `tests/e2e/Dockerfile.ubuntu` and covers the
-lightweight installers (uv via `curl|sh`, Graphify via pipx); `tests/e2e/run.sh` covers the `claude`
+lightweight installer (uv via `curl|sh`); `tests/e2e/run.sh` covers the `claude`
 plugin paths at the dry-run level.
 
 Run Claude Code's own validator before publishing a change to either plugin manifest:

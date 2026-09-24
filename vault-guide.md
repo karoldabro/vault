@@ -140,7 +140,6 @@ Precedence and failure modes — the framework never halts:
 ├── features/                # Subject-matter dossiers, one per feature/domain
 │   └── <NN>-<slug>.md or <slug>.md
 ├── campaigns/               # /v-loop campaign state, one dir per campaign; results/ is .gitignored
-├── graphify/                # Code graph slices (symlinks; .gitignored)
 ├── guides/                  # Cross-project integration contracts (API shapes, enums, data flow; no impl code)
 ├── handoffs/                # /v-handoff session handoffs — what the next session must carry on
 │   └── YYYY-MM-DD-HHMM-<slug>.md ...
@@ -275,10 +274,8 @@ one-off write.
    done | sort -u
    ```
 3. **Check indexes**: `_feature-index.md`, `decisions/_inventory.md`, `_moc.md`, for a slug or topic match.
-4. **Search claude-mem when installed**: `search(<topic>)`, top 5 hits. Not installed → say so once; the
-   grep in step 2 stands on its own.
-5. **Apply the rule**: when an existing document covers more than 60% of the topic, update it.
-6. **Naming guards**:
+4. **Apply the rule**: when an existing document covers more than 60% of the topic, update it.
+5. **Naming guards**:
    - ADRs take the next free sequential number from `_inventory.md`.
    - Features in a master domain set keep the project's `NN-` prefix.
    - Sessions are always `YYYY-MM-DD-HHMM-<slug>.md`, slug at most 6 words, kebab-case.
@@ -332,14 +329,13 @@ old ones, then spot-check `_moc.md` for broken wikilinks in Obsidian's graph vie
 
 ## 10. Required tools
 
-Vault commands prefer these tools and fall back cleanly when one is missing; `setup.sh` installs them
-(see [INSTALL.md](INSTALL.md)). The floor under all of them is grep over the vault markdown.
+Vault commands need no optional tool. The floor under every command is grep over the vault markdown and
+grep, Glob and Read over source. Serena is the one optional tool, and only `setup.sh --full` installs it
+(see [INSTALL.md](INSTALL.md)).
 
 | Tool | Purpose | Install |
 |------|---------|---------|
-| **Serena** | Symbol-aware code navigation and refactoring. MCP: `activate_project`, `find_symbol`, `rename`, `replace_symbol_body`. | `setup.sh --with-serena` |
-| **MorphLLM Fast Apply** | Bulk multi-file edits at 10k+ tok/sec. MCP: `morph_edit(target_filepath, instructions, code_edit)`. | not auto-installed (paid key): `claude mcp add` — see ADR-005 |
-| **claude-mem** | Project history — progressive disclosure search. MCP: `search`, `timeline`, `get_observations`. Read-only; it auto-captures via its SessionEnd hook. | `setup.sh --with-claude-mem` |
+| **Serena** | Symbol-aware code navigation and refactoring. MCP: `activate_project`, `find_symbol`, `rename`, `replace_symbol_body`. | `setup.sh --full` |
 
 **Which tool to reach for, and in what order, lives in [`tool-playbook.md`](tool-playbook.md)** — cost
 hierarchy, health checks, fallbacks, and a worked example per tool.
@@ -363,18 +359,18 @@ instead. Decision record: [[ADR-018-decision-communication-contract]] in `vault/
 |---------|---------|-----------|
 | `/v-setup` | Install or repair the machine-level stack — prerequisites, `~/vault/_global/`, optional tools. Wraps `setup.sh`, shows what it will run, asks first. `--doctor` checks without changing anything. | — |
 | `/v-init` | Bootstrap a project vault for the current repo: creates the vault (global, or in-repo with `--in-repo`), writes `VAULT.md`, scaffolds folders + indexes, wires CLAUDE.md. | git |
-| `/v-work` | Vault-aware dev lifecycle: load context → propose (with the duplicate check) → approval → execute → commit + capture. | claude-mem, Serena, MorphLLM |
-| `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, claude-mem, Serena, MorphLLM |
-| `/v-ask` | Read-only, vault-aware Q&A. Loads context cheapest-first; no edits, no gate, no capture. Hands off when the answer implies a change. | claude-mem, graphify, Serena |
-| `/v-do` | Small low-risk change, no approval gate. Orient → execute → self-review; capture off by default. Escalates to `/v-work` above ~5 files, `/v-team` for architecture, schema, auth, billing or cross-repo. | claude-mem, Serena, MorphLLM |
+| `/v-work` | Vault-aware dev lifecycle: load context → propose (with the duplicate check) → approval → execute → commit + capture. | vault grep, Serena (optional), Edit |
+| `/v-team` | Persona-critique lifecycle for big or high-stakes work. Reuses v-work steps 01/02/05; PROPOSE + EXECUTE run panel loops where project-specific critics (from `VAULT.md` `project_type`/`personas`, then stack auto-detect; defined in `personas/`) review plan + diff, propose fixes + tests, and loop to convergence. | Agent panel, vault grep, Serena (optional), Edit |
+| `/v-ask` | Read-only, vault-aware Q&A. Loads context cheapest-first; no edits, no gate, no capture. Hands off when the answer implies a change. | vault grep, Serena (optional), Grep |
+| `/v-do` | Small low-risk change, no approval gate. Orient → execute → self-review; capture off by default. Escalates to `/v-work` above ~5 files, `/v-team` for architecture, schema, auth, billing or cross-repo. | vault grep, Serena (optional), Edit |
 | `/v-loop` | Autonomous campaign engine against a real system. Picks an adapter, refuses without an arena the operator names and a restore command it runs at intake, takes every decision in one exchange, then enumerates a backlog and works each case until every one is terminal or a cap stops it (§11.1). | Agent fan-out, whatever the adapter's verifier is |
 | `/v-method` | Designs the method for one heavy task and runs no stage. Refuses without a written problem statement, an observable criterion, or when the task fits one rung of the ladder. Routes on checkable task properties (`commands/v-method/routing.md`), asks which of budget and criteria is fixed, then writes a method file whose every stage carries a command, seats, tools, exit evidence and a kill criterion naming the field its verdict is read from (§11.2). | `bin/gate.sh verdict --run`, the stage commands themselves |
 | `/v-handoff` | Write what the next session carries on, into `handoffs/`: what is left, what not to touch, what is unverified, and the exact next command. `resume` reads the newest open one back, follows its `continues` chain, and marks it resumed; `list` shows them. Refuses when nothing is left to do, and names `/v-capture` instead. | `bin/doc-lint.sh` |
 | `/v-report` | File a problem found during other work into `reports/`: what is wrong, which files, the consequence, the cause, how to see it, the repair and what closes it. `list` orders by severity; `close` marks it fixed or rejected. Only for a problem outside the scope of the work that found it. | `bin/doc-lint.sh` |
-| `/v-capture` | Capture this session as `sessions/*.md`. Runs the duplicate check, updates indexes, extracts ADR candidates, cross-links Refs. | claude-mem auto-capture (SessionEnd hook) |
+| `/v-capture` | Capture this session as `sessions/*.md`. Runs the duplicate check, updates indexes, extracts ADR candidates, cross-links Refs. | vault grep |
 | `/v-link` | Declare two projects coupled, so context loading sweeps both. Updates `~/vault/_global/coupled-groups.md`. | — |
-| `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from a feature. | claude-mem, graphify, MorphLLM |
-| `/v-reconcile` | Bring a document up to `_shared/document-standard.md`: split the record out to a sidecar, rewrite, then prove with `doc-lint --compare` that no constraint was dropped. Approval-gated per file. | claude-mem, graphify, `bin/doc-lint.sh` |
+| `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from a feature. | vault grep, Serena (optional), Grep |
+| `/v-reconcile` | Bring a document up to `_shared/document-standard.md`: split the record out to a sidecar, rewrite, then prove with `doc-lint --compare` that no constraint was dropped. Approval-gated per file. | vault grep, `bin/doc-lint.sh` |
 | `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | Agent |
 
 `attic/` holds `/v-migrate`, whose one-shot migration finished; `bin/vault-migrate.sh` still works.

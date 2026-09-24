@@ -18,7 +18,7 @@ real onboarding on another machine): `sudo ./setup.sh` strands everything in `/r
 
 ## Did
 - Diagnosed the deadlock from [[setup.sh]] + [[lib/installers.sh]]:
-  - `sudo ./setup.sh` → `$HOME=/root` → uv, bun, plugins and tool config land in root's home (invisible to
+  - `sudo ./setup.sh` → `$HOME=/root` → uv, plugins and tool config land in root's home (invisible to
     the user); `claude` not on root's PATH → `claude_cli_ok` false → plugin auto-install skipped →
     user installed plugins by hand.
   - `./setup.sh` as the user → `sudo_available()` required **passwordless** sudo (`sudo -n true`),

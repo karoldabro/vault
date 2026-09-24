@@ -19,7 +19,6 @@ tags: [moc]
 <!-- Last N session entries appended by /v-capture. -->
 
 ## Code
-- Graph: `graphify/<repo>/graph.json` per sub-repo.
 - Repo roots: `<path-to-repo>`.
 
 ## External refs

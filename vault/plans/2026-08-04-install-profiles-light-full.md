@@ -10,21 +10,21 @@ tags: [plan, install, setup, tooling]
 
 ## Task
 
-Make Graphify and Serena developer-only tools that are **not** installed by default. `setup.sh`
+Make Serena a developer-only tool that is **not** installed by default. `setup.sh`
 should ask the user which install they want: full (developer) or light (normal).
 
 ## Current state
 
-- `setup.sh` already gates both behind `--with-serena` / `--with-graphify` / `--full`. With **no**
-  flags it installs nothing and asks nothing — so "default installs them" is false at the script
+- `setup.sh` already gates Serena behind `--with-serena` / `--full`. With **no**
+  flags it installs nothing and asks nothing — so "default installs it" is false at the script
   level, but everything *around* the script pushes `--full`:
   - `INSTALL.md` flags table: `--full` … "Recommended."
   - `INSTALL.md` quick-start one-liner is `./setup.sh --full --yes`.
   - `commands/v-setup.md` Step 3 runs `--full --yes` unconditionally.
-  - `scripts/detect-stack.sh` (SessionStart hook) reports missing `graphify` and `serena`.
-  - `doctor()` prints both as plain rows, indistinguishable from required tools.
+  - `scripts/detect-stack.sh` (SessionStart hook) reports missing `serena`.
+  - `doctor()` prints it as a plain row, indistinguishable from required tools.
   - `tool-playbook.md` §3/§4 and `commands/v-work/steps/02-load-context.md` §2.4/§2.5 instruct the
-    model to *surface* their absence and offer to install — correct for a developer, noise for a
+    model to *surface* its absence and offer to install — correct for a developer, noise for a
     normal user.
 - There is no interactive mode choice anywhere, and no record of which profile the machine chose.
 
@@ -48,11 +48,11 @@ words the user asked for (light / full), plus `--minimal` kept as the existing b
 
 | Profile | Flag | Installs |
 |---------|------|----------|
-| Light (normal) — **default** | `--light` | claude-mem (bun + plugin) |
-| Full (developer) | `--full` | claude-mem + Serena (uv) + Graphify (pipx) |
+| Light (normal) — **default** | `--light` | the default tools |
+| Full (developer) | `--full` | the default tools + Serena (uv) |
 | Minimal | `--minimal` | nothing — scaffold + command links only |
 
-Per-tool flags (`--with-serena`, `--with-claude-mem`, `--with-graphify`) stay as the escape hatch and
+Per-tool flags (`--with-serena`) stay as the escape hatch and
 keep beating profile selection. `--minimal` keeps beating everything (existing test asserts this).
 
 ### Selection rules
@@ -61,8 +61,8 @@ keep beating profile selection. `--minimal` keeps beating everything (existing t
 2. No flag + TTY → prompt:
    ```
    Which install?
-     [1] Light (normal)     claude-mem only. Recommended.
-     [2] Full (developer)   adds Serena + Graphify (uv, pipx, Python 3.10+).
+     [1] Light (normal)     Recommended.
+     [2] Full (developer)   adds Serena (uv).
      [3] Minimal            framework only, no tools.
    Choice [1]:
    ```
@@ -82,11 +82,11 @@ machine.
 
 ### Stop reporting the dev tools as gaps
 
-- `scripts/detect-stack.sh` — drop `graphify` / `serena` from `missing[]` entirely. The hook then only
+- `scripts/detect-stack.sh` — drop `serena` from `missing[]` entirely. The hook then only
   reports a missing machine layer, which is the one real gap.
-- `doctor()` — label both rows `graphify (developer)` / `serena (developer)` so a light install does
-  not read as failing. Neither was ever required for the exit code; only the label changes.
-- `tool-playbook.md` §3 + §4 — "surface it and offer `graphify hook install`" becomes conditional:
+- `doctor()` — label the row `serena (developer)` so a light install does
+  not read as failing. It was never required for the exit code; only the label changes.
+- `tool-playbook.md` §3 + §4 — "surface it and offer to install" becomes conditional:
   offer it on a full install; on a light install fall back to grep/Glob without commentary.
 - `commands/v-work/steps/02-load-context.md` §2.4/§2.5 and `commands/v-do.md` — same softening, one
   line each.
@@ -96,7 +96,7 @@ machine.
 - `INSTALL.md` — quick-start one-liner becomes `./setup.sh --yes` (light); flags table gains `--light`
   and moves "Recommended" onto it; `--full` reworded as the developer profile; add a short
   "Which install?" section naming what each profile buys.
-- `README.md` — the tool-playbook bullet notes Serena/Graphify are developer-profile tools.
+- `README.md` — the tool-playbook bullet notes Serena is a developer-profile tool.
 - `commands/v-setup.md` — Step 2's gate presents the two profiles instead of a yes/no on `--full`;
   Step 3 runs the chosen profile; front-matter `argument-hint` gains `--light`.
 
@@ -106,8 +106,8 @@ machine.
    (currently lines 45–120) to the four selection rules; add the prompt. Tool: Edit.
 2. `setup.sh` — write `install_mode` into `config.md` (Step 2 block), including on re-run when the
    file already exists. Tool: Edit.
-3. `lib/installers.sh` — relabel the two `_doctor_row` calls. Tool: Edit.
-4. `scripts/detect-stack.sh` — remove the graphify/serena block. Tool: Edit.
+3. `lib/installers.sh` — relabel the `_doctor_row` call. Tool: Edit.
+4. `scripts/detect-stack.sh` — remove the serena block. Tool: Edit.
 5. `tool-playbook.md`, `commands/v-work/steps/02-load-context.md`, `commands/v-do.md` — soften the
    missing-tool instructions. Tool: Edit.
 6. `commands/v-setup.md` — profile gate. Tool: Edit.
@@ -119,10 +119,9 @@ machine.
 
 `tests/unit/setup-autoinstall.bats` (dry-run transcript — the primary seam):
 
-- `--light --dry-run` emits the claude-mem install commands and **no** `uv tool install serena-agent`,
-  **no** `pipx install graphifyy`.
-- `--full --dry-run` still emits all three (existing test, must stay green).
-- bare `--yes` with a fake PATH resolves to the light profile — claude-mem only.
+- `--light --dry-run` emits **no** `uv tool install serena-agent`.
+- `--full --dry-run` still emits it (existing test, must stay green).
+- bare `--yes` with a fake PATH resolves to the light profile.
 - no flags, stdin closed, no `--yes` → nothing installed (minimal), and the flag hint is printed.
 - prompt: no flags with `2` on stdin → full profile; empty line → light. (Reuses the existing
   `</dev/null` / stdin pattern at `setup-autoinstall.bats:274`.)
@@ -135,10 +134,10 @@ machine.
 
 `tests/unit/plugin-install.bats`:
 
-- `scripts/detect-stack.sh` no longer mentions graphify or serena.
+- `scripts/detect-stack.sh` no longer mentions serena.
 
 Fault named per happy path: the profile resolver's failure mode is a flag silently losing to the
-prompt — covered by rule 1 having its own case for both `--full` and `--with-graphify`.
+prompt — covered by rule 1 having its own case for both `--full` and `--with-serena`.
 
 ## Vault writes
 

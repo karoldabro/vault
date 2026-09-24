@@ -58,7 +58,7 @@ test-harness-critic:{ analyzer: "run vitest run + verify @nuxt/test-utils setup;
 ## Stack-local personas
 
 ## Persona: Component / State Architect  (base_agent: frontend-architect)
-- **analyzer:** component tree + store/composable introspection (Serena/graphify); detect the project's
+- **analyzer:** component tree + store/composable introspection (Serena when present, else grep); detect the project's
   state approach (Pinia store vs composables-only — check deps + `stores/`/`composables/`); compare
   against existing components/composables.
 - **mandate:** Correct composable-vs-component boundary, the project's state pattern applied

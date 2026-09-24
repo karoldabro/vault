@@ -49,8 +49,8 @@ do what the ticket asked?").
 
 ## 2.4 Load the reviewed repo's vault — by base-repo slug (skeptic-6)
 Resolve the vault for the **base repo** (`<owner>/<repo>` from step 1), not by assuming cwd is the repo.
-Reuse the v-work context loader's **vault-only layer**: claude-mem `search` + `~/vault/<slug>/`
-decisions (ADRs), indications, and the feature dossier for the touched area. These give the panel the
+Reuse the v-work context loader's **vault-only layer**: a grep over `~/vault/<slug>/` decisions
+(ADRs), indications, and the feature dossier for the touched area. These give the panel the
 project's rules and conventions to check the diff against.
 
 ### The indication retrieval rule (mandatory, in this order)
@@ -94,7 +94,7 @@ the token budget and with the count recorded. An unrecorded partial load is what
 loading nothing is not the safe default, it is a silent hole in the review.
 
 **Local-only layers run only if `Local match: yes` from step 1** (local HEAD == the PR's repo/branch):
-graphify `graph.json`, Serena symbols, the project `CLAUDE.md`. Otherwise **skip them and say so** — do
+Serena symbols, a grep over local source, the project `CLAUDE.md`. Otherwise **skip them and say so** — do
 not load a different checkout's structure and pass it off as the PR's.
 
 **If no persona pack resolves** for the base repo, FAIL LOUDLY now: tell the user the review will run the
@@ -124,14 +124,14 @@ Carry forward to step 3:
   `_shared/critic-panel.md` Inputs);
 - the **test-gate verdict**: `pass` · `new-failure (blocking → skip deep panel)` · `red-unattributed
   (advisory)` · `could-not-provision (infra, NOT a code finding)`.
-Because the real PR tree is now materialized, the local-only layers (graph/Serena) MAY run against the
+Because the real PR tree is now materialized, the local-only layers (Serena, source grep) MAY run against the
 clone even when step-1 `local-match` was no — note that they ran against the sandbox clone.
 
 ## Required output
 ```
 Diff: <n files, +a/-b, c changed lines>  ·  secrets: <none | N redacted (warned)>
 Task: <JIRA-KEY / asana:GID / #N "summary"> | none
-Vault: <pack resolved | GENERIC FALLBACK>  ·  layers: [vault-only | + graph/serena/CLAUDE.md]
+Vault: <pack resolved | GENERIC FALLBACK>  ·  layers: [vault-only | + serena/source/CLAUDE.md]
 Rules: <r> index rows (<scope <surface>+cross-repo | scope filter: n/a>)  ·  <b> bodies fetched
 Routing: <a> routed  ·  <m> no-match  ·  <u> unroutable   # cr_rule_route -> $CR_RULE_ROUTES
 Suppression set: <n prior v-cr fingerprints>  (<m> threads have human replies)

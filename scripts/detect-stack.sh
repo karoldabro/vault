@@ -19,10 +19,10 @@ missing=()
 
 [ -f "${VAULT_HOME}/_global/config.md" ] || missing+=("the machine layer (~/vault/_global/)")
 
-# Graphify and Serena are deliberately NOT checked here. They ship only in the
-# --full (developer) profile, so on a normal light install their absence is the
-# expected state, not a gap — naming them would report normality as a problem
-# (ADR-021). The machine layer is the one thing every install needs.
+# Serena is deliberately NOT checked here. It ships only in the --full
+# (developer) profile, so on a normal light install its absence is the expected
+# state, not a gap — naming it would report normality as a problem (ADR-021).
+# The machine layer is the one thing every install needs.
 
 [ "${#missing[@]}" -gt 0 ] || exit 0
 

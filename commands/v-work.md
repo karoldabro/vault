@@ -18,11 +18,11 @@ context (keeps the run lean; the whole body never loads at once).
 
 ## Tools — preferred, force when present (never gating)
 
-claude-mem, Serena, MorphLLM Fast Apply, and graphify are the token-saving backbone. Serena and
-graphify ship only in the developer install (`setup.sh --full`); on a `light` machine
-(`~/vault/_global/config.md` → `install_mode`) their absence is expected — grep and say nothing.
+Vault grep and Serena are the token-saving backbone. Serena ships only in the developer install
+(`setup.sh --full`); on a machine whose `install_mode` (`~/vault/_global/config.md`) is not `full`,
+Serena is absent by design — use Read and Grep and say nothing.
 
-Present → use it (don't hand-roll grep/full-file reads/`sed` in its place); genuinely down →
+Present → use it (don't hand-roll full-file reads or `sed` in its place); genuinely down →
 health-check to confirm, warn once, fall back, **never halt the lifecycle**. Canonical health-check +
 fallback table and full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md` (default `~/workspace/vault/`).
 
@@ -94,8 +94,8 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/05-commit-capture.md`, then ex
 - PROPOSE opens with two front gates (§3a.0a/§3a.0b): **clarify** the task (surface assumptions, ask
   plan-changing questions via `AskUserQuestion`) and **research it online** (ground the approach against
   how the wild solves it — reconcile any contradicting consensus). Don't jump straight to a plan.
-- If dedupe returns conflicting results (claude-mem finds doc X, grep finds doc Y), read both — the
-  vault may hold parallel docs that need merging. Flag it to the user.
+- If dedupe returns conflicting results (the vault grep finds doc X and an index points at doc Y),
+  read both — the vault may hold parallel docs that need merging. Flag it to the user.
 - If `$VAULT_FRAMEWORK_PATH/vault-guide.md` can't be found, the framework install path is wrong —
   check `~/vault/_global/config.md` (`framework_path`) or re-run `setup.sh`. If the resolved vault
   dir is missing, the repo isn't wired: run `/v-init` (old submodule vault: `bin/vault-migrate.sh`).

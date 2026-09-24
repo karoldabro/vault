@@ -53,7 +53,7 @@ forbidden from running raw `git` against a vault.**
 
 - **Never `git add -A` and never `git add .`** — always an explicit pathspec, so a dirty parent or a
   sibling vault under `~/vault/` cannot be swept into a commit. Gitignore still excludes the local-only
-  mounts (`memory/`, `graphify/`, `serena/`).
+  mounts (`memory/`, `serena/`).
 - **Never `git init` a vault.** Five of this machine's eleven vault dirs are deliberately not repos.
   Exit 3 is a one-line note, not a prompt loop. Consistent with [[ADR-005-installer-auto-exec]]'s line
   on doing things to a user's machine without asking.

@@ -148,7 +148,7 @@ cmd_push() {
 
     # Default to the vault dir as an explicit absolute path. Never `.` and never `-A`: an explicit
     # pathspec keeps a dirty parent (or an unrelated sibling vault) out of this commit, and gitignore
-    # still excludes the local-only mounts (memory/, graphify/, serena/).
+    # still excludes the local-only mounts (memory/, serena/).
     if [ "${#paths[@]}" -eq 0 ]; then
         paths=("$(cd "$dir" && pwd -P)")
     fi

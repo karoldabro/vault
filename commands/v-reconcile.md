@@ -68,7 +68,7 @@ the file alone.
 2. **Vault:** `decisions/`, `indications/`, `features/` for the same slug and keywords. A rule this
    document states may be owned by an ADR, in which case the document should reference it, not
    restate it.
-3. **Graph / code:** for every source path the document names, confirm the path still exists. A path
+3. **Code:** for every source path the document names, confirm the path still exists. A path
    that has moved is a finding for the user, not something to quietly drop.
 4. **Sibling documents:** does a plan, trail or session already hold the history this file carries?
    If so, the history moves there rather than being deleted.

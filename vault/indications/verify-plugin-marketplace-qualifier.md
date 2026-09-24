@@ -15,14 +15,14 @@ Verify it against `marketplace.json` before wiring `claude plugin install`; neve
 
 ## Rationale
 `claude plugin marketplace add <owner>/<repo>` registers the marketplace under its declared `name`, which
-often differs from the owner/repo. Guessing the qualifier (e.g. `claude-mem@claude-mem` when the real name
-is `thedotmack`) fails only on a **fresh** install. A test stub that echoes the wrong qualifier still
-satisfies a grep-key idempotency check, so the bug stays invisible until a real machine hits it.
+often differs from the owner/repo. A guessed qualifier fails only on a **fresh** install. A test stub
+that echoes the wrong qualifier still satisfies a grep-key idempotency check, so the bug stays invisible
+until a real machine hits it.
 
 ## Examples
-- Do: `thedotmack/claude-mem` → `marketplace.json` `name: thedotmack`, plugin `claude-mem` → install `claude-mem@thedotmack`.
-- Do: `thedotmack/claude-mem` → marketplace name `thedotmack` → install `claude-mem@thedotmack`.
-- Don't: derive the qualifier from the owner or repo slug (`claude-mem@claude-mem`).
+- Do: `karoldabro/vault` → `.claude-plugin/marketplace.json` `name: kdabro-vault`, plugin `vault` →
+  install `vault@kdabro-vault`.
+- Don't: derive the qualifier from the owner or repo slug (`vault@karoldabro`, `vault@vault`).
 
 ## Applies-to
-`lib/installers.sh`, `setup.sh`, `tests/unit/setup-autoinstall.bats`
+`.claude-plugin/marketplace.json`, `README.md`, `commands/v-plugin.md`, `bin/vault-plugin.sh`

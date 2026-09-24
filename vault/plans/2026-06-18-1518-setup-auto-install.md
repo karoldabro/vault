@@ -13,15 +13,15 @@ Rework `setup.sh` from a detect-and-print-a-hint advisor into an Ubuntu-first au
 onboarder for the whole vault tool stack, with a Docker-based e2e harness that runs it.
 
 ## Task
-Make `setup.sh` install all dependencies and tools automatically on Ubuntu (ollama, Graphify,
+Make `setup.sh` install all dependencies and tools automatically on Ubuntu (ollama,
 Claude plugins and MCPs) and onboard them, for a one-command experience.
-Keywords: setup.sh · ubuntu-apt · auto-install · ollama · graphify · claude-plugins · mcp · onboarding · idempotent.
+Keywords: setup.sh · ubuntu-apt · auto-install · ollama · claude-plugins · mcp · onboarding · idempotent.
 
 ## Open & deferred
 
 - **Latent secret leak in `lib/installers.sh`.** `run_shell` prints its pipeline verbatim with no
   redaction, and `_redact_args` only masks `KEY=val`-shaped suffixes. Nothing secret reaches either
-  path today, because Morph is the only secret-bearing tool and it is not installed. Adding any
+  path today, because no secret-bearing tool is installed. Adding any
   keyed tool re-opens this. The guardrail lives as a comment at `lib/installers.sh:66`.
 - **Deferred: hostile-path hardening in `setup.sh`.** Path validation against adversarial `$HOME` or
   `$PATH` values is not done.
@@ -30,7 +30,7 @@ Keywords: setup.sh · ubuntu-apt · auto-install · ollama · graphify · claude
   `${#arr[@]}` forms, so no host in scope hits it.
 - **Coverage gap: real `claude` marketplace idempotency is unverified.** No `claude` binary exists in
   the e2e image, so re-add behaviour is only stub-tested in `tests/unit/setup-autoinstall.bats`.
-- **Coverage gap: e2e proves only uv and graphify.** The ollama and claude install paths are covered
+- **Coverage gap: e2e proves only uv.** The ollama and claude install paths are covered
   by dry-run transcript assertions, not by a real install. Noted in `tests/e2e/run.sh`.
 
 ## Decisions
@@ -38,7 +38,6 @@ Keywords: setup.sh · ubuntu-apt · auto-install · ollama · graphify · claude
 | decision | reason | record |
 |---|---|---|
 | Auto-install is the default on Ubuntu, gated by consent | The ask was a one-command experience; the safety cost is paid by printed URLs, a consent prompt and degrade-on-non-apt | `vault/decisions/ADR-005-installer-auto-exec.md` |
-| Morph MCP is not installed at all, and `--with-morph` is not a flag | A paid key for a tool most runs skip is not worth a live secret surface in `setup.sh` | local |
 | ollama plus `nomic-embed-text` stays the embedding backend | It matches the working vault stack; the daemon bootstrap stays an advisory note | local |
 | The dry-run transcript is the primary tested surface for execute-path logic | The offline alpine suite can never reach the privileged path | local |
 
@@ -49,34 +48,28 @@ Dependency-ordered. File · action · key detail.
 1. **`setup.sh` → `run()` executor plus dry-run seam.** `run <cmd...>` executes; under
    `VAULT_SETUP_DRY_RUN=1` it echoes `[dry-run] <cmd>` and returns 0. It redacts secret-shaped args.
    **Scope = network and privileged side-effects only** (apt, `curl|sh`, ollama pull, claude CLI,
-   uv/bun/pipx installers). Pure-local scaffold (mkdir, heredocs, tool config, calling install.sh)
+   uv/pipx installers). Pure-local scaffold (mkdir, heredocs, tool config, calling install.sh)
    stays a **direct** call so the existing offline alpine bats stay green.
 2. **`lib/installers.sh` — extract `install_<tool>` and `check_<tool>` pairs**, sourced by setup.sh.
    Each `install_X` runs `check_X` (idempotent guard: `command -v` **plus** a known-path probe of
-   `~/.local/bin`, `~/.bun/bin`, `/usr/local/bin`), then if absent prints the source URL, `run`s the
+   `~/.local/bin`, `/usr/local/bin`), then if absent prints the source URL, `run`s the
    install and verifies. **Continue-on-error**: a tool failure never aborts the run; record pass/fail
    into a status map.
 3. **Platform detect plus consent.** Detect `apt-get` and `sudo -n true`. Ubuntu with sudo takes the
    auto-install path; no apt or no sudo degrades to the hint path and exits 0, never halting.
    Auto-install prints what it will install and every remote URL, and requires consent: an
    interactive prompt unless `--yes`.
-4. **Base prereqs:** `sudo apt-get update && sudo apt-get install -y git curl jq ca-certificates unzip`
-   (`unzip` is required by the bun installer).
-5. **Foundational runtimes:** uv via `curl -LsSf https://astral.sh/uv/install.sh | sh`; bun via
-   `curl -fsSL https://bun.com/install | bash`. PATH-probe their bins.
+4. **Base prereqs:** `sudo apt-get update && sudo apt-get install -y git curl jq ca-certificates unzip`.
+5. **Foundational runtime:** uv via `curl -LsSf https://astral.sh/uv/install.sh | sh`. PATH-probe
+   its bin.
 6. **ollama:** official `curl -fsSL https://ollama.com/install.sh | sh`; ensure the daemon runs
    (`systemctl enable --now ollama` on systemd hosts, else `ollama serve &` plus a readiness poll,
    required so the model pull works in containers); `ollama pull nomic-embed-text` guarded by
    `ollama list | grep -q`.
-7. **pipx plus graphify:** `sudo apt-get install -y pipx && pipx ensurepath`; `pipx install graphifyy`
-   (PyPI package `graphifyy`, binary `graphify`); verify `graphify --version`. Per-repo
-   `graphify hook install` stays `/v-init`'s job, noted only.
+7. **pipx:** `sudo apt-get install -y pipx && pipx ensurepath`.
 8. **serena:** `uv tool install -p 3.13 serena-agent`.
 9. **Claude plugins (new capability).** Probe `command -v claude` plus a version floor; absent or old
-   degrades this section to hints. Otherwise each step is guarded for idempotency under `set -e`:
-   `claude plugin marketplace add thedotmack/claude-mem` then
-   `claude plugin install claude-mem@claude-mem --scope user`, falling back to
-   `claude plugin install claude-mem`.
+   degrades this section to hints. Otherwise each step is guarded for idempotency under `set -e`.
 10. **Secret-bearing config files** (anything holding a key): write under `( umask 077; … )` so they
     land `0600`; `chmod 700` on `~/.claude`.
 11. **Doctor pass** (`setup.sh --doctor`, also auto-run at the end): per tool, check presence and
@@ -89,18 +82,15 @@ Dependency-ordered. File · action · key detail.
 13. **Tests** — the `## Test plan` section below.
 14. **README rewrite** plus `vault/decisions/ADR-005-installer-auto-exec.md`, documenting the safety
     stance: auto-exec, consent-gated, audit-logged, degrade-on-non-apt. Folds in the doc and name
-    fixes, including the wrong plugin id.
+    fixes.
 
 ## Tool install commands
 
 | tool | install | verify | idempotency guard |
 |------|---------|--------|-------------------|
 | ollama | `curl -fsSL https://ollama.com/install.sh \| sh` + `ollama pull nomic-embed-text` | `ollama --version` | `ollama list \| grep -q '^nomic-embed-text'` |
-| graphify | `pipx install graphifyy` | `graphify --version` | `pipx list \| grep -q graphifyy` |
-| claude-mem | `claude plugin marketplace add thedotmack/claude-mem` + `claude plugin install claude-mem` (bun auto-installed) | `claude plugin list \| grep -q claude-mem` | same |
 | serena | `uv tool install -p 3.13 serena-agent` | `serena --help` | `uv tool list \| grep -q serena-agent` |
 | uv | `curl -LsSf https://astral.sh/uv/install.sh \| sh` | `uv --version` | `command -v uv` / `~/.local/bin/uv` |
-| bun | `curl -fsSL https://bun.com/install \| bash` (needs `unzip`) | `bun --version` | `command -v bun` / `~/.bun/bin/bun` |
 
 ## Test plan
 - **Keep** `tests/unit/install.bats` and `tests/integration/setup.bats` green unchanged. On the
@@ -139,7 +129,7 @@ Dependency-ordered. File · action · key detail.
 ## Rollback
 
 Revert the commit that adds `lib/installers.sh` and rewrites `setup.sh`. Nothing installed on a host
-is undone by that revert: uv, bun, ollama, pipx, graphify and serena stay where they landed, and
+is undone by that revert: uv, ollama, pipx and serena stay where they landed, and
 `~/.claude` keeps its `0700` mode. To stop auto-install without reverting, run `setup.sh` on a host
 with no `apt-get` or no passwordless sudo, or pass `--dry-run`; both take the hint path and exit 0.
 

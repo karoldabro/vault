@@ -26,7 +26,7 @@ Three things stood in the way:
    live in a versioned cache directory that is neither.
 2. **`commands/` was not clean.** A plugin turns every `.md` under `commands/` into an invocable
    command. `install.sh` skipped `README.md` and `attic/` by name; the plugin loader has no such list.
-3. **Dependencies.** `setup.sh` installs the tool stack (uv/Serena, bun/claude-mem, pipx/Graphify) and
+3. **Dependencies.** `setup.sh` installs the optional developer tool (Serena, via uv) and
    scaffolds `~/vault/_global/`. Claude Code deliberately runs no installer when a plugin lands, and
    [[ADR-005-installer-auto-exec]] commits us to printing every source before running it — which rules
    out doing this silently from a hook even though the hook API allows it.

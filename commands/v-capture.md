@@ -13,9 +13,8 @@ description: Capture this session as a vault sessions/*.md doc. Runs dedupe vs r
 Force-write this session into the project vault: dedupe vs recent sessions, session doc, ADR +
 indication candidates, feature dossier gate, Refs cross-linking, index updates.
 
-The session doc in the vault is the durable record — it is git-tracked and greppable. claude-mem
-auto-captures alongside it; if it is absent, say so once and carry on. Degrade gracefully, never
-halt, never skip *silently*.
+The session doc in the vault is the durable record — it is git-tracked and greppable. Degrade
+gracefully, never halt, never skip *silently*.
 
 **Mechanics live in `$VAULT_FRAMEWORK_PATH/bin/vault-capture.sh`** (default
 `~/workspace/vault/bin/vault-capture.sh`; below: `$VC`). You supply judgment: metadata, candidate
@@ -125,7 +124,6 @@ Report the rollup only when it **changed** the field.
 - **`_moc.md`:** `$VC index-moc --vault <vault> --session <filename> --goal "<goal>"` (idempotent,
   keeps last 5).
 - **`_feature-index.md`:** created → add row; updated → set "Last touched" = today; skipped → no-op.
-- **claude-mem:** no action — its SessionEnd hook auto-captures; `mcp-search` is read-only.
 - **Push:** unless `behaviour.vault_autosync` is `false`, commit and push everything this capture
   wrote. This is the step that gets the session out of this machine — do it last, after the indexes:
 

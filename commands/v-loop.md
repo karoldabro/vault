@@ -68,8 +68,8 @@ exercises a real system. That cost is what buys evidence a review cannot produce
 
 ## Tools
 
-claude-mem, Serena, MorphLLM and graphify are preferred and never gating. Present → use it; down →
-health-check, warn once, fall back. Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
+Serena is preferred when present and never gating. Present → use it; down → health-check, warn once,
+fall back to Read and Grep. Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
 ---
 

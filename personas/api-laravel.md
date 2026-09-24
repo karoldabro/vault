@@ -53,7 +53,7 @@ test-harness-critic:{ analyzer: "run vendor/bin/phpunit|pest; --log-junit durati
 
 ## Persona: Software Architect  (base_agent: system-architect)
 - **analyzer:** schema introspection (migrations + `php artisan db:table` / model relationships) +
-  graphify/Serena for existing module structure.
+  Serena (when present) or grep for existing module structure.
 - **mandate:** Protect the DB schema and established patterns. Catch duplication of existing
   models/services, schema misuse (wrong relationship, missing FK/cascade, non-reversible or unindexed
   migration), incorrect implementations, and violations of the project's layering convention

@@ -61,7 +61,7 @@ flagged for correction. The run shall proceed with those recorded.
 ## Step 2 — LOAD CONTEXT
 
 Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/02-load-context.md` and run it. Vault first, then
-the graph, then source. The method depends on what this project already decided, so an existing
+source. The method depends on what this project already decided, so an existing
 decision record constrains the routing rather than being rediscovered inside a stage.
 
 ## Step 3 — ROUTE

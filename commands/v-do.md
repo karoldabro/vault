@@ -36,11 +36,10 @@ Escalating means: state in one line why it's bigger than `/v-do`, and suggest `/
 
 ## Tools — preferred, never gating
 
-claude-mem, Serena, MorphLLM, graphify — present → use it (don't hand-roll grep/full-file
-reads/`sed`); genuinely down → health-check, warn once, fall back, never halt. Serena and graphify
-ship only in the developer install (`setup.sh --full`) — on a `light` machine
-(`~/vault/_global/config.md` → `install_mode`) they are absent by design: grep and say nothing. Full
-rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
+Serena — present → use it (don't hand-roll full-file reads or `sed`); genuinely down → health-check,
+warn once, fall back, never halt. Serena ships only in the developer install (`setup.sh --full`) — on a
+machine whose `install_mode` (`~/vault/_global/config.md`) is not `full`, Serena is absent by design:
+use Read and Grep and say nothing. Full rules: `$VAULT_FRAMEWORK_PATH/tool-playbook.md`.
 
 ---
 
@@ -57,12 +56,12 @@ reconsider the guardrail.
   `$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh pull <project-vault>`. Exit 0 and 4 are silent; anything
   else is one line and you carry on. Contract: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`.
   The matching push happens only if the optional capture at the end actually runs — `/v-capture` owns it.
-- **Cheap vault check, not the full Step-2 sweep:** claude-mem `search("<keywords>")` for prior
-  decisions/gotchas in this area (playbook §2; grep the vault if it isn't installed), and read any
-  `indications/` rows matching the files you'll touch — those are **binding constraints**, not
+- **Cheap vault check, not the full Step-2 sweep:** grep the vault for prior decisions/gotchas in this
+  area (`grep -ril "<keyword>" <project-vault>/{decisions,sessions,indications,features}/`), and read
+  any `indications/` rows matching the files you'll touch — those are **binding constraints**, not
   suggestions. Skip the rest unless the answer needs it.
-- Structural question (what calls X, where defined) → `graphify query` / Serena `find_symbol` before
-  grepping, when they are installed. Otherwise go straight to the edit.
+- Structural question (what calls X, where defined) → Serena `find_symbol` / `find_referencing_symbols`
+  when it is installed, else grep the source. Otherwise go straight to the edit.
 
 ### 2 — Execute
 
@@ -73,7 +72,7 @@ content:**
 |-----------|------|
 | Single-location change | `Edit` |
 | Several changes, one file | `MultiEdit` |
-| Bulk / multi-file pattern edit | `MorphLLM morph_edit` (keep `// ... existing code ...` markers both ends) |
+| Bulk / multi-file pattern edit | `Edit` per location |
 | New file / full rewrite | `Write` |
 | Project-wide symbol rename | Serena `rename_symbol` |
 

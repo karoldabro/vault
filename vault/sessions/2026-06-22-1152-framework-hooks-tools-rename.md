@@ -34,7 +34,7 @@ Add three lifecycle capabilities to `/v-work` + `/v-team`: per-project task-trac
 - Phase set = 14: `on_start` + `pre_/post_` per step (analyze, load_context, propose, execute, commit, capture) + `on_end`; APPROVAL GATE and v-team panel-loop rounds are non-hookable.
 - `post_commit` fires after `git commit`, before `/v-capture`; `post_capture` after `/v-capture`; `on_end` on any termination (success, gate-reject, abort).
 - `behaviour.suggest_rename` default true → step 1 surfaces `/rename <slug>`; the lifecycle never claims the rename happened.
-- tool-playbook guidance is suggestion, not gate — Claude auto-selects; only genuine safety notes (Morph markers) stay firm.
+- tool-playbook guidance is suggestion, not gate — Claude auto-selects; only genuine safety notes stay firm.
 
 ## Next
 - Merge `feat/lifecycle-hooks-tools-rename` → main (not yet pushed).

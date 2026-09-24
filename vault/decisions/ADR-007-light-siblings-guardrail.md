@@ -22,7 +22,7 @@ Ship two single-file light siblings — `/v-ask` (read-only Q&A) and `/v-do` (sm
 **no approval gate**. For `/v-do`, a **scope guardrail replaces the gate**: before editing, escalate
 when the work touches architecture/schema/auth/billing/a cross-repo contract (→ `/v-team`), spans
 more than ~5 files or has unclear blast radius (→ `/v-work`), or is destructive (→ stop for explicit
-consent). `/v-ask` carries no gate because it is hard read-only (no `Edit`/`Write`/`Morph`/`git`/
+consent). `/v-ask` carries no gate because it is hard read-only (no `Edit`/`Write`/`git`/
 capture). The four commands form one escalation ladder: `/v-ask` → `/v-do` → `/v-work` → `/v-team`.
 
 ## Consequences

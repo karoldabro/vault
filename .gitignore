@@ -15,8 +15,6 @@ desktop.ini
 
 # Tooling
 node_modules/
-# graphify post-commit hook output (this repo's own code graph)
-graphify-out/
 # stray diagnostic temp file
 .tmp-diag.txt
 

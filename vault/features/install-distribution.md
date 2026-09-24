@@ -40,17 +40,20 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
 - Activation flags: `--enable-style`, `--enable-doc-lint`, `--enable-brevity`, `--enable-all`. Each
   edits `~/.claude/settings.json`, backs it up first, appends only when absent, and leaves entries
   the user already had in place. **Without a flag, `install.sh` never touches settings.**
-- `setup.sh` — base prerequisites, `~/vault/_global/` scaffold, tool stack per profile, doctor pass,
-  then `install.sh`. Flags: `--light`, `--full`, `--minimal`, `--with-*`, `--yes`, `--dry-run`,
-  `--doctor`.
+- `setup.sh` — base prerequisites, `~/vault/_global/` scaffold, the developer tool when the profile
+  is `full`, doctor pass, then `install.sh`. Flags: `--light`, `--full`, `--with-serena`, `--yes`,
+  `--dry-run`, `--doctor`.
 
 **Install profiles** — [[../decisions/ADR-021-install-profiles]]
 
-- `--light` (default) = claude-mem · `--full` = + Serena (uv) + Graphify (pipx) · `--minimal` = no tools.
-- Recorded as `install_mode: light|full|minimal` under `## config` in `~/vault/_global/config.md`.
-- Serena and Graphify are **developer tools**. Anything that reads their absence — `doctor()`,
+- `--light` (default) = no optional tools · `--full` = Serena (uv).
+- Recorded as `install_mode: light|full` under `## config` in `~/vault/_global/config.md`. Every
+  reader treats any value other than `full` as "no developer tools".
+- Serena is the one **developer tool**. Anything that reads its absence — `doctor()`,
   `scripts/detect-stack.sh`, `tool-playbook.md` §3/§4, `v-work` §2.4/§2.5, `v-do.md`, `v-work.md` —
   checks `install_mode` first and stays silent on a light machine.
+- Uninstall steps for tools the framework no longer supports: `docs/uninstall-removed-tools.md`
+  ([[../decisions/ADR-032-remove-memory-and-edit-mcps]]).
 
 **Shared**
 
@@ -88,11 +91,10 @@ vault scaffold (`/v-init`, `bin/vault-init.sh`).
   (`make validate-plugin`).
 - `setup.sh` is invoked under `sudo` → it refuses, because `$HOME` would become `/root` and strand the
   whole per-user install there; edge: `VAULT_ALLOW_SUDO=1` overrides.
-- No profile flag is passed → stdin is a terminal means prompt (empty answer → light), `--yes` means
-  light, and neither means minimal with nothing installed; edge: an explicit `--with-*` set is never
-  widened by the light default, and `--minimal` beats everything.
+- No profile flag is passed → stdin is a terminal means prompt (empty answer → light); `--yes` or no
+  terminal means light, which installs no tool; edge: an explicit `--with-serena` records `full`.
 - A tool is absent → it is reported as a gap only when `install_mode` says it should have been there;
-  a light machine missing Serena or Graphify is the expected state, not a fault.
+  a light machine missing Serena is the expected state, not a fault.
 - The installer re-runs with a different profile → `install_mode` is rewritten in place, so the file
   always holds exactly one such line.
 - `install.sh` runs with no activation flag → every shipped hook is linked into `~/.claude/hooks/`

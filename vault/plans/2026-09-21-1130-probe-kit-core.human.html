@@ -265,7 +265,7 @@ flowchart LR
 <tr><td>a registry of checks with a cost column</td><td>quality/checks.tsv of the vault-quality-gates plugin</td><td>new</td><td>it runs at push time against a baseline; this registry runs while a session plans; ADR-031 rejects sharing it</td></tr>
 <tr><td>link checking</td><td>-</td><td>new</td><td>searched bin, lib and scripts for a link resolver; only doc-lint's DUP1 exists and it checks repeated lines</td></tr>
 <tr><td>SQL text parsing</td><td>-</td><td>new</td><td>searched bin and lib for a SQL reader; none exists</td></tr>
-<tr><td>symbol name extraction</td><td>graphify-out/graph.json</td><td>new</td><td>the graph is built by a global tool and absent on a light install; a regex reads the source with no install</td></tr>
+<tr><td>symbol name extraction</td><td>-</td><td>new</td><td>a regex reads the source with no install</td></tr>
 <tr><td>complexity, spelling and manifest checks</td><td>-</td><td>new</td><td>wrappers for lizard, typos and claude plugin validate; none exists</td></tr>
 <tr><td>timeouts</td><td>-</td><td>new</td><td>searched bin, lib and scripts for <code>timeout</code>; none exists</td></tr>
 </tbody>

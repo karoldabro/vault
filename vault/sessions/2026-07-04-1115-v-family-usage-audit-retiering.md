@@ -18,7 +18,7 @@ online-researcher), then execute the approved 4-phase overhaul.
 - **Audit findings**: /v-team = 40% of 462 lifecycle runs, rising to 78% in early July, at ~2× cost with
   the same ~79% completion rate as /v-work; /v-do starved (8 uses); 2 breakages; v-capture.md (1,625 w)
   auto-loaded every run; "0 memories" noise in 77% of sessions traced to **the memory plugin missing its
-  extraction config** (not claude-mem); `events.db` 31.6 GB unbounded; Pre/PostToolUse = 87% of ~9.2k daily hook spawns.
+  extraction config**; `events.db` 31.6 GB unbounded; Pre/PostToolUse = 87% of ~9.2k daily hook spawns.
 - **Phase 0** `04a6f2f`: fixed a wrong memory API call in v-guide; v-capture
   header contradiction; stale `_resolution.md §1.4` ref; documented `team_max_*` knobs (vault-guide §12.1).
 - **Phase 1** `9eabac4`: new [[../../bin/vault-capture.sh]] (dedupe / scan-adr / scan-ind / refs /
@@ -29,14 +29,13 @@ online-researcher), then execute the approved 4-phase overhaul.
   novel choices. [[../decisions/ADR-015-retier-lifecycle-lite-critic-fast-path]].
 - **Phase 3** `afc17ee`: /v-migrate + /v-resume archived to `commands/attic/` (install.sh skips attic;
   stale symlinks removed; v-pm links installed as a side-effect fix). Machine-level: Pre/PostToolUse
-  hooks removed from `~/.claude/settings.json`; `events.db` pruned to 60 days + VACUUM; claude-mem
-  `pending_messages.retry_count` column added.
+  hooks removed from `~/.claude/settings.json`; `events.db` pruned to 60 days + VACUUM.
 - **Dogfooding bonus** `7503468`: this capture found an octal bug in `next-adr` (ADR-014 read as 12).
 
 ## Learned
 - Transcript archaeology beats intuition: v-team "felt" safer (v-work ESC'd 20% vs v-team 13%) but bought
   zero completion-rate gain — the tiering was a routing problem, not a rigor problem.
-- The "extraction returned 0 memories" message names claude-mem in perception but is emitted by the
+- The "extraction returned 0 memories" message is emitted by the
   memory plugin's bridge; it ran 6 weeks as embedding-only recall and nobody noticed — extraction is
   enrichment, not load-bearing.
 - `install.sh` symlinks every commands/ subdir — an attic/ dir would have shipped without the skip.

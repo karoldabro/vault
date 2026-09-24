@@ -86,9 +86,8 @@ the agent and its verifier, so a small verifier is worse rather than cheaper.
 before a model writes prose. `bin/output-lint.sh` measures the reply afterwards instead, and the
 rule is recorded as prose in `vault/check-budget.md` rather than claimed as enforced.
 
-**Reachability through the code graph, to prove a change is wired in.** This repo's
-`graphify-out/graph.json` holds 2,598 nodes, all markdown documents, and 2,385 edges, all
-`contains`; `bin/`, `scripts/` and `lib/` are unindexed. `bin/gate.sh readers` greps instead.
+**Reachability through a code graph, to prove a change is wired in.** The framework ships no code
+graph. `bin/gate.sh readers` greps instead.
 
 **A gate with no escape hatch.** `GATE=off` stays, whole-run only. A gate with no relief valve is
 abandoned wholesale rather than used with a stated exception.

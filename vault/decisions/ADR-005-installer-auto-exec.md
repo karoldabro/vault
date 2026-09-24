@@ -13,12 +13,11 @@ tags: [adr, install, setup, onboarding, security]
 The original `setup.sh` deliberately **never executed** network installs: it detected what was missing
 and printed the command to run, to avoid surprise `curl | bash` and stay test-friendly (header comment,
 old lines 18–20). In practice this meant "the installer doesn't install" — every tool (ollama,
-Graphify, Serena, the Claude plugins/MCPs) was a manual copy-paste, and the printed hints had drifted
+Serena) was a manual copy-paste, and the printed hints had drifted
 wrong. The goal is a smooth one-command install on Ubuntu.
 
 The `/v-team` panel (architect + security + skeptic) flagged that reversing the no-auto-exec stance is a
-real safety decision, not a refactor: it adds `curl|sh` supply-chain exposure, `sudo apt`, and
-third-party Claude marketplace code execution.
+real safety decision, not a refactor: it adds `curl|sh` supply-chain exposure and `sudo apt`.
 
 ## Decision
 `setup.sh` **auto-installs** the stack on Ubuntu (apt + sudo present), **consent-gated**:
@@ -30,12 +29,10 @@ third-party Claude marketplace code execution.
   hint path unchanged.
 - **`run()` seam** — every network/privileged command goes through one wrapper; `--dry-run`
   (`VAULT_SETUP_DRY_RUN=1`) echoes instead of executing and is the primary tested surface.
-- **Audit + secrets** — every remote URL / marketplace source is printed before it runs; `run()` redacts
+- **Audit + secrets** — every remote URL is printed before it runs; `run()` redacts
   `*_KEY`/`*_TOKEN`/`*_SECRET` values; secret-bearing config files are `0600`.
 - **Continue-on-error + doctor** — one tool failing never aborts the run; a `doctor` pass verifies what
   landed and owns the exit code (non-zero only if a required tool failed).
-
-Morph Fast Apply was **dropped** from the installer (it needs a paid API key; out of scope).
 
 ## Consequences
 - One-command install on Ubuntu (`./setup.sh --full --yes`); the same script stays safe on non-Ubuntu by
@@ -44,12 +41,11 @@ Morph Fast Apply was **dropped** from the installer (it needs a paid API key; ou
   and proven for real on an opt-in Ubuntu container (`tests/e2e/`, `VAULT_E2E=1 make test-e2e`).
 - Per-tool installers live in `lib/installers.sh` (`install_<tool>`/`check_<tool>`); `setup.sh`
   orchestrates; `install.sh` (symlinks) is unchanged.
-- Removing `--with-morph` is a clean break (no deprecation stub) — it is now an unknown flag.
-- Supply-chain trust is explicit: the user consents to vendor `curl|sh` scripts and two third-party
-  marketplaces (`thedotmack/claude-mem`), printed for an audit trail.
+- Supply-chain trust is explicit: the user consents to vendor `curl|sh` scripts, each printed for an
+  audit trail.
 
 ### Follow-up (2026-06-19) — privilege model correction
-Real-world onboarding exposed a deadlock: the installer is **per-user** (uv, bun and plugins in
+Real-world onboarding exposed a deadlock: the installer is **per-user** (uv and the tools it installs in
 `$HOME`), yet (a) the auto path was gated on *passwordless* sudo, so a normal user got hint-only, and
 (b) running it under `sudo` flipped `$HOME` to `/root`, stranding every artifact and hiding `claude`.
 Resolved (`98ac293`): run **as the user, escalate internally for apt only**, accept **interactive**

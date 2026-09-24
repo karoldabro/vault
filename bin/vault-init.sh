@@ -14,8 +14,7 @@
 #   5. Write <code-repo>/VAULT.md (vault_path + slug) if absent.
 #   6. Append entry to $VAULT_HOME/_global/coupled-groups.md.
 #   7. Append memory-stack snippet to <code-repo>/CLAUDE.md (idempotent).
-#   8. Install graphify post-commit hook + build initial graph in the code repo (if graphify present).
-#   9. Initial commit.
+#   8. Initial commit.
 #
 # Environment overrides:
 #   VAULT_HOME              default: $HOME/vault
@@ -28,7 +27,6 @@
 #   --framework-path PATH   override VAULT_FRAMEWORK_PATH
 #   --no-vault-md           do not write <code-repo>/VAULT.md
 #   --no-claude-md          do not touch <code-repo>/CLAUDE.md
-#   --no-graphify           skip graphify hook install + initial graph build
 #   --yes                   non-interactive (currently informational)
 #   -h, --help              show usage
 
@@ -43,7 +41,6 @@ slug=""
 in_repo=0
 no_vault_md=0
 no_claude_md=0
-no_graphify=0
 
 usage() {
     sed -n '2,/^set -euo/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
@@ -56,7 +53,6 @@ while [ $# -gt 0 ]; do
         --framework-path)  VAULT_FRAMEWORK_PATH="$2"; shift 2 ;;
         --no-vault-md)     no_vault_md=1; shift ;;
         --no-claude-md)    no_claude_md=1; shift ;;
-        --no-graphify)     no_graphify=1; shift ;;
         --yes|-y)          shift ;;
         -h|--help)         usage; exit 0 ;;
         *) echo "Unknown flag: $1" >&2; usage >&2; exit 2 ;;
@@ -361,28 +357,6 @@ This project is wired into the vault knowledge framework.
 
 Use \`/v-work\` for development, \`/v-capture\` to save the session.
 EOF
-    fi
-fi
-
-#------------------------------------------------------------------------------
-# Graphify — install post-commit hook + build initial graph in the CODE repo
-#------------------------------------------------------------------------------
-# The graph lives in the code repo (graphify-out/), kept fresh by the hook so
-# /v-work can query it instead of grepping. The hook is AST-based (no LLM, no
-# token cost) and rebuilds the graph on every commit. The one-time full build
-# (`graphify .`) is left to the user — it can run a deeper extraction, so we do
-# not trigger it automatically (especially under --yes). Non-fatal throughout.
-if [ "${no_graphify}" -eq 0 ]; then
-    if command -v graphify >/dev/null 2>&1; then
-        echo "Installing graphify post-commit hook in ${code_repo}..."
-        ( cd "${code_repo}" && graphify hook install ) || \
-            echo "  (graphify hook install failed — run it manually later)"
-        echo "  Build the initial graph once with: (cd ${code_repo} && graphify .)"
-        echo "  After that the hook keeps graph.json fresh on every commit (free, AST-based)."
-    else
-        echo "graphify not found — skipping graph hook."
-        echo "  Install it, then run 'graphify hook install' + 'graphify .' in ${code_repo}"
-        echo "  so /v-work can answer structural questions from graph.json instead of grep."
     fi
 fi
 

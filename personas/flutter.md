@@ -58,7 +58,7 @@ test-harness-critic:{ analyzer: "run flutter test; verify testWidgets pump/pumpA
 ## Stack-local personas
 
 ## Persona: Widget / State Architect  (base_agent: mobile-app-builder)
-- **analyzer:** widget tree + state-management introspection (Serena/graphify); detect the project's
+- **analyzer:** widget tree + state-management introspection (Serena when present, else grep); detect the project's
   state approach + DI style from `pubspec.yaml` + `lib/`; compare against existing widgets/view-models.
 - **mandate:** Widget tree depth, the project's state pattern applied consistently, `const` correctness,
   separation of UI from business logic (no data access / network in `build()`), dependency injection

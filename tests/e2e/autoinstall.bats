@@ -19,23 +19,17 @@ teardown() { cleanup_test_home; }
     [ -x "${HOME}/.local/bin/uv" ]
 }
 
-@test "real install: graphify lands on PATH via pipx" {
-    run "${VAULT_ROOT}/setup.sh" --with-graphify --yes
-    [ "$status" -eq 0 ]
-    PATH="${HOME}/.local/bin:${PATH}" command -v graphify
-}
-
 @test "doctor reflects a real install with a ✓ row and exits 0" {
-    "${VAULT_ROOT}/setup.sh" --with-graphify --yes >/dev/null
+    "${VAULT_ROOT}/setup.sh" --with-serena --yes >/dev/null
     run env PATH="${HOME}/.local/bin:${PATH}" "${VAULT_ROOT}/setup.sh" --doctor
     [ "$status" -eq 0 ]
     # Must be the check glyph, not just the label (which prints either way).
-    [[ "$output" == *"✓] graphify"* ]]
+    [[ "$output" == *"✓] uv"* ]]
 }
 
 @test "re-running a completed install is an idempotent no-op (exit 0)" {
-    "${VAULT_ROOT}/setup.sh" --with-graphify --yes >/dev/null
-    run "${VAULT_ROOT}/setup.sh" --with-graphify --yes
+    "${VAULT_ROOT}/setup.sh" --with-serena --yes >/dev/null
+    run "${VAULT_ROOT}/setup.sh" --with-serena --yes
     [ "$status" -eq 0 ]
-    [[ "$output" == *"graphify present"* ]]
+    [[ "$output" == *"uv present"* ]]
 }
