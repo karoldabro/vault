@@ -131,6 +131,7 @@ path and are meaningless under a plugin install.
 
 ## Sessions
 
+- [[../sessions/2026-09-24-1651-remove-mcp-tools]]
 - [[../sessions/2026-09-15-0939-readme-rewrite-and-docs-cleanup]]
 - [[../sessions/2026-09-03-0929-mechanical-brevity-enforcement]]
 - [[../sessions/2026-08-04-1339-install-profiles-light-full]]

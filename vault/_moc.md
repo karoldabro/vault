@@ -37,11 +37,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-09-24-1651-remove-mcp-tools]] — Remove the memory plugin, edit MCP and code graph from the framework; Serena stays optional
 - [[sessions/2026-09-22-1023-spec-reading-probes-s11]] — S11: spec-reading SQL probes (spec-tables/spec-naming) and the data-model/naming triage auditors for the plan-time probe stage
 - [[sessions/2026-09-22-0900-stack-packs-s9]] — Probe-registry stack packs for Laravel, Nuxt, Flutter and Python, gated by a repo-declared stack_packs VAULT.md key
 - [[sessions/2026-09-21-2106-pm-shard-contracts-s12]] — /v-pm shard side of cross-session contracts (S12)
 - [[sessions/2026-09-21-2021-cross-session-contracts-s6]] — cross-session contracts table and gate.sh master for master plans (S6)
-- [[sessions/2026-09-21-1800-plan-time-probes-s5]] — Add a plan-time probe stage and reuse auditor to /v-team PROPOSE with a 50% cost tier
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center for one or more repos: rules REQ-NN with axis tags, a glossary, and decision/state tables. Adds the single-repo `requirements/` category. The id chain reaches the established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)
