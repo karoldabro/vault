@@ -61,10 +61,31 @@ fi
 [ -n "$vault" ] || vault="${cwd}/vault"
 [ -d "${vault}/plans" ] || exit 0
 
-# The session's plan is the most recently touched approved one. A session with no approved plan has
-# nothing to be held to, and exits 0.
-plan="$(grep -l '^status: approved' "${vault}"/plans/*.md 2>/dev/null \
-        | xargs -r ls -t 2>/dev/null | head -1)"
+# The session's plan is the most recently touched approved one THAT THIS SESSION TOUCHED. A vault
+# shared by a coupled group carries plans from every repo in it; without the mtime floor the hook
+# picks whichever plan anyone wrote last and holds this session to work it never did.
+#
+# The floor is the transcript's birth time. A filesystem reporting none leaves %W at 0; then there
+# is no floor and every approved plan stays a candidate, which is the wider, older behaviour.
+transcript="$(hook_json_field "$payload" '.transcript_path // empty')"
+floor=0
+if [ -n "$transcript" ] && [ -e "$transcript" ]; then
+    floor="$(stat -c %W "$transcript" 2>/dev/null || printf '0')"
+    [ "$floor" -gt 0 ] 2>/dev/null || floor=0
+fi
+
+plan=''
+while IFS= read -r candidate; do
+    [ -n "$candidate" ] || continue
+    if [ "$floor" -gt 0 ]; then
+        touched="$(stat -c %Y "$candidate" 2>/dev/null || printf '0')"
+        [ "$touched" -ge "$floor" ] 2>/dev/null || continue
+    fi
+    plan="$candidate"
+    break
+done <<PLANS
+$(grep -l '^status: approved' "${vault}"/plans/*.md 2>/dev/null | xargs -r ls -t 2>/dev/null)
+PLANS
 [ -n "$plan" ] && [ -r "$plan" ] || exit 0
 
 mode="verdict"
@@ -79,6 +100,14 @@ rc=$?
 # Exit 2 is the only value that blocks a stop. Any other nonzero is reported to the user and lets
 # the turn end, which would make this hook advisory — the thing it exists not to be.
 if [ "$rc" -eq 1 ]; then
+    # A plan with no success criteria has no legal exit: no verdict can be recorded against a table
+    # that does not exist, so blocking on it would refuse every stop until someone rubber-stamps a
+    # criterion the plan never stated. Report it and let the turn end.
+    case "$out" in
+        *"no '## Success criteria' table"*)
+            printf 'completion-hook: %s states no success criteria, so nothing can be verdicted against it\n' "$plan" >&2
+            exit 0 ;;
+    esac
     {
         printf 'This session marked work done and recorded no verdict for it.\n\n'
         printf '%s\n\n' "$out"
