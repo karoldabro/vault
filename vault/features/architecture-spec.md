@@ -61,5 +61,6 @@ Non-goals: installing any tool, and changing `/v-work` or `/v-do`.
 ## Sessions
 - [[../sessions/2026-09-21-1015-architecture-first-planning-s1-s2]]: contract, gate, templates, wiring and tests.
 - [[../sessions/2026-09-21-1130-human-plan-page-and-profiles]]: profiles as data, the human page renderer, its gate and the `/v-team` wiring.
+- [[../sessions/2026-09-24-2013-human-page-essentials]]: the page shows only the operator's decisions, defaults, user-visible trade-offs, hand checks, diagrams and signatures.
 - [[../sessions/2026-09-21-1400-probe-panel-input-s7]]: `bin/probe-panel.sh` feeds probe rows to the review panels; the `probe:` key of an indication.
 - [[../sessions/2026-09-21-1317-probe-kit-core-s4]]: the probe kit core, its tool verification and two review rounds.
