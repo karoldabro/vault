@@ -193,24 +193,24 @@ teardown() {
     done
 }
 
-@test "propose loop decomposes into session-sized units inside the appetite" {
+@test "the propose loop no longer splits feature work; /v-pm does" {
     PL="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
-    grep -qi 'f3'              "${PL}"
-    grep -qi 'session-sized'   "${PL}"
-    grep -qi 'appetite'        "${PL}"
-    grep -qi 'ceiling'         "${PL}"
-    grep -qi 'light-command-siblings' "${PL}"
-    # /v-ask writes nothing, so it cannot be assigned a row
-    grep -qi 'v-ask` is not eligible' "${PL}"
-    # a deviation is the tracker working, not a failure
-    grep -qi 'deviation'       "${PL}"
+    ! grep -q '(f3)' "${PL}"
+    grep -q 'planned by `/v-pm` instead' "${PL}"
+    grep -q "trail sidecar of the caller's plan" "${PL}"
 }
 
-@test "feature pickup reports progress from the Sessions rows" {
-    PU="${VAULT_ROOT}/commands/v-team/steps/00-feature-pickup.md"
-    grep -q  '## Sessions'     "${PU}"
-    grep -qi 'evidence'        "${PU}"
-    grep -qi 'Progress'        "${PU}"
+@test "shared feature pickup refuses a session that may not start, claims the row, and loads the brief" {
+    PU="${VAULT_ROOT}/commands/_shared/feature-pickup.md"
+    [ -f "${PU}" ]
+    [ ! -e "${VAULT_ROOT}/commands/v-team/steps/00-feature-pickup.md" ]
+    grep -q  'pm-plan.sh order <plan>' "${PU}"
+    grep -q  '`todo` and `runnable`'   "${PU}"
+    grep -q  'status=doing'            "${PU}"
+    grep -q  '`## Goal` is the task restatement' "${PU}"
+    grep -qi 'legacy layout'           "${PU}"
+    grep -q  'commands/_shared/feature-pickup.md' "${VAULT_ROOT}/commands/v-team.md"
+    grep -q  'commands/_shared/feature-pickup.md' "${VAULT_ROOT}/commands/v-work.md"
 }
 
 # --- the consumer seat -------------------------------------------------------------------

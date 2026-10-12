@@ -54,7 +54,7 @@ having read the diff.
 | F1 | Every `REQ-NN` this row claimed is covered | name the test or dossier entry covering each |
 | F2 | The row's `status` is updated | one of `todo`, `doing`, `done`, `dropped` — no other value |
 | F3 | The row carries evidence | a commit hash or session-record path; a `done` row without evidence is invalid |
-| F4 | The row's `last touched` date is today | this is what makes a stale row visible as stale |
+| F4 | The row's `date` is today | this is what makes a stale row visible as stale |
 | F5 | Any deviation is written into the row | scope cut, work added, an item not built — the note is the point, not an apology |
 | F6 | A `dropped` row says why | one line |
 

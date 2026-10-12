@@ -9,7 +9,7 @@ setup() {
     make_test_home
     PM="${VAULT_ROOT}/commands/v-pm.md"
     STEPS="${VAULT_ROOT}/commands/v-pm/steps"
-    PICKUP="${VAULT_ROOT}/commands/v-team/steps/00-feature-pickup.md"
+    PICKUP="${VAULT_ROOT}/commands/_shared/feature-pickup.md"
     TPL="${VAULT_ROOT}/templates/_features"
 }
 
@@ -276,7 +276,7 @@ teardown() {
     grep -qi 'temporarily break the code' "${DOD}"
     # evidence and the stale-row date are what make a `done` row trustworthy
     grep -qi 'evidence'                 "${DOD}"
-    grep -qi 'last touched'             "${DOD}"
+    grep -q  "row's \`date\` is today"   "${DOD}"
 }
 
 @test "the done gate runs BEFORE staging, not after the commit" {
@@ -377,11 +377,14 @@ teardown() {
     grep -q 'legacy layout: /v-pm reconcile <feature>' "${ST}"
 }
 
-@test "step 5.0 of the close step sets the master-plan row through session_of" {
+@test "step 5.1a closes the master-plan row after the code commit, through session_of" {
     local s="${VAULT_ROOT}/commands/v-work/steps/05-commit-capture.md"
-    grep -q 'session_of' "${s}"
-    grep -q 'gate.sh verdict' "${s}"
-    grep -q 'gate.sh master' "${s}"
+    awk '/^## 5.1a/{f=1;next} /^## /{f=0} f' "${s}" > "${BATS_TEST_TMPDIR}/a"
+    grep -q 'session_of' "${BATS_TEST_TMPDIR}/a"
+    grep -q 'vault-sync.sh pull' "${BATS_TEST_TMPDIR}/a"
+    grep -q 'pm-plan.sh set <master> <id> status=done' "${BATS_TEST_TMPDIR}/a"
+    grep -q 'gate.sh master' "${BATS_TEST_TMPDIR}/a"
+    grep -q 'never halts the close' "${BATS_TEST_TMPDIR}/a"
 }
 
 @test "a shard instantiated from the template passes the master gate and loses a row on deletion" {

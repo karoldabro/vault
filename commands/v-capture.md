@@ -104,7 +104,8 @@ Report per feature: `created | updated | skipped: <reason>`.
 ## Step 4e — Feature status rollup (feature mode only)
 
 When this session worked a `_features/<feature>/` workspace, **derive** that feature's `header.md`
-`status:` from the session rows across every `projects/*/plan.md` `## Sessions` table, and write it:
+`status:` from its session rows, read from the tracker that `commands/_shared/feature-pickup.md` §0.1
+resolves (the plan's `## Sessions`, or the legacy shard tables), and write it:
 
 | every row | status |
 |---|---|
@@ -112,10 +113,8 @@ When this session worked a `_features/<feature>/` workspace, **derive** that fea
 | any row `doing` or `done`, but not all | `in-progress` |
 | every row `done` or `dropped` | `shipped` |
 
-**Derive it, never ask.** This field exists in two places today — the header and the rows — and only
-the rows get written, so nine of twelve features currently claim `planning` while their own shards say
-otherwise. That is what makes `/v-pm status` unable to tell you what is really moving. Writing it here,
-on the way out of every session, is what keeps the two in step.
+**Derive it, never ask.** The rows are the truth; the header is a copy that goes stale unless every
+session rewrites it on the way out.
 
 Report the rollup only when it **changed** the field.
 

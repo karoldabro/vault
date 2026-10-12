@@ -48,9 +48,10 @@ no spec and leave `arch_spec` empty.
 
 **Master plan.** When the scope splits into two or more sessions that each write their own plan file,
 append both sections of `$VAULT_FRAMEWORK_PATH/templates/master-plan.md`, Sessions first, after `## Sequencing & dependencies`
-and fill them: it owns the table rules. When the task names one session of a master plan, set
-`session_of: <master plan file>#<session id>` in the plan's frontmatter, taking the file and id from
-the task or from the Sessions row that launched the session.
+and fill them: it owns the table rules. A feature that spans repos, or needs its split reviewed, is
+planned by `/v-pm` instead. When the task names one session of a master plan, set
+`session_of: <absolute master plan path>#<session id>` in the plan's frontmatter, taking the file and
+id from the task or from Step 0 (`commands/_shared/feature-pickup.md`).
 
 ## (b) Load + select critics
 
@@ -204,42 +205,6 @@ gate (the happy-path bias this counters must not gate its own activation).
    feature mode, a backlog row grounded in a `requirements.md` rule echoes its `REQ-NN` in the `source`
    column** — this is the spec→backlog half of the id chain (the dossier half is written at capture,
    `04-execute-loop.md` §5.4a).
-
-## (f3) Decompose into sessions — feature mode only
-
-Runs when this session has a feature workspace (Step 0 resolved one). Skip entirely otherwise; an
-ordinary `/v-team` run has no shard to write.
-
-`/v-pm` gave this repo an **appetite** — a session budget in `generic-plan.md` — and named the **first
-slice**. It did not enumerate the work, because it does not read this code. Splitting is this session's
-job, and the rows it writes are this session's to maintain.
-
-1. **Read the appetite. Do not re-derive it.** It is a ceiling, not an estimate. If the converged plan
-   does not fit, cut scope — `[could]` rules first, then `[should]` — and record what you cut. Never
-   quietly exceed the budget; if only `[must]` rules remain and it still does not fit, say so at the
-   approval gate and let the operator re-size.
-2. **Size each unit against what actually lands here.** Units are **session-sized**, not edit-sized. In this framework a session that finished
-   cleanly touched a median of ~9 files; sessions that reached ~49 dropped work permanently and needed
-   a follow-up. Treat ~9 as the target and anything past ~15 as a unit that wants splitting.
-3. **Cut vertically, hardest part first.** Start with `/v-pm`'s first slice. Each later unit should
-   deliver something observable on its own, not one architectural layer of something.
-4. **Pick each unit's command** off the existing ladder — `/v-do` for a contained edit, `/v-work` for
-   ordinary work, `/v-team` where a wrong decision is expensive to reverse. `/v-ask` is not eligible: it
-   writes nothing, so it can never close a row. Rules:
-   `$VAULT_FRAMEWORK_PATH/vault/indications/light-command-siblings.md`.
-5. **Write the rows** into `projects/<this>/plan.md` `## Sessions`, one per unit: id, scope, command,
-   `status: todo`, the `REQ-NN` ids it covers, and today's date. Leave `evidence` empty — it is filled
-   when the row closes, and a `done` row without it is invalid.
-6. **Write the dependencies.** Insert a `depends` column after `status` in the shard's Sessions header,
-   separator and rows when the header lacks it, and fill it with the ids each unit waits for. Copy the `## Cross-session contracts` section
-   from `templates/master-plan.md` when the shard lacks it, and write one contract row for each
-   dependency. Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <shard>`: exit 1 names each defect and
-   its fix, so repeat until it prints `master: ok`.
-
-**Expect these rows to be wrong in detail.** The tracker that worked here shipped all ten of its
-sessions and rewrote nearly every row on the way — scope cut, work added, one session inserted that no
-plan predicted. That is the tracker doing its job. Write the rows so the executing session can correct
-them, and never treat a recorded deviation as a failure.
 
 ## (g) Finalise
 

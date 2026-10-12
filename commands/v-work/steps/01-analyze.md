@@ -79,6 +79,8 @@ falls back and is surfaced — never halt. See `vault-guide.md` §1.1.
 
 ## 1.4c Size check — fast-path detection (`/v-work` only)
 
+A session started by feature pickup never fast-paths: its row must close through step 5.1a.
+
 Apply the `/v-do` guardrail (see `commands/v-do.md`) to the restated task: **small** = ≤~5 files,
 predictable blast radius, no architecture/schema/migration/auth/billing/cross-repo surface, nothing
 destructive. Unsure → **not small**. `/v-team` reuses this step verbatim but **ignores this section**

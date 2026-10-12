@@ -31,12 +31,12 @@ Then read `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md` and wor
 before §5.1 stages a single file. A gate that runs after the commit blocks nothing.
 
 - The **baseline** applies to every session.
-- The **feature-mode extension** applies only when this session has a `## Sessions` row in a feature
-  shard. A plain session has no such row and is **not** blocked by those lines — do not invent one.
-- The **master-plan bullet** applies when the plan's frontmatter names `session_of`. Open the file named
-  before `#` (beside the plan, or an absolute path), find the Sessions row whose id follows `#`, set
-  `status` to `done` and `date` to today, and fill `evidence` with the result of `gate.sh verdict <plan>
-  --run`. Stage that file in the same commit and confirm it with `gate.sh master <master file>`.
+- The **feature-mode extension** applies only when this session has a Sessions row in a feature
+  plan, resolved per `$VAULT_FRAMEWORK_PATH/commands/_shared/feature-pickup.md` §0.1 (the plan's
+  `## Sessions`, or a legacy shard). A plain session has no such row and is **not** blocked by those
+  lines — do not invent one.
+- The **master-plan row** of a plan whose frontmatter names `session_of` is written after the code
+  commit, in §5.1a, because its evidence is that commit.
 
 Each line is `met`, `failed`, or `not-applicable` **with a reason**. Silence is not a pass, and a line
 you cannot honestly assert is recorded as not-applicable rather than ticked. That distinction is the
@@ -68,6 +68,31 @@ when the "why" is not obvious. Leave pushing to the operator.
 After the commit lands (before `/v-capture`), honor any carried `post_commit` hook — e.g. "remind to
 move the Jira ticket to In Review" (it never transitions anything itself; instruction-only). See
 `vault-guide.md` §1.1.
+
+## 5.1a Close the master-plan row (when the plan names `session_of`)
+
+`done` means committed, so this runs after §5.1. Open the plan named before `#` in `session_of` (an
+absolute path, or one beside the session plan) and close the row whose id follows `#`. One routine
+writes a master row; `commands/_shared/feature-pickup.md` §0.3 claims a row with the same one:
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh pull <master's vault>
+$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh set <master> <id> status=done date=<today> evidence=<code commit sha>
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh push <master's vault> -m "close <id>" <master> <any brief this session appended>
+```
+
+Also write each success criterion's `verdict` and `evidence` whose `sessions` cell names this id and
+whose other sessions are all `done`. Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <master>`.
+
+Act on the push exit code; the routine never halts the close (`commands/_shared/vault-sync.md`):
+- **0** — done.
+- **1** — pull once more, re-run `set`, push again. A second failure goes into the session plan's
+  `## Open & deferred` as `unpushed master row <id>`, and the close goes on.
+- **4** — the master lives inside this repo's worktree. Commit the master file in a second commit with
+  explicit paths: `chore(plan): close <id>`.
+- **5** — the vault has no upstream. Commit it locally and say once that the row stayed on this machine.
+
+A legacy shard row (no `plan.md`) is updated in the same way, by hand, in the shard.
 
 ## 5.2 Vault sync (if applicable)
 

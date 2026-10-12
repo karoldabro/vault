@@ -93,9 +93,10 @@ lifecycles.
 - **Baseline** — always. Each line is `met`, `failed`, or `not-applicable` with a reason. Report only
   what failed or was waived; a fully met baseline earns no line. A `failed` line stops the change —
   fix it, or take it to the user.
-- **Feature-mode extension** — only when this change closes a `## Sessions` row in a feature shard,
-  which the shard template does allow `/v-do` to do. Set the row's status, write the evidence and
-  today's date, and note any deviation. That is three fields, not ceremony; leaving them costs the next
+- **Feature-mode extension** — only when this change closes a feature plan's Sessions row, on the
+  tracker `commands/_shared/feature-pickup.md` §0.1 resolves. After the commit, pull the plan's vault
+  (`bin/vault-sync.sh pull`), write status, evidence, today's date and any deviation with
+  `bin/pm-plan.sh set`, then push the plan file (`bin/vault-sync.sh push`). That is three fields, not ceremony; leaving them costs the next
   session more than writing them costs you.
 
 ### 4 — Capture (optional, OFF by default)

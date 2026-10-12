@@ -45,7 +45,14 @@ after `/v-capture` has run.
 5. EXECUTE
 6. COMMIT + CAPTURE
 
+**When the task names a feature session** — `<absolute plan path>#<id>`, or a feature slug with an
+optional `S<n>` — prepend task **0. FEATURE PICKUP**.
+
 ---
+
+## Step 0 — FEATURE PICKUP (only when the task names a feature session)
+Read `$VAULT_FRAMEWORK_PATH/commands/_shared/feature-pickup.md`, then execute, before Step 1. A refusal
+there ends the session. The pickup turns the fast path off for the rest of the run.
 
 ## Step 1 — ANALYZE
 Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/01-analyze.md`, then execute. Mark ANALYZE `completed`.

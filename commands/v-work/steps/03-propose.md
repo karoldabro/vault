@@ -255,6 +255,10 @@ Instantiate `$VAULT_FRAMEWORK_PATH/templates/plan.md` into
 `## Open & deferred`, and `process_record` stays empty. If `plans/` does not exist, create it (warn once; add
 `add_folders: [plans]` to `VAULT.md` so it is recognised) — do not halt.
 
+When Step 0 picked up a feature session, set `session_of: <absolute plan path>#<id>` in the plan's
+frontmatter, and keep the success criteria Step 0 copied into `## Success criteria`. A relative path
+into another vault does not resolve, so the path is always absolute.
+
 The artifact carries: research sources + takeaways · Serena memories read · lite-critic findings and
 dispositions · work items (one row per exact file path) · `## Artifact lifecycles` · test plan (type
 + scenarios + location) · vault writes (CREATE/UPDATE per §3b dedupe, with match counts) · index

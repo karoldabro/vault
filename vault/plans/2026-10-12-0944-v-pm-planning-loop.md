@@ -186,7 +186,7 @@ Not in scope: the thread protocol, `contracts.md`, and the legacy shard readers'
 |----|------|-------|---------|--------|---------|-----|------|----------|-----------|
 | S1 | /home/kdabrow/workspace/vault | planning group: W-1 to W-12 | /v-team | done | | | 2026-10-12 | 5d8e9b4 | |
 | S2 | /home/kdabrow/workspace/vault | plan format: W-13 to W-19 | /v-team | done | | | 2026-10-12 | 1e652b8 | |
-| S3 | /home/kdabrow/workspace/vault | `/v-pm` command: W-20 to W-31 | /v-team | todo | S1 S2 | | | | |
+| S3 | /home/kdabrow/workspace/vault | `/v-pm` command: W-20 to W-31 | /v-team | done | S1 S2 | | 2026-10-12 | a12c16e | |
 | S4 | /home/kdabrow/workspace/vault | feature pickup and execution side: W-32 to W-42, W-52 | /v-team | todo | S2 S3 | | | | |
 | S5 | /home/kdabrow/workspace/vault | templates, docs and vault records: W-43 to W-51 | /v-work | todo | S3 S4 | | | | |
 
