@@ -23,6 +23,7 @@ Rework `/v-pm` into a read-only planner. It refuses to plan until the operator s
 - accepted limit: legacy workspaces keep their current shard readers unchanged (D-13). Open shard rows today: `empty-feed-activation` api S1 `doing`, `feature-requests` api S4 `blocked`, `city-location-gating` (three shards with a non-standard column order), and `ask-digitally` (no `## Sessions` table). Reconcile converts a row only after the operator confirms its mapping.
 - unverified: whether a bare `/v-work` inside the quoted prompt of `claude "<prompt>"` resolves to the plugin skill `vault:v-work`. S4 closes only after one pasted run line is seen to fire Step 0 (SC-7).
 - unverified: no test runs a `/v-pm` session end to end. SC-5 runs the plan format through both scripts; the command steps are graded by text.
+- existing defect, not this plan's: three unit tests fail on `e292f48`, before this plan: `research-clarify.bats` 11 and `document-standard.bats` 33 and 41. `checks/pm-loop-SC-6.sh` tolerates the `research-clarify.bats` one by name.
 - existing defect, not this plan's: `bin/gate.sh`, `bin/vault-sync.sh`, `tests/integration/vault-sync.bats` and `tests/unit/gate.bats` carry uncommitted changes from other work. No session of this plan stages them.
 
 ## Open questions
@@ -184,7 +185,7 @@ Not in scope: the thread protocol, `contracts.md`, and the legacy shard readers'
 | id | repo | scope | command | status | depends | req | date | evidence | deviation |
 |----|------|-------|---------|--------|---------|-----|------|----------|-----------|
 | S1 | /home/kdabrow/workspace/vault | planning group: W-1 to W-12 | /v-team | done | | | 2026-10-12 | 5d8e9b4 | |
-| S2 | /home/kdabrow/workspace/vault | plan format: W-13 to W-19 | /v-team | todo | | | | | |
+| S2 | /home/kdabrow/workspace/vault | plan format: W-13 to W-19 | /v-team | done | | | 2026-10-12 | 1e652b8 | |
 | S3 | /home/kdabrow/workspace/vault | `/v-pm` command: W-20 to W-31 | /v-team | todo | S1 S2 | | | | |
 | S4 | /home/kdabrow/workspace/vault | feature pickup and execution side: W-32 to W-42, W-52 | /v-team | todo | S2 S3 | | | | |
 | S5 | /home/kdabrow/workspace/vault | templates, docs and vault records: W-43 to W-51 | /v-work | todo | S3 S4 | | | | |

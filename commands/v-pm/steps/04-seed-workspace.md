@@ -1,4 +1,4 @@
-# Step 3 — SEED WORKSPACE (plan mode)
+# Step 4 — SEED WORKSPACE (plan mode, after approval)
 
 > Path note: `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` when that reads as an absolute path (plugin install), otherwise resolved per `vault-guide.md` §1.1.
 
@@ -6,63 +6,35 @@
 
 > **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
 
-**Multi-repo mode only.** In **single-repo mode** (1 participant) this step is **skipped** — `01-intake.md`
-§1.3 already wrote `requirements.md` into the project's own `<project-vault>/requirements/<feature>.md`
-(no `_features/` workspace, no symlink, no shard). Proceed straight to CAPTURE (Step 5, project-vault
-variant). The rest of this step is the 2+-repo path.
+Runs only after the operator approved the plan. **Single-repo mode skips this step**: the plan home
+from Step 1 already holds everything, so go to Step 5.
 
-Materialise the feature workspace in the `_features/` vault and wire it into each participant project.
+Multi-repo mode wires the `~/vault/_features/<feature>/` workspace into each participant.
 
-## 3.1 Scaffold
-Create `~/vault/_features/<feature>/` from `$VAULT_FRAMEWORK_PATH/templates/_features/`:
+## 4.1 Scaffold what the plan does not already hold
+`plan.md`, `plan.trail.md`, `briefs/`, `requirements.md` and `contracts.md` exist from Step 3. Add:
 ```
 <feature>/
-  requirements.md    business knowledge center — what & why (Step 2)  (only v-pm writes)
-  generic-plan.md    the project-agnostic plan — how/sequencing + appetite + first slice  (only v-pm writes)
-  contracts.md       structured cross-project interface (Step 2)
-  header.md          participants · status · created · slug         (header.md template)
+  header.md          participants · status · created · slug   (templates/_features/header.md)
   conversation/      empty — threads land here
-  sessions/          empty — planning-session records (CAPTURE writes here)
-  projects/          one project-shard per participant (each project's /v-team writes its own)
+  projects/<proj>/plan.md   one shard per participant (templates/_features/project-shard.md)
 ```
-Instantiate `requirements.md` + `generic-plan.md` + `contracts.md` from what Step 2 produced. Instantiate
-one `projects/<proj>/plan.md` **stub** per participant from `templates/_features/project-shard.md` (the
-project fills the body in its own session). v-pm seeds **three** sections there and no others:
+A shard holds what that repo consumes from `contracts.md`, its constraints and its tests. The session
+tracker stays in `plan.md` `## Sessions`, its one home; a shard carries no second copy.
 
-1. **`## Business rules to satisfy`** — the `REQ-NN` ids from `requirements.md` that fall to that
-   project. **Id refs only, not copied rule text.**
-2. **`## Sessions`** — the table **header and the repo's appetite only, with no rows**. Copy the header
-   from the template, which includes `depends`. The executing `/v-team` session writes every row; v-pm
-   never guesses them.
-3. **`## Cross-session contracts`** — the five-column header of `templates/master-plan.md`, **no rows**.
-   The `/v-team` session writes them through step (f3) item 6 of `03-propose-loop.md`.
-
-Keep **all three** out of `## Consumed contract`, so the Step-0 drift check still diffs cleanly — it is a
-mechanical field-by-field compare of that section against `contracts.md`, and a second table inside it
-would produce false drift on every pickup. Do **not** create a `ledger.md` — the ledger is a **derived view**:
-`/v-pm status` and reconcile compute it from thread filenames on read, so there is no shared file to
-race on.
-
-## 3.2 Symlink into each project
-For each participant `<proj>`, symlink the workspace into its vault so it shows in that project's feature
-index and `/v-team` can find it without a slug:
+## 4.2 Symlink into each participant
 ```
 ln -s ~/vault/_features/<feature>  ~/vault/<proj>/features/<feature>
 ```
-Ensure the symlink is **gitignored** in the participant repo — the `templates/vault.gitignore` entry for
-workspace symlinks covers it; confirm it's present in each project vault's `.gitignore`.
+Confirm each participant vault's `.gitignore` carries the workspace-symlink entry from
+`$VAULT_FRAMEWORK_PATH/templates/vault.gitignore`.
 
-## 3.3 Stage the workspace (commit happens in CAPTURE)
-Leave the new `<feature>/` **staged, not committed** — the CAPTURE step (05) commits it together with the
-planning-session record and any ADRs, in one commit. (`_features/` is its own committed vault
-ingests it.)
+## 4.3 Stage, commit in Step 5
+Leave the workspace staged. Step 5 commits it with the trail and any ADRs, in one commit.
 
 ## Required output
 ```
-Workspace: ~/vault/_features/<feature>/  [seeded, staged]  (requirements.md · generic-plan.md · contracts.md)
-Shard rule-ids: [<proj>: REQ-NN,… seeded into `## Business rules to satisfy`, per participant]
-Shard appetite: [<proj>: N sessions seeded into `## Sessions`, header only — no rows]
-Shard contracts: [<proj>: `## Cross-session contracts` header seeded — no rows]
+Workspace: ~/vault/_features/<feature>/  [plan · briefs · requirements · contracts · shards]
 Symlinks: [<proj>/features/<feature> → workspace, per participant]
 ```
-Mark SEED WORKSPACE `completed` → Step 5 (CAPTURE).
+Mark SEED WORKSPACE `completed` → Step 5.

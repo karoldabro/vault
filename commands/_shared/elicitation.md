@@ -114,16 +114,18 @@ proceed silently past one that passes it — that is the fork that has to be ask
 
 Two things the operator owns and only they can supply. Elicit both before planning ends:
 
-- **The measurable outcome.** What observable will differ once this ships, and by when. "Users can
-  filter orders" is a feature, not an outcome. It belongs in `requirements.md` under
-  `## Business context & goals`, which is the single home for the success metric.
+- **The success criterion.** Under `/v-pm` this is the one refusal in this module, and the exception
+  to "What this is not": `/v-pm` does not plan until the operator states at least one line as
+  `WHEN <trigger> THE SYSTEM SHALL <observable>`, or accepts one drafted from their words. The refusal
+  text and what counts as accepted live in `commands/v-pm/steps/01-intake.md` §1.2. The lines live in
+  the feature plan's `## Success criteria`; `requirements.md` `## Business context & goals` links
+  them. Every other command that loads this module records a missing outcome as an open question in
+  `## Business context & goals` and proceeds.
 - **Anything "done" must include beyond the baseline.** The floor — tests, review, lint, docs, the
   status row — is already fixed in `definition-of-done.md` and is not the operator's to restate. Ask
   only for what this feature adds: a performance bound, a migration that must complete, a third party
   that must confirm receipt.
 
-If the operator cannot name a measurable outcome, that is itself a finding. Say so plainly and record
-it as an open question rather than inventing one.
 
 ## Required output
 
@@ -132,6 +134,6 @@ Techniques used: [1 document analysis · 2 five-whys · …]   (ruled out: <n> �
 Need: <one sentence, in your words, after the whys>
 Asked: <n>   ·   Answered: <n>   ·   Defaulted: <n>   (each default → `## Assumptions to test`)
 Still open: [questions carried into `## Open questions`, with why each does not block]
-Success metric: <the operator's measurable outcome | not supplied — recorded as open>
+Success criteria: <the operator's lines | not supplied — recorded as open (under /v-pm: refused)>
 Done adds: [what this feature adds to the baseline | nothing beyond the baseline]
 ```

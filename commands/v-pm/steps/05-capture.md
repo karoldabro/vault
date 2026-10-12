@@ -6,70 +6,42 @@
 
 > **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
 
-Planning is where the cross-project decisions are made — record them, or they evaporate. This is v-pm's
-own `/v-capture`, scoped to the feature workspace and cross-project. Runs after SEED WORKSPACE (plan
-mode) and at the end of `reconcile`.
+Record the planning decisions, commit the plan, and hand the operator the first runnable sessions.
 
-**Single-repo mode (1 participant):** capture against the **project vault**, not `_features/` — write the
-planning-session into `<project-vault>/sessions/`, and commit the **project vault** (which now holds `requirements/<feature>.md`). Skip the ADR-into-neutral-
-workspace default (§5.2) — any ADR is this one project's, so it lands in `<project-vault>/decisions/`.
-Then tell the user to run `/v-team`/`/v-work` in that repo. The rest below is the multi-repo path.
+## 5.1 The trail is the planning record
+`plan.trail.md` already holds the research, the options rejected, and each round's findings with
+their dispositions. Add the session's need, participants and tier at its top. A single-repo run also
+writes a one-line session note into `<project-vault>/sessions/` that links the plan folder.
 
-## 5.1 Write the planning-session record
-Into `~/vault/_features/<feature>/sessions/YYYY-MM-DD-HHMM-<slug>.md` (from
-`$VAULT_FRAMEWORK_PATH/templates/_features/planning-session.md`): the necessity, participants, the panel's
-**critique trail** (what each critic raised; applied / rejected / deferred), the decisions and trade-offs,
-and links to `requirements.md` + `generic-plan.md` + `contracts.md`. This is the *why* behind the plan —
-the part the committed artifacts don't hold.
+## 5.2 Extract ADR candidates
+Scan the plan and the trail for decision-shaped statements: `chose X over Y`, a sequencing call, a
+contract shape. Present each as one line; for each the operator confirms, write it from
+`$VAULT_FRAMEWORK_PATH/templates/decision.md`:
+- multi-repo → `~/vault/_features/<feature>/decisions/ADR-<n>-<slug>.md`, the neutral workspace. Offer
+  to promote one into `~/vault/<proj>/decisions/` when it binds only that repo.
+- single-repo → `<project-vault>/decisions/`.
 
-## 5.2 Extract cross-project ADR candidates
-Scan the plan + panel decisions for decision-shaped statements (`chose X over Y`, `going with`, `rejected
-… in favor of`, sequencing calls, contract-shape decisions). Present each as a one-line candidate; for
-each the user confirms:
-- Write `~/vault/_features/<feature>/decisions/ADR-<n>-<slug>.md` (from
-  `$VAULT_FRAMEWORK_PATH/templates/decision.md`) — cross-project ADRs live in the **neutral workspace** by
-  default, not scattered into one participant's vault.
-- **Offer to promote** an ADR into a specific participant's vault (`~/vault/<proj>/decisions/`) when it's
-  really that one project's call rather than a shared one.
-Don't manufacture ADRs — only genuine decisions the planning actually made.
-
-## 5.3 Make the knowledge findable
-The committed `requirements.md` **is** the durable record — domain glossary, business rules (REQ-NN)
-and the variant/state tables. Keep those tables in the file, not only the glossary and rules: they are
-the test-design fan-out's primary input, and grep over the vault is how each project's `/v-team` LOAD
-CONTEXT (`02-load-context.md` §2.1) finds them.
-
-## 5.4 Commit + push
-Commit the whole `~/vault/_features/<feature>/` (workspace + planning-session record + any ADRs) with
-**explicit paths** — `_features/` is its own committed vault, and a cross-project plan that never
-leaves this machine is useless to the other participants:
-
+## 5.3 Commit and push
 ```bash
-$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh push ~/vault/_features -m "plan <feature>" ~/vault/_features/<feature>
+$VAULT_FRAMEWORK_PATH/bin/vault-sync.sh push <plan vault> -m "plan <feature>" <plan folder> <requirements file>
 ```
+The plan vault is `~/vault/_features` for multi-repo and the project vault for single-repo. Never raw
+`git`, never `git add -A`. Exit codes: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`. On exit
+5 (no upstream) say plainly that sessions on another machine cannot see the plan yet.
 
-Single-repo mode pushes the **project vault** instead, same call. Never raw `git`, never `git add -A`.
-Exit codes and what each means: `$VAULT_FRAMEWORK_PATH/commands/_shared/vault-sync.md`. Exit 5 (no
-upstream) matters more here than anywhere else — say plainly that the other projects cannot see the
-plan yet.
+## 5.4 Hand over the run order
+```bash
+$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh order <plan>
+```
+Print the waves, then the run line of every `runnable` session, copied from its brief's
+`## Next command`. Sessions in one wave may run at the same time; a later wave waits.
 
 ## Required output
-
-**Multi-repo:**
 ```
-Planning session: _features/<feature>/sessions/<file>.md
-ADR candidates: <N found, M written>   (promoted to <proj>: [...] | none)
-Committed: _features/<feature>/  (<shortsha>)
+Plan: <absolute plan path>   (<n> sessions, <w> waves)
+ADR candidates: <N found, M written>
+Committed: <plan vault> (<shortsha>)   · pushed: <yes | no — reason>
+Run now:
+  <run line of each wave-1 session>
 ```
-Mark CAPTURE `completed`. Plan mode complete — tell the user the workspace is ready and to run
-`/v-team <feature>` in **each** project.
-
-**Single-repo:**
-```
-Requirements: <project-vault>/requirements/<feature>.md
-Planning session: <project-vault>/sessions/<file>.md
-ADR candidates: <N found, M written> (in <project-vault>/decisions/ | none)
-Committed: <project-vault>  (<shortsha>)
-```
-Mark CAPTURE `completed`. Plan mode complete — the knowledge center is written; tell the user to run
-`/v-team` (or `/v-work`) in **that** repo to build it.
+Mark CAPTURE `completed`. Plan mode ends here; `/v-pm` implements nothing.

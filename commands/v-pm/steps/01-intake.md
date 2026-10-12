@@ -6,81 +6,83 @@
 
 > **Writing a document:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/document-standard.md` first — it governs every file written here (one file one question, current truth only, no process inside a contract document; `bin/doc-lint.sh` enforces it).
 
-Capture the business necessity, make sure it's understood, and decide who's in.
+Understand the need, get the operator's success criteria, decide who is in, and size the work.
 
 ## 1.1 Elicit (do not merely clarify)
-Read `$VAULT_FRAMEWORK_PATH/commands/_shared/elicitation.md` and run it. That module owns the whole
-protocol: the technique menu worked cheapest-first (document analysis → five whys when the operator
-hands you a solution → research → scenario walkthrough → example-driven), where each answer lands, and
-the stopping rule. It is not repeated here.
+Read `$VAULT_FRAMEWORK_PATH/commands/_shared/elicitation.md` and run it. That module owns the protocol:
+the technique menu worked cheapest-first, where each answer lands, and the stopping rule. This step
+adds the need restated in one sentence, after the whys and before anything else.
 
-Three things this step must produce beyond the module's own output:
+Every question still open after the stopping rule gets a stated default in `requirements.md`
+`## Assumptions to test`, surfaced at the approval gate. A genuine plan fork with no safe default is
+asked through `AskUserQuestion`, and the step waits for the answer.
 
-1. **The need, restated in one sentence** — after the whys, not before them. The operator usually
-   arrives with a solution; the need behind it is what the plan is built on.
-2. **The measurable success metric**, into `requirements.md` `## Business context & goals`. If the
-   operator cannot name one, record that as an open question rather than inventing one.
-3. **What "done" adds** beyond the baseline in
-   `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md`. Ask only for the additions — a
-   performance bound, a migration that must complete, a third party that must confirm. The floor is
-   fixed and is not the operator's to restate.
+## 1.2 Success criteria — refuse without them
+`/v-pm` does not plan until the operator has stated at least one success criterion in this form:
 
-**Unanswered does not mean blocked.** Every question still open after the stopping rule gets a stated
-default, written to `requirements.md` `## Assumptions to test` and surfaced at the approval gate where
-it can still be corrected. The one exception is a genuine plan-fork with **no safe default** — ask via
-`AskUserQuestion` and **wait**. Planning ahead is the most expensive place to guess, but holding a
-whole feature for a question that changes nothing is its own failure.
+```
+WHEN <trigger> THE SYSTEM SHALL <observable>
+```
 
-## 1.2 Resolve participants
-Determine which repos the feature spans:
-1. If the user named them, use that.
-2. Else read `~/vault/_global/coupled-groups.md` — if the necessity clearly maps to a declared group
-   (vivi, digitally, givore…), propose its members and confirm.
-3. Else ask which projects are in scope.
+When the operator has given none, draft one from their own words and send exactly this, filled in:
 
-## 1.3 Break-even gate — decouple the knowledge center from the coordination machinery
-The **business knowledge center (`requirements.md`) is worth authoring for ANY feature** — it stops the
-user repeating themselves and makes the vault richer for tests + AI. Only the **coordination machinery**
-(the `_features/` workspace, `conversation/`, `contracts.md` seam, symlinks, shards) needs 2+ repos to
-pay off. So the gate splits on that boundary, not on "author requirements or not":
+```
+I will not plan until you give at least one line: WHEN <trigger> THE SYSTEM SHALL <observable>.
+Drafted from your words: WHEN <trigger> THE SYSTEM SHALL <observable>.
+Reply with your own lines, or "yes" to take this one.
+```
 
-- **2+ participants → full multi-repo run.** Proceed through SEED WORKSPACE (Step 4) as normal:
-  requirements.md + generic-plan.md + contracts.md into the neutral `_features/<feature>/` workspace.
-- **1 participant → single-repo run (author the knowledge center, skip the machinery).** Do **not** hand
-  off empty-handed and do **not** seed a `_features/` workspace. Instead:
-  1. Run **LOAD CONTEXT** (`02-load-context.md`) and **PLAN PANEL** (`03-plan-panel.md`) scoped to the one
-     project — but PLAN PANEL emits **only `requirements.md`** (the knowledge center); **skip
-     `contracts.md`** (no cross-project seam) and **skip `generic-plan.md`** (single-repo execution
-     planning is `/v-team`'s job, not a cross-project shard).
-  2. **Write it into the project's OWN vault** at `<project-vault>/requirements/<feature>.md` (from
-     `templates/_features/requirements.md`). This is the project's own vault — no cross-repo write. If
-     `requirements/` doesn't exist yet, create it + a `requirements/_index.md` (one-line note; no forced
-     migration of existing vaults).
-  3. Run **CAPTURE** (`05-capture.md`, single-repo branch) against the **project vault**: planning-session
-     into `<project-vault>/sessions/`, commit the project vault (not
-     `_features/`).
-  4. **Hand off execution**: tell the user to run `/v-team` (or `/v-work`) in that repo — it reads
-     `requirements/<feature>.md` (LOAD CONTEXT now globs `requirements/`) and, **at `/v-capture` Step 4d**
-     (shared by both lifecycles), writes the **established** `features/<feature>` dossier carrying each
-     `REQ-NN` id. Same spec→established seam as multi-repo, just inside one vault. Then end the v-pm run.
+An explicit "yes" makes the drafted line the operator's. Silence, "fine" to another question, or a
+feature name such as "admins can export orders" does not. Repeat the refusal until a line is stated
+or accepted; never write a default in its place. The lines go to the plan's `## Success criteria`,
+their single home; `requirements.md` `## Business context & goals` links them.
 
-Carry the resolved **mode** (`single-repo` | `multi-repo`) forward — Steps 3/4/5 branch on it.
+## 1.3 Definition of done
+The plan carries four default lines, DD-1 to DD-4, from `$VAULT_FRAMEWORK_PATH/templates/feature-plan.md`:
+planning done, code implemented, code tested, static analysis passed. Ask the operator only what this
+feature adds beyond them: a performance bound, a migration that must complete, a third party that must
+confirm. The per-session floor stays in `$VAULT_FRAMEWORK_PATH/commands/_shared/definition-of-done.md`.
 
-## 1.4 Name + slug
-Pick a short kebab-case `<feature>` slug (e.g. `saved-filters`, `team-billing`). This is the workspace
-directory name and the `/v-team <feature>` argument. Confirm it isn't already taken: **multi-repo** →
-check `_features/<feature>/`; **single-repo** → check `<project-vault>/requirements/<feature>.md` (that's
-where single-repo mode writes it, not `_features/`).
+## 1.4 Resolve participants and their paths
+1. If the operator named the repos, use them.
+2. Else read `~/vault/_global/coupled-groups.md`; when the need maps to a declared group, propose its
+   members and confirm.
+3. Else ask which repos are in scope.
+
+For each repo record its **absolute path** (from `coupled-groups.md` or the repo's `VAULT.md`) and its
+vault path. Every session row names the path its command runs in.
+
+## 1.5 Size the work — the scale tier
+Count these facts from the intake answers: repos in scope; whether the work changes a schema, auth,
+payments, a public contract or adds an external service; whether it creates a new system. Map them to
+`small`, `medium` or `large` with the table in `$VAULT_FRAMEWORK_PATH/personas/_shared/planning/README.md`
+`## Scale tiers`. The tier sets the reviewer and round caps in Step 3 and what each reviewer may demand.
+
+A small project gets a small plan. A `small` tier with one obvious session may still run the panel
+once; it never grows sessions to look thorough.
+
+## 1.6 Plan home
+- **1 repo** → the plan lives in `<project-vault>/plans/<feature>/`, and `requirements.md` in
+  `<project-vault>/requirements/<feature>.md`. Create either folder when absent (warn once). No
+  `_features/` workspace, no conversation threads, no symlinks.
+- **2+ repos** → the plan and `requirements.md` live in `~/vault/_features/<feature>/`, with the
+  workspace of Step 4.
+
+Both homes hold the same three things: `plan.md`, `plan.trail.md` and `briefs/`. Carry the resolved
+mode (`single-repo` | `multi-repo`) forward.
+
+## 1.7 Name and slug
+Pick a short kebab-case `<feature>` slug. Check it is free: `<project-vault>/plans/<feature>/` for
+single-repo, `~/vault/_features/<feature>/` for multi-repo.
 
 ## Required output
 ```
 Need: <one sentence, after the whys — the problem, not the requested solution>
 Techniques used: [document analysis · five-whys · …]   (ruled out: <n> — <reason>)
-Asked: <n> · Answered: <n> · Defaulted: <n>   (defaults → requirements.md `## Assumptions to test`)
-Still open: [carried to `## Open questions`, with why each does not block]
-Success metric: <the operator's measurable outcome | not supplied — recorded as open>
-Done adds: [what this feature adds to the baseline | nothing beyond the baseline]
-Participants: [api, frontend, …]   (source: named | coupled-group <g> | asked)
-Feature slug: <feature>
+Success criteria: <n> stated by the operator   [SC ids]
+Done adds: [what this feature adds to DD-1..DD-4 | nothing]
+Participants: [<repo> → <absolute path>, …]   (source: named | coupled-group <g> | asked)
+Tier: <small | medium | large>   (repos: <n>; risky surface: <none | which>)
+Mode: <single-repo | multi-repo>   ·   Home: <plan folder>   ·   Feature slug: <feature>
 ```
-Mark INTAKE `completed` → Step 2.
+Mark INTAKE `completed` → Step 2. Without at least one stated success criterion INTAKE is not complete.

@@ -24,12 +24,13 @@ teardown() {
     assert_symlink_to "${HOME}/.claude/commands/v-pm"    "${VAULT_ROOT}/commands/v-pm"
 }
 
-@test "v-pm dispatcher has plan/reconcile/status modes and a 'when to use' bar" {
-    grep -qi 'plan'                         "${PM}"
+@test "v-pm dispatcher has plan/reconcile/status modes, a 'when to use' bar, and the read-only rule" {
     grep -qi 'reconcile'                    "${PM}"
     grep -qi 'status'                       "${PM}"
     grep -qi 'when to use'                  "${PM}"
-    grep -qi '2+ repos\|spans 2'            "${PM}"
+    grep -q  'writes no code'               "${PM}"
+    grep -q  'holds no opinion of its own'  "${PM}"
+    grep -q  '### Step 4 — APPROVAL GATE'   "${PM}"
 }
 
 @test "v-pm dispatcher has a tool health-check + fallback table and the search precedence" {
@@ -47,19 +48,14 @@ teardown() {
     [ -f "${STEPS}/07-status.md" ]
 }
 
-@test "capture writes a planning-session record and extracts cross-project ADRs" {
-    grep -qi 'planning-session'             "${STEPS}/05-capture.md"
-    grep -qi 'sessions/'                    "${STEPS}/05-capture.md"
-    grep -qi 'ADR'                          "${STEPS}/05-capture.md"
-    grep -qi 'decisions/'                   "${STEPS}/05-capture.md"
-    grep -qi 'commit'                       "${STEPS}/05-capture.md"
-    # cross-project ADRs land in the neutral workspace by default
-    grep -qi 'neutral workspace\|_features/<feature>/decisions' "${STEPS}/05-capture.md"
-    # the knowledge center is referenced + its glossary/rules recorded
-    grep -qi 'requirements.md'              "${STEPS}/05-capture.md"
-    grep -qi 'glossary'                     "${STEPS}/05-capture.md"
-    # single-repo captures against the project vault
-    grep -qi 'single-repo\|project vault'   "${STEPS}/05-capture.md"
+@test "capture uses the trail as the record, extracts ADRs, commits, and prints the run order" {
+    C="${STEPS}/05-capture.md"
+    grep -q  'plan.trail.md'                "${C}"
+    grep -qi 'ADR'                          "${C}"
+    grep -qi 'neutral workspace'            "${C}"
+    grep -q  'vault-sync.sh push'           "${C}"
+    grep -q  'pm-plan.sh order'             "${C}"
+    grep -qi 'single-repo'                  "${C}"
 }
 
 @test "requirements id-traceability seam is wired at the CONSUMING files, not just feature-pickup" {
@@ -108,10 +104,9 @@ teardown() {
     grep -q  'ADR-014'                      "${VAULT_ROOT}/vault/decisions/_inventory.md"
 }
 
-@test "v-pm dispatcher reframes 'when to use' for 1+ repos (knowledge center) with coordination as the 2+ delta" {
-    grep -qi 'requirements'                 "${PM}"
-    grep -qi '1 repo\|single-repo\|1+ repos\|any.*feature' "${PM}"
-    grep -qi '2+ repos'                     "${PM}"
+@test "v-pm plans one or many repos, proportional to the scale tier" {
+    grep -qi 'one repo or several\|one or many repos' "${PM}"
+    grep -qi 'scale tier'                   "${PM}"
 }
 
 @test "load-context is vault-first, ACROSS every participant vault, and emits a digest" {
@@ -124,57 +119,52 @@ teardown() {
     grep -qi 'cheapest-first\|precedence'   "${STEPS}/02-load-context.md"
 }
 
-@test "intake clarify-hard-blocks; single-repo authors requirements.md into the project vault (not a bare hand-off) then hands execution off" {
-    grep -qi 'clarify'                      "${STEPS}/01-intake.md"
-    grep -qi 'wait\|hard-block'             "${STEPS}/01-intake.md"
-    grep -qi '1 participant\|single-participant\|single-repo' "${STEPS}/01-intake.md"
-    grep -qi 'hand off\|hand-off\|/v-team'  "${STEPS}/01-intake.md"
-    # single-repo still authors the knowledge center into the project's OWN vault, skipping the workspace
-    grep -qi 'requirements.md'              "${STEPS}/01-intake.md"
-    grep -qi 'requirements/<feature>\|<project-vault>/requirements' "${STEPS}/01-intake.md"
-    grep -qi 'skip.*workspace\|no.*_features/ workspace\|not.*seed' "${STEPS}/01-intake.md"
+@test "intake refuses without operator success criteria and sets tier, repos and plan home" {
+    IN="${STEPS}/01-intake.md"
+    grep -q  'I will not plan until you give at least one line' "${IN}"
+    grep -q  'WHEN <trigger> THE SYSTEM SHALL <observable>' "${IN}"
+    grep -qi 'never write a default in its place' "${IN}"
+    grep -q  'absolute path'                "${IN}"
+    grep -q  'personas/_shared/planning/README.md' "${IN}"
+    grep -q  '<project-vault>/plans/<feature>/' "${IN}"
+    grep -q  '<project-vault>/requirements/<feature>.md' "${IN}"
 }
 
-@test "plan-panel is a sequential 4-critic pipeline, consumes the LOAD CONTEXT digest, borrows 03-propose-loop NOT critic-panel" {
-    grep -qi 'sequential'                   "${STEPS}/03-plan-panel.md"
-    grep -qi 'business'                     "${STEPS}/03-plan-panel.md"
-    grep -qi 'product owner'                "${STEPS}/03-plan-panel.md"
-    grep -qi 'architect'                    "${STEPS}/03-plan-panel.md"
-    grep -qi 'contract'                     "${STEPS}/03-plan-panel.md"
-    grep -qi 'pm_max_rounds'                "${STEPS}/03-plan-panel.md"
-    grep -qi '03-propose-loop'              "${STEPS}/03-plan-panel.md"
-    grep -qi 'not.*critic-panel'            "${STEPS}/03-plan-panel.md"
-    # each critic reasons from the loaded vault context
-    grep -qi 'LOAD CONTEXT digest\|Step 2'  "${STEPS}/03-plan-panel.md"
+@test "plan-panel runs the parallel planning panel through the v-team loop and checks the plan" {
+    P="${STEPS}/03-plan-panel.md"
+    grep -qi 'parallel'                     "${P}"
+    ! grep -qi 'sequential'                 "${P}"
+    grep -q  '_resolution.md` §2.3'         "${P}"
+    grep -q  '03-propose-loop.md'           "${P}"
+    grep -q  'no `(f2)`'                    "${P}"
+    grep -q  'pm-plan.sh check'             "${P}"
+    grep -q  'templates/handoff.md'         "${P}"
+    grep -q  'delivery-planner.md'          "${P}"
 }
 
-@test "seed-workspace scaffolds requirements.md, seeds shard rule-ids, and has NO ledger file (derived view)" {
-    grep -qi 'requirements.md'              "${STEPS}/04-seed-workspace.md"
-    grep -qi 'generic-plan.md'              "${STEPS}/04-seed-workspace.md"
-    grep -qi 'contracts.md'                 "${STEPS}/04-seed-workspace.md"
-    grep -qi 'conversation/'                "${STEPS}/04-seed-workspace.md"
-    grep -qi 'projects/'                    "${STEPS}/04-seed-workspace.md"
-    grep -qi 'derived view\|no.*ledger'     "${STEPS}/04-seed-workspace.md"
-    grep -qi 'symlink'                      "${STEPS}/04-seed-workspace.md"
-    # v-pm seeds REQ ids into the shard's owned section, NOT into Consumed contract
-    grep -qi 'Business rules to satisfy\|REQ-'  "${STEPS}/04-seed-workspace.md"
-    # multi-repo only — single-repo is handled in intake §1.3
-    grep -qi 'single-repo'                  "${STEPS}/04-seed-workspace.md"
+@test "seed-workspace runs after approval, multi-repo only, and keeps the tracker in plan.md" {
+    S="${STEPS}/04-seed-workspace.md"
+    grep -qi 'after approval\|approved'     "${S}"
+    grep -qi 'single-repo mode skips'       "${S}"
+    grep -q  'conversation/'                "${S}"
+    grep -q  'symlink'                      "${S}"
+    grep -q  'its one home'                 "${S}"
 }
 
-@test "plan-panel emits the requirements.md knowledge center (rules + glossary), single source of why" {
-    grep -qi 'requirements.md'              "${STEPS}/03-plan-panel.md"
-    grep -qi 'business rules\|REQ-'         "${STEPS}/03-plan-panel.md"
-    grep -qi 'glossary'                     "${STEPS}/03-plan-panel.md"
-    grep -qi 'single source of .why.\|why.*requirements' "${STEPS}/03-plan-panel.md"
-    # single-repo mode emits requirements only (skips contracts + generic-plan)
-    grep -qi 'single-repo'                  "${STEPS}/03-plan-panel.md"
+@test "plan-panel writes requirements, contracts and briefs with the run line" {
+    P="${STEPS}/03-plan-panel.md"
+    grep -q  'requirements.md'              "${P}"
+    grep -qi 'glossary'                     "${P}"
+    grep -q  'contracts.md'                 "${P}"
+    grep -q  'claude --add-dir <plan folder> "<command> <absolute plan path>#<id>"' "${P}"
 }
 
-@test "status mode is a no-write cross-feature sweep" {
-    grep -qi 'sweep'                        "${STEPS}/07-status.md"
-    grep -qi 'no writes\|no write'          "${STEPS}/07-status.md"
-    grep -qi 'cross-feature\|every.*_features' "${STEPS}/07-status.md"
+@test "status mode sweeps every feature and writes only the done lines" {
+    ST="${STEPS}/07-status.md"
+    grep -qi 'sweep'                        "${ST}"
+    grep -q  'pm-plan.sh order'             "${ST}"
+    grep -qi 'legacy'                       "${ST}"
+    grep -q  'DD-2 to DD-4'                 "${ST}"
 }
 
 @test "reconcile drains to:pm threads, flags staleness, and captures at the end" {
@@ -304,14 +294,9 @@ teardown() {
     ! grep -qi '05-commit-capture'      "${VAULT_ROOT}/commands/v-do.md"
 }
 
-@test "v-pm emits an appetite and a first slice, never a task list" {
-    grep -qi 'appetite'                 "${PM}"
-    grep -qi 'appetite'                 "${STEPS}/03-plan-panel.md"
-    grep -qi 'first slice'              "${STEPS}/03-plan-panel.md"
-    grep -qi 'never a task list\|not a task list\|never write session-sized\|not enumerate' "${STEPS}/03-plan-panel.md"
-    grep -q  '## Appetite'              "${TPL}/generic-plan.md"
-    grep -q  '## First slice'           "${TPL}/generic-plan.md"
-    grep -q  '## Options considered'    "${TPL}/generic-plan.md"
+@test "v-pm decides the sessions and names no appetite" {
+    ! grep -rqi 'appetite' "${PM}" "${STEPS}"
+    grep -q '/v-pm` decides how many' "${STEPS}/03-plan-panel.md"
 }
 
 @test "the shard carries a Sessions tracker with evidence, a date, and a bounded vocabulary" {
@@ -326,12 +311,6 @@ teardown() {
     grep -qi 'Consumed contract'        "${SH}"
     # coverage has ONE home: the table, not the REQ id list
     ! grep -qi 'annotates coverage'     "${SH}"
-}
-
-@test "v-pm seeds the Sessions header and appetite but never a row" {
-    grep -q  '## Sessions'              "${STEPS}/04-seed-workspace.md"
-    grep -qi 'no rows\|NO rows'         "${STEPS}/04-seed-workspace.md"
-    grep -qi 'Consumed contract'        "${STEPS}/04-seed-workspace.md"
 }
 
 @test "status derives progress from shard rows, not the header field that goes stale" {
@@ -350,10 +329,10 @@ teardown() {
     grep -qi 'derive it, never ask\|Derive it, never ask' "${VC}"
 }
 
-@test "intake elicits rather than merely clarifying, and never blocks on a non-fork" {
+@test "intake elicits, states defaults, and adds only to the four done lines" {
     IN="${STEPS}/01-intake.md"
     grep -qi 'elicitation.md'           "${IN}"
-    grep -qi 'success metric'           "${IN}"
+    grep -q  'DD-1 to DD-4'             "${IN}"
     grep -qi 'definition-of-done.md'    "${IN}"
     tr '\n' ' ' < "${IN}" | grep -qi 'stated *default'
 }
@@ -390,21 +369,12 @@ teardown() {
     grep -q 'templates/master-plan.md' "${SH}"
 }
 
-@test "the seed step seeds three sections, the third with a header and no rows, and reports it" {
-    S="${STEPS}/04-seed-workspace.md"
-    grep -q 'seeds \*\*three\*\* sections' "${S}"
-    grep -q '`## Cross-session contracts`' "${S}"
-    grep -qi 'no rows' "${S}"
-    grep -q 'step (f3) item 6' "${S}"
-    grep -q '^Shard contracts:' "${S}"
-}
-
-@test "the status step runs the master gate per open shard and reports a Contract gap" {
+@test "the status step checks each plan and still reads a legacy shard through the master gate" {
     ST="${STEPS}/07-status.md"
-    grep -q 'bin/gate.sh master <shard> 2>&1' "${ST}"
+    grep -q 'pm-plan.sh check <plan>' "${ST}"
+    grep -q 'bin/gate.sh master <shard>' "${ST}"
     grep -q 'REFUSED master' "${ST}"
-    grep -q '\*\*Contract gap\*\*' "${ST}"
-    grep -q 'Four exceptions' "${ST}"
+    grep -q 'legacy layout: /v-pm reconcile <feature>' "${ST}"
 }
 
 @test "step 5.0 of the close step sets the master-plan row through session_of" {

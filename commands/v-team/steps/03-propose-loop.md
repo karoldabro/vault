@@ -146,7 +146,8 @@ The synthesizer is itself an LLM-judge, so neutralise its known biases:
    **`## Advisory test hints`** section of the **trail sidecar**, never to the plan. The §(f2) test-design fan-out is the **sole authoritative writer** of
    the Test backlog and reconciles these hints into it. (The §(d) schema still emits
    `PROPOSED_TESTS`; only their consumption changes.)
-6. **Append** round R to the **trail sidecar** (`plans/<slug>.trail.md`, `## Findings & dispositions`
+6. **Append** round R to the **trail sidecar of the caller's plan** (`plans/<slug>.trail.md` for
+   `/v-team`, `plan.trail.md` for `/v-pm`; `## Findings & dispositions`
    and `## Metrics`), never to the plan: each finding's disposition (applied / deferred / rejected +
    reason) plus new confirmed blockers, findings-delta, per-persona overlap, confirmed-vs-advisory
    counts, previously-confirmed findings dropped this round (sycophancy flag) and token cost. The

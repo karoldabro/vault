@@ -4,9 +4,12 @@
 
 > **Writing to the user:** Read `$VAULT_FRAMEWORK_PATH/commands/_shared/communication.md` first — it governs every user-facing line produced here (answer first, no jargon, options carry their consequences, report exceptions not normality).
 
-Ground the plan in what the vault already knows — **before** the panel drafts anything. A cross-project
-planner must load context from **every participant's vault**, not one. Query **cheapest-first**: the vault
-before anything else; stop as soon as you have enough. Do **not** read source code here.
+Ground the plan in what the vault and the code already say — **before** the panel drafts anything. A
+cross-project planner loads context from **every participant**, not one. Query **cheapest-first**: the
+vault before the code; stop as soon as you have enough.
+
+**`/v-pm` writes no code.** This step reads source and runs read-only commands only: no edit, no
+install, no build, no test run, no migration.
 
 ## 2.0 Sync every participant's vault first
 A cross-project planner reads vaults other people write to, so a stale copy here is likelier than
@@ -39,6 +42,22 @@ Per participant, note what it already exposes / consumes that this feature touch
 shared types). This seeds the **contract critic** in Step 3 and flags where the new plan meets existing
 code.
 
+## 2.4 Read-only code orientation, per participant
+The session split in Step 3 is cut against real files, so read each repo at its absolute path:
+
+1. **Serena** when `check_onboarding_performed()` answers: `get_symbols_overview` on the modules the
+   keywords touch, `find_symbol` for each capability the need adds. Otherwise `git ls-files`, `grep -rn`
+   and reading the files.
+2. **Manifests**: `composer.json`, `package.json`, `pubspec.yaml`, `pyproject.toml` — what is already
+   installed, so a reviewer can check a package against the repo instead of guessing.
+3. **The entry points** the need runs through: route files, command files, the module that owns the
+   entity.
+4. **The conventions in force**: two or three sibling files of each kind the plan will add.
+
+Write the result as a **code index**: one line per path, with what it is and why it matters here. The
+index is what every reviewer receives, so no reviewer re-greps the tree
+(`$VAULT_FRAMEWORK_PATH/commands/_shared/agent-conduct.md` "Fan-out").
+
 ## Required output — the LOAD CONTEXT digest
 ```
 Vaults loaded: [<proj>… + _global + _features]
@@ -47,6 +66,7 @@ Existing features / dossiers: [overlap → reuse, don't reinvent]
 Prior cross-project plans: [...]
 Conventions / indications that constrain this: [...]
 Coupling touchpoints: [per participant]
+Code index: [<repo>: <path> — <what it is, why it matters>, …]
 ```
 This digest is **passed to every critic in Step 3** (they plan grounded in project knowledge, not blind)
 and referenced by the draft. Mark LOAD CONTEXT `completed` → Step 3.
