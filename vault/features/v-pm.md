@@ -61,3 +61,4 @@ channel (multi-repo coordination stays file-based and async).
 ## Sessions
 - [[../sessions/2026-07-03-1240-v-pm-cross-project-planning]]
 - [[../sessions/2026-07-03-1559-vpm-business-knowledge-center]] — requirements knowledge center (1+ repos), id chain, ADR-014
+- [[../sessions/2026-10-12-1042-v-pm-planning-loop]] — read-only planner, planning panel, session split, ADR-033
