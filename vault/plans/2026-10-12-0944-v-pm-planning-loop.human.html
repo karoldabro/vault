@@ -47,14 +47,6 @@ pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font
 <h1>v-pm-planning-loop — plan</h1>
 <h2>Task</h2>
 <p>Rework <code>/v-pm</code> into a read-only planner. It refuses to plan until the operator states success criteria. It reads the vault and the code of every repo in scope, researches prior art, and drafts an architecture plan. A parallel panel of planning reviewers critiques the draft until it converges. The output is one normalized plan. Its Sessions table names the repo and command of each session and gives a run order in parallel waves. Each session has one brief with a ready-to-paste shell line. The reviewers live in a reusable group, <code>personas/_shared/planning/</code>.</p>
-<h2>Needs your decision</h2>
-<ul>
-<li>needs the operator: run the five sessions in this conversation, one commit each, or one new session per prompt.</li>
-<li>needs the operator: confirm dropping the business-advisor and product-owner reviewers (Q-2).</li>
-<li>needs the operator: confirm that an explicit yes to a criterion drafted from your words counts as stated (D-18).</li>
-<li>needs the operator: confirm that legacy workspaces stay unmigrated until a reconcile you confirm (D-13).</li>
-<li>needs the operator: the review ran its two rounds. The second round raised 16 new must-fix items about claiming and closing a session row, and all are applied below without a third review. The rules most likely to hide a remaining gap are D-10 to D-13.</li>
-</ul>
 <h2>Defaults taken for you</h2>
 <div class="scroll">
 <table>
