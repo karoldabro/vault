@@ -3,6 +3,7 @@ type: decision
 project: vault
 id: ADR-014
 status: accepted
+superseded_in_part_by: ADR-033
 scope: repo
 tags: [adr, v-pm, requirements, business-logic, knowledge-center, testing]
 ---

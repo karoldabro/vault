@@ -173,14 +173,15 @@ teardown() {
     grep -qi '05-capture\|run.*CAPTURE\|Capture' "${STEPS}/06-reconcile.md"
 }
 
-@test "all seven _features templates exist (incl. planning-session + requirements)" {
+@test "the feature-plan template and the five workspace templates exist; the retired two do not" {
+    [ -f "${VAULT_ROOT}/templates/feature-plan.md" ]
     [ -f "${TPL}/header.md" ]
     [ -f "${TPL}/requirements.md" ]
-    [ -f "${TPL}/generic-plan.md" ]
     [ -f "${TPL}/contracts.md" ]
     [ -f "${TPL}/project-shard.md" ]
     [ -f "${TPL}/THREAD.md" ]
-    [ -f "${TPL}/planning-session.md" ]
+    [ ! -e "${TPL}/generic-plan.md" ]
+    [ ! -e "${TPL}/planning-session.md" ]
 }
 
 @test "requirements.md template is the business knowledge center with test-shaped rules + glossary + REQ ids" {
@@ -195,16 +196,17 @@ teardown() {
     grep -qi 'axis\|\[authz\]\|\[error\]\|\[nfr\]' "${TPL}/requirements.md"
 }
 
-@test "project-shard has a v-pm-owned 'Business rules to satisfy' REQ-id section (single-writer carve-out)" {
-    grep -qi 'Business rules to satisfy'           "${TPL}/project-shard.md"
-    grep -qi 'REQ-'                                "${TPL}/project-shard.md"
-    grep -qi 'seeded by /v-pm\|/v-pm seeds\|SEEDED BY /v-pm\|v-pm owns\|v-pm-seeded' "${TPL}/project-shard.md"
-    grep -qi 'preserve\|not overwrite\|never overwrite\|append' "${TPL}/project-shard.md"
+@test "the shard holds no tracker; the plan's Sessions table is its one home" {
+    SH="${TPL}/project-shard.md"
+    ! grep -q '^## Sessions' "${SH}"
+    ! grep -q '^## Cross-session contracts' "${SH}"
+    ! grep -q '^## Business rules to satisfy' "${SH}"
+    grep -q '../../plan.md' "${SH}"
 }
 
-@test "project-shard template is BMAD-self-contained with a consumed-contract section" {
-    grep -qi 'self-contained'               "${TPL}/project-shard.md"
-    grep -qi 'consumed contract'            "${TPL}/project-shard.md"
+@test "project-shard template keeps the consumed-contract section the drift check reads" {
+    grep -q '^## Consumed contract' "${TPL}/project-shard.md"
+    grep -qi 'drift check'          "${TPL}/project-shard.md"
 }
 
 @test "THREAD template encodes state in the filename with from/to frontmatter" {
@@ -299,18 +301,12 @@ teardown() {
     grep -q '/v-pm` decides how many' "${STEPS}/03-plan-panel.md"
 }
 
-@test "the shard carries a Sessions tracker with evidence, a date, and a bounded vocabulary" {
-    SH="${TPL}/project-shard.md"
-    grep -q  '## Sessions'              "${SH}"
-    grep -qi 'evidence'                 "${SH}"
-    grep -qi 'last touched'             "${SH}"
-    grep -qi 'todo | doing | done | dropped' "${SH}"
-    # /v-ask writes nothing, so it can never close a row
-    grep -qi 'NOT /v-ask\|not /v-ask'   "${SH}"
-    # the drift check is a mechanical table compare — keep this table out of its way
-    grep -qi 'Consumed contract'        "${SH}"
-    # coverage has ONE home: the table, not the REQ id list
-    ! grep -qi 'annotates coverage'     "${SH}"
+@test "the feature plan carries the Sessions tracker columns and the four done lines" {
+    FP="${VAULT_ROOT}/templates/feature-plan.md"
+    grep -q '^| id | repo | scope | command | status | depends | req | date | evidence | deviation |$' "${FP}"
+    grep -q '^| id | criterion | sessions | verdict | evidence |$' "${FP}"
+    for dd in DD-1 DD-2 DD-3 DD-4; do grep -q "^| ${dd} |" "${FP}"; done
+    grep -q 'repo      — the absolute path' "${VAULT_ROOT}/templates/master-plan.md"
 }
 
 @test "status derives progress from shard rows, not the header field that goes stale" {
@@ -337,19 +333,20 @@ teardown() {
     tr '\n' ' ' < "${IN}" | grep -qi 'stated *default'
 }
 
-@test "requirements template keeps ONE home for the success metric and marks rule priority" {
+@test "requirements template links the plan's success criteria and marks rule priority" {
     RQ="${TPL}/requirements.md"
-    grep -qi 'MEASURABLE'               "${RQ}"
     grep -q  '## Assumptions to test'   "${RQ}"
     grep -qi '\[must\]'                 "${RQ}"
-    # a second acceptance-shaped section is the duplication this avoids
-    ! grep -q '## Success criteria'     "${RQ}"
+    grep -q  "plan's \`## Success criteria\`\|feature plan's \`## Success criteria\`" "${RQ}"
+    ! grep -q '^## Success criteria'    "${RQ}"
 }
 
-@test "the appetite rule and ADR-024 are recorded in the vault" {
-    grep -q 'plan-appetite-not-tasks' "${VAULT_ROOT}/vault/indications/plan-appetite-not-tasks.md"
-    grep -qi 'amends' "${VAULT_ROOT}/vault/decisions/ADR-024-vpm-pm-discipline.md"
-    grep -qi 'ADR-012' "${VAULT_ROOT}/vault/decisions/ADR-024-vpm-pm-discipline.md"
+@test "ADR-033 and the pm-plans-sessions indication record the session split" {
+    grep -q 'ADR-024 decision 3' "${VAULT_ROOT}/vault/decisions/ADR-033-v-pm-planning-loop.md"
+    grep -q 'superseded_in_part_by: ADR-033' "${VAULT_ROOT}/vault/decisions/ADR-024-vpm-pm-discipline.md"
+    grep -q 'ADR-033' "${VAULT_ROOT}/vault/decisions/_inventory.md"
+    [ -f "${VAULT_ROOT}/vault/indications/pm-plans-sessions.md" ]
+    [ ! -e "${VAULT_ROOT}/vault/indications/plan-appetite-not-tasks.md" ]
 }
 
 @test "requirements-spec-vs-established points at the step that actually exists" {
@@ -360,14 +357,6 @@ teardown() {
 }
 
 # The shard carries the columns `bin/gate.sh master` reads, and three v-pm and v-work steps name them.
-
-@test "the shard has depends after status and a Cross-session contracts section with five columns" {
-    SH="${TPL}/project-shard.md"
-    grep -q '^| id | scope | command | status | depends | REQ covered | evidence | last touched | deviation |$' "${SH}"
-    grep -q '^## Cross-session contracts$' "${SH}"
-    grep -q '^| id | contract | produced by | consumed by | shape |$' "${SH}"
-    grep -q 'templates/master-plan.md' "${SH}"
-}
 
 @test "the status step checks each plan and still reads a legacy shard through the master gate" {
     ST="${STEPS}/07-status.md"
@@ -387,14 +376,15 @@ teardown() {
     grep -q 'never halts the close' "${BATS_TEST_TMPDIR}/a"
 }
 
-@test "a shard instantiated from the template passes the master gate and loses a row on deletion" {
+@test "a plan instantiated from the feature-plan template passes the master gate and refuses a missing contract" {
     local TMP; TMP=$(mktemp -d)
-    sed 's/{{[a-z]*}}/x/g' "${TPL}/project-shard.md" > "${TMP}/shard.md"
-    run "${VAULT_ROOT}/bin/gate.sh" master "${TMP}/shard.md"
+    sed 's/{{[a-z]*}}/x/g' "${VAULT_ROOT}/templates/feature-plan.md" > "${TMP}/plan.md"
+    run "${VAULT_ROOT}/bin/gate.sh" master "${TMP}/plan.md"
     [ "$status" -eq 0 ]
-    awk '{print} /^\|----\|-------\|---------\|--------\|---------\|/{print "| S1 | a | \/v-do | done | | | `x` | 2026-09-21 | |"; print "| S2 | b | \/v-do | todo | S1 | | | 2026-09-21 | |"}' "${TMP}/shard.md" > "${TMP}/filled.md"
+    awk '{print} /^\|----\|------\|-------\|---------\|/{print "| S1 | /tmp/a | a | /v-do | done | | | 2026-09-21 | x | |"; print "| S2 | /tmp/a | b | /v-do | todo | S1 | | 2026-09-21 | | |"}' "${TMP}/plan.md" > "${TMP}/filled.md"
     run "${VAULT_ROOT}/bin/gate.sh" master "${TMP}/filled.md"
     [ "$status" -eq 1 ]
     grep -q 'S2 depends on S1' <<<"$output"
     rm -rf "${TMP}"
 }
+

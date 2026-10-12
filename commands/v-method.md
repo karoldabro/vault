@@ -121,14 +121,15 @@ Name the method file's path and the first stage's command in one line. The opera
 command; `/v-method` stops here.
 
 **The seam with `/v-pm`.** Two commands, two questions. `/v-pm` owns what the product must do — the
-`requirements.md` rules, the glossary, the variant tables and an appetite per repo. `/v-method` owns
+`requirements.md` rules, the glossary, the variant tables and the sessions of the feature plan. `/v-method` owns
 how to work on it. A task whose business logic is unclear runs `/v-pm` first, because choosing a
 method requires a stated problem. A task whose requirements are clear and whose approach is not runs
 `/v-method` first.
 
-`/v-method` consumes the appetite `/v-pm` wrote and re-derives none of it. Its stage rows are coarser
-than session rows: it orders and sizes the stages, and each stage's own session splits the work
-inside one. A method whose stages exceed the appetite cuts scope and records the cut.
+`/v-method` reads the session count of each repo from the `/v-pm` plan's `## Sessions` table and
+re-derives none of it. Its stage rows are coarser than session rows: it orders and sizes the stages,
+and each stage's own session does the work inside it. A method whose stages exceed that session count
+cuts scope and records the cut.
 
 ---
 
@@ -144,5 +145,5 @@ Next: run <command> on <scope>
 ```
 
 **Omit any line with nothing to say.** The omit rule cuts good news and keeps every warning: a stated
-default, a property answered by guess, a stage whose tools this project lacks, and an appetite the
+default, a property answered by guess, a stage whose tools this project lacks, and a session count the
 stages exceed shall all be surfaced, however brief.

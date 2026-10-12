@@ -16,7 +16,7 @@ Start with [[README]] to install it, and [[vault-guide]] to understand the layou
 - [[commands/v-init]] — Bootstrap a project vault
 - [[commands/v-work]] — Vault-aware dev lifecycle
 - [[commands/v-team]] — Persona-critique lifecycle (parallel critics loop over plan + diff)
-- [[commands/v-pm]] — Cross-project feature planning into a shared `_features/` workspace
+- [[commands/v-pm]] — Read-only feature planning: success criteria, planning-reviewer panel, plan split into sessions
 - [[commands/v-do]] — Small, low-risk change with no approval gate
 - [[commands/v-ask]] — Read-only, vault-aware Q&A
 - [[commands/v-cr]] — Review a remote PR and post comments back
@@ -48,8 +48,9 @@ Start with [[README]] to install it, and [[vault-guide]] to understand the layou
 - [[templates/integration-guide]] — Cross-project API contract template
 - [[templates/VAULT]] — Per-repo vault config template
 
-`templates/_features/` holds the `/v-pm` workspace templates: `requirements.md`, `generic-plan.md`,
-`contracts.md`, `header.md`, `project-shard.md`, `planning-session.md`, `THREAD.md`.
+`templates/feature-plan.md` is the `/v-pm` plan; each session brief is a `templates/handoff.md`
+instance. `templates/_features/` holds the multi-repo workspace templates: `requirements.md`,
+`contracts.md`, `header.md`, `project-shard.md`, `THREAD.md`.
 
 ## Personas (`/v-team` critic library)
 

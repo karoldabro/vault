@@ -3,6 +3,7 @@ type: decision
 project: vault
 id: ADR-024
 status: accepted
+superseded_in_part_by: ADR-033
 scope: repo
 tags: [adr, v-pm, elicitation, definition-of-done, tracking]
 ---

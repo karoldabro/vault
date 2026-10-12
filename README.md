@@ -55,7 +55,7 @@ plugin uses the same name.
 | `/v-do` | Makes one small change, with no approval step | The change is small and obvious |
 | `/v-team` | Puts reviewers on the plan and on the diff | A wrong decision is expensive to undo |
 | `/v-loop` | Works alone for hours, until every case has a verdict | You want to hand a long job over and leave |
-| `/v-pm` | Plans one feature across several repos at once | The feature crosses repo boundaries |
+| `/v-pm` | Plans a feature, in one repo or several, and splits it into ready-to-run sessions | A wrong design would be expensive, or the work needs more than one session |
 | `/v-method` | Writes the stages, the tools, and what should stop them | The task is big and you don't know how to start |
 | `/v-rule` | Turns your own review comments into a checked rule | A review left a comment you want enforced next time |
 

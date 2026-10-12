@@ -12,12 +12,9 @@ product without re-deriving it from code. Only `/v-pm` (plan / reconcile) writes
 > `<project-vault>/requirements/<feature>.md` (1 repo). Body is identical either way.
 
 ## Business context & goals
-<!-- The why · the real user need behind the ask · the success metric. This is the SINGLE source of
-     "why" AND of the success metric — generic-plan.md back-references this instead of restating it,
-     and there is no separate success-criteria section anywhere.
-     The metric must be MEASURABLE and dated: name the observable that will differ once this ships, and
-     by when. "Users can filter orders" is a feature, not a metric. If the operator could not supply
-     one, say so here in those words and carry it in `## Open questions` — never invent one. -->
+<!-- The why · the real user need behind the ask. This is the single source of "why". The success
+     criteria live in the feature plan's `## Success criteria` (plan.md), stated by the operator as
+     WHEN <trigger> THE SYSTEM SHALL <observable>; link them here, never restate them. -->
 
 ## Actors
 <!-- Who uses / is affected by this feature (roles, systems, external parties). -->
@@ -33,7 +30,7 @@ product without re-deriving it from code. Only `/v-pm` (plan / reconcile) writes
      PRIORITY tag ([must] · [should] · [could]) and, where relevant, an axis tag: [authz] · [error] ·
      [nfr]. THIS is the single source for rules / acceptance — contracts.md and project feature dossiers
      reference by id, they never copy the text.
-     Priority is what lets a session cut scope to fit its appetite without asking. If nearly every rule
+     Priority is what lets a session cut scope to fit its session without asking. If nearly every rule
      is [must], nothing has been prioritised — go back and sort them.
      Omit this section only for a feature with no domain rules (pure infra/config). -->
 - **REQ-01** `[must] <precondition> → <expected outcome>`

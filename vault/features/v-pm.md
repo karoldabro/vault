@@ -4,62 +4,59 @@ project: vault
 slug: v-pm
 status: in_progress
 owners: []
-tags: [feature, v-pm, cross-project, planning]
+tags: [feature, v-pm, planning, cross-project]
 ---
 
 # v-pm
 
 ## Scope
-Cross-project feature planning + async agent coordination. `/v-pm` drafts a project-agnostic plan into a
-shared `_features/<feature>/` workspace; per-project `/v-team <feature>` sessions read it and coordinate
-through file-based conversation threads instead of the human relaying context. Non-goals: execution
-(that stays with `/v-team` / `/v-work`); a live agent-to-agent channel (coordination is file-based, async).
+Read-only feature planning across one or many repos. `/v-pm` refuses without operator success
+criteria, reads vault and code, researches prior art, runs a parallel panel of planning reviewers,
+and writes a normalized plan split into sessions, each with a brief and a paste-ready run line.
+Non-goals: implementation (sessions run through `/v-work` or `/v-team`); a live agent-to-agent
+channel (multi-repo coordination stays file-based and async).
 
 ## Contracts
-- **Command**: `/v-pm <necessity>` (plan) · `/v-pm reconcile <feature>` · `/v-pm status`. Dispatcher
-  `commands/v-pm.md` (with a tool health-check/fallback table) + steps `01-intake` · `02-load-context`
-  (vault-first, across every participant vault + `_global` + `_features`) · `03-plan-panel` ·
-  `04-seed-workspace` · `05-capture` (planning-session record + cross-project ADRs + commit) ·
-  `06-reconcile` (captures at end) · `07-status`.
-- **Workspace** `~/vault/_features/<feature>/`: `requirements.md` (knowledge center — rules `REQ-NN`,
-  glossary, decision/state tables; only v-pm writes) · `header.md` · `generic-plan.md` (only v-pm writes;
-  how/sequencing, why→requirements) · structured `contracts.md` · `conversation/` ·
-  `projects/<proj>/plan.md` (its `## Business rules to satisfy` REQ-id list is v-pm-seeded). No `ledger.md`.
-- **Single-repo**: `requirements.md` into `<project-vault>/requirements/<feature>.md` (new `requirements/`
-  vault category — plan-time spec); no workspace, no symlink. See [[../decisions/ADR-014-vpm-business-knowledge-center]].
-- **Thread protocol**: filename encodes state — `THREAD_<n>_OPEN_→<proj|pm>.md` →
-  `…_ANSWERED_<answerer>.md` → `…_RESOLVED.md`; frontmatter `from`/`to`/`asks`.
-- **v-team seam**: `commands/v-team/steps/00-feature-pickup.md` (feature-gated Step 0) — auto-pickup +
-  deterministic contracts-drift check. Templates under `templates/_features/`. Docs: `vault-guide.md` §13.
+- **Command**: `/v-pm <need>` (plan) · `/v-pm reconcile <feature>` · `/v-pm status`. Dispatcher
+  `commands/v-pm.md`; steps `01-intake` · `02-load-context` · `03-plan-panel` · `04-seed-workspace` ·
+  `05-capture` · `06-reconcile` · `07-status`. Approval gate between steps 3 and 4.
+- **Plan home**: single-repo `<project-vault>/plans/<feature>/`; multi-repo `~/vault/_features/<feature>/`.
+  Both hold `plan.md` (`templates/feature-plan.md`), `plan.trail.md` and `briefs/<id>-<slug>.md`
+  (`templates/handoff.md` with `plan` and `id`).
+- **Script**: `bin/pm-plan.sh check | order | set`.
+- **Reviewers**: `personas/_shared/planning/` (eight lenses) plus `consumer` and `skeptic`; selection
+  `personas/_resolution.md` §2.3; tiers and grounding in the group README.
+- **Execution seam**: `commands/_shared/feature-pickup.md`, Step 0 of `/v-work` and `/v-team`; close
+  step 5.1a of `commands/v-work/steps/05-commit-capture.md`.
+- **Multi-repo workspace**: `requirements.md` · `contracts.md` · `header.md` · `conversation/` ·
+  `decisions/` · `projects/<proj>/plan.md` (consumed contract, no tracker). Thread state lives in the
+  filename. Docs: `docs/cross-project-workspaces.md`. Record: `vault/decisions/ADR-033-v-pm-planning-loop.md`.
 
 ## Behaviors & rules
-- `/v-pm` authors the `requirements.md` business-knowledge center for **any** feature (1+ repos); only
-  the `_features/` workspace + conversation + contracts are gated at 2+ repos (break-even split).
-- 1 resolved participant → author `requirements.md` into `<project-vault>/requirements/<feature>.md`
-  (project's own vault, no cross-repo write), skip the workspace, hand **execution** to `/v-team`/
-  `/v-work`; edge: not a bare hand-off (supersedes the old "no workspace, straight to /v-team" rule).
-- `requirements/` = plan-time spec (aspirational); `features/` = established. `/v-capture` Step 5b
-  promotes only *built* rules into the dossier carrying each `REQ-NN` id — the id chain
-  `requirements.md → (f2) backlog source → established dossier` closes for both `/v-work` and `/v-team`.
-- Shard `## Business rules to satisfy` is v-pm-seeded + single-writer-owned; `/v-team` appends coverage,
-  preserves the ids, keeps them out of `## Consumed contract` (drift check stays clean).
-- Ledger is derived from thread filenames on read → no writer, no multi-session race.
-- Thread `→pm` (generic-plan / contract change) is drained only by `/v-pm reconcile`.
-- Step 0 contracts-drift check is deterministic (field-by-field vs structured `contracts.md`); LLM
-  phrases rationale only.
-- Unknown `<feature>` slug → warn loudly, continue as a plain `/v-team` run.
-- Reply latency = next open of the asking project's session, or `/v-pm status`; no live channel.
+- No operator success criterion → intake refuses with a drafted line; edge: an explicit yes to the
+  drafted line counts, silence does not.
+- A plan whose row lacks a brief, whose run line names another repo or command, whose criterion no
+  session reaches, or which lacks DD-1 to DD-4 → `bin/pm-plan.sh check` exits 1 and the approval gate
+  refuses.
+- A session whose dependency is not `done` → feature pickup prints its `order` line and ends the
+  session; edge: a dropped dependency reads `blocked` until reconcile re-points it.
+- A session closes → step 5.1a writes `done` with the code commit after the commit exists; edge: a
+  sync failure is recorded, never halts the close.
+- A planning finding blocks only with a repo path, a vault path or a re-runnable command; edge: a URL
+  alone stays advisory.
+- A legacy workspace (no `plan.md`) keeps its shard readers; edge: reconcile converts it only after
+  the operator confirms the row mapping.
+- Thread `→pm` is drained only by `/v-pm reconcile`. The contracts-drift check is deterministic.
 
 ## Coupling
-- Inherits the PROPOSE clarify + research front gates from `/v-work` §3a (ADR-012).
-- Planning panel borrows finding-schema + synthesize from `/v-team` `03-propose-loop` (not
-  `_shared/critic-panel.md`). Execution runs through `/v-team` Step 0.
+- Reuses `commands/v-team/steps/03-propose-loop.md` §(c) to §(f); runs no `(f2)`.
+- Reads elicitation from `commands/_shared/elicitation.md`, which states the `/v-pm` refusal once.
+- `/v-method` reads the session count from `plan.md`.
 
 ## Gotchas
-- `_features/` is a separate committed vault, not under any project — it holds the source-of-truth plan +
-  contracts and must be versioned + synced independently (never lives next to the local-only `_global/`).
-- `contracts.md` must stay structured (tables / typed blocks) or the deterministic drift check degrades.
-- Auto-pickup is pull-only; `/v-pm status` is the required push surface so threads don't orphan.
+- `~/vault/_features` is a separate committed vault with no upstream on this machine, so a claimed row
+  stays local until it gets one.
+- `contracts.md` must stay structured or the drift check degrades.
 
 ## Sessions
 - [[../sessions/2026-07-03-1240-v-pm-cross-project-planning]]

@@ -28,7 +28,7 @@ a git clone. `../vault-guide.md` §1.1 holds the resolution order.
 | `v-link.md` | `/v-link` | Declare two projects as coupled. |
 | `v-guide.md` | `/v-guide` | Generate a cross-project integration guide from an existing feature. |
 | `v-reconcile.md` | `/v-reconcile` | Rewrite an existing document to the writing standard; verified with `doc-lint --compare` so no constraint is lost. |
-| `v-pm.md` | `/v-pm` | Cross-project feature planning: a critic pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file-based threads. |
+| `v-pm.md` | `/v-pm` | Read-only feature planning across one or many repos: operator success criteria, a parallel planning-reviewer panel, and a plan split into sessions, each with a brief and a run line for `/v-team` or `/v-work`. |
 
 Multi-step commands (`v-work`, `v-team`, `v-cr`) keep their steps in a sibling subdirectory
 (`v-work/steps/`, `v-team/steps/`, `v-cr/steps/`) and load them on demand. `/v-team` reuses `/v-work`'s

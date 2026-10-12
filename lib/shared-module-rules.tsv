@@ -47,3 +47,4 @@ each table has at least one .?PK.? row	architecture-spec.md Rule library
 the page holds no .?<script	human-plan.md Escaping
 a repo registry is read only under	probe-kit.md Registry
 an auditor reads rows\. it adds none	plan-probes.md Auditors
+refuses? a session whose dependenc(y|ies) (is|are) not .?done	feature-pickup.md §0.2

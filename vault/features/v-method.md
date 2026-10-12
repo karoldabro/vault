@@ -59,12 +59,12 @@ the product must do (`/v-pm`), how much ceremony one change deserves (the `/v-as
   and `checks/x.sh` exiting 1 is.
 - A stage's verdict is needed → `bin/gate.sh verdict <plan> --run` produces it; edge: no model judges
   a stage, and the kill criteria are written before the stage runs.
-- A method's stages exceed the appetite `/v-pm` wrote → the command cuts scope and records the cut;
-  edge: it never re-derives the appetite.
+- A method's stages exceed the session count of the `/v-pm` plan → the command cuts scope and records
+  the cut; edge: it never re-derives the session count.
 
 ## Coupling
 
-- `/v-pm` — writes the appetite and `requirements.md`; `/v-method` consumes both. Two questions, two
+- `/v-pm` — writes the plan's sessions and `requirements.md`; `/v-method` consumes both. Two questions, two
   commands: what the product must do, and how to work on it.
 - The ladder — every stage's `command` cell is one of `/v-do`, `/v-work`, `/v-team`, `/v-loop` or
   `/v-pm`. `/v-ask` is not eligible: it writes nothing, so it can never close a stage.

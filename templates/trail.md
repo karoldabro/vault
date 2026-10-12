@@ -12,7 +12,7 @@ Record class, so chronology belongs here and nowhere else. Its contract document
 
 Nothing in the lifecycle reads this file back — reviewers exchange findings in context, not through
 disk. It exists so a decision can be audited months later. Write it, link it, do not print it.
-`/v-pm` writes the same record for a feature as `_features/<feature>/planning-session.md`.
+`/v-pm` writes the same record for a feature plan as `plan.trail.md` beside its `plan.md`.
 
 ## Decisions & trade-offs
 

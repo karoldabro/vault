@@ -4,6 +4,7 @@ project: vault
 id: ADR-029
 slug: methodology-command
 status: accepted
+superseded_in_part_by: ADR-033
 scope: repo
 date: 2026-09-13
 tags: [adr, command, methodology, orchestration]

@@ -4,7 +4,7 @@ project: {{project}}
 slug: {{slug}}
 repos: [{{repos}}]
 fixed: {{budget | criteria}}        # which one the operator fixed; the other varies
-appetite: {{sessions}}              # from /v-pm when a feature workspace exists, else the operator
+sessions: {{sessions}}              # session count from the /v-pm plan.md Sessions table, else the operator
 status: proposed                    # proposed | running | met | abandoned
 tags: [method]
 ---
@@ -73,7 +73,7 @@ tags: [method]
 
 ## Open & deferred
 <!-- Anything that could not be routed, any tool a stage names that this project does not have
-     installed, and any stage whose appetite is exceeded. Near the top of what a reader acts on, and
+     installed, and any stage whose session count is exceeded. Near the top of what a reader acts on, and
      never cut when this file is shortened. -->
 
 ## Refs

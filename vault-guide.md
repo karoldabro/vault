@@ -68,8 +68,8 @@ default and a global vault.
 | `tools` | `task_tracker`, `task_tracker_mcp`, `task_tracker_key`, `guidance` | Which task-tracker MCP this repo uses (Jira, Asana), so the lifecycle can fetch ticket context. A suggestion, not a gate. |
 
 **Cross-project feature workspaces** live in `~/vault/_features/`, outside any single project vault and
-its own committed vault. `/v-pm` writes them; a per-project `/v-team <feature>` session reads them
-through a `features/<feature>` symlink. Protocol: [docs/cross-project-workspaces.md](docs/cross-project-workspaces.md).
+its own committed vault. `/v-pm` writes them; each session of the plan reads them through
+`commands/_shared/feature-pickup.md` or a `features/<feature>` symlink. Protocol: [docs/cross-project-workspaces.md](docs/cross-project-workspaces.md).
 
 ### Vault git sync — out-of-repo vaults
 
@@ -371,7 +371,7 @@ instead. Decision record: [[ADR-018-decision-communication-contract]] in `vault/
 | `/v-link` | Declare two projects coupled, so context loading sweeps both. Updates `~/vault/_global/coupled-groups.md`. | — |
 | `/v-guide` | Generate a cross-project integration guide (API contract, data structures, enums, data flow) from a feature. | vault grep, Serena (optional), Grep |
 | `/v-reconcile` | Bring a document up to `_shared/document-standard.md`: split the record out to a sidecar, rewrite, then prove with `doc-lint --compare` that no constraint was dropped. Approval-gated per file. | vault grep, `bin/doc-lint.sh` |
-| `/v-pm` | Cross-project feature planning: a business→product→architect→contract pipeline drafts a shared plan + contract into `_features/`, then per-project `/v-team` sessions coordinate via file threads (§13). | Agent |
+| `/v-pm` | Read-only feature planning across one or many repos: refuses without operator success criteria, runs a parallel planning-reviewer panel, and writes a plan split into sessions with briefs and run lines (§13). | Agent |
 
 `attic/` holds `/v-migrate`, whose one-shot migration finished; `bin/vault-migrate.sh` still works.
 
@@ -491,10 +491,10 @@ criterion naming the exact file and field its verdict is read from. Kill criteri
 the stage runs, and `bin/gate.sh verdict <plan> --run` produces each verdict rather than a model
 judging it.
 
-**The seam with `/v-pm`**: `/v-pm` owns what the product must do and writes the appetite;
-`/v-method` owns how to work on it and consumes that appetite without re-deriving it. A task whose
+**The seam with `/v-pm`**: `/v-pm` owns what the product must do and splits it into sessions;
+`/v-method` owns how to work on it and reads that session count without re-deriving it. A task whose
 business logic is unclear runs `/v-pm` first. Stage rows stay coarser than session rows, and each
-stage's own session splits the work inside it.
+stage's own session does the work inside it.
 
 Output template: `templates/method.md`, written to `_features/<feature>/method.md` in feature mode,
 else `<project-vault>/plans/*.method.md`. No check reads a written method file yet, so the per-stage
@@ -525,8 +525,10 @@ no verdict. Turn it on with `install.sh --enable-gate`; silence it with `COMPLET
 
 ## 13. Cross-project feature workspaces (`/v-pm`)
 
-`/v-pm` plans a feature once, project-agnostically, into `~/vault/_features/`, and each project's
-`/v-team <feature>` session coordinates through files in it. The home, layout, requirements
-lifecycle, sizing, derived status, conversation protocol, auto-pickup and latency contract are in
+`/v-pm` plans a feature read-only — in one repo or several — into a normalized `plan.md` split into
+sessions, each with a brief and a run line. A multi-repo plan lives in `~/vault/_features/<feature>/`;
+a single-repo plan in `<project-vault>/plans/<feature>/`. Each session runs through `/v-work` or
+`/v-team`, whose Step 0 is `commands/_shared/feature-pickup.md`. The homes, layout, requirements
+lifecycle, derived status, conversation protocol and latency contract are in
 [docs/cross-project-workspaces.md](docs/cross-project-workspaces.md).
 
