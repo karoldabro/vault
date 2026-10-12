@@ -183,7 +183,7 @@ Not in scope: the thread protocol, `contracts.md`, and the legacy shard readers'
 
 | id | repo | scope | command | status | depends | req | date | evidence | deviation |
 |----|------|-------|---------|--------|---------|-----|------|----------|-----------|
-| S1 | /home/kdabrow/workspace/vault | planning group: W-1 to W-12 | /v-team | todo | | | | | |
+| S1 | /home/kdabrow/workspace/vault | planning group: W-1 to W-12 | /v-team | done | | | 2026-10-12 | 5d8e9b4 | |
 | S2 | /home/kdabrow/workspace/vault | plan format: W-13 to W-19 | /v-team | todo | | | | | |
 | S3 | /home/kdabrow/workspace/vault | `/v-pm` command: W-20 to W-31 | /v-team | todo | S1 S2 | | | | |
 | S4 | /home/kdabrow/workspace/vault | feature pickup and execution side: W-32 to W-42, W-52 | /v-team | todo | S2 S3 | | | | |

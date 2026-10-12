@@ -7,6 +7,10 @@ status: open                  # open | resumed
 session: {{session}}          # the session doc this handoff was written from, once one exists
 plan: {{plan}}                # the plan this work runs against, or empty
 continues: {{continues}}      # the earlier handoff this one carries on from, or empty
+# A /v-pm session brief is a handoff written ahead of time, saved as briefs/<id>-<slug>.md beside its
+# feature plan. It adds `id: <session id>`, sets `plan` to the plan's absolute path, and drops
+# `status`, since the plan's Sessions row holds the status. Its `## Next command` holds one run line:
+# cd <repo> && claude --add-dir <plan folder> "<command> <absolute plan path>#<id>"
 tags: [handoff]
 ---
 

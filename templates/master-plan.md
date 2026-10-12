@@ -15,6 +15,11 @@
      depends — ids of sessions that must finish first, separated by commas or spaces; empty when none.
                This column is the only source of dependencies. `## Sequencing & dependencies` holds
                order and external waits, never a second copy of `depends`.
+     Optional columns, read by name, used by a /v-pm feature plan (templates/feature-plan.md):
+     repo      — the absolute path of the repo the session's command runs in.
+     req       — the REQ-NN ids of requirements.md this session satisfies. Only /v-pm writes it.
+     deviation — scope cut, work added, or a row smaller than written. The executing session writes
+                 it; a recorded deviation is the tracker working.
      A dependency needs a contract row: produced by the depended-on session, consumed by this one.
      A row has the same number of cells as the header. -->
 
