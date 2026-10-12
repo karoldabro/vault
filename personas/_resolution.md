@@ -141,6 +141,27 @@ marketing's *Paid Media* cedes the spend-math **recompute** to `business/data-ev
 pack is co-seated (keeping the paid-specific judgment: bid-strategy adequacy, incrementality-vs-
 attribution, creative significance, ad-platform policy).
 
+### 2.3 Planning-group selection (`/v-pm`)
+A `/v-pm` planning panel seats from `personas/_shared/planning/` plus `consumer` and `skeptic`, and
+never from a stack or business pack. The tier from intake sets the cap; the tier table and the cap
+precedence live in `personas/_shared/planning/README.md`.
+
+1. **Always seated:** `planning/solution-architect`, `planning/lazy-dev`, `consumer`.
+2. **Seated on a trigger, in this priority order:**
+   - `planning/harness-engineer` when the deliverable is commands, prompts, agents, hooks, gates or
+     tool definitions, or the repo's `VAULT.md` declares `arch_profile: harness`;
+   - `planning/system-integration` when two or more systems, repos or external services are in scope;
+   - `planning/security-architect` on auth, permissions, personal data, payments, a public endpoint,
+     an upload, a webhook, or an AI agent with tools;
+   - `planning/delivery-planner` when the plan has two or more sessions;
+   - `planning/codebase-fit` when the plan changes an existing repo rather than starting one;
+   - `planning/future-scope` when the plan stores new data or exposes a new contract;
+   - `skeptic` on the high-risk list of §2.
+3. Over cap → drop from the bottom of the trigger list and note each drop in the trail. Never drop the
+   three always-seated lenses.
+
+Record the outcome as `Personas: planning → [solution-architect, lazy-dev, consumer, …]   (skipped: …)`.
+
 ---
 
 ## 3. base_agent fallback

@@ -1,0 +1,210 @@
+<title>v-pm-planning-loop — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
+</style>
+
+<main>
+<h1>v-pm-planning-loop — plan</h1>
+<h2>Task</h2>
+<p>Rework <code>/v-pm</code> into a read-only planner. It refuses to plan until the operator states success criteria. It reads the vault and the code of every repo in scope, researches prior art, and drafts an architecture plan. A parallel panel of planning reviewers critiques the draft until it converges. The output is one normalized plan. Its Sessions table names the repo and command of each session and gives a run order in parallel waves. Each session has one brief with a ready-to-paste shell line. The reviewers live in a reusable group, <code>personas/_shared/planning/</code>.</p>
+<h2>Needs your decision</h2>
+<ul>
+<li>needs the operator: run the five sessions in this conversation, one commit each, or one new session per prompt.</li>
+<li>needs the operator: confirm dropping the business-advisor and product-owner reviewers (Q-2).</li>
+<li>needs the operator: confirm that an explicit yes to a criterion drafted from your words counts as stated (D-18).</li>
+<li>needs the operator: confirm that legacy workspaces stay unmigrated until a reconcile you confirm (D-13).</li>
+<li>needs the operator: the review ran its two rounds. The second round raised 16 new must-fix items about claiming and closing a session row, and all are applied below without a third review. The rules most likely to hide a remaining gap are D-10 to D-13.</li>
+</ul>
+<h2>Defaults taken for you</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>question</th><th>answer</th></tr>
+</thead>
+<tbody>
+<tr><td>Do existing <code>_features/</code> workspaces need migrating?</td><td>no; their readers stay unchanged and reconcile converts one with operator-confirmed mapping (D-13)</td></tr>
+<tr><td>Keep the business-advisor and product-owner reviewers?</td><td>no; intake elicitation writes <code>requirements.md</code>, and <code>lazy-dev</code> asks whether the work is worth building (D-2)</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Checks you run yourself</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>criterion</th><th>check</th></tr>
+</thead>
+<tbody>
+<tr><td>SC-7</td><td>WHEN the operator pastes one run line produced from <code>tests/fixtures/pm/valid/</code> into a shell THE SYSTEM SHALL open Claude Code in the named repo and run Step 0 of the named command against that session</td><td>paste the S1 run line of <code>tests/fixtures/pm/valid/briefs/</code> and read the first reply; FAIL when the reply does not print the session pickup output; no-command: no harness drives an interactive Claude Code session</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Sessions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>scope</th><th>depends</th></tr>
+</thead>
+<tbody>
+<tr><td>S1</td><td>planning group: W-1 to W-12</td><td></td></tr>
+<tr><td>S2</td><td>plan format: W-13 to W-19</td><td></td></tr>
+<tr><td>S3</td><td><code>/v-pm</code> command: W-20 to W-31</td><td>S1 S2</td></tr>
+<tr><td>S4</td><td>feature pickup and execution side: W-32 to W-42, W-52</td><td>S2 S3</td></tr>
+<tr><td>S5</td><td>templates, docs and vault records: W-43 to W-51</td><td>S3 S4</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="mermaid">
+flowchart TD
+    S1["S1 planning group: W-1 to W-12"]
+    S2["S2 plan format: W-13 to W-19"]
+    S3["S3 /v-pm command: W-20 to W-31"]
+    S4["S4 feature pickup and execution side: W-32 to W-42,"]
+    S5["S5 templates, docs and vault records: W-43 to W-51"]
+</pre>
+<h2>Cross-session contracts</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>contract</th><th>produced by</th><th>consumed by</th><th>shape</th></tr>
+</thead>
+<tbody>
+<tr><td>C-1</td><td>planning lens ids and the tier table</td><td>S1</td><td>S3</td><td><code>personas/_shared/planning/&lt;id&gt;.md</code> for the eight ids of D-2; tier table in <code>personas/_shared/planning/README.md</code></td></tr>
+<tr><td>C-2</td><td>feature-plan template, brief keys and the script</td><td>S2</td><td>S3 S4</td><td><code>templates/feature-plan.md</code>; <code>templates/handoff.md</code> key <code>id</code>; <code>bin/pm-plan.sh</code> subcommands <code>check</code>, <code>order</code>, <code>set</code></td></tr>
+<tr><td>C-3</td><td><code>/v-pm</code> step names and plan homes</td><td>S3</td><td>S4 S5</td><td><code>commands/v-pm/steps/0[1-7]-*.md</code>; homes per D-8</td></tr>
+<tr><td>C-4</td><td>shared feature pickup</td><td>S4</td><td>S5</td><td><code>commands/_shared/feature-pickup.md</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2>File tree</h2>
+<pre><code>
+personas/_shared/planning/README.md                        new
+personas/_shared/planning/solution-architect.md            new
+personas/_shared/planning/codebase-fit.md                  new
+personas/_shared/planning/lazy-dev.md                      new
+personas/_shared/planning/future-scope.md                  new
+personas/_shared/planning/system-integration.md            new
+personas/_shared/planning/security-architect.md            new
+personas/_shared/planning/harness-engineer.md              new
+personas/_shared/planning/delivery-planner.md              new
+personas/_resolution.md                                    existing
+tests/unit/planning-personas.bats                          new
+checks/pm-loop-SC-1.sh                                     existing
+templates/feature-plan.md                                  new
+templates/master-plan.md                                   existing
+templates/handoff.md                                       existing
+bin/pm-plan.sh                                             new
+tests/fixtures/pm/valid/                                   new
+tests/unit/pm-plan.bats                                    new
+checks/pm-loop-SC-2.sh                                     existing
+checks/pm-loop-SC-5.sh                                     existing
+commands/v-pm.md                                           existing
+commands/v-pm/steps/01-intake.md                           existing
+commands/_shared/elicitation.md                            existing
+commands/v-pm/steps/02-load-context.md                     existing
+commands/v-pm/steps/03-plan-panel.md                       existing
+commands/v-team/steps/03-propose-loop.md                   existing
+commands/v-pm/steps/04-seed-workspace.md                   existing
+commands/v-pm/steps/05-capture.md                          existing
+commands/v-pm/steps/06-reconcile.md                        existing
+commands/v-pm/steps/07-status.md                           existing
+tests/unit/v-pm.bats                                       existing
+tests/unit/research-clarify.bats                           existing
+tests/unit/document-standard.bats                          existing
+checks/pm-loop-SC-3.sh                                     existing
+commands/_shared/feature-pickup.md                         new
+commands/v-work.md                                         existing
+commands/v-work/steps/01-analyze.md                        existing
+commands/v-work/steps/03-propose.md                        existing
+commands/v-work/steps/05-commit-capture.md                 existing
+commands/v-team.md                                         existing
+commands/v-team/steps/04-execute-loop.md                   existing
+commands/v-capture.md                                      existing
+commands/v-do.md                                           existing
+checks/master-SC-5.sh                                      existing
+tests/unit/v-team.bats                                     existing
+checks/pm-loop-SC-4.sh                                     existing
+checks/pm-loop-SC-6.sh                                     existing
+templates/_features/project-shard.md                       existing
+templates/_features/generic-plan.md                        existing
+templates/_features/planning-session.md                    existing
+templates/_features/header.md                              existing
+templates/_features/requirements.md                        existing
+templates/trail.md                                         existing
+commands/v-method.md                                       existing
+templates/method.md                                        existing
+vault-guide.md                                             existing
+docs/cross-project-workspaces.md                           existing
+docs/commands.md                                           existing
+README.md                                                  existing
+_moc.md                                                    existing
+vault/decisions/ADR-033-v-pm-planning-loop.md              new
+vault/decisions/_inventory.md                              existing
+vault/indications/pm-plans-sessions.md                     new
+vault/indications/plan-appetite-not-tasks.md               existing
+vault/indications/_index.md                                existing
+vault/features/v-pm.md                                     existing
+vault/features/v-method.md                                 existing
+</code></pre>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    I["01-intake"] -->|"need, criteria, repos, tier"| L["02-load-context"]
+    L -->|"digest, path index"| P["03-plan-panel"]
+    R["personas/_shared/planning"] -->|"lens blocks"| P
+    P -->|"plan.md, briefs/, pm-plan.sh check"| G["approval gate"]
+    G -->|"approved plan"| S["04-seed-workspace"]
+    S -->|"symlinks, shards"| C["05-capture"]
+    C -->|"order, first-wave run lines"| O["operator"]
+    O -->|"run line"| F["_shared/feature-pickup"]
+    F -->|"order, set doing, session_of"| X["05-commit-capture step 5.1a"]
+    X -->|"set done via vault-sync.sh"| M["plan.md Sessions"]
+</pre>
+<h2>Interfaces</h2>
+<ul>
+<li><code>bin/pm-plan.sh.check(plan: path): exit 0, or exit 1 with one line per defect</code>, throws <code>exit 2 unreadable plan</code></li>
+<li><code>bin/pm-plan.sh.order(plan: path): one line per session: wave, id, status, readiness, repo, brief</code>, throws <code>exit 1 on a depends cycle</code></li>
+<li><code>bin/pm-plan.sh.set(plan: path, id: string, assignments: string): rewrites one row under flock</code>, throws <code>exit 1 unknown id or column</code></li>
+<li><code>commands/_shared/feature-pickup.md.step 0(locator: string): the brief goal as the task restatement</code>, throws <code>ends the session when the row is not todo runnable</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-10-12-0944-v-pm-planning-loop.md</code> · architecture spec: <code>2026-10-12-0944-v-pm-planning-loop.arch.md</code></p>
+</main>
