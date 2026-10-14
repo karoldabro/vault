@@ -22,14 +22,14 @@
 #   2  usage error
 #   3  the vault dir is not inside a git worktree — caller notes it once; `git init` is NEVER run
 #      here, that is the user's call
-#   4  the vault dir is inside the code repo's own worktree (an in-repo `vault_path: ./vault`), so
-#      the code commit already covers it — caller skips silently
+#   4  the vault dir is a subfolder of a repo's worktree (an in-repo `vault_path: ./vault`), so
+#      the code commit already covers it — caller skips silently. A vault that is the root of its
+#      own repo always syncs, wherever the caller runs from.
 #   5  a git repo with no upstream branch. `pull` has nothing to pull; `push` still commits locally
 #      and reports that the commit did not leave the machine. Nothing is pushed to a remote this
 #      script had to guess at, and no remote branch is created.
 #
 # Environment:
-#   VAULT_SYNC_CODE_REPO   worktree to compare against for exit 4    default: $PWD
 #   VAULT_SETUP_DRY_RUN=1  print every git command, change nothing   (same seam as setup.sh)
 
 set -euo pipefail
@@ -72,13 +72,15 @@ EOF
 
 # Echoes the vault's git toplevel. Returns EXIT_NOT_A_REPO / EXIT_IN_REPO instead of printing.
 vault_toplevel() {
-    local dir="$1" top code_top
+    local dir="$1" top
 
     [ -d "$dir" ] || return "$EXIT_NOT_A_REPO"
     top="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)" || return "$EXIT_NOT_A_REPO"
 
-    code_top="$(git -C "${VAULT_SYNC_CODE_REPO:-$PWD}" rev-parse --show-toplevel 2>/dev/null || true)"
-    if [ -n "$code_top" ] && [ "$top" = "$code_top" ]; then
+    # The vault folder alone decides, never the caller's working directory: a vault that is the
+    # root of its own repo syncs; a vault in a subfolder of a repo (`vault_path: ./vault`) rides
+    # that repo's commit.
+    if [ "$(cd "$dir" && pwd -P)" != "$(cd "$top" && pwd -P)" ]; then
         return "$EXIT_IN_REPO"
     fi
 

@@ -79,7 +79,6 @@ file-by-file. Automatic pushes mean the vault's history is now shaped by whateve
 decided to commit, so a bad capture reaches the remote as fast as a good one; `vault_autosync: false`
 is the escape hatch.
 
-**Watch for.** The exit-4 check compares `git rev-parse --show-toplevel` for the vault against the
-same for `$VAULT_SYNC_CODE_REPO` (default `$PWD`). A command that runs from outside the code repo
-would lose that comparison and treat an in-repo vault as standalone — harmless (it would commit
-already-committed files), but it is the fragile assumption here.
+**Watch for.** The exit-4 check reads only the vault folder: a vault that is the root of its own
+repo syncs, and a vault in a subfolder of a repo is in-repo. A vault kept as a subfolder of a
+vault-only repo would therefore never sync; the vault layout in `vault-guide.md` §1.1 has none.

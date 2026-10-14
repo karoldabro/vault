@@ -49,13 +49,12 @@ setup() {
     VAULT="${TEST_HOME}/vault/myproject"
     REMOTE="${TEST_HOME}/remotes/myproject.git"
     PEER="${TEST_HOME}/peer"
-    # The code repo the vault is compared against for the "vault is in-repo" case.
+    # A code repo that holds an in-repo vault for the "vault is in-repo" cases.
     CODE_REPO="${TEST_HOME}/work/myproject"
     git_init "${CODE_REPO}"
     echo "code" > "${CODE_REPO}/README.md"
     git -C "${CODE_REPO}" add README.md
     git -C "${CODE_REPO}" commit --quiet -m "init"
-    export VAULT_SYNC_CODE_REPO="${CODE_REPO}"
 }
 
 teardown() {
@@ -252,6 +251,45 @@ teardown() {
 
     run git -C "${CODE_REPO}" diff --cached --name-only
     [ -z "$output" ]
+    run git -C "${CODE_REPO}" log --oneline -1
+    [[ "$output" != *"should not happen"* ]]
+}
+
+@test "a standalone vault run from inside itself still commits, never exits 4" {
+    make_vault_with_remote "${VAULT}" "${REMOTE}"
+    echo "session" > "${VAULT}/session.md"
+
+    cd "${VAULT}"
+    run SYNC push "${VAULT}" -m "from inside"
+    [ "$status" -eq 0 ]
+    run git -C "${VAULT}" log --oneline -1
+    [[ "$output" == *"docs(vault): from inside"* ]]
+}
+
+@test "a standalone vault run from a code repo commits to the vault, not the code repo" {
+    make_vault_with_remote "${VAULT}" "${REMOTE}"
+    echo "session" > "${VAULT}/session.md"
+
+    cd "${CODE_REPO}"
+    run SYNC push "${VAULT}" -m "from the code repo"
+    [ "$status" -eq 0 ]
+    run git -C "${VAULT}" log --oneline -1
+    [[ "$output" == *"docs(vault): from the code repo"* ]]
+    run git -C "${CODE_REPO}" log --oneline -1
+    [[ "$output" == *"init"* ]]
+}
+
+@test "an in-repo vault exits 4 wherever the caller runs from" {
+    mkdir -p "${CODE_REPO}/vault"
+    echo "in repo" > "${CODE_REPO}/vault/notes.md"
+
+    for from in "${CODE_REPO}" "${CODE_REPO}/vault" "${TEST_HOME}"; do
+        cd "${from}"
+        run SYNC push "${CODE_REPO}/vault" -m "should not happen"
+        [ "$status" -eq 4 ]
+        run SYNC pull "${CODE_REPO}/vault"
+        [ "$status" -eq 4 ]
+    done
     run git -C "${CODE_REPO}" log --oneline -1
     [[ "$output" != *"should not happen"* ]]
 }

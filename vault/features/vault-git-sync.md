@@ -46,8 +46,7 @@ Bound by: `/v-work` steps 2 + 5 · `/v-capture` steps 0 + 5 · `/v-do` orient ·
 Config: `behaviour.vault_autosync` in `VAULT.md` → `vault_autosync` in `~/vault/_global/config.md` →
 default **true**.
 
-Environment: `VAULT_SYNC_CODE_REPO` (worktree compared against for exit 4, default `$PWD`),
-`VAULT_SETUP_DRY_RUN=1` (the shared dry-run seam).
+Environment: `VAULT_SETUP_DRY_RUN=1` (the shared dry-run seam).
 
 ## Behaviors & rules
 
@@ -55,7 +54,8 @@ Environment: `VAULT_SYNC_CODE_REPO` (worktree compared against for exit 4, defau
 - `pull --rebase --autostash` conflicts → the rebase is aborted and the worktree restored → exit 1;
   edge: a rebase or merge already in progress is refused outright rather than continued.
 - Vault dir is not a git worktree, or does not exist → exit 3 and **no** `git init` is run.
-- Vault toplevel equals the code repo toplevel → exit 4 and nothing is staged.
+- Vault folder is a subfolder of its repo's toplevel → exit 4 and nothing is staged, from any working directory.
+- Vault folder is its repo's toplevel → it syncs, even when the caller runs from inside it.
 - `push` with no upstream → the commit is made locally, the user is told it did not leave the machine,
   and no remote branch is created.
 - `push` stages only its given paths → a sibling vault or dirty parent is never swept in; edge: no
@@ -75,10 +75,9 @@ Environment: `VAULT_SYNC_CODE_REPO` (worktree compared against for exit 4, defau
 
 ## Gotchas
 
-- **Exit 4 depends on `$PWD`.** The in-repo check compares the vault's `git rev-parse --show-toplevel`
-  against the same for `$VAULT_SYNC_CODE_REPO`, which defaults to `$PWD`. A command invoked from
-  outside the code repo misclassifies an in-repo vault as standalone. Harmless (it re-commits
-  already-committed files) but it is the fragile assumption in the design.
+- **Exit 4 reads only the vault folder.** A vault that is the root of its own repo syncs from any
+  working directory; a vault in a subfolder of a repo exits 4. A vault kept as a subfolder of a
+  vault-only repo would never sync.
 - **On this machine, half the vaults are not repos.** Six of eleven directories under `~/vault/` are
   git repos; `~/vault` itself is not. Exit 3 is the common case, not the exception.
 - **The wiring test enumerates command files by path.** `tests/unit/vault-sync.bats` lists the six
