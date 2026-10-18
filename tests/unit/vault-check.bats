@@ -196,3 +196,44 @@ use_plugin() {
     run "${CHECK_SH}" static --repo /tmp
     [ "$status" -eq 2 ]
 }
+
+# --- review fixes -----------------------------------------------------------------------
+
+@test "a base that is not a commit exits 2 and runs nothing" {
+    use_plugin; local r; r=$(make_repo r 'plugins: check-plugin')
+    CHECK_FIXTURE_LINES='coverage\tnone\t-' run "${CHECK_SH}" tests --repo "$r" --base no-such-ref
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"is not a commit"* ]]
+    [[ "$output" != *"coverage"*"none"* ]]
+}
+
+@test "a tests point that exits 1 with no coverage line stays exit 1" {
+    use_plugin; local r; r=$(make_repo r 'plugins: check-plugin')
+    CHECK_FIXTURE_EXIT=1 CHECK_FIXTURE_LINES='failed\tT::a\tboom' run "${CHECK_SH}" tests --repo "$r" --base HEAD
+    [ "$status" -eq 1 ]
+}
+
+@test "a registry with a duplicate row exits 2 and never runs the fallback" {
+    use_plugin; local r; r=$(make_repo r 'plugins: check-plugin' 'lint_command: echo FALLBACK-RAN')
+    tail -1 "${VAULT_HOME}/_global/plugins.tsv" >> "${VAULT_HOME}/_global/plugins.tsv"
+    CHECK_FIXTURE_EXIT=1 run "${CHECK_SH}" static --repo "$r" --base HEAD
+    [ "$status" -eq 2 ]
+    [[ "$output" != *"FALLBACK-RAN"* ]]
+}
+
+@test "the script's own unmeasured line survives the output cap" {
+    use_plugin; local r; r=$(make_repo r 'plugins: check-plugin')
+    VAULT_CHECK_LINES=1 CHECK_FIXTURE_LINES='survivor\ta:1\tm\nsurvivor\ta:2\tm' run "${CHECK_SH}" tests --repo "$r" --base HEAD
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"printed no coverage line"* ]]
+}
+
+@test "a redirect is a command, a placeholder is a template, and invalid shell exits 2" {
+    local r; r=$(make_repo r 'lint_command: cat < VAULT.md > /dev/null')
+    run "${CHECK_SH}" static --repo "$r" --base HEAD
+    [ "$status" -eq 0 ]
+    r=$(make_repo r2 'lint_command: grep -q "a # b" VAULT.md')
+    run "${CHECK_SH}" static --repo "$r" --base HEAD
+    [ "$status" -eq 2 ]
+    [[ "$output" == *"not valid shell"* ]]
+}

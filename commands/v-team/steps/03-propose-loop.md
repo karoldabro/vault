@@ -56,15 +56,14 @@ id from the task or from Step 0 (`commands/_shared/feature-pickup.md`).
 ## (b) Load + select critics
 
 Use the pack + selected critics resolved in the ANALYZE addendum (`personas/_resolution.md`). Read each
-selected persona file once (shared base + pack overlay composed). Default ~3 critics (business packs
-default 4, per `_resolution.md` §2.2), hard max 5.
+selected persona file once (shared base + pack overlay composed). The critic cap, the business packs' own
+default, and the raise rule are in `personas/_resolution.md` §2.
 
 **`_shared/consumer.md` holds a guaranteed seat on this panel** (`_resolution.md` §2). Every other
 lens reviews the mechanism; this one asks whether the agent, command or operator receiving the plan
 can produce one correct output from the exact text the plan hands it. Drop it only when the change
-creates no handoff at all, and say so in the trail. When architect + consumer + the triggered lens +
-`skeptic` exceed the default 3, raise `team_max_parallel_critics` to 4 for the run rather than
-dropping a triggered lens.
+creates no handoff at all, and say so in the trail. A triggered lens raises the cap rather than being
+dropped, by the raise rule of `personas/_resolution.md` §2.
 
 ## (b2) Plan-time probes
 

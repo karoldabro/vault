@@ -65,13 +65,9 @@ reviewers, and its stop rules. It runs after §5.2 so tests are written against 
 changing. A production bug a test exposes goes back to §5.1, and its fix gets one §5.2 round, as
 `testing-loop.md` §4 caps it.
 
-**Confirm the Test design dossier here (post-impl half of the generate→confirm loop).** When PROPOSE
-`(f2)` produced a dossier, the testing reviewers confirm its `advisory` entries against real code —
-generators emit pre-impl, critics confirm post-impl. Seat [[system-domain-expert]] whenever `(f2)` ran
-(it confirms each [[business-logic-cartographer]] decision-table row maps to a covered branch and each
-[[fault-relation-prospector]] metamorphic relation preserves a real rule). Routing:
-`personas/_shared/testing/design/README.md`. A `system-domain-expert`/`edge-case-hunter` co-fire on the
-same branch is **corroboration**, counted once.
+**The testing loop is the post-impl half of the generate→confirm loop**: when `(f2)` ran, seat
+[[system-domain-expert]] among its reviewers; routing and corroboration rules are in
+`personas/_shared/testing/design/README.md`.
 
 Append each testing round to the trail sidecar. Then run `bin/doc-lint.sh` on the plan before finishing.
 

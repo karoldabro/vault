@@ -54,10 +54,9 @@ packs default 4** — see §2.2):
   `skeptic` (assumptions) and `quality` (cleanliness) — see that file's Output note.
 - **Diff review seats architect, `quality` and `correctness` by default** (`/v-team` §5.2 code-review
   loop, `/v-cr`) — the senior-developer panel: reuse, simpler solutions, packages and patterns
-  (`quality`), logic against the business rule (`correctness`), structure (architect). Every lens reads
-  the static output and judges only what no tool reports (`commands/_shared/critic-panel.md` §(a)). A
-  `performance`, `security` or `skeptic` trigger below raises `team_max_parallel_critics` for that run
-  up to the hard max of 5, recorded in the trail.
+  (`quality`), logic against the business rule (`correctness`), structure (architect). Under `/v-team`
+  every lens reads the static output and judges only what no tool reports
+  (`commands/_shared/critic-panel.md` §(a) Static output).
 - **Add the 1–2 lenses the change most implicates** — derive from the Step-1 keywords / impact scope:
   auth·tenant·permission·upload → `security`; query·index·list·job·report → `performance`;
   refactor·duplication·new-module → `quality`; contract·endpoint·filter·response → integration architect.
@@ -65,9 +64,10 @@ packs default 4** — see §2.2):
   boundaries, deletion/data-loss paths, or anything touching a coupled-repo contract.
 - If selection would exceed the cap, keep architect + the highest-relevance lenses; note the dropped
   ones in the critique trail (no silent truncation). **Never drop architect, `consumer`, or the lens
-  the change's own keywords triggered.** When those three plus `skeptic` exceed the default 3, raise
-  `team_max_parallel_critics` to 4 for that run (hard max is 5) and record the raise in the trail —
-  dropping a triggered `security` lens on an auth change to fit a cap is the worse trade.
+  the change's own keywords triggered.** The one raise rule: each lens a trigger adds beyond the default
+  seats (architect + `consumer` on a plan panel; architect + `quality` + `correctness` on diff review)
+  raises `team_max_parallel_critics` by one for that run, up to the hard max of 5, recorded in the
+  trail — dropping a triggered `security` lens on an auth change to fit a cap is the worse trade.
 
 Record the outcome in the ANALYZE output — multi-pack seating joins pack names with `+`:
 ```

@@ -37,7 +37,7 @@ extension point let the lifecycle call it.
    them label survivors. A writer edits test files only; a production bug a test finds goes back to
    implement.
 4. **`/v-work` runs no loops.** One static check, one test-writer pass and one `tests` run; what remains
-   goes to the operator unlabelled.
+   goes to the operator unlabelled. Its single-pass `deploy-review-panel` on BIG scope stays.
 5. **The code-review panel critiques what no tool sees.** Each critic gets the static output, and a
    finding that restates it is dropped. Diff review seats architect, `quality` and `correctness` by
    default. **This widens ADR-003's "concrete check":** a design finding is also `confirmed` by an

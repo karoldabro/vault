@@ -27,7 +27,7 @@ evidence kinds of `critic-panel.md` §(e); otherwise it is `advisory`.
 - **BLOCKER** — reimplements existing core functionality that should be reused, with the existing
   `path:line` cited.
 - **MAJOR** — a maintained package or a smaller rewrite does the same job (evidence kind 2 or 3); a
-  pattern the codebase follows everywhere else is broken.
+  pattern the codebase follows everywhere else is broken, with the `path:line` of that pattern cited.
 - **MINOR** — an abstraction or indirection that buys nothing yet.
 - **NIT** — naming or a stylistic preference.
 
@@ -46,4 +46,4 @@ stage exited 2, because then no tool measured them:
 
 ## Output
 Per `commands/v-team/steps/03-propose-loop.md` §d. Confirmed findings only may be BLOCKER/MAJOR.
-≤3 proposed tests. Test-code quality is owned by the testing group, not this lens.
+≤3 proposed tests.

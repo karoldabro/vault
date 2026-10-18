@@ -44,13 +44,20 @@ done
 [ -n "$repo" ] && [ -n "$base" ] || usage
 [ -d "$repo" ] || { echo "vault-check: not a directory: $repo" >&2; exit 2; }
 repo=$(cd "$repo" && pwd)
+if ! git -C "$repo" rev-parse --verify -q "${base}^{commit}" >/dev/null 2>&1; then
+    printf 'unmeasured\t%s\tbase %s is not a commit in %s\n' "$stage" "$base" "$repo"
+    exit 2
+fi
 
 tmp=$(mktemp -d) || exit 2
 trap 'rm -rf "$tmp"' EXIT
 
 # The changed paths: tracked changes against <base>, then untracked files, each counted as wholly new.
-{ git -C "$repo" diff --name-only -z "$base" -- 2>/dev/null
-  git -C "$repo" ls-files -z --others --exclude-standard 2>/dev/null; } > "$tmp/files"
+{ git -C "$repo" diff --name-only -z "$base" -- && git -C "$repo" ls-files -z --others --exclude-standard; } \
+    > "$tmp/files" 2> "$tmp/git-err" || {
+    printf 'unmeasured\t%s\tthe changed paths cannot be listed: %s\n' "$stage" "$(head -1 "$tmp/git-err")"
+    exit 2
+}
 export VAULT_CHECK_FILES="$tmp/files"
 
 # emit <file>: print it within the line and byte caps, then state what was withheld.
@@ -58,9 +65,12 @@ emit() {
     local f=$1 lines=${VAULT_CHECK_LINES:-200} bytes=${VAULT_CHECK_BYTES:-12000} total shown
     total=$(grep -c '' "$f" || true)
     head -n "$lines" "$f" | head -c "$bytes" > "$tmp/shown"
+    # A byte cap can cut the last line in half; a half line could misstate a value, so drop it.
+    if [ -s "$tmp/shown" ] && [ "$(tail -c1 "$tmp/shown" | od -An -c | tr -d ' ')" != '\n' ]; then
+        sed -i '$d' "$tmp/shown"
+    fi
     shown=$(grep -c '' "$tmp/shown" || true)
     cat "$tmp/shown"
-    [ -s "$tmp/shown" ] && [ "$(tail -c1 "$tmp/shown" | od -An -c | tr -d ' ')" != '\n' ] && echo
     [ "$shown" -ge "$total" ] || printf 'withheld\t%d of %d lines\n' "$((total - shown))" "$total"
 }
 
@@ -74,27 +84,31 @@ floor_rule() {
             if ($2 != "none" && $2 + 0 < floor) bad = 1 }
         $1 == "unmeasured" && $2 == "coverage" { seen = 1 }
         END { if (bad && rc < 1) rc = 1
-              if (!seen) { print "no coverage line" > "/dev/stderr"; rc = 2 }
+              if (!seen && rc == 0) { print "no coverage line" > "/dev/stderr"; rc = 2 }
               print rc }' "$f"
 }
 
 declared=0
-vault_plugin_check_declared "$repo"; case $? in
+vault_plugin_check_declared "$repo" 2>/dev/null; case $? in
     0) declared=1 ;;
-    2) printf 'unmeasured\t%s\t%s/VAULT.md plugins line cannot be read\n' "$stage" "$repo"; exit 2 ;;
+    2) printf 'unmeasured\t%s\tthe plugins line of %s/VAULT.md or the plugin registry cannot be read\n' "$stage" "$repo"; exit 2 ;;
 esac
 
 if [ "$declared" -eq 1 ]; then
     rc=0
-    vault_plugin_run_check "$stage" "$repo" "$base" > "$tmp/out" || rc=$?
+    vault_plugin_run_check "$stage" "$repo" "$base" > "$tmp/out" 2> "$tmp/err" || rc=$?
+    : > "$tmp/own"
     if [ "$stage" = tests ] && [ "$rc" -lt 2 ]; then
         rc=$(floor_rule "$tmp/out" "$rc" 2>"$tmp/notes")
         if grep -q 'no coverage line' "$tmp/notes"; then
-            printf 'unmeasured\tcoverage\tthe check point printed no coverage line\n' >> "$tmp/out"
+            printf 'unmeasured\tcoverage\tthe check point printed no coverage line\n' >> "$tmp/own"
         fi
-        grep '^floor-below' "$tmp/notes" >> "$tmp/out" || true
+        grep '^floor-below' "$tmp/notes" >> "$tmp/own" || true
     fi
     emit "$tmp/out"
+    [ -s "$tmp/err" ] && emit "$tmp/err" >&2
+    # This script's own verdict lines sit outside the cap, so the cap can never hide them.
+    cat "$tmp/own"
     exit "$rc"
 fi
 
@@ -111,15 +125,21 @@ case "$cmd" in
     absent:*) printf 'unmeasured\t%s\t%s is %s\n' "$stage" "$key" "$cmd"; exit 2 ;;
     '') printf 'unmeasured\t%s\t%s is empty\n' "$stage" "$key"; exit 2 ;;
 esac
-if printf '%s' "$cmd" | grep -qE '<[^<>]+>|\{\{[^}]*\}\}'; then
+if printf '%s' "$cmd" | grep -qE '<[A-Za-z_][A-Za-z0-9_ .|-]*>|\{\{[^}]*\}\}'; then
     printf 'unmeasured\t%s\t%s is a template, not a runnable command: %s\n' "$stage" "$key" "$cmd"
+    exit 2
+fi
+
+if ! bash -n -c "$cmd" 2>/dev/null; then
+    printf 'unmeasured\t%s\t%s is not valid shell: %s\n' "$stage" "$key" "$cmd"
     exit 2
 fi
 
 rc=0
 if command -v timeout >/dev/null 2>&1; then
-    (cd "$repo" && timeout "${VAULT_CHECK_TIMEOUT:-1800}" bash -c "$cmd") > "$tmp/out" 2>&1 </dev/null || rc=$?
+    (cd "$repo" && timeout -k 10 "${VAULT_CHECK_TIMEOUT:-1800}" bash -c "$cmd") > "$tmp/out" 2>&1 </dev/null || rc=$?
 else
+    printf 'unmeasured\ttimeout\tno timeout command on this host; %s runs without a limit\n' "$key"
     (cd "$repo" && bash -c "$cmd") > "$tmp/out" 2>&1 </dev/null || rc=$?
 fi
 emit "$tmp/out"

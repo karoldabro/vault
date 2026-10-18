@@ -240,17 +240,25 @@ vault_plugin_opted_in() {
 # Emit `name<TAB>path` for each plugin that the repo opts into, that is registered, and that declares
 # `check`. A name the repo lists and the machine never registered is a note, not a refusal.
 _vault_plugin_check_rows() {
-    local repo=$1 want name path points rc=0 names
+    local repo=$1 want path points rc=0 names listing reg row
     names=$(vault_plugin_opted_in "${repo}/VAULT.md") || rc=$?
     [ "$rc" -eq 0 ] || return "$rc"
+    [ -n "$names" ] || return 0
+    # One pass over the registry. A registry that exists and cannot be read is exit 2, never
+    # "not registered": a broken registry must not turn a plugin's exit 1 into a quiet fallback.
+    reg=$(vault_plugin_registry_path)
+    listing=$(vault_plugin_list) || return 2
+    if [ -r "$reg" ] && [ -z "$listing" ] && grep -qv '^name' "$reg" 2>/dev/null; then
+        _vault_plugin_read_tsv "$reg" "$VAULT_PLUGIN_REGISTRY_HEADER" >/dev/null || return 2
+    fi
     while IFS= read -r want; do
         [ -n "$want" ] || continue
-        path=$(vault_plugin_path "$want" 2>/dev/null) || path=""
-        if [ -z "$path" ]; then
+        row=$(awk -F'\t' -v n="$want" '$1 == n { print; exit }' <<<"$listing")
+        if [ -z "$row" ]; then
             _vault_plugin_warn "${want} is listed in ${repo}/VAULT.md and not registered on this machine"
             continue
         fi
-        points=$(vault_plugin_list | awk -F'\t' -v n="$want" '$1 == n { print $3; exit }')
+        path=$(cut -f2 <<<"$row"); points=$(cut -f3 <<<"$row")
         _vault_plugin_declares "$points" check || continue
         printf '%s\t%s\n' "$want" "$path"
     done <<<"$names"
@@ -285,7 +293,7 @@ vault_plugin_run_check() {
         else
             rc=0
             if command -v timeout >/dev/null 2>&1; then
-                timeout "$limit" "$file" "$stage" "$repo" "$base" </dev/null || rc=$?
+                timeout -k 10 "$limit" "$file" "$stage" "$repo" "$base" </dev/null || rc=$?
                 [ "$rc" -eq 124 ] && _vault_plugin_warn "${name}: check timed out after ${limit}s"
             else
                 "$file" "$stage" "$repo" "$base" </dev/null || rc=$?

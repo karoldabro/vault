@@ -247,7 +247,7 @@ teardown() {
     # Without this line the resolution silently drops the lens the change itself implicated.
     grep -q 'raise' "${VAULT_ROOT}/personas/_resolution.md"
     tr '\n' ' ' < "${VAULT_ROOT}/personas/_resolution.md" \
-        | grep -q '`team_max_parallel_critics` to 4'
+        | grep -q 'raises `team_max_parallel_critics` by one'
 }
 
 @test "the propose loop spawns the seat and demands its dry run" {

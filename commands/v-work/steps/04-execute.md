@@ -83,8 +83,8 @@ operator once per session, not once per unit. Output lines and exits: the `check
   holds an `unmeasured coverage` line or the command exits 2. `/v-work` runs no further pass.
 - Run `bin/probe-panel.sh run --posture own --repo . --base "$PROBE_BASE"` for every scope (rules:
   `commands/_shared/critic-panel.md` §(a) Probe stage) and print `operator.txt` to the operator when it exists.
-- BIG scope (>15 files or API/schema changes): spawn `deploy-review-panel` for architecture / code /
-  test review before COMMIT, with the probe output in its prompt; run `cited` on each confirmed finding it returns.
+- BIG scope (>15 files or API/schema changes): spawn `deploy-review-panel` once, a single pass, for
+  architecture / code / test review before COMMIT, with the probe output in its prompt; run `cited` on each confirmed finding it returns.
 - Spawn the domain specialists assigned in §3a.3 when their surface is the one being implemented.
 
 ## 4.8 Self-review
@@ -106,7 +106,7 @@ no hardcoded test data · names describe scenario + outcome.
 **Architecture (BIG scope):** breaking changes documented · no new circular deps · separation of
 concerns maintained · migrations reversible, indexes on new FKs/query columns.
 
-Review loop: issues → fix, re-run relevant checks (max 3 iterations) → still failing → present to user.
+Issues → fix once and re-run the relevant checks → still failing → present to user. `/v-work` runs no review loop.
 
 Before marking complete, honor any carried `post_execute` hook (surface + apply). Mark EXECUTE
 `completed`.

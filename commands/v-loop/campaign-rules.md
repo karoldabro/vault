@@ -13,7 +13,7 @@ already binding and are named once:
 | `commands/_shared/agent-conduct.md` | writing to disk as you work, the order of a report, counts that carry their command, reading a whole source, treating a premise as possibly mistaken, and the orchestrator's half of a fan-out |
 | `commands/_shared/communication.md` | what reaches the operator, and in what order |
 | `commands/_shared/document-standard.md` | every file an agent writes |
-| `commands/_shared/definition-of-done.md` and `commands/v-team/steps/04-execute-loop.md` | the test-quality gate: a test must fail when the code is broken |
+| `commands/_shared/definition-of-done.md` and `commands/_shared/testing-loop.md` §2 | the test-quality gate: a test must fail when the code is broken |
 | `commands/_shared/critic-panel.md` | the finding schema, severity, and the grounding split that separates a fault from an opinion |
 | `commands/_shared/elicitation.md` | when an operator is asked something, and where the answer lives |
 | `commands/_shared/vault-sync.md` | git against a vault |
