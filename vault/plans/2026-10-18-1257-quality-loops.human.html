@@ -1,0 +1,132 @@
+<title>quality-loops — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
+</style>
+
+<main>
+<h1>quality-loops — plan</h1>
+<h2>Task</h2>
+<p>Split EXECUTE in <code>/v-work</code> and <code>/v-team</code> into three loops with separate owners. The execution loop writes production code and runs the repo's static checks on the diff before it calls a unit done. The code-review loop critiques design the way a senior developer would and drops anything a static tool already reports. The testing loop writes tests, measures changed-line coverage against an 80% floor and runs mutation testing on the diff, and independent reviewers label every surviving mutant. Quality tools come from a new plugin extension point <code>check</code>, so the vault-quality-gates plugin can supply them; a repo without it falls back to its <code>lint_command</code> and <code>test_command</code>.</p>
+<h2>Needs your decision</h2>
+<ul>
+<li>needs the operator: when this plan closes, no repo enforces the 80% floor or runs mutation testing. Both arrive with the deferred vault-quality-gates session below. Until then every testing loop prints <code>coverage unmeasured: &lt;reason&gt;</code>, and the operator's 80% criterion stays unmet.</li>
+</ul>
+<h2>Defaults taken for you</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>question</th><th>answer</th></tr>
+</thead>
+<tbody>
+<tr><td>Where do the static, coverage and mutation commands come from?</td><td>a new plugin point <code>check</code>; new <code>VAULT.md</code> keys would refuse ~90 onboarded repos at session start, and the plugin already measures all three (D-1)</td></tr>
+<tr><td>Does this session also build the plugin side?</td><td>no; it is a separate repo with its own gate, and the contract lands here first (Open &amp; deferred)</td></tr>
+<tr><td>Is there a fixed mutation-score target?</td><td>no; every surviving mutant on the diff is labelled instead (D-6)</td></tr>
+<tr><td>Does the 80% floor apply to the whole repo or the changed lines?</td><td>changed lines; a repo-wide floor refuses every change in a repo below it today (D-5)</td></tr>
+</tbody>
+</table>
+</div>
+<h2>File tree</h2>
+<pre><code>
+lib/vault-md.sh                                              new, the shared VAULT.md key reader
+bin/probe.sh                                                 existing, sources lib/vault-md.sh
+lib/plugin-registry.sh                                       existing, gains the check point, opt-in reader and vault_plugin_run_check
+lib/shared-module-rules.tsv                                  existing, rule owners move to testing-loop.md
+bin/vault-check.sh                                           new, the one entry point both loops call
+tests/fixtures/plugins/check-plugin/extend/plugin.tsv        new, fixture manifest
+tests/fixtures/plugins/check-plugin/extend/check.sh          new, fixture point
+tests/unit/vault-check.bats                                  new
+tests/unit/plugin-registry.bats                              existing, gains check cases
+vault/architecture/plugin-extension-contract.md              existing, gains the check row
+commands/_shared/testing-loop.md                             new, the testing loop for both commands
+commands/v-work/steps/04-execute.md                          existing, gains §4.6a and calls the testing loop
+commands/v-team/steps/04-execute-loop.md                     existing, renumbered into three loops
+commands/v-team.md                                           existing, Step 5 names the loops
+commands/_shared/definition-of-done.md                       existing, B2 points at the testing loop
+commands/_shared/critic-panel.md                             existing, static output in envelope, drop rule, evidence kinds
+personas/_shared/quality.md                                  existing, rewritten to design simplicity
+personas/_shared/performance.md                              existing, rewritten to approach cost
+personas/_resolution.md                                      existing, diff-review default seats
+personas/api-laravel.md                                      existing, overlay strings
+personas/nuxt.md                                             existing, overlay strings
+personas/flutter.md                                          existing, overlay strings
+personas/_persona-template.md                                existing, evidence line
+personas/_shared/testing/design/api-contract-mapper.md       new generator
+personas/_shared/testing/design/abuse-case-designer.md       new generator
+personas/_shared/testing/design/performance-budget-designer.md  new generator
+personas/_shared/testing/design/README.md                    existing, six generators and triggers
+commands/v-team/steps/03-propose-loop.md                     existing, (f2) selection by README
+personas/_shared/testing/system-domain-expert.md             existing, loop reference
+vault/indications/generators-emit-critics-confirm.md         existing, loop reference
+templates/VAULT.md                                           existing, two commented keys
+vault/decisions/ADR-034-three-execute-loops.md               new
+vault/decisions/_inventory.md                                existing, registers ADR-034
+checks/quality-loops-SC-1.sh                                 new, one of seven checks
+</code></pre>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    A["04-execute.md §4.6a"] -->|"stage static, base PROBE_BASE"| B["bin/vault-check.sh"]
+    T["testing-loop.md round"] -->|"stage tests, base PROBE_BASE"| B
+    B -->|"repo plugins line"| R["lib/plugin-registry.sh vault_plugin_run_check"]
+    R -->|"stage, repo, base"| P["plugin extend/check.sh"]
+    P -->|"finding, coverage, survivor lines and exit"| B
+    B -->|"no check point: command"| C["VAULT.md lint_command or test_command"]
+    B -->|"lines and exit 0, 1, 2"| A
+    B -->|"lines and exit 0, 1, 2"| T
+    A -->|"static output"| K["critic-panel.md envelope"]
+    T -->|"survivors and coverage"| V["testing reviewers"]
+    V -->|"labels"| W["test writers"]
+</pre>
+<h2>Interfaces</h2>
+<ul>
+<li><code>bin/vault-check.sh.static(repo: path, base: ref): exit 0, 1 or 2 with check lines</code></li>
+<li><code>bin/vault-check.sh.tests(repo: path, base: ref): exit 0, 1 or 2 with check lines</code></li>
+<li><code>lib/plugin-registry.sh.vault_plugin_run_check(stage: string, repo: path, base: ref): highest point exit, clamped to 2</code></li>
+<li><code>lib/plugin-registry.sh.vault_plugin_check_declared(repo: path): 0 when an opted-in plugin declares check, else 1</code></li>
+<li><code>lib/plugin-registry.sh.vault_plugin_opted_in(vault_md: path): plugin names one per line; 2 on two plugins lines</code></li>
+<li><code>lib/vault-md.sh.vault_md_key(repo: path, key: string): the value, or 1 when the file or key is absent</code></li>
+<li><code>extend/check.sh.static(repo: path, base: ref): exit 0, 1 or 2 with check lines</code></li>
+<li><code>extend/check.sh.tests(repo: path, base: ref): exit 0, 1 or 2 with check lines</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-10-18-1257-quality-loops.md</code> · architecture spec: <code>2026-10-18-1257-quality-loops.arch.md</code></p>
+</main>

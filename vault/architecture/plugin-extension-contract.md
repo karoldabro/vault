@@ -19,6 +19,7 @@ bin/vault-plugin.sh add <plugin-dir>
 |---|---|---|---|
 | init | `extend/init.sh` | `bin/vault-init.sh`, after `VAULT.md` is written | `<code-repo> <vault-dir> <slug>` |
 | dod-keys | `extend/dod-keys.tsv` | `bin/gate.sh config` | read as data, never executed |
+| check | `extend/check.sh` | `bin/vault-check.sh`, only for a repo whose `plugins:` line names the plugin | `<stage> <repo> <base>`, stage `static` or `tests` |
 
 **Parsing rules, binding on all three files below.** Line 1 is the literal uncommented header, and a
 file whose line 1 differs is refused. A row whose field count differs from the header is refused. A
@@ -32,11 +33,15 @@ never run as `sh <script>` either, which would execute a bash or python point un
 working script into a syntax error. `bin/vault-plugin.sh add` refuses a point file that is not
 executable. Stdin is closed so a point cannot consume the host's input.
 
-**A point never aborts its host, and its two failures are told apart.** Exit 1 means the point
-declined and prints `plugin <name>: <point> declined`. Any exit above 1 means the point could not
-run and prints `plugin <name>: <point> could not run (exit N)`. Collapsing the two would report a
-script that crashed as a script that chose to do nothing. `bin/vault-init.sh` exits 0 either way,
-and calls every point in a status-guarded form so `set -e` cannot abort it mid-onboarding.
+**A point never aborts its host, and a crash is never read as a decision.** Each point's exits mean:
+
+| point | exit 0 | exit 1 | exit 2 or above |
+|---|---|---|---|
+| init | done | declined; prints `plugin <name>: init declined` | could not run; prints `plugin <name>: init could not run (exit N)` |
+| check | measured and acceptable | measured and worse | could not measure; above 2 is clamped to 2 and prints `could not run` |
+
+`bin/vault-init.sh` exits 0 whatever `init` returns, and calls every point in a status-guarded form so
+`set -e` cannot abort it mid-onboarding. `bin/vault-check.sh` exits with the highest `check` exit.
 
 **`extend/plugin.tsv`** — header plus one data line:
 
@@ -44,7 +49,7 @@ and calls every point in a status-guarded form so `set -e` cannot abort it mid-o
 name	points
 ```
 
-`points` is a comma-separated subset of `init,dod-keys`. `bin/vault-plugin.sh` refuses a plugin
+`points` is a comma-separated subset of `init,dod-keys,check`. `bin/vault-plugin.sh` refuses a plugin
 naming a point this framework does not implement, one naming a point whose file is absent, and one
 whose point file is not executable.
 
@@ -65,6 +70,38 @@ key	why
 `cmd_config` prints `why` in the refusal, so the operator reads why the key exists. Those keys are
 required **only** in a repo whose `VAULT.md` carries the plugin's name in its flat `plugins:` scalar.
 Without that restriction, registering a plugin would refuse every repo on the machine.
+
+**`extend/check.sh`** — measures one stage of EXECUTE for `/v-work` and `/v-team`. It runs only for a
+repo whose `plugins:` line names the plugin; `vault_plugin_opted_in` in `lib/plugin-registry.sh`
+reads that line with the same two-line refusal as `cmd_config`.
+
+- Both stages measure the **working tree** against `<base>`, never the index: the agent has staged
+  nothing when it calls the point. `VAULT_CHECK_FILES` names a file listing every changed path,
+  NUL-separated, untracked files included and each counted as wholly changed.
+- `static` runs the static checks on those paths. `tests` runs the tests the plugin chooses for the
+  change, changed-line coverage, and mutation testing limited to changed lines. The caller stops a
+  point after `VAULT_CHECK_TIMEOUT` seconds (default 1800), so a `tests` stage runs only diff-scoped
+  measurements.
+- A `tests` point exits 1 for failing tests only. Coverage and survivors never change its exit:
+  `bin/vault-check.sh` is the single owner of the floor and exits 1 when coverage is below
+  max(80, the plugin's floor). A plugin floor below 80 prints `floor-below <floor> 80`.
+- A `tests` point that exits 0 must print a `coverage` line or `unmeasured coverage <reason>`;
+  otherwise the caller exits 2.
+
+It prints one tab-separated line per item; paths are repo-relative:
+
+| line | fields |
+|---|---|
+| `finding` | `<file>:<line>` · rule · message |
+| `failed` | test id · message |
+| `coverage` | percent of changed lines, or `none` when the change has no coverable lines · the plugin's own floor, or `-` |
+| `survivor` | `<file>:<line>` · mutator; a PHP plugin reads Infection's JSON log of escaped mutants |
+| `unmeasured` | what · reason |
+
+The caller passes the lines through, capped at `VAULT_CHECK_LINES` (200) lines and
+`VAULT_CHECK_BYTES` (12000) bytes, and states the withheld count. An unparsable line is shown as is;
+the exit decides. With no opted-in plugin declaring `check`, `bin/vault-check.sh` runs the repo's
+`lint_command` or `test_command` instead and prints `fallback`.
 
 **`~/vault/_global/plugins.tsv`** — header plus one row per registered plugin, mode 0600:
 

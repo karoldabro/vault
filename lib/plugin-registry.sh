@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # plugin-registry.sh — read the plugin registry and call a plugin's extension points.
 #
-# Contract: vault/architecture/plugin-extension-contract.md. Two points exist, `init` and
-# `dod-keys`. Commands and Claude Code hooks need nothing from here — Claude Code composes those
+# Contract: vault/architecture/plugin-extension-contract.md. Three points exist, `init`,
+# `dod-keys` and `check`. Commands and Claude Code hooks need nothing from here — Claude Code composes those
 # across plugins already.
 #
-# Sourced by bin/vault-plugin.sh, bin/vault-init.sh and bin/gate.sh. Every function returns 0 unless
+# Sourced by bin/vault-plugin.sh, bin/vault-init.sh, bin/gate.sh and bin/vault-check.sh. Every function returns 0 unless
 # its own contract says otherwise, because a host that sources this file is doing work the operator
 # needs whether or not an extension succeeded.
 #
@@ -15,7 +15,7 @@
 # The points this framework implements. A plugin naming anything else is refused at registration,
 # which is the only compatibility question this framework owns: Claude Code's own `dependencies`
 # key in a plugin's manifest gates install-time compatibility.
-VAULT_PLUGIN_POINTS="init dod-keys"
+VAULT_PLUGIN_POINTS="init dod-keys check"
 
 VAULT_PLUGIN_REGISTRY_HEADER=$'name\tpath\tpoints'
 VAULT_PLUGIN_MANIFEST_HEADER=$'name\tpoints'
@@ -159,6 +159,7 @@ vault_plugin_point_file() {
     case "$2" in
         init)     printf '%s/extend/init.sh\n' "$1" ;;
         dod-keys) printf '%s/extend/dod-keys.tsv\n' "$1" ;;
+        check)    printf '%s/extend/check.sh\n' "$1" ;;
         *)        return 1 ;;
     esac
 }
@@ -207,6 +208,96 @@ vault_plugin_run_point() {
     done < <(vault_plugin_list)
 
     return 0
+}
+
+# vault_plugin_opted_in <vault-md>
+# Emit the plugin names on the flat `plugins:` line, one per line, spaces after commas removed.
+# Returns 2 and emits nothing when the file carries two `plugins:` lines: `sed | head -1` would drop
+# the second one in silence. The same rule as bin/gate.sh plugin_keys.
+vault_plugin_opted_in() {
+    local vm=$1 count raw rest name
+    [ -r "$vm" ] || return 0
+    count=$(grep -c '^plugins:' "$vm" 2>/dev/null || true)
+    [ "${count:-0}" -gt 0 ] || return 0
+    if [ "$count" -gt 1 ]; then
+        _vault_plugin_warn "${vm} carries ${count} 'plugins:' lines; merge them into one"
+        return 2
+    fi
+    raw=$(sed -n 's/^plugins:[[:space:]]*//p' "$vm" | head -1 | tr -d '\r')
+    rest=$raw
+    while [ -n "$rest" ]; do
+        case "$rest" in
+            *,*) name=${rest%%,*}; rest=${rest#*,} ;;
+            *)   name=$rest; rest="" ;;
+        esac
+        name=$(printf '%s' "$name" | tr -d '[:space:]')
+        [ -n "$name" ] && printf '%s\n' "$name"
+    done
+    return 0
+}
+
+# _vault_plugin_check_rows <repo>
+# Emit `name<TAB>path` for each plugin that the repo opts into, that is registered, and that declares
+# `check`. A name the repo lists and the machine never registered is a note, not a refusal.
+_vault_plugin_check_rows() {
+    local repo=$1 want name path points rc=0 names
+    names=$(vault_plugin_opted_in "${repo}/VAULT.md") || rc=$?
+    [ "$rc" -eq 0 ] || return "$rc"
+    while IFS= read -r want; do
+        [ -n "$want" ] || continue
+        path=$(vault_plugin_path "$want" 2>/dev/null) || path=""
+        if [ -z "$path" ]; then
+            _vault_plugin_warn "${want} is listed in ${repo}/VAULT.md and not registered on this machine"
+            continue
+        fi
+        points=$(vault_plugin_list | awk -F'\t' -v n="$want" '$1 == n { print $3; exit }')
+        _vault_plugin_declares "$points" check || continue
+        printf '%s\t%s\n' "$want" "$path"
+    done <<<"$names"
+    return 0
+}
+
+# vault_plugin_check_declared <repo>
+# Exit 0 when at least one plugin the repo opts into declares `check`, else 1. Exit 2 when the
+# opt-in line cannot be read. No exit code of vault_plugin_run_check carries this answer, so a
+# crashed point can never be mistaken for an absent one.
+vault_plugin_check_declared() {
+    local rows rc=0
+    rows=$(_vault_plugin_check_rows "$1") || rc=$?
+    [ "$rc" -eq 0 ] || return 2
+    [ -n "$rows" ]
+}
+
+# vault_plugin_run_check <stage> <repo> <base>
+# Run `extend/check.sh <stage> <repo> <base>` for every plugin vault_plugin_check_declared counts.
+# Its stdout passes through. Returns the highest exit, each clamped to 2: 0 measured and acceptable,
+# 1 measured and worse, 2 could not measure. A missing or non-executable file, an exit above 2 and a
+# run past VAULT_CHECK_TIMEOUT seconds (default 1800) each count as 2 and are named on stderr.
+vault_plugin_run_check() {
+    local stage=$1 repo=$2 base=$3 name path file rc worst=0 rows limit=${VAULT_CHECK_TIMEOUT:-1800}
+    rows=$(_vault_plugin_check_rows "$repo") || return 2
+    while IFS=$'\t' read -r name path; do
+        [ -n "$name" ] || continue
+        file=$(vault_plugin_point_file "$path" check)
+        if [ ! -f "$file" ] || [ ! -x "$file" ]; then
+            _vault_plugin_warn "${name}: check could not run (${file} is missing or not executable)"
+            rc=2
+        else
+            rc=0
+            if command -v timeout >/dev/null 2>&1; then
+                timeout "$limit" "$file" "$stage" "$repo" "$base" </dev/null || rc=$?
+                [ "$rc" -eq 124 ] && _vault_plugin_warn "${name}: check timed out after ${limit}s"
+            else
+                "$file" "$stage" "$repo" "$base" </dev/null || rc=$?
+            fi
+            if [ "$rc" -gt 2 ]; then
+                [ "$rc" -eq 124 ] || _vault_plugin_warn "${name}: check could not run (exit ${rc})"
+                rc=2
+            fi
+        fi
+        [ "$rc" -gt "$worst" ] && worst=$rc
+    done <<<"$rows"
+    return "$worst"
 }
 
 # vault_plugin_dod_keys <name>

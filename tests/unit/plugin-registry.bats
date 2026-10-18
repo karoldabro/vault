@@ -493,3 +493,47 @@ run_point() {
     [[ "$output" == *"already cloned, not updated"* ]]
     [[ "$output" == *" at "* ]]
 }
+
+# --- the check point ----------------------------------------------------------------------
+
+@test "a plugin declaring check registers when extend/check.sh is executable" {
+    local dir; dir=$(make_plugin qg check)
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${dir}/extend/check.sh"; chmod +x "${dir}/extend/check.sh"
+    run "${PLUGIN_SH}" add "${dir}"
+    [ "$status" -eq 0 ]
+    run grep -c $'^qg\t' "${REGISTRY}"
+    [ "$output" -eq 1 ]
+}
+
+@test "add refuses a plugin whose check.sh is not executable" {
+    local dir; dir=$(make_plugin qg check)
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${dir}/extend/check.sh"
+    run "${PLUGIN_SH}" add "${dir}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"not executable"* ]]
+    run test -e "${REGISTRY}"
+    [ "$status" -ne 0 ]
+}
+
+@test "vault_plugin_opted_in reads names after spaced commas and refuses two plugins lines" {
+    local repo; repo=$(make_repo optin)
+    printf '\nplugins: a,  b ,c\n' >> "${repo}/VAULT.md"
+    run bash -c ". '${LIB}'; vault_plugin_opted_in '${repo}/VAULT.md' | tr '\n' ' '"
+    [ "$output" = "a b c " ]
+    printf 'plugins: d\n' >> "${repo}/VAULT.md"
+    run bash -c ". '${LIB}'; vault_plugin_opted_in '${repo}/VAULT.md'"
+    [ "$status" -eq 2 ]
+    run "${GATE_SH}" config "${repo}"
+    [[ "$output" == *"2 'plugins:' lines"* ]]
+}
+
+@test "vault_plugin_check_declared ignores a registered check plugin the repo does not opt into" {
+    local dir repo; dir=$(make_plugin qg check); repo=$(make_repo notopted)
+    printf '#!/usr/bin/env bash\nexit 0\n' > "${dir}/extend/check.sh"; chmod +x "${dir}/extend/check.sh"
+    run "${PLUGIN_SH}" add "${dir}"
+    run bash -c ". '${LIB}'; vault_plugin_check_declared '${repo}'"
+    [ "$status" -eq 1 ]
+    printf '\nplugins: qg\n' >> "${repo}/VAULT.md"
+    run bash -c ". '${LIB}'; vault_plugin_check_declared '${repo}'"
+    [ "$status" -eq 0 ]
+}
