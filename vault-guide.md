@@ -404,8 +404,10 @@ The framework assumes none of these. Read `VAULT.md`, then the project's convent
 |------|---------|--------|---------|
 | `team_max_parallel_critics` | 3 (business packs 4) | hard max 5 | Critics per panel round (`personas/_resolution.md` §2, business selection §2.2) |
 | `team_max_rounds` | 2 | hard ceiling | PROPOSE design-loop rounds (`v-team/steps/03-propose-loop.md`) |
-| `team_max_review_rounds` | 2 | hard ceiling | EXECUTE diff-review-loop rounds (`v-team/steps/04-execute-loop.md`) |
-| `team_max_test_designers` | 3 | — | Test-design generators in PROPOSE sub-phase (f2) |
+| `team_max_review_rounds` | 2 | hard ceiling | EXECUTE code-review-loop rounds (`v-team/steps/04-execute-loop.md` §5.2) |
+| `team_max_test_designers` | 5 | — | Test-design generators in PROPOSE sub-phase (f2) (`personas/_shared/testing/design/README.md`) |
+| `team_max_test_rounds` | 3 | hard ceiling | EXECUTE testing-loop rounds (`commands/_shared/testing-loop.md` §6) |
+| `team_max_test_writers` | 2 | hard max 3 | Test writers per testing round (`commands/_shared/testing-loop.md` §3) |
 
 An unset knob takes the default. A cap hit with open blockers escalates to the user.
 

@@ -24,9 +24,10 @@ PROPOSE and EXECUTE get looped variants. `/v-team` therefore **depends on `/v-wo
 
 **`/v-team` is the escalation, not the default.** Use `/v-work` for routine work — it has a single-pass
 **lite critic** (`03-propose.md` §3a.6) when you want a second opinion, at a fraction of the cost. A
-`/v-team` run costs roughly **2× a `/v-work` session** (~20k of scaffolding + 30–60k of agent fan-out
-across 6–12 spawns: up to ~3 critics × 2 rounds × 2 loops + `team_max_test_designers` generators), and
-measured across June–July 2026 it delivered the **same ~79% completion rate** as `/v-work`. Reach for it
+`/v-team` run spawns about **9 to 45 agents**: 2 to 5 test designers, 3 to 5 code-review critics over up
+to 2 rounds, up to 2 test writers and 3 testing reviewers over up to 3 rounds, and up to 3 bug-return
+review rounds. Its token cost has not been re-measured at that size; before the testing loop existed, a
+run cost about 2× a `/v-work` session and delivered the **same ~79% completion rate** (June–July 2026). Reach for it
 only when a wrong design decision is **expensive to reverse** — architecture, schema, auth, billing,
 cross-repo contracts — not because you want *a* second opinion.
 
@@ -55,7 +56,7 @@ after `/v-capture` has run.
 2. LOAD CONTEXT
 3. PROPOSE (panel loop)
 4. APPROVAL GATE
-5. EXECUTE (review loop)
+5. EXECUTE (implement, code-review loop, testing loop)
 6. COMMIT + CAPTURE
 
 **If the task names a feature session** — `<absolute plan path>#<id>`, or a `<feature>` with an
@@ -136,8 +137,10 @@ line** — approving authorizes everything it touches.
 - Feedback → revise the plan (re-loop if needed), present again
 - Rejection ("no", "cancel") → end; mark remaining tasks `deleted`
 
-## Step 5 — EXECUTE (review loop)
-Read `$VAULT_FRAMEWORK_PATH/commands/v-team/steps/04-execute-loop.md`, then execute. Mark EXECUTE `completed`.
+## Step 5 — EXECUTE (three loops)
+Read `$VAULT_FRAMEWORK_PATH/commands/v-team/steps/04-execute-loop.md`, then execute. It runs three loops with
+separate owners: implement (production code and the static check), the code-review loop (design), and
+the testing loop (`commands/_shared/testing-loop.md`). Mark EXECUTE `completed`.
 
 ## Step 6 — COMMIT + CAPTURE
 Read `$VAULT_FRAMEWORK_PATH/commands/v-work/steps/05-commit-capture.md`, then execute.

@@ -106,4 +106,6 @@ stack_packs: {{stack_packs}}
 # team_max_rounds: 2                   # plan-critique loop cap
 # team_max_parallel_critics: 3         # critics selected per change (hard max 5; business packs default 4, §2.2)
 # team_max_review_rounds: 2            # diff-review loop cap
-# team_max_test_designers: 3           # generators in the PROPOSE (f2) test-design fan-out
+# team_max_test_designers: 5           # generators in the PROPOSE (f2) test-design fan-out
+# team_max_test_rounds: 3              # testing-loop cap (commands/_shared/testing-loop.md)
+# team_max_test_writers: 2             # test writers per testing round (hard max 3)

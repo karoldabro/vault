@@ -30,19 +30,22 @@ lead with the conclusion	communication.md + document-standard.md rule 2
 current truth only	document-standard.md rule 5
 delete superseded	document-standard.md rule 5
 (met|failed), .*not-applicable	definition-of-done.md
-kills .{0,3}1 seeded mutant	definition-of-done.md §Tests + v-team 04-execute-loop §5.2
-coverage without fault.detection	definition-of-done.md §Tests + v-team 04-execute-loop §5.2
+kills .{0,3}1 seeded mutant	testing-loop.md §2 + definition-of-done.md §Tests
+coverage without fault.detection	testing-loop.md §2 + definition-of-done.md §Tests
 temporarily break the code and confirm	definition-of-done.md §Tests
-never weaken an assertion	v-team 04-execute-loop.md §5.2
+never weaken an assertion	testing-loop.md §2
 separate defects from opinions	critic-panel.md §(d) severity + grounding
 ground first	critic-panel.md §(a)
-(default|hard max).{0,20}(3|5).{0,20}(critics|agents)	critic-panel.md §(b)
+(default|hard max).{0,20}(3|5).{0,20}(critics|agents)	personas/_resolution.md §2, referenced by critic-panel.md §(b)
 ask everything.{0,20}(up front|in the first exchange).{0,40}never	elicitation.md
 do not invent a third	elicitation.md
 leave pushing to the operator	v-work 05-commit-capture.md §5.1
 commit with a pathspec	vault-sync.md §2 + scripts/staging-hook.sh
 never raw git against a vault	vault-sync.md
 declared (values|identifiers) are consumed	bin/gate.sh readers
+test files only	testing-loop.md §4
+max\(80, ?floor\)	testing-loop.md §1
+coverage unmeasured	testing-loop.md §6 + §7
 each table has at least one .?PK.? row	architecture-spec.md Rule library
 the page holds no .?<script	human-plan.md Escaping
 a repo registry is read only under	probe-kit.md Registry

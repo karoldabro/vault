@@ -32,7 +32,8 @@ answer. A tick that is not true is not.
 
 ### Tests (B2)
 
-The per-test quality gate is owned by `v-team/steps/04-execute-loop.md` §5.2 and is not restated here.
+The per-test quality gate and the coverage floor are owned by `commands/_shared/testing-loop.md` §1 and §2
+and are not restated here.
 One clause matters enough to quote, because dropping half of it makes the gate unsatisfiable in a repo
 with no mutation tool:
 

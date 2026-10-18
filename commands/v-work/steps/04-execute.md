@@ -58,9 +58,29 @@ Run the detected test command (Step 1 / CLAUDE.md; Docker projects use the proje
 aliases) against the changed surface. Fix root cause before proceeding. After all phases, run the
 full suite and classify any failures as pre-existing vs newly introduced.
 
+## 4.6a Static check before a unit is done
+
+Before you call a unit of work done, run:
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/vault-check.sh static --repo . --base "$PROBE_BASE"
+```
+
+Fix every finding that names a file you changed, then run it once more. A unit is done once no output
+line names a changed file, whatever the exit code: under `fallback scope repo` the repo's own linter
+checks the whole repo, and findings in files you did not touch are recorded, not fixed. Findings still
+open after the second run go to the operator. Exit 2 means nothing could be measured; say so to the
+operator once per session, not once per unit. Output lines and exits: the `check` point in
+`vault/architecture/plugin-extension-contract.md`.
+
 ## 4.7 Delegate verification
 
-- After code lands, spawn `test-writer-fixer` to write/repair and run tests for the changed surface.
+- After code lands, spawn `test-writer-fixer` once to write/repair and run tests for the changed
+  surface. Every kept test passes the per-test gate of `commands/_shared/testing-loop.md` §2.
+- Then run `$VAULT_FRAMEWORK_PATH/bin/vault-check.sh tests --repo . --base "$PROBE_BASE"` once.
+  Coverage below the floor of `commands/_shared/testing-loop.md` §1, and every `survivor` line, go to
+  the operator as open items, unlabelled. Print `coverage unmeasured: <reason>` whenever the output
+  holds an `unmeasured coverage` line or the command exits 2. `/v-work` runs no further pass.
 - Run `bin/probe-panel.sh run --posture own --repo . --base "$PROBE_BASE"` for every scope (rules:
   `commands/_shared/critic-panel.md` §(a) Probe stage) and print `operator.txt` to the operator when it exists.
 - BIG scope (>15 files or API/schema changes): spawn `deploy-review-panel` for architecture / code /
@@ -71,11 +91,12 @@ full suite and classify any failures as pre-existing vs newly introduced.
 
 Check every changed file before marking complete.
 
-**Code quality (all scopes):** no god classes (>200 lines / >5 responsibilities) · no deep nesting
-(>3 levels) · no magic numbers/strings · no unused imports / dead / commented-out code ·
+**Code quality (all scopes):** the §4.6a static check owns size, structure and style; do not re-check by
+eye what it measured. Check what no tool sees: one responsibility per class or module ·
 `sed`/`awk`/`python` not used for edits · pattern compliance · **every `indications/` rule loaded in
-§2.3a honored** · input validation at boundaries · no copy-pasted logic (extract shared) · KISS/YAGNI
-(no premature abstraction).
+§2.3a honored** · input validation at boundaries · an existing symbol or package reused instead of
+rewritten · KISS/YAGNI (no premature abstraction). When §4.6a measured nothing (exit 2), also check by
+eye for god classes, deep nesting, unused or dead code and copy-pasted blocks.
 
 **Test quality:** happy + edge + error covered · no happy-path-only · no assertions on internals ·
 no hardcoded test data · names describe scenario + outcome.
