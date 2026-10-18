@@ -24,7 +24,7 @@ loop both decorrelated and executable, and keeps "only confirmed findings block"
 ## Examples
 - Do: `personas/_shared/testing/design/fault-relation-prospector` emits fault hypotheses + metamorphic
   relations as `advisory` dossier rows; `assertion-auditor` (mutation) and `system-domain-expert` (rule
-  existence) confirm them in EXECUTE §5.3.
+  existence) confirm them in the EXECUTE testing loop (`commands/_shared/testing-loop.md`).
 - Do: every generator file carries both a `NOT → <critic>` (vertical) and a `NOT → <other generator>`
   (horizontal) decorrelation line.
 - Don't: a "generate-mode" added to a critic persona, or a generator that runs mutation/coverage and casts
@@ -32,4 +32,4 @@ loop both decorrelated and executable, and keeps "only confirmed findings block"
 
 ## Applies-to
 `personas/_shared/testing/design/**`, `personas/_shared/testing/system-domain-expert.md`,
-`commands/v-team/steps/03-propose-loop.md` (§f2), `commands/v-team/steps/04-execute-loop.md` (§5.3).
+`commands/v-team/steps/03-propose-loop.md` (§f2), `commands/v-team/steps/04-execute-loop.md` (§5.3), `commands/_shared/testing-loop.md`.

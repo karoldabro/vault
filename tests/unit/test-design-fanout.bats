@@ -9,7 +9,7 @@ setup() {
     export VAULT_ROOT="${VAULT_ROOT:-/code}"
     TESTING_DIR="${VAULT_ROOT}/personas/_shared/testing"
     DESIGN_DIR="${TESTING_DIR}/design"
-    GENERATORS="fault-relation-prospector business-logic-cartographer boundary-property-explorer"
+    GENERATORS="fault-relation-prospector business-logic-cartographer boundary-property-explorer api-contract-mapper abuse-case-designer performance-budget-designer"
 }
 
 @test "design generator group dir exists with a README index" {
@@ -18,7 +18,7 @@ setup() {
     grep -qE '^group: testing-design$' "${DESIGN_DIR}/README.md"
 }
 
-@test "all three generators exist with valid generator frontmatter" {
+@test "all six generators exist with valid generator frontmatter" {
     for g in ${GENERATORS}; do
         local f="${DESIGN_DIR}/${g}.md"
         [ -f "${f}" ] || { echo "missing generator: ${f}"; return 1; }
@@ -44,10 +44,11 @@ setup() {
     for g in ${GENERATORS}; do
         local f="${DESIGN_DIR}/${g}.md"
         grep -q  '## Decorrelation'        "${f}" || { echo "${g}: no Decorrelation section"; return 1; }
-        # vertical: names a critic it defers to
-        grep -q  'NOT → edge-case-hunter'  "${f}" || { echo "${g}: no vertical NOT->critic"; return 1; }
+        # vertical: names a testing critic it defers to
+        grep -qE 'NOT → (edge-case-hunter|assertion-auditor|flakiness-sentinel|test-double-critic|test-behaviorist|test-harness-critic|system-domain-expert)' "${f}" \
+            || { echo "${g}: no vertical NOT->critic"; return 1; }
         # horizontal: names another generator
-        grep -qE 'NOT → (fault-relation-prospector|business-logic-cartographer|boundary-property-explorer)' "${f}" \
+        grep -qE "NOT → ($(echo ${GENERATORS} | tr ' ' '|'))" "${f}" \
             || { echo "${g}: no horizontal NOT->generator"; return 1; }
     done
 }
@@ -132,4 +133,14 @@ setup() {
     local f="${VAULT_ROOT}/commands/v-work/steps/03-propose.md"
     grep -qi 'decision table' "${f}"
     grep -qi 'name.*fault\|fault that would break' "${f}"
+}
+
+@test "the design README seats every generator by a rule and routes it to the testing loop" {
+    local f="${DESIGN_DIR}/README.md"
+    for g in ${GENERATORS}; do
+        grep "\[\[${g}\]\]" "${f}" | grep -qiE 'every `\(f2\)`|trigger:' \
+            || { echo "README gives ${g} no seating rule"; return 1; }
+    done
+    grep -q 'testing loop' "${f}"
+    grep -q 'team_max_test_designers` (default 5)' "${f}"
 }

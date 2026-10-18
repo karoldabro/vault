@@ -13,7 +13,7 @@ business rules**: `indications/` + `features/` + the feature dossier for the cha
 tests actually exercise the documented rules of the system under test, catching the LLM failure where a
 type/variant rule is specified but only the default path is tested.
 
-Runs **post-implementation** in the EXECUTE diff-review loop (§5.3), where written tests exist. It confirms
+Runs **post-implementation** in the EXECUTE testing loop (`commands/_shared/testing-loop.md`), where written tests exist. It confirms
 the [[design/business-logic-cartographer]] decision tables and the [[design/fault-relation-prospector]]
 metamorphic relations against the actual rules. Like every testing critic it binds a real analyzer and
 **only `confirmed` findings block**.
@@ -57,7 +57,7 @@ independent blocker.
 - [ ] The cartographer's decision-table rows each map to a covered branch; MRs preserve a real invariant.
 
 ## Output
-Per `commands/v-team/steps/04-execute-loop.md` §5.3. A BLOCKER/MAJOR cites the rule's source line
+Per `commands/_shared/testing-loop.md` §5. A BLOCKER/MAJOR cites the rule's source line
 (`features/…`/`indications/…`) AND the uncovered branch (coverage report). Do not comment on assertion
 strength (→ assertion-auditor) or generic boundaries (→ edge-case-hunter). ≤3 proposed tests targeting the
 highest-risk untested documented rules.

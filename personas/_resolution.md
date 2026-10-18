@@ -48,10 +48,16 @@ packs default 4** — see §2.2):
   exact text this plan hands it. It takes the seat `correctness` would take, which the next bullet
   already makes optional for plan critique. Drop it only when the change creates no handoff at all —
   no new artifact, field, marker, report, prompt or choice-surface row — and note the drop in the trail.
-- **`correctness` (bug-hunter): default-in for diff review** — `/v-cr` and `/v-team`'s diff-review loop
+- **`correctness` (bug-hunter): default-in for diff review** — `/v-cr` and `/v-team`'s code-review loop
   review *existing code's behaviour*, where logic/edge/null/race bugs are the highest-value findings
   (`_shared/correctness.md`). For pure plan critique (no diff yet) it is optional. Decorrelated from
   `skeptic` (assumptions) and `quality` (cleanliness) — see that file's Output note.
+- **Diff review seats architect, `quality` and `correctness` by default** (`/v-team` §5.2 code-review
+  loop, `/v-cr`) — the senior-developer panel: reuse, simpler solutions, packages and patterns
+  (`quality`), logic against the business rule (`correctness`), structure (architect). Every lens reads
+  the static output and judges only what no tool reports (`commands/_shared/critic-panel.md` §(a)). A
+  `performance`, `security` or `skeptic` trigger below raises `team_max_parallel_critics` for that run
+  up to the hard max of 5, recorded in the trail.
 - **Add the 1–2 lenses the change most implicates** — derive from the Step-1 keywords / impact scope:
   auth·tenant·permission·upload → `security`; query·index·list·job·report → `performance`;
   refactor·duplication·new-module → `quality`; contract·endpoint·filter·response → integration architect.
@@ -92,7 +98,7 @@ When the change **adds or modifies test files** — path globs `*test*`, `*spec*
 - **Generators** (`personas/_shared/testing/design/`) are **not critics** and are **never selected into a
   panel**. They fan out in the PROPOSE sub-phase `(f2)` to author the test plan; see that group's
   `README.md` for the generator↔critic contract.
-- **`system-domain-expert`** is a critic seat for the EXECUTE diff-review loop, grounded in the repo's own
+- **`system-domain-expert`** is a critic seat for the EXECUTE testing loop, grounded in the repo's own
   `indications/`+`features/` rules. **Seat it whenever the PROPOSE `(f2)` fan-out ran** (i.e. a business-
   logic-touching change) — **regardless of the test-file glob above**, because new untested business logic
   has no test files in the diff at selection time yet is exactly the case this seat exists to catch. It is

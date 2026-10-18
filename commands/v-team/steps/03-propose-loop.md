@@ -180,7 +180,7 @@ set `team_max_rounds: 1` and make round 2 opt-in for high-risk work.)
 
 After the *design* plan converges (f) and before finalise (g), design the tests as a **first-class
 generative activity** — split out of solution design. This sub-phase performs **no confirmation**: it
-**only generates** (all confirmation is post-impl in EXECUTE §5.3 — the generators bind no analyzer and
+**only generates** (all confirmation is post-impl in the EXECUTE §5.3 testing loop — the generators bind no analyzer and
 never seat on the critique panel). It is the **sole authoritative writer** of the Test backlog.
 
 **Gating — fail open.** Run `(f2)` by default for any diff touching endpoints/handlers/migrations/business
@@ -188,10 +188,11 @@ logic. **Skip only** pure refactor/docs/formatting diffs, with a one-line note s
 gate (the happy-path bias this counters must not gate its own activation).
 
 1. **Spawn the generators** (parallel, one message — reuse only the spawn-and-merge skeleton of (c)+(e),
-   not the grounding-gate/de-bias prose). Default all three from `personas/_shared/testing/design/`,
-   capped by `team_max_test_designers` (default 3): [[fault-relation-prospector]] (fault hypotheses +
-   metamorphic relations), [[business-logic-cartographer]] (decision-table / state-transition / variant
-   rules — the post-`type` case), [[boundary-property-explorer]] (BVA/EP + property invariants). Each
+   not the grounding-gate/de-bias prose). Select them from the generator table of
+   `personas/_shared/testing/design/README.md`: [[business-logic-cartographer]] (decision-table /
+   state-transition / variant rules — the post-`type` case) and [[boundary-property-explorer]] (BVA/EP +
+   property invariants) on every `(f2)`, plus each generator whose trigger the change hits, capped by
+   `team_max_test_designers` (default 5). Each
    envelope: the converged design plan + LOAD-CONTEXT digest (**incl. the feature's `requirements.md` in
    feature mode — the `## Variant & state rules` decision/state tables are `business-logic-cartographer`'s
    primary input**) + the **advisory test hints** (the demoted design-critic `PROPOSED_TESTS`, read from

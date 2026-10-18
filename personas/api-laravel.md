@@ -18,11 +18,11 @@ security:    { analyzer: "larastan/psalm taint pass + `composer audit`",
                checklist: [tenant/user query scoping, $fillable/$guarded mass-assignment,
                            policy/gate per action + per model (IDOR), throttle middleware on
                            sensitive routes, no secrets in logs/responses] }
-performance: { analyzer: "Larastan + query log / N+1 detection (e.g. beyondcode query detector)",
+performance: { analyzer: "query log / N+1 count (e.g. beyondcode query detector) on the changed paths; cite the count",
                checklist: [N+1 / missing with(), indexes on FKs + filtered/sorted columns,
                            cursor/chunk on large sets, ShouldQueue for heavy work,
                            Resource over-fetch, model::select column pruning] }
-quality:     { analyzer: "Larastan/PHPStan (project level) + duplication grep / symbol search",
+quality:     { analyzer: "read the static output (PHPStan already ran) + symbol search + `composer show` / Packagist for an existing package",
                checklist: [existing Action/Service/Repository already does this, thin controllers,
                            form requests for validation, no god service, package exists on Packagist] }
 ```

@@ -26,8 +26,10 @@ prompt overlay, if the named agent is unavailable.
 ## Bound analyzer
 <!-- The real tool/command the critic MUST run before opining, so findings cite real signals.
      Stack packs override this with stack-specific tooling (see _pack-template.md). Generic default
-     here; e.g. "static analysis + grep for the anti-pattern". If no analyzer is available, the critic
-     says so and downgrades its findings to `advisory`. -->
+     here; e.g. "symbol search + grep for the anti-pattern". A diff-review lens reads the static output
+     (commands/_shared/critic-panel.md §(a) Static output) instead of re-running the linter, and judges
+     only what no tool reports. A design lens with no analyzer confirms a finding with one of the four
+     evidence kinds of critic-panel.md §(e); without one, its findings are `advisory`. -->
 
 ## Severity rubric
 What each level means **for this lens** (the four-level ladder is framework-fixed):

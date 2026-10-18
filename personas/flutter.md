@@ -25,14 +25,14 @@ security:    { analyzer: "`flutter analyze` + grep for SharedPreferences storing
                checklist: [secrets in secure storage (flutter_secure_storage), NOT plain
                            shared_preferences; API token handling; cert pinning where required;
                            deep-link parameter validation; no tokens/PII in logs or analytics] }
-performance: { analyzer: "`flutter analyze` + DevTools timeline/rebuild notes; grep setState scope / ListView vs ListView.builder",
+performance: { analyzer: "DevTools timeline/rebuild counts; grep setState scope / ListView vs ListView.builder",
                checklist: [rebuild scope (selective watch, no over-broad listen), const constructors,
                            ListView.builder for long/infinite lists, image caching
                            (cached_network_image), dispose() controllers + StreamSubscriptions,
                            heavy work off the UI isolate (compute/Isolate)] }
-quality:     { analyzer: "`flutter analyze` (flutter_lints / very_good_analysis) + `dart format` + duplication/symbol search",
+quality:     { analyzer: "read the static output (flutter analyze already ran) + symbol search + pub.dev for an existing package",
                checklist: [widget reuse vs duplication, UI/logic separation, SOLID/KISS,
-                           existing widget already does this, no god-widget (~400 lines), dead code,
+                           existing widget already does this,
                            DEFER to the repo's indications for the canonical conventions] }
 ```
 

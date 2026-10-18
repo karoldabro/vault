@@ -24,7 +24,7 @@ PROPOSE and EXECUTE get looped variants. `/v-team` therefore **depends on `/v-wo
 
 **`/v-team` is the escalation, not the default.** Use `/v-work` for routine work — it has a single-pass
 **lite critic** (`03-propose.md` §3a.6) when you want a second opinion, at a fraction of the cost. A
-`/v-team` run spawns about **9 to 45 agents**: 2 to 5 test designers, 3 to 5 code-review critics over up
+`/v-team` run spawns about **9 to 45 agents**: 2 to 5 test designers (`team_max_test_designers`), 3 to 5 code-review critics over up
 to 2 rounds, up to 2 test writers and 3 testing reviewers over up to 3 rounds, and up to 3 bug-return
 review rounds. Its token cost has not been re-measured at that size; before the testing loop existed, a
 run cost about 2× a `/v-work` session and delivered the **same ~79% completion rate** (June–July 2026). Reach for it

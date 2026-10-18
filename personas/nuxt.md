@@ -30,9 +30,9 @@ performance: { analyzer: "nuxt build + `nuxi analyze` (bundle) where available; 
                checklist: [bundle size / code-splitting, lazy + dynamic components, image module
                            (<NuxtImg>/@nuxt/image), hydration cost, redundant client fetches,
                            useFetch/$fetch dedupe + caching, payload size] }
-quality:     { analyzer: "project eslint + typecheck (vue-tsc / `nuxi typecheck`) if wired; duplication + symbol search",
+quality:     { analyzer: "read the static output (eslint and typecheck already ran) + symbol search + `npm view` for an existing package",
                checklist: [composable/component reuse vs duplication, component SRP, typed props/emits,
-                           existing component already does this, no prop-drilling, dead code,
+                           existing component already does this, no prop-drilling,
                            DEFER to the repo's indications for the canonical conventions] }
 ```
 

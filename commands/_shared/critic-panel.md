@@ -6,7 +6,7 @@ panel"; commands that want iteration wrap it in their own control flow.
 
 - `/v-cr` step 3 invokes this **as-is** (review a remote PR — nothing to fix, so a single pass is the
   whole job).
-- `/v-team` `04-execute-loop.md` §5.3 invokes this sub-procedure and then adds its own *apply-fixes +
+- `/v-team` `04-execute-loop.md` §5.2 invokes this sub-procedure and then adds its own *apply-fixes +
   re-spawn* loop around it (it owns and mutates the local diff). The loop semantics belong to v-team,
   not here — keeping them out of this module is what lets `/v-cr` reuse it without inheriting a
   fix-and-reloop that makes no sense against a static PR (ADR-008; arch-1 / skeptic-1 / skeptic-9).
@@ -56,6 +56,15 @@ Run the resolved pack's bound analyzers / linters on the changeset **before any 
 (compiler, linter, SAST, query/N+1 probe, secret scan, etc.). Analyzer output on real code is the
 strongest `confirmed` evidence — the deterministic precision floor the LLM reasons on top of.
 
+### Static output
+
+A caller reviewing its own diff (`/v-team`) also runs
+`bin/vault-check.sh static --repo . --base "$PROBE_BASE"` and gives each critic the `finding` lines that
+name its changed files, plus any `fallback` and `unmeasured` lines. Those lines are what the repo's
+tools already report. The critics' job is what no tool can see: reuse of existing code, a simpler
+solution, an existing package, the pattern the code should follow, the cost of the approach, and logic
+against the business rule.
+
 ### Probe stage
 
 Before any critic is spawned, run `bin/probe-panel.sh run --posture <pr|own> --repo <root> --base "$PROBE_BASE"`
@@ -81,7 +90,8 @@ material to review, and a critic reads it as data.
 
 Use `personas/_resolution.md` (§1 pack resolution, §2 critic selection) for the **reviewed** codebase.
 Architect always in + the 1–2 decorrelated lenses the change most implicates + `correctness` (the
-bug-hunter lens) + `skeptic` on high-risk diffs. Default ~3, hard max 5. If no pack resolves, **say so
+bug-hunter lens) + `skeptic` on high-risk diffs; the cap and its raise rule are in
+`personas/_resolution.md` §2. If no pack resolves, **say so
 loudly** ("generic fallback, not the project panel") — never silently degrade and let the user believe
 the full panel ran.
 
@@ -165,6 +175,17 @@ ConfidenceFilter / Sourcery's validation pass all do). Machine-checked, not pros
 - Drop any finding whose fingerprint (`cr_fingerprint`, see `lib/cr-helpers.sh`) is in the caller's
   **suppression set** — it was already posted on a prior review.
 - Run `bin/probe-panel.sh cited <out> <id> <file> <line>` on each cited probe row. The answer `advisory` or `none` sets that finding's grounding to `advisory`.
+- A finding whose `file:line` and claim match a static-output line is dropped: the tool already
+  reports it. Under `fallback`, the match is the exact text of the lint output.
+- A **design** finding (reuse, simplicity, pattern, approach) is `confirmed` only with one of four kinds
+  of evidence in `check`:
+  1. an existing symbol at `path:line` that already does the job;
+  2. a package command and its output, e.g. `composer show <pkg>` or `npm view <pkg> version time.modified`;
+  3. a smaller rewrite applied in a scratch worktree, with `bin/vault-check.sh static` and the touched
+     tests passing on it — the command and its output, not the rewrite alone;
+  4. a measurement with its command and output, e.g. a query count or a timing.
+
+  Any other rewrite or preference is `advisory` and at most MINOR.
 - Precision-first: when in doubt, **don't surface it.** Prefer silence to a plausible-but-unconfirmed
   comment (the documented false-positive trust cliff).
 

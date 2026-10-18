@@ -62,6 +62,16 @@ setup() {
     grep -qi 'test-touching'         "${f}"
 }
 
+@test "quality persona judges design and keeps mechanical checks only when no static check ran" {
+    local f="${VAULT_ROOT}/personas/_shared/quality.md"
+    grep -qi 'simpler' "${f}"
+    grep -qi 'package' "${f}"
+    local m c
+    m=$(grep -niE 'nesting|dead or commented-out' "${f}" | head -1 | cut -d: -f1)
+    c=$(grep -n 'When no static check ran' "${f}" | head -1 | cut -d: -f1)
+    [ -n "${m}" ] && [ -n "${c}" ] && [ "${c}" -lt "${m}" ]
+}
+
 @test "quality persona no longer double-votes test behaviour" {
     # The "tests express behaviour, not internals" checklist bullet moved to test-behaviorist.
     local f="${VAULT_ROOT}/personas/_shared/quality.md"

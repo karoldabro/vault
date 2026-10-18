@@ -72,7 +72,7 @@ feedback × maintainability**. The first two are in tension — flag a test that
 destroying another, and prefer deleting a zero-value test over patching it.
 
 ## Generators vs critics
-These six lenses are **critics** — they review *written* tests in the EXECUTE diff-review loop, each bound
+These six lenses are **critics** — they review *written* tests in the EXECUTE testing loop (`commands/_shared/testing-loop.md`), each bound
 to a real analyzer, and own the post-impl VOTE. Their generative counterpart is the **test-design
 generator group** at `design/` (see `design/README.md`): generators run in the PROPOSE sub-phase `(f2)`,
 ground in the *design plan* (not code), bind **no** analyzer, emit `advisory` dossier entries, and
