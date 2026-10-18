@@ -9,10 +9,12 @@ tags: [plugins, extension, install]
 
 # Plugin extensions — how a separate repo extends this framework
 
-Two points, a registry the operator writes by hand, and one CLI. A plugin reaches per-repo
-onboarding and the config gate; everything else it needs, Claude Code already gives it.
+Three points, a registry the operator writes by hand, and one CLI. A plugin reaches per-repo
+onboarding, the config gate and the EXECUTE quality checks; everything else it needs, Claude Code
+already gives it.
 
-Decision and the rejected alternatives: `vault/decisions/ADR-030-framework-extension-points.md`.
+Decision and the rejected alternatives: `vault/decisions/ADR-030-framework-extension-points.md`;
+the `check` point: `vault/decisions/ADR-034-three-execute-loops.md`.
 Byte-level contract: `vault/architecture/plugin-extension-contract.md`.
 Rule for anyone editing the call sites: `vault/indications/plugin-extension-never-aborts-host.md`.
 
@@ -20,21 +22,24 @@ Rule for anyone editing the call sites: `vault/indications/plugin-extension-neve
 
 | file | role |
 |---|---|
-| `lib/plugin-registry.sh` | `vault_plugin_list` · `vault_plugin_path` · `vault_plugin_check_points` · `vault_plugin_run_point` · `vault_plugin_dod_keys` |
+| `lib/plugin-registry.sh` | `vault_plugin_list` · `vault_plugin_path` · `vault_plugin_check_points` · `vault_plugin_run_point` · `vault_plugin_dod_keys` · `vault_plugin_opted_in` · `vault_plugin_check_declared` · `vault_plugin_run_check` |
+| `bin/vault-check.sh` | the one caller of the `check` point; falls back to `lint_command` / `test_command`; owns the max(80, floor) coverage rule |
 | `bin/vault-plugin.sh` | `add` · `remove` · `list` · `doctor`; the only writer of the registry |
 | `bin/vault-init.sh` | runs the `init` point, and validates the slug before it reaches `sed` or a plugin |
 | `bin/gate.sh` | `plugin_keys` inside `cmd_config` |
 | `~/vault/_global/plugins.tsv` | the registry: `name<TAB>path<TAB>points`, mode 0600, machine-local |
 | `templates/plugin/` | the skeleton a plugin author copies |
-| `tests/unit/plugin-registry.bats` | 31 cases |
+| `tests/unit/plugin-registry.bats` | registration, points, opt-in |
+| `tests/unit/vault-check.bats` | the `check` point and the fallback |
 | `checks/ext-SC-{1,2,3,4,5,7}.sh` | the gate checks |
 
-## The two points
+## The three points
 
 | point | plugin file | called from | arguments |
 |---|---|---|---|
 | `init` | `extend/init.sh` | `bin/vault-init.sh`, after `VAULT.md` is written | `<code-repo> <vault-dir> <slug>` |
 | `dod-keys` | `extend/dod-keys.tsv` | `bin/gate.sh config` | none; read as data |
+| `check` | `extend/check.sh` | `bin/vault-check.sh`, only for a repo whose `plugins:` line names the plugin | `<static\|tests> <repo> <base>` |
 
 ## Behaviors & rules
 
@@ -62,15 +67,20 @@ Rule for anyone editing the call sites: `vault/indications/plugin-extension-neve
 - Given a registry holding two rows with one name, then `vault_plugin_list` refuses; a silent
   first-wins would hide the second path.
 - Given a plugin path containing a space, then it registers, runs, and the next row is unaffected.
+- A `check` point exiting above 2, a missing `check.sh` or an unreadable registry → `bin/vault-check.sh` exits 2 and never falls back.
+- A registered `check` plugin the repo's `plugins:` line does not name → never runs.
 
 ## Exit codes
 
 `bin/vault-plugin.sh`: 0 done · 1 refused · 2 usage. `vault_plugin_run_point` always returns 0.
+`vault_plugin_run_check` and `bin/vault-check.sh`: 0 measured and acceptable · 1 measured and worse ·
+2 could not measure.
 
 ## Sessions
 
 - [[../sessions/2026-09-14-1433-plugin-extension-points]] — built both points, the registry, the CLI
   and the skeleton; cut two designed points on evidence.
+- [[../sessions/2026-10-18-1257-quality-loops]] — the `check` point and `bin/vault-check.sh`.
 
 ## Not covered
 

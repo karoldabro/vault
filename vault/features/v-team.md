@@ -28,7 +28,7 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
   [[../architecture/session-gates]]. Tests: `tests/unit/gate.bats`.
 - **Consumer seat**: `personas/_shared/consumer.md` — guaranteed on the PROPOSE panel across all three
   selection regimes (`_resolution.md` §2, §2.1, §2.2), never a relevance pick, never dropped by the cap
-  (over cap, raise `team_max_parallel_critics` to 4 rather than drop a triggered lens). It simulates the
+  (over cap, the raise rule of `_resolution.md` §2 lifts `team_max_parallel_critics` rather than dropping a triggered lens). It simulates the
   receiver: the finding's `check` carries the literal text the receiver gets plus one produced output.
   Its form is `templates/plan.md` `## Artifact lifecycles`, enforced by `check_plan` in `bin/doc-lint.sh`
   (PLAN1 blank cell or a row naming nothing openable; PLAN2 file-creating plan with no table). Rule:
@@ -51,14 +51,22 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
   test-harness-critic), one AI-test-failure cluster + one bound analyzer each. Selected on test-touching
   changes via `_resolution.md` §2.1 (cap 3). Rule: [[../indications/testing-persona-group]]. Plus a 7th
   critic `system-domain-expert` (grounded in the repo's own `indications/`+`features/` rules), seated in
-  EXECUTE §5.3 whenever the (f2) fan-out ran (`_resolution.md` §2.1a).
-- **Test-design generators** (ADR-011): `personas/_shared/testing/design/` — fault-relation-prospector,
-  business-logic-cartographer, boundary-property-explorer. Run in PROPOSE sub-phase **(f2)** (generation
+  the EXECUTE §5.3 testing loop whenever the (f2) fan-out ran (`_resolution.md` §2.1a).
+- **Three EXECUTE loops** (ADR-034): `commands/v-team/steps/04-execute-loop.md` §5.1 Implement
+  (production code; `bin/vault-check.sh static` before a unit is done), §5.2 Code-review loop (design
+  only; architect + `quality` + `correctness` by default; static output in every envelope, restated tool
+  findings dropped), §5.3 Testing loop (`commands/_shared/testing-loop.md`: writers edit tests only,
+  changed-line coverage ≥ max(80, floor), reviewers label every survivor). `/v-work` runs one pass of
+  each check and no loops.
+- **Test-design generators** (ADR-011, ADR-034): `personas/_shared/testing/design/` — fault-relation-prospector,
+  business-logic-cartographer, boundary-property-explorer, api-contract-mapper, abuse-case-designer,
+  performance-budget-designer, seated per the README table. Run in PROPOSE sub-phase **(f2)** (generation
   only, no analyzer, never on the panel); author the Test Design Dossier + Proposed test backlog;
   confirmed post-impl in EXECUTE. Rule: [[../indications/generators-emit-critics-confirm]].
 - **Config** (`VAULT.md` `behaviour`): `project_type`, `personas.{use,add,skip}` (`use` accepts a list
   for multi-pack seating), `team_max_rounds` (2), `team_max_review_rounds` (2),
-  `team_max_parallel_critics` (3, business packs 4, hard max 5), `team_max_test_designers` (3).
+  `team_max_parallel_critics` (3, business packs 4, hard max 5), `team_max_test_designers` (5),
+  `team_max_test_rounds` (3), `team_max_test_writers` (2, hard max 3); defaults and bounds: `vault-guide.md` §12.1.
 - **Artifact**: `templates/plan.md` → `<vault>/plans/YYYY-MM-DD-HHMM-<slug>.md` (converged plan +
   work items + test backlog; the critique trail goes to the sibling `<slug>.trail.md`).
 - **Finding schema**: severity (BLOCKER/MAJOR/MINOR/NIT) + `grounding` (confirmed|advisory) +
@@ -103,3 +111,4 @@ not the default lifecycle (routine work stays on `/v-work`); critics do not mess
 - [[../sessions/2026-07-10-1740-llm-collaboration-patterns]]
 - [[../sessions/2026-09-02-2147-consumer-seat-and-artifact-lifecycles]] — the consumer seat, the artifact-lifecycle table and PLAN1/PLAN2
 - [[../sessions/2026-09-13-1447-coverage-gate-and-failed-sessions]] — the Step 4 kill criterion; a session that cannot reach its own criteria fails instead of asking for approval
+- [[../sessions/2026-10-18-1257-quality-loops]] — EXECUTE split into implement, code-review and testing loops
