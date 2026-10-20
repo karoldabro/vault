@@ -38,11 +38,11 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-10-20-1934-agent-systems-lens]] — agent-systems planning lens and eight agent skills
 - [[sessions/2026-10-18-1257-quality-loops]] — Split EXECUTE into implement, code-review and testing loops; add the plugin check point
 - [[sessions/2026-10-12-1042-v-pm-planning-loop]] — Rework /v-pm into a read-only planner with a planning-reviewer panel and a session split
 - [[sessions/2026-09-24-2013-human-page-essentials]] — Cut the human plan page down to what only the operator supplies or judges
 - [[sessions/2026-09-24-1651-remove-mcp-tools]] — Remove the memory plugin, edit MCP and code graph from the framework; Serena stays optional
-- [[sessions/2026-09-22-1023-spec-reading-probes-s11]] — S11: spec-reading SQL probes (spec-tables/spec-naming) and the data-model/naming triage auditors for the plan-time probe stage
 <!-- Last N session entries appended by /v-capture. -->
 - [[sessions/2026-07-03-1559-vpm-business-knowledge-center]] — /v-pm authors a `requirements.md` business-logic knowledge center for one or more repos: rules REQ-NN with axis tags, a glossary, and decision/state tables. Adds the single-repo `requirements/` category. The id chain reaches the established `features/` dossier at shared /v-capture §5b (ADR-014)
 - [[sessions/2026-07-03-1240-v-pm-cross-project-planning]] — build /v-pm: cross-project feature planning into a shared `_features/` workspace + file-based conversation (state-in-filename, derived ledger, auto-pickup + `/v-pm status`, deterministic contracts-drift); flip clarify gate to hard-block (ADR-013)
