@@ -11,10 +11,13 @@ an architecture, a session split, a set of briefs. `/v-pm` seats this group on e
 (selection: `personas/_resolution.md` §2.3). Any other command reuses a lens by its group-qualified id,
 `planning/<id>`, through a pack's `use_shared` or `VAULT.md` `personas.add`.
 
-Two kinds of deliverable get planned here, and they fail differently. **Software** fails at runtime:
-wrong boundaries, lost data, broken contracts. **An AI harness** (commands, prompts, agents, hooks,
-gates) fails when a model reads ambiguous text, loops without a cap, or claims success nothing checks.
-`harness-engineer` owns the second kind; every other lens applies to both.
+Three kinds of deliverable get planned here, and they fail differently. **Software** fails at
+runtime: wrong boundaries, lost data, broken contracts. **A developer harness** (commands, step
+files, critic prompts, hooks, gates for Claude Code) fails when a model reads ambiguous text, loops
+without a cap, or claims success nothing checks. **A product agent** (an LLM call the product makes at
+runtime for its users) fails in front of customers: injected instructions, leaked data, unmeasured
+quality. `harness-engineer` owns the second kind and `agent-systems` the third; every other lens
+applies to all three.
 
 ## The lenses
 
@@ -25,8 +28,9 @@ gates) fails when a model reads ambiguous text, loops without a cap, or claims s
 | [[lazy-dev]] | an existing product, package, framework feature or config change does the job; over-engineering; the simplest plan that meets the stated need | the repo's own modules → codebase-fit · a one-way door that must be decided now → future-scope |
 | [[future-scope]] | one-way doors and cheap seams that an MVP usually drops (retention, idempotency, audit, analytics events, logging, flags) | speculative generality → lazy-dev wins · the seam's shape → solution-architect |
 | [[system-integration]] | the surface between two or more systems: contracts, data ownership, consistency, retries, versioning, deploy order | the inside of one system → solution-architect · caller authentication and abuse → security-architect |
-| [[security-architect]] | trust boundaries, the authorization model, data classification, secrets, attack surface, abuse cases, AI-agent tool permissions | a defect visible only in code → `personas/_shared/security.md` at diff review · contract ordering and failure → system-integration |
-| [[harness-engineer]] | a harness plan: deterministic code against model judgement, mechanical verification, context budget, loop and spawn caps, tool contracts | the literal handoff dry run → `personas/_shared/consumer.md` · system structure → solution-architect |
+| [[security-architect]] | trust boundaries, the authorization model, data classification, secrets, attack surface, abuse cases | a defect visible only in code → `personas/_shared/security.md` at diff review · contract ordering and failure → system-integration · the trust boundary of a product agent run → agent-systems |
+| [[harness-engineer]] | a developer harness plan: deterministic code against model judgement, mechanical verification, context budget, loop and spawn caps, tool contracts, and the untrusted-input check for harness agents | the literal handoff dry run → `personas/_shared/consumer.md` · system structure → solution-architect · an LLM call the product makes for its users → agent-systems |
+| [[agent-systems]] | a product agent: agent shape and caps, the trust boundary of each run, tool and MCP contracts, output validation, knowledge and retrieval, judge calibration, learning gates, run records and erasure | auth and secrets outside an agent run → security-architect · developer tooling → harness-engineer · the literal handoff dry run → consumer |
 | [[delivery-planner]] | the split into sessions: vertical slices, hardest part first, size, dependencies, acceptance commands, rollout and rollback per session | what each session builds → the lenses above · whether a prompt is usable → consumer |
 
 `consumer` and `skeptic` from `personas/_shared/` sit beside these lenses. On a planning panel

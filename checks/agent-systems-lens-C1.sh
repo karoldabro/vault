@@ -3,7 +3,8 @@
 set -uo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 [ -f "$root/personas/_shared/planning/agent-systems.md" ] || { printf 'agent-systems lens not written yet\n'; exit 1; }
-"$root/tests/run.sh" tests/unit/planning-personas.bats
+cd "$root" || exit 2
+./tests/run.sh tests/unit/planning-personas.bats
 rc=$?
 [ "$rc" -eq 0 ] && exit 0
 [ "$rc" -eq 2 ] && exit 2

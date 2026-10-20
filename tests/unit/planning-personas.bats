@@ -7,7 +7,7 @@ load "../helpers/setup.bash"
 setup() {
     export VAULT_ROOT="${VAULT_ROOT:-/code}"
     DIR="${VAULT_ROOT}/personas/_shared/planning"
-    LENSES="solution-architect codebase-fit lazy-dev future-scope system-integration security-architect harness-engineer delivery-planner"
+    LENSES="solution-architect codebase-fit lazy-dev future-scope system-integration security-architect harness-engineer agent-systems delivery-planner"
 }
 
 @test "planning group has a README with the group key" {
@@ -71,4 +71,31 @@ setup() {
     grep -q '~15' "${f}"
     grep -q '/v-ask' "${f}"
     grep -q '/v-do' "${f}" && grep -q '/v-work' "${f}" && grep -q '/v-team' "${f}"
+}
+
+@test "resolution seats agent-systems before harness-engineer and keeps agent tools off security-architect" {
+    local r="${VAULT_ROOT}/personas/_resolution.md" a h
+    a="$(grep -n '^   - `planning/agent-systems` when' "${r}" | cut -d: -f1)"
+    h="$(grep -n '^   - `planning/harness-engineer` when' "${r}" | cut -d: -f1)"
+    [ -n "${a}" ] && [ -n "${h}" ] && [ "${a}" -lt "${h}" ] || { echo "agent-systems ${a:-missing}, harness-engineer ${h:-missing}"; return 1; }
+    run grep -q 'AI agent with tools' "${r}"
+    [ "$status" -ne 0 ]
+}
+
+@test "only agent-systems names the trust-part rule and judge TPR among planning lenses" {
+    for p in ${LENSES}; do
+        [ "${p}" = agent-systems ] && continue
+        if grep -qiE 'trifecta|\bTPR\b' "${DIR}/${p}.md"; then echo "${p} still holds an agent-systems rule"; return 1; fi
+        # The three-part rule may stay only in harness-engineer, scoped to harness agents (README row).
+        [ "${p}" = harness-engineer ] && continue
+        if grep -qiE 'untrusted (input|content).{0,40}(outbound|sink)' "${DIR}/${p}.md"; then echo "${p} restates the three-part rule"; return 1; fi
+    done
+}
+
+@test "every planning id in a pack use_shared resolves to a lens file" {
+    for f in "${VAULT_ROOT}"/personas/*.md; do
+        for id in $(sed -n 's/^use_shared: \[\(.*\)\]$/\1/p' "${f}" | tr ',' ' '); do
+            case "${id}" in planning/*) [ -f "${DIR}/${id#planning/}.md" ] || { echo "${f}: ${id} has no file"; return 1; } ;; esac
+        done
+    done
 }

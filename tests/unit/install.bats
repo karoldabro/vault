@@ -35,7 +35,9 @@ teardown() {
     dirs="$(find "${VAULT_ROOT}/commands" -mindepth 1 -maxdepth 1 -type d ! -name attic | wc -l | tr -d ' ')"
     # Output styles are linked into a second tree by the same helpers.
     styles="$(find "${VAULT_ROOT}/output-styles" -maxdepth 1 -name '*.md' ! -name 'README.md' 2>/dev/null | wc -l | tr -d ' ')"
-    expected=$((files + dirs + styles))
+    # Skills are folders, linked into a third tree by the same helpers.
+    skills="$(find "${VAULT_ROOT}/skills" -mindepth 1 -maxdepth 1 -type d ! -name attic 2>/dev/null | wc -l | tr -d ' ')"
+    expected=$((files + dirs + styles + skills))
     run "${VAULT_ROOT}/install.sh"
     [ "$status" -eq 0 ]
     [[ "$output" == *"Linked:  0"* ]]
@@ -116,6 +118,23 @@ teardown() {
     [ "$status" -eq 0 ]
     [ -d "${HOME}/.claude/output-styles" ]
     assert_symlink_to "${HOME}/.claude/output-styles/director.md" "${VAULT_ROOT}/output-styles/director.md"
+}
+
+@test "install.sh links each skill folder into ~/.claude/skills/" {
+    run "${VAULT_ROOT}/install.sh"
+    [ "$status" -eq 0 ]
+    assert_symlink_to "${HOME}/.claude/skills/agent-shape" "${VAULT_ROOT}/skills/agent-shape"
+}
+
+@test "install.sh prunes a stale skill link and keeps the user's own" {
+    "${VAULT_ROOT}/install.sh" >/dev/null
+    ln -s "${VAULT_ROOT}/skills/agent-ghost" "${HOME}/.claude/skills/agent-ghost"
+    mkdir -p "${HOME}/mine"
+    ln -s "${HOME}/mine/gone" "${HOME}/.claude/skills/my-own"
+    run "${VAULT_ROOT}/install.sh"
+    [ "$status" -eq 0 ]
+    [ ! -L "${HOME}/.claude/skills/agent-ghost" ]
+    [ -L "${HOME}/.claude/skills/my-own" ]
 }
 
 @test "install.sh prunes a stale output-style symlink for a deleted source" {

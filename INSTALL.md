@@ -109,7 +109,7 @@ On a full install it runs the vendor `curl | sh` script for uv, and it prints ev
 A plugin install has nothing to relink: `/plugin update vault@kdabro-vault` swaps the whole thing.
 
 A symlink install needs `./install.sh` after `git pull`. It is safe to run repeatedly, overwrites nothing
-in `~/.claude/commands/` or `~/.claude/output-styles/` that is not already a symlink, and prunes links
+in `~/.claude/commands/`, `~/.claude/output-styles/` or `~/.claude/skills/` that is not already a symlink, and prunes links
 pointing at deleted sources.
 
 ### Turn on the `director` output style
@@ -177,6 +177,7 @@ hand, once. Symlink rather than copy, so both homes track the framework:
 W="$HOME/workspace/.claude-work"
 ln -s ~/.claude/commands      "$W/commands"        # if not already linked
 ln -s ~/.claude/output-styles "$W/output-styles"
+ln -s ~/.claude/skills        "$W/skills"
 ln -s ~/.claude/hooks         "$W/hooks"
 ```
 

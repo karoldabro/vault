@@ -1,0 +1,108 @@
+<title>2026-10-20-1934-agent-systems-lens — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
+</style>
+
+<main>
+<h1>2026-10-20-1934-agent-systems-lens — plan</h1>
+<h2>Task</h2>
+<p>Add a planning critic lens, <code>planning/agent-systems</code>, that reviews the design of LLM agents a product runs for its own users. Add eight plugin skills that teach how to build those agents. Store the research behind both as cited records in the framework repo <code>~/workspace/vault</code>.</p>
+<h2>Needs your decision</h2>
+<ul>
+<li>needs the operator: release a new plugin version by bumping <code>.claude-plugin/plugin.json</code>. Sessions read the cached plugin at <code>~/.claude/plugins/cache/kdabro-vault/vault/1.13.0</code>, so no session sees the lens or the skills before the release.</li>
+<li>needs the operator: run the follow-up <code>/v-team</code> in <code>~/workspace/recycling-api</code> that applies this lens to the support drafter. This plan builds the lens and does not diagnose the drafter.</li>
+</ul>
+<h2>File tree</h2>
+<pre><code>
+personas/_shared/planning/agent-systems.md                       new, plan critic for agents a product runs for its users
+personas/_shared/planning/README.md                              existing, three deliverable kinds; agent-systems row
+personas/_shared/planning/security-architect.md                  existing, hands product agent runs to agent-systems
+personas/_shared/planning/harness-engineer.md                    existing, scoped to developer harnesses
+personas/_resolution.md                                          existing, §2 and §2.3 seat agent-systems on a runtime LLM call
+personas/api-laravel.md                                          existing, use_shared gains planning/agent-systems
+skills/agent-shape/SKILL.md                                      new
+skills/agent-trust-boundaries/SKILL.md                           new
+skills/agent-tools-mcp/SKILL.md                                  new
+skills/agent-output-validation/SKILL.md                          new
+skills/agent-knowledge-context/SKILL.md                          new
+skills/agent-evals/SKILL.md                                      new
+skills/agent-self-improvement/SKILL.md                           new
+skills/agent-runtime-ops/SKILL.md                                new
+vault/research/v-pm-planning-lenses/agent-systems-architecture.md  new, research record
+vault/research/v-pm-planning-lenses/agent-systems-security.md      new, research record
+vault/research/v-pm-planning-lenses/agent-systems-quality.md       new, research record
+vault/_moc.md                                                    existing, one research line
+install.sh                                                       existing, links skills/ for symlink installs
+vault-guide.md                                                   existing, §11 names skills/
+INSTALL.md                                                       existing, names ~/.claude/skills/ and the second-home link
+tests/unit/install.bats                                          existing, idempotence count and skill link tests
+checks/agent-systems-lens-C1.sh                                  existing, runs planning-personas.bats
+checks/agent-systems-lens-C2.sh                                  existing, runs agent-skills.bats and agent-systems-c3.bats
+checks/agent-systems-lens-C3.sh                                  existing, parses one saved lens run
+tests/unit/planning-personas.bats                                existing, new lens, trigger, one owner per moved rule
+tests/unit/agent-skills.bats                                     new
+tests/unit/agent-systems-c3.bats                                 new
+tests/unit/plugin-install.bats                                   existing, skills/ at the plugin root
+tests/fixtures/agent-skills/                                     new, fail fixtures for skills and checklist links
+tests/fixtures/agent-systems-c3/                                 new, pass and fail fixtures for the C3 parser
+</code></pre>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    R["personas/_resolution.md"] -->|"trigger: runtime LLM call"| L["agent-systems.md"]
+    P["personas/api-laravel.md"] -->|"use_shared id"| L
+    L -->|"finding: confirmed or advisory"| S["v-team or v-pm synthesizer"]
+    L -->|"skill path per checklist item"| K["skills/agent-*/SKILL.md"]
+    K -->|"how-to text"| E["implementing session"]
+    D["vault/research/v-pm-planning-lenses/agent-systems-*.md"] -->|"source URLs"| L
+    D -->|"source URLs"| K
+</pre>
+<h2>Interfaces</h2>
+<ul>
+<li><code>agent-systems lens.critic spawn(plan: path, envelope: text): finding schema of commands/v-team/steps/03-propose-loop.md §(d)</code></li>
+<li><code>agent-* skill.Skill tool load(name: string): how-to text</code></li>
+<li><code>checks/agent-systems-lens-C3.sh.script(run: path): exit 0, 1 or 2</code></li>
+<li><code>tests/run.sh.bats file(file: path): exit code</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-10-20-1934-agent-systems-lens.md</code> · architecture spec: <code>2026-10-20-1934-agent-systems-lens.arch.md</code></p>
+</main>
