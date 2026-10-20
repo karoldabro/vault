@@ -346,7 +346,8 @@ hierarchy, health checks, fallbacks, and a worked example per tool.
 
 Commands arrive either as a Claude Code plugin (`/plugin marketplace add karoldabro/vault`, then
 `/plugin install vault@kdabro-vault`) or from `$VAULT_FRAMEWORK_PATH/install.sh`, which symlinks
-`commands/` into `~/.claude/commands/` and `output-styles/` into `~/.claude/output-styles/`. Pick one
+`commands/` into `~/.claude/commands/`, `output-styles/` into `~/.claude/output-styles/` and
+`skills/` into `~/.claude/skills/`. The plugin install loads `skills/` from the plugin root. Pick one
 mode; running both installs every command twice. All commands assume the tools in §10.
 
 **How every command writes to you:** `commands/_shared/communication.md`, bound at the top of each

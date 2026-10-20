@@ -60,6 +60,8 @@ packs default 4** — see §2.2):
 - **Add the 1–2 lenses the change most implicates** — derive from the Step-1 keywords / impact scope:
   auth·tenant·permission·upload → `security`; query·index·list·job·report → `performance`;
   refactor·duplication·new-module → `quality`; contract·endpoint·filter·response → integration architect.
+  On a PROPOSE panel only, a pack whose `use_shared` lists `planning/agent-systems` seats it when the
+  §2.3 agent-systems condition holds.
 - **`skeptic`: add only on high-risk changes** — auth, billing/payments, migrations, multi-tenant
   boundaries, deletion/data-loss paths, or anything touching a coupled-repo contract.
 - If selection would exceed the cap, keep architect + the highest-relevance lenses; note the dropped
@@ -154,11 +156,14 @@ precedence live in `personas/_shared/planning/README.md`.
 
 1. **Always seated:** `planning/solution-architect`, `planning/lazy-dev`, `consumer`.
 2. **Seated on a trigger, in this priority order:**
-   - `planning/harness-engineer` when the deliverable is commands, prompts, agents, hooks, gates or
-     tool definitions, or the repo's `VAULT.md` declares `arch_profile: harness`;
+   - `planning/agent-systems` when the product makes an LLM call at runtime for its users: a prompt,
+     tool, MCP surface, retrieval, judge or learning loop that runs in the product, not in Claude Code;
+   - `planning/harness-engineer` when the deliverable is developer tooling for Claude Code: commands,
+     step files, critic prompts, hooks, gates or tool definitions, or the repo's `VAULT.md` declares
+     `arch_profile: harness`;
    - `planning/system-integration` when two or more systems, repos or external services are in scope;
    - `planning/security-architect` on auth, permissions, personal data, payments, a public endpoint,
-     an upload, a webhook, or an AI agent with tools;
+     an upload or a webhook;
    - `planning/delivery-planner` when the plan has two or more sessions;
    - `planning/codebase-fit` when the plan changes an existing repo rather than starting one;
    - `planning/future-scope` when the plan stores new data or exposes a new contract;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Install vault framework commands into ~/.claude/commands/ and output styles into
-# ~/.claude/output-styles/.
+# Install vault framework commands into ~/.claude/commands/, output styles into
+# ~/.claude/output-styles/ and skills into ~/.claude/skills/.
 # Idempotent. Refuses to overwrite non-symlink files.
 #
 # Usage:  install.sh [--enable-style] [--enable-doc-lint] [--enable-brevity] [--enable-gate] [--enable-all]
@@ -58,6 +58,8 @@ TARGET_DIR="${HOME}/.claude/commands"
 COMMANDS_DIR="${VAULT_ROOT}/commands"
 STYLES_TARGET_DIR="${HOME}/.claude/output-styles"
 STYLES_DIR="${VAULT_ROOT}/output-styles"
+SKILLS_TARGET_DIR="${HOME}/.claude/skills"
+SKILLS_DIR="${VAULT_ROOT}/skills"
 HOOKS_TARGET_DIR="${HOME}/.claude/hooks"
 
 # The hooks this framework ships, as data. Adding one is a row here, not five edits scattered
@@ -163,6 +165,13 @@ fi
 # forever. prune_stale is a no-op when the target dir is absent, and the src_prefix guard keeps
 # a user's own symlinks safe.
 prune_stale "${STYLES_DIR}" "${STYLES_TARGET_DIR}"
+
+# Skills (e.g. skills/agent-shape/ → ~/.claude/skills/agent-shape). Each skill is a folder, so
+# link_tree links the folders; pruned unconditionally for the same reason as output styles.
+if [ -d "${SKILLS_DIR}" ]; then
+    link_tree "${SKILLS_DIR}" "${SKILLS_TARGET_DIR}" "README.md" "attic"
+fi
+prune_stale "${SKILLS_DIR}" "${SKILLS_TARGET_DIR}"
 
 # Link every shipped hook. Linking is not activating: registering a hook means editing
 # settings.json, which happens below and only behind a flag.

@@ -2,7 +2,7 @@
 type: persona-pack
 pack: api-laravel
 project_type: api-laravel
-use_shared: [security, performance, quality, skeptic]
+use_shared: [security, performance, quality, skeptic, planning/agent-systems]
 tags: [persona-pack, laravel, api]
 ---
 
