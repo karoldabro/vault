@@ -1,0 +1,116 @@
+<title>2026-10-24-1903-v-cr-abstract-review — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
+</style>
+
+<main>
+<h1>2026-10-24-1903-v-cr-abstract-review — plan</h1>
+<h2>Task</h2>
+<p><code>/v-cr</code> seats five single-task reviewers, each owning one question no linter answers. A relation map of the change, built by the new <code>bin/change-map.sh</code>, feeds each reviewer.</p>
+<h2>Needs your decision</h2>
+<ul>
+<li>needs the operator: run <code>/v-cr --no-post</code> on one real pull request after C3 is MET. C3 runs the seats on local fixtures, and no forge path runs in this session.</li>
+</ul>
+<h2>File tree</h2>
+<pre><code>
+bin/change-map.sh                                  new, builds, slices and summarizes the relation map of a change
+personas/_shared/review/README.md                  new, the /v-cr review group: seats, boundaries, evidence table
+personas/_shared/review/change-impact.md           new, callers and referrers the change leaves wrong
+personas/_shared/review/test-gap.md                new, changed behaviour with no test, tests that pass for the wrong reason
+personas/_shared/review/architecture-fit.md        new, layering, dependency direction, placement, contract changes
+personas/_shared/review/pattern-conformance.md     new, does the change follow how this repo already does the same job
+personas/_shared/review/intent-trace.md            new, each task requirement against the diff
+personas/_shared/correctness.md                    existing, gains the map key and an intent-trace boundary
+personas/_shared/quality.md                        existing, gains a pattern-conformance boundary
+personas/_persona-template.md                      existing, documents the map key
+personas/_shared/testing/README.md                 existing, test-gap boundary
+personas/_resolution.md                            existing, adds the /v-cr seat rule
+commands/_shared/critic-panel.md                   existing, caller seat rule, map input, context row, evidence pointer
+commands/v-cr/steps/01-detect.md                   existing, resolves the head ref for the map
+commands/v-cr/adapters.md                          existing, fetch_ref caller cell
+commands/v-cr/steps/02-gather.md                   existing, builds and scrubs the relation map
+commands/v-cr/steps/03-review.md                   existing, seats the review group and slices the map
+commands/v-cr/steps/05-capture.md                  existing, records map counts
+commands/v-cr.md                                   existing, one line naming the review group and the map
+tests/fixtures/v-cr-seeded/mk-repo.sh              new, seeded and clean fixture repos
+tests/unit/change-map.bats                         new, T1-T12
+tests/unit/review-personas.bats                    new, T13-T16
+tests/unit/v-cr.bats                               existing, T17-T21
+tests/unit/cr-coverage.bats                        existing, retargeted test-file ownership guard
+tests/unit/v-cr-abstract-review-c3.bats            new, T22
+tests/fixtures/v-cr-abstract-review-c3/            new, scorer fixtures
+checks/v-cr-abstract-review-C1.sh                  new, runs tests/unit/change-map.bats
+checks/v-cr-abstract-review-C2.sh                  new, runs the group and wiring tests
+checks/v-cr-abstract-review-C3.sh                  new, scores the saved runs against rebuilt fixtures
+checks/v-cr-abstract-review-C4.sh                  new, pins the rule-line count
+docs/reviewer-packs.md                             existing, review group row
+vault/indications/cr-panel-spawn-and-visibility.md existing, Spawned example
+vault/decisions/ADR-035-v-cr-single-task-review-seats.md   new, the decision record
+vault/decisions/_inventory.md                      existing, ADR-035 row
+vault/features/v-cr.md                             existing, seats and map behaviours
+</code></pre>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    D["01-detect.md §1.6"] -->|"head ref: refs/vcr/n"| G["02-gather.md §2.4a"]
+    G -->|"base, head refs"| M["bin/change-map.sh build"]
+    M -->|"map rows: TSV file"| R["03-review.md §3.1"]
+    P["personas/_shared/review/*.md"] -->|"map: relation list"| S["bin/change-map.sh slice"]
+    R -->|"map file, persona file, chunk paths"| S
+    S -->|"seat slice: TSV"| C["critic-panel.md (c) spawn"]
+    RES["_resolution.md §2.4"] -->|"seat list"| C
+    C -->|"findings, receipts"| V["critic-panel.md (e) verify"]
+    EV["review/README.md evidence table"] -->|"confirm rules"| V
+    V -->|"comment set"| POST["04-post.md"]
+    M -->|"map file"| ST["bin/change-map.sh status"]
+    ST -->|"coverage lines"| CAP["05-capture.md coverage block"]
+</pre>
+<h2>Interfaces</h2>
+<ul>
+<li><code>bin/change-map.sh.build(repo: path, base: ref, head: ref): six-field rows of the plan's Map row contract on stdout, then one `map-status` line; exit 0</code>, throws <code>exit 2: repo is not a git repo, or a ref is not a commit</code></li>
+<li><code>bin/change-map.sh.slice(map: path, persona: path, paths: path): the `map-status` line, then the rows whose relation the persona's `map:` key lists, cut at `VCR_SLICE_BYTES` with a `withheld: &lt;n&gt; rows` line; exit 0</code>, throws <code>exit 2: the map is unreadable, or the persona has no `map:` key</code></li>
+<li><code>bin/change-map.sh.status(map: path): `map_status:` and one `map_&lt;relation&gt;:` line per relation for the coverage block; exit 0</code>, throws <code>exit 2: the map has no `map-status` line</code></li>
+<li><code>personas/_shared/review/&lt;seat&gt;.md.frontmatter(id: string, base_agent: string, map: list): the persona block and its map relations</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-10-24-1903-v-cr-abstract-review.md</code> · architecture spec: <code>2026-10-24-1903-v-cr-abstract-review.arch.md</code></p>
+</main>
