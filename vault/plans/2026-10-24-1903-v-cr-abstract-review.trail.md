@@ -97,6 +97,17 @@ Same seats. Verdicts: REQUEST_CHANGES ×3. Round-0 findings honoured except harn
 | fit-r1-7 | NIT | confirmed | ADR-033 shape has a Superseded clauses section | applied: W27 |
 | fit-r1-8 | NIT | confirmed | human page missing | applied at the approval gate |
 
+### Execute — 2026-10-24
+
+- Tests T1–T12 were written after `bin/change-map.sh`, then proven to fail: all 12 failed against a stub that prints only `map-status`.
+- `tests/unit/v-cr.bats` T17–T21 were appended with a shell heredoc, against `commands/v-work/steps/04-execute.md` §4.2.
+- C3 seeded run: all four planted findings found by their owning seats (change-impact, test-gap, pattern-conformance; intent-trace also caught the missing tests). architecture-fit also flagged the stale caller, so its mandate was narrowed to contract changes the repo's records forbid.
+- C3 first control run failed on a real fixture gap: `bin/report.sh` had no test and accepted a missing unit (test-gap, confirmed MAJOR). The control fixture gained a guard and `tests/report.bats`, and the five control seats ran again; the second control run has no confirmed BLOCKER or MAJOR. First-run blocks: session scratchpad `c3/out-b1/`.
+- Code review round 1 (`deploy-review-panel`, the no-pack fallback) confirmed four MAJORs in `bin/change-map.sh`: lost `git grep` failures, deleted files without callers, colon and non-ASCII paths, and an unfetched base ref. It also found a Python call read as a definition, slow siblings, a build failure that stopped the review, and a T10 that could pass on an error. All were fixed and T23–T27 added. Report: session scratchpad `code-review.md`.
+- Code review round 2 confirmed M1–M3, W2–W4 and S1–S6 fixed. It found two new MAJORs in the step files. The `Local match: yes` path had no base ref. A changed-path mismatch check in step 2 §2.4a dropped correct maps on renames and unreferenced files. Both were fixed, the check removed. Paths with a quote or backslash now go through `-z`. A moved file is no longer its own caller, and T28 covers both. The review cap was reached, so these last fixes have no third review. Report: session scratchpad `code-review-r2.md`.
+- The container's awk is busybox, which ends a record at NUL; `git grep -z` output is turned into tabs with `tr` before awk.
+- Full suite: 7 failing tests now, all failing on `92f56f7` as well; one test failing there passes now.
+
 ## Metrics
 
 | round | confirmed BLOCKER/MAJOR new | advisory | previously-confirmed dropped |

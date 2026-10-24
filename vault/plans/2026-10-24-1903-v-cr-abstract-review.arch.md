@@ -146,7 +146,7 @@ flowchart LR
 
 | path | max lines |
 |------|-----------|
-| bin/change-map.sh | 280 |
+| bin/change-map.sh | 300 |
 | personas/_shared/review/README.md | 90 |
 | personas/_shared/review/pattern-conformance.md | 80 |
 | personas/_shared/review/architecture-fit.md | 80 |

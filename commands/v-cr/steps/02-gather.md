@@ -30,6 +30,10 @@ People paste tokens into review threads, and a comment body now reaches both a c
 §5.3's learning loop — a git-tracked vault file. An unscanned comment is the shortest path from a
 pasted token to a committed one.
 
+**Relation-map excerpts are the third scanned input.** `bin/change-map.sh build` (§2.4a) quotes repo
+lines from outside the diff, and it passes every row through the same `cr_redact_runtime` scrub before
+any seat sees it.
+
 ## 2.3 Extract + fetch the linked task (skeptic-4)
 ```bash
 source "$VAULT_FRAMEWORK_PATH/lib/cr-helpers.sh"
@@ -97,8 +101,23 @@ loading nothing is not the safe default, it is a silent hole in the review.
 Serena symbols, a grep over local source, the project `CLAUDE.md`. Otherwise **skip them and say so** — do
 not load a different checkout's structure and pass it off as the PR's.
 
-**If no persona pack resolves** for the base repo, FAIL LOUDLY now: tell the user the review will run the
-generic fallback (single lens), not the project panel. Never silently degrade.
+**If no persona pack resolves** for the base repo, say so now: the five review seats of
+`personas/_resolution.md` §2.4 still run, without the stack architect overlay or the pack's analyzers.
+
+## 2.4a Build the relation map
+Each review seat gets its slice of the change's relation map. Build it once, here, from the head ref step 1
+§1.6 resolved: the local head when `Local match: yes`, or `refs/vcr/<n>` otherwise. Under `--sandbox`,
+build it after §2.6, in the sandbox clone. Carry `$CR_MAP` (the output path), `$CR_MAP_REPO` (the repo it was built in) and
+`$CR_HEAD` (the head ref) to step 3.
+```bash
+"$VAULT_FRAMEWORK_PATH/bin/change-map.sh" build --repo "$CR_MAP_REPO" --base "$PROBE_BASE" --head "$CR_HEAD" > "$CR_MAP" \
+    || { rc=$?; rm -f "$CR_MAP"; echo "Map: not built, change-map exited $rc"; }
+```
+`PROBE_BASE` is `git merge-base <base ref> <head ref>`. The base ref is the local base branch when
+`Local match: yes`, `refs/vcr/<n>-base` when step 1 fetched it, and the clone's base under `--sandbox`.
+The script reads git objects only and runs no repo code. A nonzero exit removes `$CR_MAP`, so a half-written
+file never reaches step 3. No `$CR_MAP`, or a `Map: not built` reason carried from step 1, means no map:
+print the reason, and step 3 runs the seats on the diff alone.
 
 ## 2.5 Fetch the existing-comment suppression set (arch-6)
 List the PR's existing comments via the adapter; collect every `<!-- v-cr:fp=… -->` fingerprint already
@@ -131,7 +150,8 @@ clone even when step-1 `local-match` was no — note that they ran against the s
 ```
 Diff: <n files, +a/-b, c changed lines>  ·  secrets: <none | N redacted (warned)>
 Task: <JIRA-KEY / asana:GID / #N "summary"> | none
-Vault: <pack resolved | GENERIC FALLBACK>  ·  layers: [vault-only | + serena/source/CLAUDE.md]
+Vault: <pack resolved | no pack: seats run without overlays>  ·  layers: [vault-only | + serena/source/CLAUDE.md]
+Map: <line one of `bin/change-map.sh status --map "$CR_MAP"` | not built, <reason>>
 Rules: <r> index rows (<scope <surface>+cross-repo | scope filter: n/a>)  ·  <b> bodies fetched
 Routing: <a> routed  ·  <m> no-match  ·  <u> unroutable   # cr_rule_route -> $CR_RULE_ROUTES
 Suppression set: <n prior v-cr fingerprints>  (<m> threads have human replies)

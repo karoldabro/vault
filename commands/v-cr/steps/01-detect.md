@@ -63,16 +63,28 @@ Fork/public: <yes|no>                         # drives the egress policy (steps 
 Local match: <local HEAD == PR repo/branch? yes|no>   # gates local-only context (step 2)
 ```
 
-## 1.6 Resolve the fetchable ref — only under `--sandbox`
-The isolated-execution path (`commands/v-cr/sandbox.md`) needs a **fetchable git ref** for the PR head.
-Resolve it through the adapter `fetch_ref` op (forge-agnostic; see `adapters.md`), never hard-coded here:
+## 1.6 Resolve the fetchable ref
+Two consumers need a **fetchable git ref** for the PR head: the relation map (step 2 §2.4a) on every run,
+and the isolated-execution path (`commands/v-cr/sandbox.md`) under `--sandbox`. Resolve it through the
+adapter `fetch_ref` op (forge-agnostic; see `adapters.md`), never hard-coded here:
 - **GitHub** → `refs/pull/<n>/head` (guaranteed, incl. fork heads).
 - **Bitbucket Cloud/Server** → capability-probed (`git ls-remote`); PR refs are admin-gated and a fork is
   a separate repo, so the op may return **`unsupported`**.
 
-If `fetch_ref` returns `unsupported` (or the host trust gate would forbid the fetch), **refuse
-`--sandbox`, fall back to API-only review, and state the reason** — never materialize/run a tree that is
-not provably the PR's. (Without `--sandbox`, skip this section entirely.)
+**For the map, without `--sandbox`:** when `Local match: yes`, use the local head and fetch nothing.
+Otherwise fetch only into a local repo that has a remote whose URL names the base `<owner>/<repo>`, under
+the host trust gate: `git fetch <remote> +<ref>:refs/vcr/<n> +refs/heads/<base branch>:refs/vcr/<n>-base`.
+The base comes along so the map compares against the PR's own base, not a stale local branch. The fetch
+writes objects and two refs; it touches no working tree, index or branch, and no repo code runs, so
+`sandbox.md` S2 still holds. Arm the deletion `git update-ref -d refs/vcr/<n>` and
+`git update-ref -d refs/vcr/<n>-base` now; step 5 runs both, and a run that stops before step 5 runs both
+before it reports the stop.
+No such repo → carry `Map: not built, no local clone of <owner>/<repo>`. `unsupported` or a failed fetch →
+carry `Map: not built, <reason>`. The review continues on the diff alone.
+
+**Under `--sandbox`:** if `fetch_ref` returns `unsupported` (or the host trust gate would forbid the
+fetch), **refuse `--sandbox`, fall back to API-only review, and state the reason** — never
+materialize/run a tree that is not provably the PR's.
 
 ## Required output
 ```

@@ -2,6 +2,7 @@
 type: persona
 id: correctness
 base_agent: root-cause-analyst
+map: [caller]
 tags: [persona, shared]
 ---
 
@@ -48,4 +49,5 @@ available → reason over the diff, mark unconfirmed findings `advisory`.
 Per `commands/_shared/critic-panel.md` §d. Confirmed findings only may be BLOCKER/MAJOR — a BLOCKER must
 show the failing input/path. ≤3 proposed tests, favouring the boundary / null / error-path scenarios it
 surfaced. Decorrelation: behaviour-of-the-diff (this lens) vs assumptions-of-the-plan ([[skeptic]]) vs
-cleanliness ([[quality]]) vs exploitability ([[security]]).
+cleanliness ([[quality]]) vs exploitability ([[security]]). On `/v-cr` the task's acceptance criteria
+belong to `review/intent-trace`, so this lens judges only behaviour.

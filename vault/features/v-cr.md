@@ -32,9 +32,14 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
   `cr_anchor_check`, `cr_rule_coverage`).
 - Indication routing: `bin/indication-route-audit.sh` reports one project index as routable /
   unroutable; rule: [[../indications/rules-routed-not-recalled]].
-- Persona: `personas/_shared/correctness.md`; selection wired in `personas/_resolution.md` §2.
+- Seats: the five lenses of `personas/_shared/review/` (change-impact, test-gap, architecture-fit,
+  pattern-conformance, intent-trace), selected by `personas/_resolution.md` §2.4; `correctness` and
+  `security` join on triggers. Evidence rules: the table in `personas/_shared/review/README.md`.
+  Decision: [[../decisions/ADR-035-v-cr-single-task-review-seats]].
+- Relation map: `bin/change-map.sh build|slice|status` (row contract in its header); each persona's
+  frontmatter `map:` key names its slice. Built in step 2 §2.4a from the head ref step 1 §1.6 resolves.
 - Tests: `tests/unit/forge-detect.bats`, `tests/unit/v-cr.bats`, `tests/unit/cr-coverage.bats`,
-  `tests/unit/cr-rule-routing.bats`.
+  `tests/unit/cr-rule-routing.bats`, `tests/unit/change-map.bats`, `tests/unit/review-personas.bats`.
 - Config (user/global env): `VCR_HOST_MAP` (self-hosted host→platform), `VCR_JIRA_PROJECTS` (Jira-key
   allowlist), `VCR_MAX_TOKENS`, `--max-comments`, `--post`, `--unpost`.
 - Decision: [[../decisions/ADR-008-v-cr-remote-pr-review]].
@@ -65,9 +70,22 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
   every review of a prose-heavy index and lose the operator's attention.
 - The unexamined set is non-empty → step 4's gate demands fresh confirmation and the summary names the
   paths; edge: the operator may accept the gap, recorded as `coverage_accepted`.
-- One testing critic owns every changed test file → its receipt lists each one and §3.6 reports
-  unexamined test files as their own count; edge: `personas/_resolution.md` §2.1 seats only one, so
-  per-file assignment is unavailable.
+- `review/test-gap` owns every changed test file → its receipt lists each one and §3.6 reports
+  unexamined test files as their own count; edge: the testing group joins only as `--sandbox` evidence.
+- A seat receives only the map relations its `map:` key lists → `bin/change-map.sh slice` prints
+  `map-status` first and `withheld: <n> rows` when `VCR_SLICE_BYTES` cut it; edge: a missing `map:` key
+  exits 2 and stops the review, `map: []` receives the status line only.
+- A changed function's body changes → its enclosing definition becomes a changed symbol and every
+  whole-word use at head is a `caller` row; edge: a removed definition is read from base, so its
+  remaining callers still appear.
+- A file changed with a partner in ≥3 commits at confidence ≥0.5 and the partner is not in the diff →
+  a `co-change` row; edge: commits over `VCR_MAP_MAX_COMMIT_FILES` (30) add no support, and a co-change
+  row grounds advisory findings only.
+- Without `--sandbox` and with no local match → step 1 fetches `+<ref>:refs/vcr/<n>` into a local repo
+  whose remote names the base repo, and step 5 deletes the ref; edge: no such repo prints
+  `Map: not built, no local clone of <owner>/<repo>` and the seats run on the diff alone.
+- A cross-file finding → `target` is the changed line, the off-diff `path:line` goes in `check`, and the
+  file read in full is a `context` receipt row; edge: a forge refuses inline comments outside the diff.
 
 ## Gotchas
 - **Idempotency fingerprint = `sha256(file:rule:code_hash)`** — never the LLM message (non-deterministic)

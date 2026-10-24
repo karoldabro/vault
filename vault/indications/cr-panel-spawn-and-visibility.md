@@ -34,7 +34,7 @@ executing attacker PR code is opt-in, [[../decisions/ADR-009-v-cr-sandboxed-exec
 unless the posture is surfaced. Long comments bury the actionable signal.
 
 ## Examples
-- Do: `Spawned: [Software Architect → backend-architect, correctness → Explore, security → security-engineer]`,
+- Do: `Spawned: [change-impact → root-cause-analyst, test-gap → quality-engineer, architecture-fit → system-architect, pattern-conformance → refactoring-expert, intent-trace → requirements-analyst]`,
   then `Coverage: 12 changed · 3 with findings · 7 examined clean · 2 NOT EXAMINED` naming the two
   paths, and `Tests: not executed (static review only — re-run with --sandbox to gate on tests)`.
 - Don't: present three persona verdicts that were reasoned inline with no `Agent` calls; emit a summary
