@@ -109,5 +109,6 @@ pushes, or applies), webhook/CI auto-trigger (CLI on-demand only in v0), whole-r
 - [[../sessions/2026-06-19-1132-v-cr-code-review-command]] — designed + built via /v-team design panel
 - [[../sessions/2026-06-19-1605-v-cr-panel-spawn-coverage-brevity]] — enforce real panel spawn, surface coverage + test posture, tighten comments
 - [[../sessions/2026-09-01-1000-vcr-delivery-and-coverage]] — verify comment delivery on the forge, record coverage durably
+- [[../sessions/2026-10-24-1903-v-cr-abstract-review]] — five single-task review seats fed by a relation map of the change
 - [[../sessions/2026-09-01-1930-vcr-coverage-receipts]] — compute coverage from per-file critic receipts; wire cr_diff_stats
 - [[../sessions/2026-09-09-1204-indication-routing-and-anchor-verification]] — route indications to the diff, verify every citation, print what was checked
