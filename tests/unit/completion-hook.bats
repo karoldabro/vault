@@ -145,3 +145,45 @@ BROKEN
     run fire false
     [ "$status" -eq 2 ]
 }
+
+# transcript_line <tool> <file_path> — one assistant tool_use record as Claude Code writes it.
+transcript_line() {
+    printf '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"%s","input":{"file_path":"%s"}}]}}\n' "$1" "$2"
+}
+
+fire_with_transcript() {
+    printf '{"stop_hook_active":false,"cwd":"%s","transcript_path":"%s"}' "${TMP}" "${TMP}/s.jsonl" | "${HOOK}"
+}
+
+@test "does not block on a plan only a parallel session wrote" {
+    write_plan DONE
+    transcript_line Edit "${TMP}/other.md" > "${TMP}/s.jsonl"
+    run fire_with_transcript
+    [ "$status" -eq 0 ]
+}
+
+@test "blocks on a plan this session edited" {
+    write_plan DONE
+    transcript_line Edit "${TMP}/vault/plans/p.md" > "${TMP}/s.jsonl"
+    run fire_with_transcript
+    [ "$status" -eq 2 ]
+}
+
+@test "blocks on a plan one of this session's subagents wrote" {
+    write_plan DONE
+    : > "${TMP}/s.jsonl"
+    mkdir -p "${TMP}/s/subagents"
+    transcript_line Write "${TMP}/vault/plans/p.md" > "${TMP}/s/subagents/agent-a.jsonl"
+    run fire_with_transcript
+    [ "$status" -eq 2 ]
+}
+
+@test "a plan path that is only read or quoted does not make the plan this session's" {
+    write_plan DONE
+    {
+        transcript_line Read "${TMP}/vault/plans/p.md"
+        printf '{"type":"user","message":{"content":"Stop hook error: Plan: %s"}}\n' "${TMP}/vault/plans/p.md"
+    } > "${TMP}/s.jsonl"
+    run fire_with_transcript
+    [ "$status" -eq 0 ]
+}
