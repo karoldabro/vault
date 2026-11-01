@@ -15,6 +15,10 @@ reports findings the analyzer (or a concrete check) can confirm. The persona *in
 it does not replace it. Prefer **verifier asymmetry**: exercise a verification affordance the drafter
 didn't — run the check, execute the query, replay the flow ([[ADR-017-evidence-based-panel-hardening]]).
 
+Optional frontmatter `map: [<relation>, …]` names the relation-map rows this persona receives on a `/v-cr`
+review. `bin/change-map.sh slice` reads it; the relations are `referenced-by`, `references`, `caller`,
+`test`, `co-change` and `sibling`, and `map: []` receives only the status line.
+
 ## base_agent
 The Claude Code agent this persona is spawned as (from the v-work roster in
 `commands/v-work/steps/03-propose.md` §3a.3). Fallback: generic `Explore` agent with this block as the

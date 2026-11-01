@@ -38,6 +38,7 @@ tags: [moc]
 - Testing critic group — `personas/_shared/testing/` (6 lenses for AI-written tests); see [[indications/testing-persona-group]]
 
 ## Sessions (recent)
+- [[sessions/2026-10-24-1903-v-cr-abstract-review]] — /v-cr seats five single-task reviewers fed by a relation map of the change
 - [[sessions/2026-10-20-1934-agent-systems-lens]] — agent-systems planning lens and eight agent skills
 - [[sessions/2026-10-18-1257-quality-loops]] — Split EXECUTE into implement, code-review and testing loops; add the plugin check point
 - [[sessions/2026-10-12-1042-v-pm-planning-loop]] — Rework /v-pm into a read-only planner with a planning-reviewer panel and a session split

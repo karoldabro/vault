@@ -413,7 +413,8 @@ cov_fixture() {
 }
 
 @test "the testing critic owns every changed test file and reports its own gap count" {
-    grep -qi 'owns every changed test file' /code/commands/v-cr/steps/03-review.md
+    grep -qi 'owns every changed test file' /code/personas/_shared/review/test-gap.md
+    grep -qi 'passes for the wrong reason\|pass for the wrong reason' /code/personas/_shared/review/test-gap.md
     grep -qi 'unexamined test files' /code/commands/v-cr/steps/03-review.md
 }
 

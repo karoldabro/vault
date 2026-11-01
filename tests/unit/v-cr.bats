@@ -307,3 +307,55 @@ setup() {
     grep -q 'Probes: sandbox ran' /code/commands/v-cr/steps/03-review.md
     ! grep -q -- '--allow-repo-registry' /code/commands/v-cr/steps/03-review.md
 }
+
+# --- review seats and the relation map (vault/plans/2026-10-24-1903-v-cr-abstract-review.md T17-T21) ---
+
+flat() { tr '\n' ' ' < "$1" | tr -s ' '; }
+
+@test "T17: the shared panel defers to the review evidence table, takes the map as untrusted input, and widens context" {
+    local f=/code/commands/_shared/critic-panel.md
+    flat "$f" | grep -q 'evidence table in `personas/_shared/review/README.md`'
+    flat "$f" | grep -q 'relation map'
+    flat "$f" | grep -q 'untrusted input and is fenced like the diff'
+    grep -q '| `context` | a file read in full from outside the changeset: a subject-under-test or a relation-map target |' "$f"
+    flat "$f" | grep -q 'A `/v-cr` caller seats the review group by §2.4'
+}
+
+@test "T18: step 1 fetches the head ref outside --sandbox into a named repo; step 2 builds and scrubs the map" {
+    local d=/code/commands/v-cr/steps/01-detect.md g=/code/commands/v-cr/steps/02-gather.md
+    flat "$d" | grep -q 'fetch only into a local repo that has a remote whose URL names the base `<owner>/<repo>`'
+    grep -q '+<ref>:refs/vcr/<n>' "$d"
+    grep -q 'Map: not built, no local clone of <owner>/<repo>' "$d"
+    flat "$d" | grep -q 'git update-ref -d refs/vcr/<n>'
+    grep -q '^## 2.4a Build the relation map' "$g"
+    grep -q 'change-map.sh" build --repo' "$g"
+    flat "$g" | grep -q 'Relation-map excerpts are the third scanned input'
+    grep -q 'for the relation map and for `--sandbox`' /code/commands/v-cr/adapters.md
+}
+
+@test "T19: resolution 2.4 seats the five lenses in order with only correctness and security joining" {
+    local f=/code/personas/_resolution.md
+    grep -q '^### 2.4 `/v-cr` review seats' "$f"
+    flat "$f" | grep -q '`review/change-impact`, `review/test-gap`, `review/architecture-fit`, `review/pattern-conformance`, `review/intent-trace`'
+    flat "$f" | grep -q 'intent-trace\*\* seats only when step 2 fetched a task or the PR body is non-empty'
+    flat "$f" | grep -q 'Two lenses may join, and no other:\*\* `correctness`'
+    flat "$f" | grep -q 'never replaces change-impact or test-gap'
+    flat "$f" | grep -q 'The cap is five seats'
+    flat "$f" | grep -q '`/v-cr` uses none of this section, §2.1 or the cap: it seats by §2.4'
+}
+
+@test "T20: step 3 slices the map per seat and no longer restates critic selection" {
+    local f=/code/commands/v-cr/steps/03-review.md
+    grep -q 'change-map.sh" slice --map "$CR_MAP" --persona' "$f"
+    flat "$f" | grep -q 'Seat the review group by `personas/_resolution.md` §2.4'
+    ! flat "$f" | grep -q 'bug-hunter lens + `skeptic` on high-risk diffs'
+    flat "$f" | grep -q 'Give every `applies` row to `review/architecture-fit`'
+    flat "$f" | grep -q 'cite its `path:line` and never quote it'
+}
+
+@test "T21: step 5 records the map from status, and the dispatcher names the review group" {
+    grep -q 'bin/change-map.sh status --map "$CR_MAP"' /code/commands/v-cr/steps/05-capture.md
+    grep -q 'map_status:' /code/commands/v-cr/steps/05-capture.md
+    grep -q 'personas/_shared/review/' /code/commands/v-cr.md
+    grep -q 'bin/change-map.sh' /code/commands/v-cr.md
+}
