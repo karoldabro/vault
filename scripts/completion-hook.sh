@@ -61,25 +61,29 @@ fi
 [ -n "$vault" ] || vault="${cwd}/vault"
 [ -d "${vault}/plans" ] || exit 0
 
-# The session's plan is the most recently touched approved one THAT THIS SESSION TOUCHED. A vault
-# shared by a coupled group carries plans from every repo in it; without the mtime floor the hook
-# picks whichever plan anyone wrote last and holds this session to work it never did.
+# The session's plan is the most recently touched approved one THIS SESSION WROTE: a Write, Edit or
+# MultiEdit tool call on its path, in the session's transcript or one of its subagents' transcripts.
+# Parallel sessions share a vault, and a coupled group shares one across repos, so a plan's mtime
+# says only that someone wrote it. Reads do not count, and neither does a path quoted in text: this
+# hook's own refusal names the plan, and counting that would make one false block permanent.
 #
-# The floor is the transcript's birth time. A filesystem reporting none leaves %W at 0; then there
-# is no floor and every approved plan stays a candidate, which is the wider, older behaviour.
+# With no readable transcript, or no jq to read it, every approved plan stays a candidate.
 transcript="$(hook_json_field "$payload" '.transcript_path // empty')"
-floor=0
-if [ -n "$transcript" ] && [ -e "$transcript" ]; then
-    floor="$(stat -c %W "$transcript" 2>/dev/null || printf '0')"
-    [ "$floor" -gt 0 ] 2>/dev/null || floor=0
+written=''
+if [ -n "$transcript" ] && [ -r "$transcript" ] && command -v jq >/dev/null 2>&1; then
+    written="$(cat "$transcript" "${transcript%.jsonl}"/subagents/*.jsonl 2>/dev/null \
+        | jq -r 'select(.type == "assistant") | .message.content[]?
+                 | select(.type == "tool_use" and (.name == "Write" or .name == "Edit" or .name == "MultiEdit"))
+                 | .input.file_path // empty' 2>/dev/null \
+        | xargs -r -d '\n' readlink -f 2>/dev/null | sort -u)"
+    [ -n "$written" ] || written=$'\n'   # a transcript that wrote no file owns no plan
 fi
 
 plan=''
 while IFS= read -r candidate; do
     [ -n "$candidate" ] || continue
-    if [ "$floor" -gt 0 ]; then
-        touched="$(stat -c %Y "$candidate" 2>/dev/null || printf '0')"
-        [ "$touched" -ge "$floor" ] 2>/dev/null || continue
+    if [ -n "$written" ]; then
+        grep -qxF "$(readlink -f "$candidate")" <<<"$written" || continue
     fi
     plan="$candidate"
     break
