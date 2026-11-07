@@ -14,7 +14,7 @@ tags: [report, planning, approval-gate, success-criteria]
 # plans-pass-gates-without-reaching-the-goal — report
 
 ## What is wrong
-A `/v-pm` master plan and a `/v-team` amendment of it pass every gate (`pm-plan.sh check`, `gate.sh coverage`, `gate.sh master`, panel review) while the whole plan has about a 30–40% chance of meeting the operator's stated goal.
+A `/v-pm` master plan and a `/v-team` amendment of it pass every gate: `pm-plan.sh check`, `gate.sh coverage`, `gate.sh master` and the panel review. Yet the whole plan has about a 30–40% chance of meeting the operator's stated goal.
 
 ## Files
 
@@ -51,4 +51,4 @@ Expected result: a plan whose steps, finished, meet 100% of the operator's goal,
 Found at the end of a digitally-core session; the framework is a separate repo.
 
 ## Closes when
-A `/v-pm` run on a goal produces an approval block naming the goal criterion, the probability, the runtime and "unowned work: none"; and `gate.sh master` refuses a plan with a session scope that defers work to unnamed rows.
+A `/v-pm` run produces an approval block naming the goal criterion, the probability, the runtime and "unowned work: none". `gate.sh master` refuses a session scope that defers work to unnamed rows.

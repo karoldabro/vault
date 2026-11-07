@@ -14,7 +14,7 @@ tags: [report, master-plan, artifact, delivery, automation]
 # plan-state-and-delivery-need-manual-prompts — report
 
 ## What is wrong
-After each session of a master plan, the operator must ask by hand for three things: update the master plan, republish its operator page, and merge the session branch into `main`.
+After each master-plan session, the operator must ask by hand for three things. They are: update the master plan, republish its operator page, and merge the session branch into `main`.
 
 ## Files
 
@@ -38,7 +38,7 @@ Close any session of `~/vault/digitally-core/plans/device-sync-tests/plan.md`: `
 `/v-work` on the framework:
 1. `bin/render-master.sh <plan>` renders the master page (waves from `pm-plan.sh order`, one card per brief, result per done row, reference tables) from `plan.md` and `briefs/`.
 2. The close step in `05-commit-capture.md` runs it and republishes to the plan's `human_plan` URL, merging onto the live version when a publish is refused.
-3. A close-time delivery step: when the repo's `VAULT.md` declares `delivery_command` and a merge target, ask once at approval whether the session may merge its branch into that target after its checks pass; on yes, merge and push at close. Approval of the plan covers it.
+3. A close-time delivery step for repos whose `VAULT.md` declares `delivery_command` and a merge target. At approval, ask once whether the session may merge its branch after its checks pass. On yes, it merges and pushes at close.
 
 ## Not now because
 Found at the end of a digitally-core session; the framework is a separate repo.
