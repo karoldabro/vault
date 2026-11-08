@@ -55,6 +55,11 @@ channel (multi-repo coordination stays file-based and async).
   key gets one note.
 - Two consecutive todo sessions of one repo whose brief rows fit in `session_max_changes` → refused
   unless one scope states `split: <reason>`; edge: a glob row counts as one change.
+- A plan with `goal_fit: required` and an empty `baseline` row → each session pickup runs its goal
+  script and refuses one that passes; edge: a script not written yet writes nothing and retries.
+- The last session close → `gate.sh goal last` runs the goal script; a failure → `/v-pm reconcile`
+  names the failing cases with `gate.sh goal failing` and `pm-plan.sh gap` appends one session per
+  repo; edge: the fourth gap round is refused.
 
 ## Coupling
 - Reuses `commands/v-team/steps/03-propose-loop.md` §(c) to §(f); runs no `(f2)`.
@@ -72,3 +77,4 @@ channel (multi-repo coordination stays file-based and async).
 - [[../sessions/2026-10-12-1042-v-pm-planning-loop]] — read-only planner, planning panel, session split, ADR-033
 - [[../sessions/2026-10-20-1934-agent-systems-lens]] — agent-systems planning lens, eight agent skills
 - [[../sessions/2026-11-08-1337-plan-goal-fit]] — goal fit gate, goal-case ownership, session-merge rule, goal-fit lens
+- [[../sessions/2026-11-08-1626-plan-goal-fit-s2]] — goal runs at pickup and close, gap loop
