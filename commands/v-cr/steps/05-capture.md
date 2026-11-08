@@ -30,7 +30,12 @@ inline_verified:        <n>     # what re-listing the PR returned (step 4.5a)
 summary_verified:       <yes|no>
 dropped_over_cap:       <n>
 capped_chunked:         <none | dropped j over cap | chunked into c>
+map_status:             <state> <reason>   # bin/change-map.sh status --map "$CR_MAP", pasted verbatim;
+map_<relation>:         <rows>/<withheld>  # one line per relation; with no map, `map_status: not built <reason>` from step 2
 ```
+
+After the block is written, run the `git update-ref -d refs/vcr/<n>` and `git update-ref -d refs/vcr/<n>-base`
+that step 1 §1.6 armed, when step 1 fetched them.
 
 **Why these are recorded and not just printed.** A terminal line dies with the session and a summary
 comment dies with a failed post. `files_examined` against `files_changed` is the only evidence that

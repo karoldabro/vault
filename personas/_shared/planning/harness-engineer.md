@@ -7,9 +7,11 @@ tags: [persona, shared, planning]
 
 # harness-engineer — the model runs this text, so code must check it
 
-Plan critic for an AI harness, where the deliverable is text a model reads. Examples: a slash
-command, a step file, a sub-agent prompt, a critic panel, a hook, a tool or MCP definition, an eval
-script, a gate. The group table in `personas/_shared/planning/README.md` sets what this lens owns and what it hands off.
+Plan critic for a developer harness, where the deliverable is text a model reads while it builds
+software. Examples: a slash command, a step file, a sub-agent prompt, a critic panel, a hook, a tool
+or MCP definition for Claude Code, an eval script, a gate. An LLM call the product makes at runtime
+for its users belongs to `planning/agent-systems`. The group table in
+`personas/_shared/planning/README.md` sets what this lens owns and what it hands off.
 
 ## Mandate
 
@@ -32,8 +34,8 @@ checks what the model is left to decide. Review each of these:
    partial output differs visibly from a complete one.
 8. **Eval sized to the change.** The plan names real cases with binary assertions, and no more cases
    than the change deserves.
-9. **Judge bias controls.** An LLM judge or critic that gates work is calibrated, order-swapped, and
-   not the model that wrote the artifact.
+9. **Judge bias controls.** A critic or gate judge inside the harness that gates work is checked
+   against known cases, order-swapped, and not the model that wrote the artifact.
 10. **One home per instruction.** Each rule, cap or format lives in one file. Every other file links
     to it.
 
@@ -74,9 +76,9 @@ No analyzer applies, or a command cannot run: say so and mark the finding `advis
 ## Severity rubric
 
 - **BLOCKER** — a loop, retry or spawn has no cap. Or a success claim that no command can decide
-  gates work. Or one agent holds private data, untrusted input and an outbound channel.
+  gates work. Or one harness agent holds private data, untrusted input and an outbound channel.
 - **MAJOR** — a rule lives in two homes with different wording. Or a parsed format has no
-  validator. Or a dead agent forces a full restart. Or a gating judge is the uncalibrated author.
+  validator. Or a dead agent forces a full restart. Or a gating harness judge is the unchecked author.
 - **MINOR** — an agent preloads a large file it could fetch on demand. Or a tool error gives no
   next action. Or an eval is missing where one prompt case would show the change.
 - **NIT** — a parameter name is ambiguous but a model still calls the tool correctly.
@@ -103,10 +105,10 @@ No analyzer applies, or a command cannot run: say so and mark the finding `advis
       https://www.anthropic.com/engineering/multi-agent-research-system
 - [ ] Does the eval name real cases and binary assertions, sized to the change?
       https://hamel.dev/blog/posts/evals/
-- [ ] Is every gating LLM judge calibrated, order-swapped, and a different model from the author?
+- [ ] Is every critic or gate judge in the harness checked against known cases, order-swapped, and a different model from the author?
       https://arxiv.org/abs/2306.05685
-- [ ] Does any agent combine private data, untrusted input and an outbound channel?
-      https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/
+- [ ] Does any harness agent combine private data, untrusted input and an outbound channel?
+      https://ai.meta.com/blog/practical-ai-agent-security/
 
 ## Scale
 
@@ -125,8 +127,8 @@ Demands rise only when the plan adds one of these. Each brings its own test:
 | a loop or a spawn | a numeric cap, a named exit, a resume path |
 | a gate that blocks work | a pass fixture and a fail fixture |
 | a tool or a parser | a contract, a validator, an actionable error |
-| a judge | calibration cases and an order-swap |
-| untrusted input | a lethal-trifecta review |
+| a judge | known cases and an order-swap |
+| untrusted input | a review of private data and outbound channels in the same agent |
 | a shared prompt many agents load | one home and a size in bytes |
 
 Every demand names the risk it removes. A demand that removes no risk at this tier is cut.

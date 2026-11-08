@@ -108,6 +108,9 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-cr/steps/05-capture.md`, then execute. Ma
 
 ## Notes
 
+- **Five single-task seats, fed by a relation map.** The panel seats `personas/_shared/review/`
+  (`personas/_resolution.md` §2.4); `bin/change-map.sh` gives each seat the callers, referrers, tests,
+  co-change partners and siblings its question needs.
 - **Reuses three shared assets, not the v-work/v-team lifecycles:** `personas/_resolution.md` (pack +
   critic selection), `commands/_shared/critic-panel.md` (the single-pass panel sub-procedure), and the
   vault context loader. It does **not** run propose/approval/commit gates — its only gate is the POST

@@ -670,6 +670,23 @@ mkplan_lifecycle() {
     [ "$status" -eq 0 ]
 }
 
+@test "readers matches an identifier holding brackets as its literal text" {
+    printf "ZONES = '[classify] rank_zones'\n" > "${TMP}/channels.py"
+    local f
+    f=$(mkplan_lifecycle bracketed '`[classify] rank_zones`')
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 0 ]
+}
+
+@test "readers refuses a dotted identifier that only a regex wildcard would match" {
+    printf 'effectsXduck = true\n' > "${TMP}/config.toml"
+    local f
+    f=$(mkplan_lifecycle dotted '`effects.duck`')
+    run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no code reads it"* ]]
+}
+
 @test "readers ignores markdown, so a key mentioned only in prose still refuses" {
     printf 'we should add effects_duck_under_narration one day\n' > "${TMP}/notes.md"
     local f
@@ -677,6 +694,50 @@ mkplan_lifecycle() {
     run "${GATE_SH}" readers "${f}"
     [ "$status" -eq 1 ]
     [[ "$output" == *"no code reads it"* ]]
+}
+
+@test "readers searches the code repos the plan names, not only the vault holding the plan" {
+    # A global vault (~/vault/<slug>/) is its own repo and holds no code.
+    local vault="${TMP}/vault" code="${TMP}/ws/myapp" f
+    mkdir -p "${vault}/plans" "${code}/src"
+    git -C "${vault}" init --quiet; git -C "${code}" init --quiet
+    printf 'effects_duck_under_narration = True\n' > "${code}/src/config.py"
+    f="${vault}/plans/p.md"
+    {
+        echo "---"; echo "type: plan"; echo "repos: [myapp]"; echo "---"; echo
+        echo "## Artifact lifecycles"; echo
+        echo "| artifact | what requires it | who writes it | who reads it | missing or wrong |"
+        echo "|---|---|---|---|---|"
+        echo '| `effects_duck_under_narration` | a step | this plan | a reader | it fails |'
+        echo '| `src/config.py` | a step | this plan | a reader | it fails |'
+        echo
+    } > "${f}"
+    GATE_WORKSPACE="${TMP}/ws" run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"does not exist yet"* ]]
+
+    GATE_WORKSPACE="${TMP}/nowhere" run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"no code reads it"* ]]
+}
+
+@test "readers run from a vault folder named like its code repo still searches the code repo" {
+    local vault="${TMP}/vault/myapp" code="${TMP}/ws/myapp" f
+    mkdir -p "${vault}/plans" "${code}"
+    git -C "${vault}" init --quiet; git -C "${code}" init --quiet
+    printf 'effects_duck_under_narration = True\n' > "${code}/config.py"
+    f="${vault}/plans/p.md"
+    {
+        echo "---"; echo "type: plan"; echo "repos: [myapp]"; echo "---"; echo
+        echo "## Artifact lifecycles"; echo
+        echo "| artifact | what requires it | who writes it | who reads it | missing or wrong |"
+        echo "|---|---|---|---|---|"
+        echo '| `effects_duck_under_narration` | a step | this plan | a reader | it fails |'
+        echo
+    } > "${f}"
+    cd "${vault}"
+    GATE_WORKSPACE="${TMP}/ws" run "${GATE_SH}" readers "${f}"
+    [ "$status" -eq 0 ]
 }
 
 @test "readers notes a declared path that does not exist rather than refusing" {

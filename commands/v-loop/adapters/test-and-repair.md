@@ -1,5 +1,7 @@
 # test-and-repair — verify and fix a feature that is already built and running
 
+> Path note: `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` when that reads as an absolute path (plugin install), otherwise resolved per `vault-guide.md` §1.1.
+
 Turns each interactive element and state of a running feature into an executable test, runs it
 against the real system, files what fails, fixes it, and retests. The rules below were paid for by
 two campaigns on different stacks: a Laravel feature under Playwright and PHPUnit, and a Flutter app

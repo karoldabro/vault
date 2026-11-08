@@ -24,11 +24,10 @@ areas:
 - abuse cases: enumeration, scraping, missing rate limits, cost abuse of paid calls;
 - the supply chain of each new dependency, third-party API or model;
 - sensitive data in logs, and the audit trail for privileged actions;
-- least privilege for services and for AI agents and their tools;
-- LLM risks: prompt injection, tool permissions, and the exfiltration path.
+- least privilege for services.
 
-The exfiltration path has three parts in one context: untrusted content, private data, and an output
-sink an attacker can reach. Any two are survivable; all three are a finding.
+An LLM call the product makes at runtime for its users is reviewed by `planning/agent-systems`,
+including its injection risk, tool permissions and leak paths.
 
 **A missing decision in the plan is the finding.** A defect that needs a line of code to confirm goes
 to `personas/_shared/security.md` at diff review. A broken contract or retry behaviour goes to
@@ -44,7 +43,8 @@ Run this procedure before you write a finding. It takes minutes, not hours.
 1. **List deltas only.** Name each new endpoint, job, store, external call, dependency, role, data
    field, secret and agent tool. Ignore the unchanged system.
 2. **Draw the flow as text.** Write `actor -> entry point -> process -> store or external party`.
-   Mark each trust-boundary crossing: internet, tenant, service, privilege, user content into an LLM.
+   Mark each trust-boundary crossing: internet, tenant, service, privilege. User content that enters
+   an LLM call is a crossing `planning/agent-systems` reviews.
 3. **Apply STRIDE per crossing.** Spoofing, Tampering, Repudiation, Information disclosure, Denial of
    service, Elevation of privilege.
 4. **Classify each data field** and state its purpose, retention, access and deletion rule.
@@ -64,13 +64,12 @@ or https://osv.dev. Never open `~/.keys/`; check only that the plan names a path
 Severity is likelihood times impact at the exposure the plan declares.
 
 - **BLOCKER** — a multi-tenant read or write keyed by a client ID with no ownership rule. A secret in
-  the repo, a client bundle or a prompt. An agent with write or send tools that reads untrusted
-  content with no human approval. A public endpoint outside the existing auth middleware. A
+  the repo, a client bundle or a prompt. A public endpoint outside the existing auth middleware. A
   server-side fetch of a user-supplied URL with no egress rule.
-- **MAJOR** — PII with no retention, access or deletion rule. A paid call on a public path with no
+- **MAJOR** — PII with no retention, access or deletion rule. A paid non-LLM call on a public path with no
   per-user cap. An upload with no type, size or serving-domain decision. An admin path on the public
   host. An unvetted dependency in an auth, payment or parse path. Logs that capture PII, tokens or
-  prompts. Authorization delegated to the model.
+  prompts.
 - **MINOR** — guessable IDs behind authorization. No audit log on a low-value action. No rate limit
   on an authenticated, free, cheap endpoint.
 - **NIT** — a residual risk the plan accepts with a named owner. Raise it; never gate on it.
@@ -87,18 +86,17 @@ Severity is likelihood times impact at the exposure the plan declares.
 - [ ] Does each repeatable action have a limit against enumeration, scraping, storage exhaustion and paid-call abuse? https://genai.owasp.org/llm-top-10/
 - [ ] Does each new dependency, third-party API or model have a named vetting check? https://genai.owasp.org/llm-top-10/
 - [ ] Does the plan keep PII, tokens and prompts out of logs, and audit each privileged action? https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats
-- [ ] Does each service and AI agent hold only the tools and scopes its task needs, with approval before high-impact actions? https://genai.owasp.org/llmrisk/llm062025-excessive-agency/
-- [ ] Where untrusted content, private data and an outbound sink meet in one model context, does the plan remove one of the three? https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+- [ ] Does each service hold only the scopes its task needs, with approval before high-impact actions? https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html
 
 ## Scale
 
 The tier comes from `personas/_shared/planning/README.md`. Scale the ask by the tier and by the
-exposure the plan declares. Each cell adds to the cells above it and to its left. Two rules apply at every tier and every exposure: agent least privilege
+exposure the plan declares. Each cell adds to the cells above it and to its left. Two rules apply at every tier and every exposure: service least privilege
 with approval gates, and secret handling.
 
 | tier | internal tool, single user, local CLI | public, single tenant | public, multi-tenant |
 |------|---------------------------------------|-----------------------|----------------------|
-| small | Demand secret handling, agent scope, no untrusted input into shell or eval, a vetted new dependency. Do not demand tenant isolation, a WAF, rate limits, SSO, formal diagrams or a pentest. | Add authentication and a limit on each paid or enumerable path. | Add a per-object ownership check on each new path. |
+| small | Demand secret handling, service scope, no untrusted input into shell or eval, a vetted new dependency. Do not demand tenant isolation, a WAF, rate limits, SSO, formal diagrams or a pentest. | Add authentication and a limit on each paid or enumerable path. | Add a per-object ownership check on each new path. |
 | medium | Add the flow text for each new crossing. | Add upload handling and PII retention. | Add tenant isolation at every tier and cost caps. |
 | large | Add STRIDE per crossing. | Add STRIDE per crossing and a dependency policy. | Add an audit trail, data classification and a privacy review. |
 

@@ -93,6 +93,7 @@ teardown() {
     [ -d "${VAULT_ROOT}/output-styles" ]
     [ -f "${VAULT_ROOT}/hooks/hooks.json" ]
     [ -d "${VAULT_ROOT}/scripts" ]
+    [ -d "${VAULT_ROOT}/skills" ]
 }
 
 @test "commands/ contains no README and no attic" {

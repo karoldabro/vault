@@ -47,6 +47,9 @@ channel (multi-repo coordination stays file-based and async).
 - A legacy workspace (no `plan.md`) keeps its shard readers; edge: reconcile converts it only after
   the operator confirms the row mapping.
 - Thread `→pm` is drained only by `/v-pm reconcile`. The contracts-drift check is deterministic.
+- A plan whose product makes an LLM call at runtime for its users → `planning/agent-systems` takes a
+  trigger seat before `planning/harness-engineer`; edge: developer tooling for Claude Code seats
+  `harness-engineer` only.
 
 ## Coupling
 - Reuses `commands/v-team/steps/03-propose-loop.md` §(c) to §(f); runs no `(f2)`.
@@ -62,3 +65,4 @@ channel (multi-repo coordination stays file-based and async).
 - [[../sessions/2026-07-03-1240-v-pm-cross-project-planning]]
 - [[../sessions/2026-07-03-1559-vpm-business-knowledge-center]] — requirements knowledge center (1+ repos), id chain, ADR-014
 - [[../sessions/2026-10-12-1042-v-pm-planning-loop]] — read-only planner, planning panel, session split, ADR-033
+- [[../sessions/2026-10-20-1934-agent-systems-lens]] — agent-systems planning lens, eight agent skills

@@ -39,7 +39,7 @@ against its own pack's deliverable surface — never a silent single-pick.
 
 More personas ≠ more signal (correlated critics collapse to ~2 effective votes). Select the **most
 relevant, decorrelated** set, capped by `team_max_parallel_critics` (default 3, hard max 5; **business
-packs default 4** — see §2.2):
+packs default 4** — see §2.2). `/v-cr` uses none of this section, §2.1 or the cap: it seats by §2.4.
 
 - **Architect persona(s): always in** — they own structure and reuse.
 - **`consumer`: always in on the PROPOSE panel** — plan critique only, never a relevance pick and
@@ -48,18 +48,20 @@ packs default 4** — see §2.2):
   exact text this plan hands it. It takes the seat `correctness` would take, which the next bullet
   already makes optional for plan critique. Drop it only when the change creates no handoff at all —
   no new artifact, field, marker, report, prompt or choice-surface row — and note the drop in the trail.
-- **`correctness` (bug-hunter): default-in for diff review** — `/v-cr` and `/v-team`'s code-review loop
-  review *existing code's behaviour*, where logic/edge/null/race bugs are the highest-value findings
+- **`correctness` (bug-hunter): default-in for diff review** — `/v-team`'s code-review loop
+  reviews *existing code's behaviour*, where logic/edge/null/race bugs are the highest-value findings
   (`_shared/correctness.md`). For pure plan critique (no diff yet) it is optional. Decorrelated from
   `skeptic` (assumptions) and `quality` (cleanliness) — see that file's Output note.
 - **Diff review seats architect, `quality` and `correctness` by default** (`/v-team` §5.2 code-review
-  loop, `/v-cr`) — the senior-developer panel: reuse, simpler solutions, packages and patterns
+  loop) — the senior-developer panel: reuse, simpler solutions, packages and patterns
   (`quality`), logic against the business rule (`correctness`), structure (architect). Under `/v-team`
   every lens reads the static output and judges only what no tool reports
   (`commands/_shared/critic-panel.md` §(a) Static output).
 - **Add the 1–2 lenses the change most implicates** — derive from the Step-1 keywords / impact scope:
   auth·tenant·permission·upload → `security`; query·index·list·job·report → `performance`;
   refactor·duplication·new-module → `quality`; contract·endpoint·filter·response → integration architect.
+  On a PROPOSE panel only, a pack whose `use_shared` lists `planning/agent-systems` seats it when the
+  §2.3 agent-systems condition holds.
 - **`skeptic`: add only on high-risk changes** — auth, billing/payments, migrations, multi-tenant
   boundaries, deletion/data-loss paths, or anything touching a coupled-repo contract.
 - If selection would exceed the cap, keep architect + the highest-relevance lenses; note the dropped
@@ -154,11 +156,14 @@ precedence live in `personas/_shared/planning/README.md`.
 
 1. **Always seated:** `planning/solution-architect`, `planning/lazy-dev`, `consumer`.
 2. **Seated on a trigger, in this priority order:**
-   - `planning/harness-engineer` when the deliverable is commands, prompts, agents, hooks, gates or
-     tool definitions, or the repo's `VAULT.md` declares `arch_profile: harness`;
+   - `planning/agent-systems` when the product makes an LLM call at runtime for its users: a prompt,
+     tool, MCP surface, retrieval, judge or learning loop that runs in the product, not in Claude Code;
+   - `planning/harness-engineer` when the deliverable is developer tooling for Claude Code: commands,
+     step files, critic prompts, hooks, gates or tool definitions, or the repo's `VAULT.md` declares
+     `arch_profile: harness`;
    - `planning/system-integration` when two or more systems, repos or external services are in scope;
    - `planning/security-architect` on auth, permissions, personal data, payments, a public endpoint,
-     an upload, a webhook, or an AI agent with tools;
+     an upload or a webhook;
    - `planning/delivery-planner` when the plan has two or more sessions;
    - `planning/codebase-fit` when the plan changes an existing repo rather than starting one;
    - `planning/future-scope` when the plan stores new data or exposes a new contract;
@@ -167,6 +172,22 @@ precedence live in `personas/_shared/planning/README.md`.
    three always-seated lenses.
 
 Record the outcome as `Personas: planning → [solution-architect, lazy-dev, consumer, …]   (skipped: …)`.
+
+### 2.4 `/v-cr` review seats
+A `/v-cr` review seats the five lenses of `personas/_shared/review/`, in this priority order:
+`review/change-impact`, `review/test-gap`, `review/architecture-fit`, `review/pattern-conformance`,
+`review/intent-trace`. Their boundaries and evidence rules live in that group's `README.md`.
+
+1. **intent-trace** seats only when step 2 fetched a task or the PR body is non-empty. Otherwise its seat
+   is free.
+2. **Two lenses may join, and no other:** `correctness` on the high-risk list of the `skeptic` bullet in
+   §2, and `security` on the auth keywords of §2 (auth, tenant, permission, upload). A joining lens takes
+   the free seat first, then replaces the lowest-priority seat still held. It never replaces
+   change-impact or test-gap.
+3. The cap is five seats. `team_max_parallel_critics` does not apply.
+4. A resolved pack's architect persona becomes the architecture-fit overlay and takes no seat.
+
+`/v-cr` step 3 prints the outcome as `Panel: review → [change-impact, test-gap, architecture-fit, pattern-conformance, intent-trace]   (joined: …, replaced: …)`.
 
 ---
 

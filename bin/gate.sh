@@ -42,6 +42,7 @@
 #
 # Env:    GATE=off   skip every check and exit 0. Whole-run only, no per-check suppression: a gate
 #                    that can be silenced one check at a time gets silenced.
+#         GATE_WORKSPACE  where a bare `repos:` name is looked up for `readers` (default ~/workspace)
 #
 # Exit: 0 clean (or skipped)
 #       1 the gate refuses — the session may not continue
@@ -205,6 +206,29 @@ checks_root() {
     local plan=$1 root
     root=$(git -C "$(dirname "$plan")" rev-parse --show-toplevel 2>/dev/null) || root=""
     printf '%s' "${root:-$(cd "$(dirname "$plan")" && pwd)}"
+}
+
+# The directories `readers` searches, one per line: the plan's own root, then each `repos:` entry
+# that resolves to a directory. A vault outside the code repo holds no code, so without the entries
+# every identifier would be refused. An entry is a path (a leading `~` is expanded) or a repo name:
+# the working directory's repo when its folder has that name, else GATE_WORKSPACE/<name>.
+code_roots() {
+    local plan=$1 entry dir cwd_top own
+    own=$(checks_root "$plan"); printf '%s\n' "$own"
+    cwd_top=$(git rev-parse --show-toplevel 2>/dev/null || true)
+    [ "$cwd_top" = "$own" ] && cwd_top=""   # a vault folder named like its code repo is not that repo
+    while IFS= read -r entry; do
+        entry="${entry#"${entry%%[![:space:]]*}"}"; entry="${entry%"${entry##*[![:space:]]}"}"
+        [ -n "$entry" ] || continue
+        case "$entry" in
+            "~"/*) dir="${HOME}/${entry#\~/}" ;;
+            /*)    dir=$entry ;;
+            *)     if [ -n "$cwd_top" ] && [ "$(basename "$cwd_top")" = "$entry" ]; then dir=$cwd_top
+                   else dir="${GATE_WORKSPACE:-$HOME/workspace}/${entry}"; fi ;;
+        esac
+        if [ -d "$dir" ]; then printf '%s\n' "$dir"; fi
+    done < <(frontmatter_get "$plan" repos | tr -d '[]' | tr ',' '\n')
+    return 0
 }
 
 # Refuse a check path a different plan already claims.
@@ -553,7 +577,8 @@ plugin_keys() {
 cmd_readers() {
     local plan=$1
     require_plan "$plan"
-    local root; root=$(checks_root "$plan")
+    local roots=()
+    mapfile -t roots < <(code_roots "$plan" | awk 'NF && !seen[$0]++')
 
     local header rows i_artifact
     header=$(table_header "$plan" '## Artifact lifecycles' || true)
@@ -573,13 +598,18 @@ cmd_readers() {
         # A path is checked for existence; a bare identifier is checked for a reader.
         case "$ident" in
             */*|*.sh|*.md|*.json)
-                [ -e "${root}/${ident}" ] || note "$ident is declared and does not exist yet"
+                local path=$ident found=0 r
+                case "$path" in "~"/*) path="${HOME}/${path#\~/}" ;; esac
+                if [[ $path == /* ]]; then [ -e "$path" ] && found=1
+                else for r in "${roots[@]}"; do [ -e "${r}/${path}" ] && found=1; done; fi
+                [ "$found" -eq 1 ] || note "$ident is declared and does not exist yet"
                 continue ;;
         esac
         # grep exits 1 when it finds nothing, and `set -o pipefail` would abort the whole run on
-        # exactly the case this check exists to report. Guard it.
+        # exactly the case this check exists to report. Guard it. `-F`: an identifier is literal text,
+        # so `[classify] rank_zones` must not become a bracket class.
         local hits
-        hits=$(grep -rIl --exclude-dir=.git --exclude='*.md' -e "$ident" "$root" 2>/dev/null || true)
+        hits=$(grep -rIlF --exclude-dir=.git --exclude='*.md' -e "$ident" "${roots[@]}" 2>/dev/null || true)
         hits=$(printf '%s' "$hits" | grep -c . || true)
         if [ "$hits" -eq 0 ]; then
             refuse "\`$ident\` is declared and no code reads it. A binding nothing reads makes the next session believe the question is settled and gives it no way to find out otherwise"

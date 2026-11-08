@@ -27,6 +27,7 @@ They live once, in `../personas/_shared/`, and each pack pulls in the ones it ne
 | `consumer` | Whoever has to use the thing afterwards |
 | `skeptic` | The claim you have not proved yet |
 | `_shared/testing/` | Tests an AI wrote: weak assertions, fakes, flakiness, missed edges |
+| `_shared/review/` | A `/v-cr` pull-request review: cross-file impact, missing tests, architecture, repo patterns, the ticket |
 | `_shared/business/` | Numbers used as evidence |
 
 ## How a repo picks its pack

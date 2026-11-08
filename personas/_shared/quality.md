@@ -46,4 +46,4 @@ stage exited 2, because then no tool measured them:
 
 ## Output
 Per `commands/v-team/steps/03-propose-loop.md` §d. Confirmed findings only may be BLOCKER/MAJOR.
-≤3 proposed tests.
+≤3 proposed tests. On `/v-cr` the repo-pattern question belongs to `review/pattern-conformance`.

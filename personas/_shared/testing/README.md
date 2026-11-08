@@ -43,6 +43,8 @@ Multi-agent panels lose value when critics correlate. Boundaries are enforced in
   test-double-critic.
 - **test-harness-critic** owns *runnability + level placement*, NOT *individual missing inputs* →
   edge-case-hunter, NOT *assertion strength* → assertion-auditor.
+- **`review/test-gap`** replaces this group on a `/v-cr` review: it owns *changed behaviour with no test*
+  and *tests that pass for the wrong reason*, and cites this group's runs as evidence only under `--sandbox`.
 
 Also: the flat `quality` lens **no longer** carries "tests express behaviour, not internals" — that
 bullet moved to `test-behaviorist` (specialist beats generalist; removes a double-vote).
