@@ -33,7 +33,8 @@ Instantiate, in the plan home:
 
 **Split into sessions.** `/v-pm` decides how many. Apply the sizing rules in
 `$VAULT_FRAMEWORK_PATH/personas/_shared/planning/delivery-planner.md` `## Mandate`, and stay
-proportional to the tier: a `small` tier is usually one session. For each session:
+proportional to the tier: a `small` tier is one session unless a `split:` reason holds
+(`templates/master-plan.md` `## Sessions`). For each session:
 
 - a `## Sessions` row: the repo's absolute path, the scope, a command from the ladder, `status: todo`,
   `depends`, and the `REQ-NN` ids it satisfies in `req`;
@@ -48,6 +49,11 @@ proportional to the tier: a `small` tier is usually one session. For each sessio
 cd <repo> && claude --add-dir <plan folder> "<command> <absolute plan path>#<id>"
 ```
 
+**Goal tables.** Fill `## Goal cases` with every case the goal command needs, one row per case or per
+group of cases not written yet, each with its owning session. Leave `runtime estimate` and
+`failure paths` of `## Goal fit` for the goal-fit reviewer. A case no session owns gets a session, or
+the goal criterion is narrowed with the operator; it never stays unowned.
+
 ## (c) Seat the panel
 Select reviewers with `$VAULT_FRAMEWORK_PATH/personas/_resolution.md` §2.3, capped by the tier
 (`personas/_shared/planning/README.md` `## Scale tiers`). Spawn them in parallel, one message, each as
@@ -59,7 +65,7 @@ command it names.
 
 ## (d) to (f) The loop
 Run §(d) to §(f) of `03-propose-loop.md` unchanged: the finding schema, the de-biased synthesizer, and
-the convergence rules. The synthesizer writes to the trail of this plan, `plan.trail.md`. The round cap
+the convergence rules, the goal-block copy of §(e).7 included. The synthesizer writes to the trail of this plan, `plan.trail.md`. The round cap
 is the tier's. `/v-pm` runs no `(f2)` test-design fan-out: test hints stay in the trail, and each
 executing session designs its own tests. A revision rewrites `plan.md` and the briefs to the new
 current state.
@@ -68,8 +74,7 @@ current state.
 Run, and fix until each exits 0:
 
 ```bash
-$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh check <plan>
-$VAULT_FRAMEWORK_PATH/bin/gate.sh master <plan>
+$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh check <plan>   # runs gate.sh master and gate.sh goal
 $VAULT_FRAMEWORK_PATH/bin/doc-lint.sh <plan> <plan folder>/briefs/*.md
 ```
 
@@ -81,6 +86,7 @@ Research: [sources + takeaways | --no-research | unavailable]
 Panel: <n> reviewers, <n> rounds   (skipped: …)   ·   still open: <n>
 Sessions: <n> in <w> waves   ·   first wave: [ids]
 Criteria reached: [SC id → session ids]
-Check: pm-plan.sh check exit 0 · gate.sh master exit 0
+Goal: the goal line of commands/v-pm.md Step 4
+Check: pm-plan.sh check exit 0
 ```
 Mark PLAN PANEL `completed` → the approval gate.

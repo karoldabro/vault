@@ -115,19 +115,127 @@ master_table_check() {
     while IFS="$US" read -r msg key; do
         [ -n "$msg" ] && master_refuse "$plan" "$msg" "$key"
     done < <(master_problems table "$plan")
+    if [ "$(arch_fm_value <(master_src "$plan") goal_fit)" = required ]; then
+        master_scope_check "$plan"
+    fi
     return 0
+}
+
+# The deferral phrases and the split reasons of templates/master-plan.md, which owns both lists.
+MASTER_DEFER=("append rows" "for the rest" "the rest of the" "remaining cases" "remaining rows"
+              "basic version" "skip for now" "wired later" "placeholder for")
+MASTER_SPLIT='split:[[:space:]]*(other repo|outside wait|over limit|risk apart)'
+
+# master_changes <plan> <id>: the number of rows in the `## Left to do` table of the session's brief.
+# Prints nothing when the session has no brief.
+master_changes() {
+    local brief
+    brief=$(compgen -G "$(dirname "$1")/briefs/$2-*.md" | head -n 1) || true
+    [ -n "$brief" ] && [ -r "$brief" ] || return 0
+    [ -n "$(table_header <(master_src "$brief") '## Left to do' || true)" ] || return 0
+    table_rows <(master_src "$brief") '## Left to do' | awk -F "$US" '$1 != "" { n++ } END { print n + 0 }'
+}
+
+# master_limit <repo>: session_max_changes from the repo's VAULT.md, default 15.
+master_limit() {
+    local repo=$1 v=""
+    [ -n "$repo" ] && v=$(vault_key "$repo/VAULT.md" session_max_changes 2>/dev/null || true)
+    v=${v%%[[:space:]]#*}
+    [[ $v =~ ^[0-9]+$ ]] && [ "$v" -gt 0 ] && { printf '%s' "$v"; return 0; }
+    printf '15'
+}
+
+# master_scope_check <plan>: the [goal_fit] rules on scope cells: deferred work and session size.
+master_scope_check() {
+    local plan=$1 sh i_id i_st i_sc i_rp row id st sc rp low p rest tok n=0 first="" key
+    local -a ids
+    local -A status scope repo
+    sh=$(table_header <(master_src "$plan") '## Sessions' || true)
+    i_id=$(col_index "$sh" id); i_st=$(col_index "$sh" status)
+    i_sc=$(col_index "$sh" scope); i_rp=$(col_index "$sh" repo)
+    [ -n "$i_sc" ] || return 0
+    while IFS= read -r row; do
+        id=$(cell "$row" "$i_id"); [ -n "$id" ] || continue
+        [[ $id =~ ^[-:\ ]+$ ]] && continue
+        ids+=("$id"); status[$id]=$(cell "$row" "$i_st"); scope[$id]=$(cell "$row" "$i_sc")
+        repo[$id]=""; [ -n "$i_rp" ] && repo[$id]=$(cell "$row" "$i_rp")
+        rp=${repo[$id]%/}; case "$rp" in "~"/*) rp="$HOME/${rp#\~/}" ;; ""|/*) ;; *) rp="$(dirname "$plan")/$rp" ;; esac
+        repo[$id]=$rp
+    done < <(table_rows <(master_src "$plan") '## Sessions')
+
+    for id in "${ids[@]}"; do
+        case "${status[$id]}" in done|dropped) continue ;; esac
+        low=${scope[$id],,}
+        for p in "${MASTER_DEFER[@]}"; do
+            [[ $low == *"$p"* ]] || continue
+            rest=${low#*"$p"}
+            if master_has_owner "$id" "$rest"; then continue; fi
+            master_refuse "$plan" "$id defers work with \`$p\` and names no session that owns it; add a session that owns the work and write \`for <id>\` after the phrase, or put the work in this scope" "$id"
+            break
+        done
+    done
+
+    # Session size: consecutive todo sessions of one repo that fit in one session.
+    local -A last
+    local prev a b limit
+    for id in "${ids[@]}"; do
+        [ "${status[$id]}" = dropped ] && continue
+        key="${repo[$id]}_"; prev=${last[$key]:-}; last[$key]=$id
+        [ "${status[$id]}" = todo ] && [ -n "$prev" ] && [ "${status[$prev]}" = todo ] || continue
+        [[ ${scope[$id]} =~ $MASTER_SPLIT || ${scope[$prev]} =~ $MASTER_SPLIT ]] && continue
+        a=$(master_changes "$plan" "$prev"); b=$(master_changes "$plan" "$id")
+        { [ -n "$a" ] && [ -n "$b" ]; } || continue
+        limit=$(master_limit "${repo[$id]}")
+        [ $((a + b)) -le "$limit" ] || continue
+        master_refuse "$plan" "$prev and $id hold $a and $b changes, $((a + b)) in all, within session_max_changes $limit; merge them into one session, or add \`split: <reason>\` to the scope of $id" "$id"
+    done
+
+    # A small plan is one session unless each later open session states why it stands apart.
+    [ "$(arch_fm_value <(master_src "$plan") tier)" = small ] || return 0
+    for id in "${ids[@]}"; do
+        [ "${status[$id]}" = dropped ] && continue
+        n=$((n + 1)); [ "$n" -eq 1 ] && continue
+        [ "${status[$id]}" = done ] && continue
+        [[ ${scope[$id]} =~ $MASTER_SPLIT ]] && continue
+        master_refuse "$plan" "a small plan is one session, and $id states no reason to stand apart; merge it, or add \`split: <reason>\` with other repo, outside wait, over limit or risk apart" "$id"
+    done
+    return 0
+}
+
+# master_has_owner <id> <text>: true when <text> holds `for <s>`, `owned by <s>` or `→ <s>` naming
+# another session whose status is todo or doing. Ids compare without regard to case.
+master_has_owner() {
+    local me=$1 text=$2 s
+    for s in "${ids[@]}"; do
+        [ "$s" = "$me" ] && continue
+        case "${status[$s]}" in todo|doing) ;; *) continue ;; esac
+        [[ $text =~ (^|[^[:alnum:]])(for|owned\ by|→)[[:space:]]+${s,,}([^[:alnum:]_-]|$) ]] && return 0
+    done
+    return 1
+}
+
+# master_resolve <plan> <session_of value>: print the master plan file the value names. Returns 1
+# when the value lacks the form <file>#<id>, 2 when the file does not exist. The one resolver of
+# session_of: `gate.sh master` and `gate.sh goal` both call it.
+master_resolve() {
+    local plan=$1 so=$2 file id
+    file=${so%#*}; id=${so##*#}
+    { [ "$file" != "$so" ] && [ -n "$file" ] && [ -n "$id" ]; } || return 1
+    [[ $file == /* ]] || file="$(dirname "$plan")/$file"
+    [ -f "$file" ] || return 2
+    printf '%s\n' "$file"
 }
 
 # master_order_check <plan> <session_of value>: every contract the session consumes has a producer
 # whose Sessions row is `done` in the master plan the value names.
 master_order_check() {
-    local plan=$1 so=$2 file id master msg key
-    file=${so%#*}; id=${so##*#}
-    if [ "$file" = "$so" ] || [ -z "$file" ] || [ -z "$id" ]; then
-        master_refuse "$plan" "session_of needs the form <master plan file>#<session id>" "$so"; return 0
-    fi
-    if [[ $file == /* ]]; then master=$file; else master="$(dirname "$plan")/$file"; fi
-    if [ ! -f "$master" ]; then master_refuse "$plan" "session_of names a master plan that does not exist" "$file"; return 0; fi
+    local plan=$1 so=$2 id master msg key rc=0
+    id=${so##*#}
+    master=$(master_resolve "$plan" "$so") || rc=$?
+    case "$rc" in
+        1) master_refuse "$plan" "session_of needs the form <master plan file>#<session id>" "$so"; return 0 ;;
+        2) master_refuse "$plan" "session_of names a master plan that does not exist" "${so%#*}"; return 0 ;;
+    esac
     [ -r "$master" ] || die "cannot read: $master"
     if ! master_is_table "$(table_header <(master_src "$master") '## Sessions' || true)"; then
         master_refuse "$plan" "session_of names a plan with no ## Sessions table" "$file"; return 0

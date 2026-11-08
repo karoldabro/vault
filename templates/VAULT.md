@@ -109,3 +109,5 @@ stack_packs: {{stack_packs}}
 # team_max_test_designers: 5           # generators in the PROPOSE (f2) test-design fan-out
 # team_max_test_rounds: 3              # testing-loop cap (commands/_shared/testing-loop.md)
 # team_max_test_writers: 2             # test writers per testing round (hard max 3)
+# session_max_changes: 15              # brief rows two sessions may hold together before the planner must
+#                                      # merge them; a glob row counts once (templates/master-plan.md)

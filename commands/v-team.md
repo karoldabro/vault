@@ -106,6 +106,12 @@ stop as an error. The check passes silently in a repo whose `VAULT.md` declares 
 
 **Then check the master plan tables:** `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <plan>`. Exit 1 means a dependency has no contract row, or a contract the session consumes has a producer that is not `done`: fix the table or finish the producer, then present. Exit 2 means a file could not be read: stop as an error. The check passes silently for an ordinary plan.
 
+**Then check the goal:** `$VAULT_FRAMEWORK_PATH/bin/gate.sh goal <plan>`. For a master plan, or a plan
+with `session_of`, exit 1 means a goal case has no owning session, the runtime estimate is over the
+limit, or a `## Goal fit` field is missing: fix the master, then present. An older master without
+`goal_fit: required` prints one note and passes. The decision prints the goal line in the form of
+`commands/v-pm.md` Step 4.
+
 **Then check the human page:** `$VAULT_FRAMEWORK_PATH/bin/gate.sh human <plan>`. Exit 1 means the page
 is missing, stale or not linked; a page that is not linked needs publishing and a `human_plan` value, as
 in `03-propose-loop.md`. If the plan or the spec changed after the page was made, run

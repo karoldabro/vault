@@ -78,9 +78,10 @@ Read `$VAULT_FRAMEWORK_PATH/commands/v-pm/steps/03-plan-panel.md`, then execute:
 plan and briefs, the parallel review loop, and `bin/pm-plan.sh check`.
 
 ### Step 4 — APPROVAL GATE
-Run `$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh check <plan>` and `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <plan>`.
-Exit 1 from either means the plan is not normalized: fix it, then present. Exit 2 means a file could
-not be read: stop and say so.
+Run `$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh check <plan>`; it also runs `gate.sh master` and
+`gate.sh goal`. Exit 1 means the plan is not normalized, or a goal case has no owning session, or the
+runtime estimate is over the limit: fix it, then present. Exit 2 means a file could not be read: stop
+and say so.
 
 **STOP. Present the decision and wait for explicit approval.** Approving the plan authorizes every
 session it creates. Present, within 15 lines and per `communication.md` "Presenting a decision":
@@ -88,6 +89,8 @@ the recommendation; the impact (repos, session count, waves); the operator's suc
 sessions that reach each; the decisions that are the operator's own call, each with its consequence;
 the stated defaults; and anything still open. Always say in plain words when the reviewers ran out of
 rounds with items open, and name any minority finding the plan did not apply. Name the plan path.
+Print the goal line in this form, every time, as one of the lines that are never cut:
+`Goal: <SC id> · owned N/M · runtime <estimate> of <limit> · first failure path: <text>`.
 
 - Approval → Step 5 · Feedback → revise the plan, re-run the check, present again · Rejection → end.
 

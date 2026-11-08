@@ -292,3 +292,13 @@ teardown() {
     grep -q 'critic-panel.md' "${f}"
     grep -q 'Probes:' "${f}"
 }
+
+@test "T15: v-team and v-work run the goal check, copy the goal block, and always print the goal line" {
+    local loop="${VAULT_ROOT}/commands/v-team/steps/03-propose-loop.md"
+    grep -q '\*\*Then check the goal:\*\* `$VAULT_FRAMEWORK_PATH/bin/gate.sh goal <plan>`' "${VAULT_ROOT}/commands/v-team.md"
+    grep -q '^7\. \*\*Copy the goal block\.\*\*' "${loop}"
+    grep -q 'Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh goal <plan>`' "${loop}"
+    grep -q 'the goal line of `commands/v-pm.md` Step 4 for a master or `session_of` plan' "${loop}"
+    grep -q 'the master.s goal line in the form of `commands/v-pm.md` Step 4' "${VAULT_ROOT}/commands/v-work/steps/03-propose.md"
+    grep -q 'tell the operator to run `/v-pm reconcile <feature>` on the master' "${VAULT_ROOT}/commands/v-work/steps/03-propose.md"
+}

@@ -36,6 +36,9 @@ sets `wrong`; a session never scores its own refusal.
 | arch | 0 | 0 | `cmd_arch`; the contract is `commands/_shared/architecture-spec.md` |
 | human | 0 | 0 | `cmd_human`; the contract is `commands/_shared/human-plan.md` |
 | master | 0 | 0 | `cmd_master`; refuses a dependency with no contract row and a session that consumes an unproduced contract; the contract is `templates/master-plan.md` |
+| goal | 0 | 0 | `cmd_goal`; refuses an opted-in master whose goal cases are not all owned, whose runtime estimate is over the limit, or whose `## Goal fit` field is malformed |
+| master deferral | 0 | 0 | `master_scope_check`; refuses an open scope holding a deferral phrase of `templates/master-plan.md` with no named owner |
+| master split | 0 | 0 | `master_scope_check`; refuses two same-repo todo sessions within `session_max_changes`, and a small plan's second session with no `split:` reason |
 | completion-hook | 0 | 0 | |
 | staging-hook | 0 | 0 | |
 | rule-coverage | 0 | 0 | `cr_rule_coverage`; refuses only on a routed rule nobody decided |

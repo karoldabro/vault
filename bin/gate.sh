@@ -24,6 +24,8 @@
 #         bin/gate.sh master   <plan>          every dependency between two sessions has a contract row, and
 #                                              a session's own plan consumes only produced contracts;
 #                                              templates/master-plan.md
+#         bin/gate.sh goal     <plan>          an opted-in master plan's sessions own every goal case,
+#                                              within the runtime limit; templates/master-plan.md
 #         bin/gate.sh all     <plan> --phase <propose|approve|close> [--repo <root>]
 #         bin/gate.sh --help
 #
@@ -76,6 +78,12 @@ fi
 if [ -r "${GATE_VAULT_ROOT}/lib/master-check.sh" ]; then
     # shellcheck source=../lib/master-check.sh
     . "${GATE_VAULT_ROOT}/lib/master-check.sh"
+fi
+
+# `cmd_goal`: the sessions of an opted-in master plan own every case of the operator's goal.
+if [ -r "${GATE_VAULT_ROOT}/lib/goal-check.sh" ]; then
+    # shellcheck source=../lib/goal-check.sh
+    . "${GATE_VAULT_ROOT}/lib/goal-check.sh"
 fi
 
 US=$'\037'          # cell separator for parsed rows; never appears in markdown
@@ -815,6 +823,7 @@ main() {
         arch)     cmd_arch "$@" ;;
         human)    cmd_human "$@" ;;
         master)   cmd_master "$@" ;;
+        goal)     cmd_goal "$@" ;;
         all)
             local plan=${1:-} phase="" archargs=()
             shift || true
@@ -827,9 +836,9 @@ main() {
             done
             case "$phase" in
                 propose) cmd_criteria "$plan"; cmd_arch "$plan" ${archargs[@]+"${archargs[@]}"}
-                         cmd_master "$plan" ;;
+                         cmd_master "$plan"; cmd_goal "$plan" ;;
                 approve) cmd_criteria "$plan"; cmd_arch "$plan" ${archargs[@]+"${archargs[@]}"}
-                         cmd_master "$plan"
+                         cmd_master "$plan"; cmd_goal "$plan"
                          cmd_human "$plan" ${archargs[@]+"${archargs[@]}"}; cmd_coverage "$plan" ;;
                 # `coverage` is deliberately NOT in the close phase. `verdict` already requires every
                 # criterion to be MET with evidence there, and a plan with no `## Work items` table

@@ -37,6 +37,19 @@ feature name such as "admins can export orders" does not. Repeat the refusal unt
 or accepted; never write a default in its place. The lines go to the plan's `## Success criteria`,
 their single home; `requirements.md` `## Business context & goals` links them.
 
+**The goal.** One stated line is the goal: when it passes, the need is met. One command decides it, and
+its `<observable>` names that command in backticks. Send exactly this, filled in:
+
+```
+Which line means the need is met? Drafted: <SC id> — WHEN <trigger> THE SYSTEM SHALL <observable naming `<command>`>.
+How long may one run of `<command>` take, including the runs it needs first? Reply in minutes or hours.
+Reply "yes" with a limit, or give your own line and limit.
+```
+
+Repeat the ask until both are answered; a missing limit is refused like a missing criterion, never
+defaulted. Write the answers into the plan's `## Goal fit` rows `goal` and `runtime limit`;
+`templates/master-plan.md` owns the field rules.
+
 ## 1.3 Definition of done
 The plan carries four default lines, DD-1 to DD-4, from `$VAULT_FRAMEWORK_PATH/templates/feature-plan.md`:
 planning done, code implemented, code tested, static analysis passed. Ask the operator only what this
@@ -79,7 +92,7 @@ single-repo, `~/vault/_features/<feature>/` for multi-repo.
 ```
 Need: <one sentence, after the whys — the problem, not the requested solution>
 Techniques used: [document analysis · five-whys · …]   (ruled out: <n> — <reason>)
-Success criteria: <n> stated by the operator   [SC ids]
+Success criteria: <n> stated by the operator   [SC ids]   ·   goal: <SC id> `<command>`   ·   runtime limit: <value>
 Done adds: [what this feature adds to DD-1..DD-4 | nothing]
 Participants: [<repo> → <absolute path>, …]   (source: named | coupled-group <g> | asked)
 Tier: <small | medium | large>   (repos: <n>; risky surface: <none | which>)

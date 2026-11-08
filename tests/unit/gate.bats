@@ -1504,3 +1504,201 @@ master_refused() {
     sed 's/| S2 | the renderer | \/v-team | done |/| S2 | the renderer | \/v-team | |/' "$(MF complete)" > "${TMP}/complete.md"
     master_refused 'its producer S2 has status empty' "${TMP}/session-plan.md"
 }
+
+# ---------------------------------------------------------------------------- goal
+# `gate.sh goal` and the [goal_fit] scope rules of `gate.sh master`. Each defect is derived inline from
+# tests/fixtures/goal/complete.md or tests/fixtures/goal/e2e-split/plan.md, beside its assertion.
+
+GF() { printf '%s' "${VAULT_ROOT}/tests/fixtures/goal/complete.md"; }
+
+# goal_refused <pattern> <file> — exit 1 and a REFUSED goal line matching the pattern
+goal_refused() {
+    run "${GATE_SH}" goal "$2"
+    [ "$status" -eq 1 ]
+    grep -Eq -- "REFUSED goal .*$1" <<<"$output"
+}
+
+@test "T1: the complete fixture passes, and a master without goal_fit: required gets one note" {
+    run "${GATE_SH}" goal "$(GF)"
+    [ "$status" -eq 0 ]
+    [ "$output" = "goal: ok $(GF)" ]
+    sed '/^goal_fit:/d; /^## Goal fit/,/^## Sessions/{/^## Sessions/!d}' "$(GF)" > "${TMP}/old.md"
+    run "${GATE_SH}" goal "${TMP}/old.md"
+    [ "$status" -eq 0 ]
+    grep -q 'note .*has no goal_fit: required' <<<"$output"
+    [ "$(grep -c REFUSED <<<"$output")" -eq 0 ]
+}
+
+@test "T2: an opted-in plan without ## Goal fit or ## Goal cases is refused" {
+    awk '/^## Goal fit/{s=1} /^## Goal cases/{s=0} !s' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'no ## Goal fit table' "${TMP}/a.md"
+    awk '/^## Goal cases/{s=1} /^## Sessions/{s=0} !s' "$(GF)" > "${TMP}/b.md"
+    goal_refused 'no ## Goal cases table' "${TMP}/b.md"
+}
+
+@test "T3: a goal row naming an unknown or empty criterion is refused by name" {
+    sed 's/^| goal | SC1 |/| goal | SC9 |/' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'names SC9, and ## Success criteria has no SC9' "${TMP}/a.md"
+    sed 's/^| goal | SC1 |/| goal | |/' "$(GF)" > "${TMP}/b.md"
+    goal_refused 'the goal row is empty' "${TMP}/b.md"
+}
+
+@test "T4: a document path, a command absent from the criterion, and a non-command or non-delivery goal are refused" {
+    sed 's/^| goal | SC1 | `bin\/report.sh --all` |/| goal | SC1 | `docs\/cases.md` |/' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'starts with a document path' "${TMP}/a.md"
+    sed 's/^| goal | SC1 | `bin\/report.sh --all` |/| goal | SC1 | `bin\/other.sh` |/' "$(GF)" > "${TMP}/b.md"
+    goal_refused 'does not appear in the text of SC1' "${TMP}/b.md"
+    sed 's/| delivery | command | `checks\/sc1.sh`/| delivery | observed | `checks\/sc1.sh`/' "$(GF)" > "${TMP}/c.md"
+    goal_refused 'SC1 is the goal and its how is not command' "${TMP}/c.md"
+    sed 's/| delivery | command | `checks\/sc1.sh`/| behaviour | command | `checks\/sc1.sh`/' "$(GF)" > "${TMP}/d.md"
+    goal_refused 'SC1 is the goal and its kind is not delivery' "${TMP}/d.md"
+    sed 's/^| goal | SC1 | `bin\/report.sh --all` |/| goal | SC1 | the report command |/' "$(GF)" > "${TMP}/e.md"
+    goal_refused 'holds no command in backticks' "${TMP}/e.md"
+}
+
+@test "T5: failure paths with fewer than two cited paths are refused" {
+    sed 's/^| failure paths | 2 | .*/| failure paths | 1 | S2 may not parse nested specs |/' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'failure paths names 1 path' "${TMP}/a.md"
+    sed 's/^| failure paths | 2 | .*/| failure paths | 2 | the reader is slow; the format may change |/' "$(GF)" > "${TMP}/b.md"
+    goal_refused 'failure paths names 0 path' "${TMP}/b.md"
+    sed 's/^| failure paths | 2 | .*/| failure paths | 2 | S2: nested specs fail; `docs\/spec.md:12`. allows a dropped column |/' "$(GF)" > "${TMP}/c.md"
+    run "${GATE_SH}" goal "${TMP}/c.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "T6: a runtime estimate over the limit, a malformed value and a sourceless estimate are refused" {
+    sed 's/^| runtime estimate | 45 min |/| runtime estimate | 3 h |/' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'runtime estimate 3 h is over the limit 2 h' "${TMP}/a.md"
+    sed 's/^| runtime limit | 2 h |/| runtime limit | |/' "$(GF)" > "${TMP}/b.md"
+    goal_refused "runtime limit '' is not" "${TMP}/b.md"
+    sed 's/^| runtime estimate | 45 min |/| runtime estimate | quick |/' "$(GF)" > "${TMP}/c.md"
+    goal_refused "runtime estimate 'quick' is not" "${TMP}/c.md"
+    sed 's/^| runtime estimate | 45 min | .*/| runtime estimate | 45 min | |/' "$(GF)" > "${TMP}/d.md"
+    goal_refused 'runtime estimate names no source' "${TMP}/d.md"
+    sed 's/^| runtime limit | 2 h |/| runtime limit | 120 min |/; s/^| runtime estimate | 45 min |/| runtime estimate | 1.5 h |/' "$(GF)" > "${TMP}/e.md"
+    run "${GATE_SH}" goal "${TMP}/e.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "T7: goal-trace prints owned N/M; an empty owner, a dropped owner and a bad count are refused" {
+    run "${VAULT_ROOT}/bin/goal-trace.sh" "$(GF)"
+    [ "$status" -eq 0 ]
+    [ "$output" = "owned 30/30" ]
+    sed 's/^| G-2 | nested specs | 18 | S3 |/| G-2 | nested specs | 18 | |/' "$(GF)" > "${TMP}/a.md"
+    run "${VAULT_ROOT}/bin/goal-trace.sh" "${TMP}/a.md"
+    [ "$status" -eq 1 ]
+    grep -qx 'owned 12/30' <<<"$output"
+    grep -qx 'unowned G-2: nested specs (18)' <<<"$output"
+    goal_refused 'not every goal case has an owning session: owned 12/30' "${TMP}/a.md"
+    sed 's/| S3 | the reader for nested specs | \/v-team | todo |/| S3 | the reader for nested specs | \/v-team | dropped |/' "$(GF)" > "${TMP}/b.md"
+    goal_refused "owner 'S3' is no live row" "${TMP}/b.md"
+    sed 's/^| G-1 | flat specs | 10 |/| G-1 | flat specs | many |/' "$(GF)" > "${TMP}/c.md"
+    goal_refused "count 'many' is not a positive whole number" "${TMP}/c.md"
+}
+
+@test "T8: a session plan is judged by its master, resolved like gate.sh master, CRLF and comment included" {
+    cp "$(GF)" "${TMP}/complete.md"
+    printf -- '---\ntype: plan\nsession_of: complete.md#S2   # the flat reader\n---\n\n# s2\n' | sed 's/$/\r/' > "${TMP}/s2.md"
+    run "${GATE_SH}" goal "${TMP}/s2.md"
+    [ "$status" -eq 0 ]
+    [ "$output" = "goal: ok ${TMP}/complete.md" ]
+    sed -i 's/^| G-2 | nested specs | 18 | S3 |/| G-2 | nested specs | 18 | |/' "${TMP}/complete.md"
+    goal_refused 'owned 12/30' "${TMP}/s2.md"
+    printf -- '---\ntype: plan\nsession_of: gone.md#S2\n---\n' > "${TMP}/s3.md"
+    run "${GATE_SH}" goal "${TMP}/s3.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "T9: an ordinary plan is silent, and gate.sh all runs goal in the approve phase" {
+    printf '# p\n\n## Task\nx\n' > "${TMP}/plain.md"
+    run "${GATE_SH}" goal "${TMP}/plain.md"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+    grep -q 'approve) .*' "${GATE_SH}"
+    awk '/approve\)/{s=1} s && /cmd_goal "\$plan"/{f=1} /close\)/{s=0} END{exit !f}' "${GATE_SH}"
+    awk '/propose\)/{s=1} s && /cmd_goal "\$plan"/{f=1} /approve\)/{s=0} END{exit !f}' "${GATE_SH}"
+}
+
+@test "T10: a deferral phrase on an open row is refused unless it names an open owner" {
+    sed 's/| S2 | the reader for flat specs |/| S2 | wire five flat specs; append rows for the rest |/' "$(GF)" > "${TMP}/a.md"
+    master_refused 'S2 defers work with `append rows` and names no session that owns it' "${TMP}/a.md"
+    sed 's/| S2 | the reader for flat specs |/| S2 | wire five flat specs; append rows for the rest for S1 |/' "$(GF)" > "${TMP}/b.md"
+    master_refused 'S2 defers work' "${TMP}/b.md"
+    sed 's/| S2 | the reader for flat specs |/| S2 | a Basic Version of the reader |/' "$(GF)" > "${TMP}/c.md"
+    master_refused 'S2 defers work with `basic version`' "${TMP}/c.md"
+    sed '/^goal_fit:/d; s/| S2 | the reader for flat specs |/| S2 | append rows for the rest |/' "$(GF)" > "${TMP}/d.md"
+    run "${GATE_SH}" master "${TMP}/d.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "T11: an owned deferral, done rows and the real S5j and L3b cells pass; over-split sessions are refused" {
+    sed 's/| S2 | the reader for flat specs |/| S2 | wire five flat specs; append rows for the rest → S3 |/' "$(GF)" > "${TMP}/a.md"
+    run "${GATE_SH}" master "${TMP}/a.md"
+    [ "$status" -eq 0 ]
+    sed 's/| S1 | the spec format |/| S1 | Production patterns from Graylog, first of the remaining work: append rows for the rest |/; s/| S2 | the reader for flat specs |/| S2 | the 7 `deferred-l3b` cases; re-run L2 case Y4 |/' "$(GF)" > "${TMP}/b.md"
+    run "${GATE_SH}" master "${TMP}/b.md"
+    [ "$status" -eq 0 ]
+    local E="${VAULT_ROOT}/tests/fixtures/goal/e2e-split"
+    cp -r "$E" "${TMP}/e"
+    master_refused 'S1 and S2 hold 5 and 6 changes, 11 in all, within session_max_changes 15; merge them' "${TMP}/e/plan.md"
+    master_refused 'a small plan is one session, and S3 states no reason to stand apart' "${TMP}/e/plan.md"
+    sed -i 's/^tier: small/tier: medium/; s/| the dynamic screen journey |/| the dynamic screen journey split: outside wait |/; s/| created data for the feed journeys |/| created data for the feed journeys split: risk apart |/' "${TMP}/e/plan.md"
+    run "${GATE_SH}" master "${TMP}/e/plan.md"
+    [ "$status" -eq 0 ]
+    sed -i 's/ split: outside wait//; s/ split: risk apart//' "${TMP}/e/plan.md"
+    mkdir -p "${TMP}/repo"; printf 'session_max_changes: 8\n' > "${TMP}/repo/VAULT.md"
+    sed -i "s#/fixture/app#${TMP}/repo#g" "${TMP}/e/plan.md"
+    run "${GATE_SH}" master "${TMP}/e/plan.md"
+    [ "$status" -eq 0 ]
+}
+
+@test "T3: a missing goal or runtime-limit row is refused, never a silent exit" {
+    sed '/^| goal | SC1 |/d' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'the goal row is empty' "${TMP}/a.md"
+    sed '/^| runtime limit |/d' "$(GF)" > "${TMP}/b.md"
+    goal_refused "runtime limit '' is not" "${TMP}/b.md"
+}
+
+@test "T4: a blank command and a command padded with spaces are judged after trimming" {
+    sed 's/^| goal | SC1 | `bin\/report.sh --all` |/| goal | SC1 | ` ` |/' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'holds an empty command' "${TMP}/a.md"
+    sed 's/^| goal | SC1 | `bin\/report.sh --all` |/| goal | SC1 | ` docs\/cases.md` |/; s/WHEN `bin\/report.sh --all` runs/WHEN `docs\/cases.md` lists cases and `bin\/report.sh --all` runs/' "$(GF)" > "${TMP}/b.md"
+    goal_refused 'starts with a document path' "${TMP}/b.md"
+    sed 's/^| goal | SC1 | `bin\/report.sh --all` |/| goal | SC1 | `bin` |/' "$(GF)" > "${TMP}/c.md"
+    goal_refused 'does not appear in the text of SC1' "${TMP}/c.md"
+}
+
+@test "T5: clock times are not cited paths, and an estimate a fraction over the limit is refused" {
+    sed 's/^| failure paths | 2 | .*/| failure paths | 2 | it may break at 10:30; or fail at 11:00 |/' "$(GF)" > "${TMP}/a.md"
+    goal_refused 'failure paths names 0 path' "${TMP}/a.md"
+    sed 's/^| runtime estimate | 45 min |/| runtime estimate | 120.4 min |/' "$(GF)" > "${TMP}/b.md"
+    goal_refused 'runtime estimate 120.4 min is over the limit 2 h' "${TMP}/b.md"
+}
+
+@test "T7: leading-zero and overflowing counts, duplicate ids, bad statuses and an unlisted operator row are refused" {
+    sed 's/^| G-1 | flat specs | 10 |/| G-1 | flat specs | 08 |/; s/^| G-2 | nested specs | 18 | S3 |/| G-2 | nested specs | 18 | |/' "$(GF)" > "${TMP}/a.md"
+    run "${VAULT_ROOT}/bin/goal-trace.sh" "${TMP}/a.md"
+    [ "$status" -eq 1 ]
+    grep -q "bad G-1: count '08'" <<<"$output"
+    grep -q 'unowned G-2: nested specs (18)' <<<"$output"
+    awk '{print} /^\| G-3 /{print "| G-9 | hidden | 18446744073709551616 | | todo |"}' "$(GF)" > "${TMP}/b.md"
+    goal_refused "count '18446744073709551616' is not a positive whole number" "${TMP}/b.md"
+    sed 's/^| G-2 | nested specs | 18 | S3 | todo |/| G-1 | nested specs | 18 | S3 | maybe |/' "$(GF)" > "${TMP}/c.md"
+    goal_refused 'G-1: the id appears twice' "${TMP}/c.md"
+    sed 's/^| G-2 | nested specs | 18 | S3 | todo |/| G-2 | nested specs | 18 | S3 | maybe |/' "$(GF)" > "${TMP}/d.md"
+    goal_refused "status 'maybe' is not todo or pass" "${TMP}/d.md"
+    sed '/^- needs the operator: sign the release check/d' "$(GF)" > "${TMP}/e.md"
+    goal_refused 'owned by operator, and ## Open & deferred does not name G-3' "${TMP}/e.md"
+}
+
+@test "T11: a brief without Left to do, todo rows across an open row, and a relative repo are sized correctly" {
+    local E="${VAULT_ROOT}/tests/fixtures/goal/e2e-split"
+    cp -r "$E" "${TMP}/e"; sed -i 's/^tier: small/tier: medium/' "${TMP}/e/plan.md"
+    sed -i '/^## Left to do/,$d' "${TMP}/e/briefs/S3-feed.md"
+    sed -i 's/| S2 | \/fixture\/app | the dynamic screen journey | \/v-work | todo |/| S2 | \/fixture\/app | the dynamic screen journey | \/v-work | doing |/' "${TMP}/e/plan.md"
+    run "${GATE_SH}" master "${TMP}/e/plan.md"
+    [ "$status" -eq 0 ]
+    cp -r "$E" "${TMP}/f"; sed -i 's/^tier: small/tier: medium/; s#/fixture/app#../repo#g' "${TMP}/f/plan.md"
+    mkdir -p "${TMP}/repo"; printf 'session_max_changes: 8\n' > "${TMP}/repo/VAULT.md"
+    ( cd / && "${GATE_SH}" master "${TMP}/f/plan.md" )
+}

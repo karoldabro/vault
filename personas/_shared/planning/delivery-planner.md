@@ -19,12 +19,14 @@ is an instance of `templates/handoff.md`. The new session has no memory of the p
 has only the brief, the plan and the repo. This lens checks that every session can start, finish and
 prove its result from those three inputs.
 
-**Sizing rules.** This file is the single home of these rules.
+**Sizing rules.** This file is the single home of these rules, except how changes are counted and when
+two sessions must merge: `templates/master-plan.md` `## Sessions` owns those, and `bin/gate.sh master`
+applies them.
 
 - A unit is session-sized, never edit-sized.
 - In this framework, sessions that finished cleanly touched a median of ~9 files. Sessions that
   reached ~49 files dropped work permanently and needed a follow-up session.
-- Target ~9 files per session. Split any session past ~15 files.
+- Target ~9 changes per session, and split past the repo's `session_max_changes`.
 - Cut vertically. Each session delivers one observable behaviour across every layer it needs.
 - Put the hardest or riskiest part first, so it surfaces while time remains.
 - Pick each row's command from the ladder in `vault/indications/light-command-siblings.md`. Use
@@ -53,9 +55,9 @@ If `bin/pm-plan.sh` is absent, say so and continue with the rest.
    run in parallel.
 3. `bin/gate.sh master <plan>` — a dependency with no contract row, or a contract that names a
    missing session.
-4. Count the files per session. List the exact paths in each brief's `## Left to do`, count them, and
-   paste the list with the count. A brief that names directories or `the resources` has no countable
-   size. That is itself a finding.
+4. Count the changes per session: the rows of each brief's `## Left to do`. `bin/gate.sh master`
+   refuses the over-split pairs on an opted-in plan; paste its output. A brief that names directories
+   or `the resources` has no countable size. That is itself a finding.
 5. For two sessions in the same wave and the same repo, intersect their `## Left to do` path lists.
    Paste the intersection.
 6. For each acceptance command in a brief, check that its script or path exists in the repo, or that
@@ -71,7 +73,7 @@ Mechanical checks from the research, applied by hand when no script covers them:
 | expand and contract together | one session both adds the new shared interface and removes the old one | MAJOR |
 | main-breaking order | session N removes a symbol that a later session still uses | BLOCKER |
 | flag without removal | a session adds a toggle and no later session removes it | MAJOR |
-| over-split | session count exceeds the total file count divided by 9, plus 1 | MINOR |
+| over-split | two sessions of one repo fit under `session_max_changes` together, or a small plan has a second session with no `split:` reason | BLOCKER |
 | under-split | one session has two acceptance commands for unrelated behaviours | MINOR |
 
 ## Severity rubric
@@ -80,10 +82,10 @@ Mechanical checks from the research, applied by hand when no script covers them:
   `gate.sh master` exits 1. A dependency has no contract row. A same-wave pair in one repo shares a
   file. A session has no runnable acceptance command. A session consumes something nothing produces.
   An order leaves main broken.
-- **MAJOR** — a session will likely drop work or ship unsafely. Examples: more than ~15 files. A
+- **MAJOR** — a session will likely drop work or ship unsafely. Examples: more than `session_max_changes` changes. A
   layer-only slice. The riskiest work in a late session. A migration, flag or external call with no
   rollback. A flag with no removal session. A brief missing goal, read-first paths or upstream output.
-- **MINOR** — the split works but costs extra sessions or context. Examples: over-split, under-split,
+- **MINOR** — the split works but costs extra sessions or context. Examples: under-split,
   a command one rung too heavy, a brief that pastes the whole plan.
 - **NIT** — wording in a row or brief that slows the reader without misleading it.
 
@@ -92,7 +94,7 @@ Mechanical checks from the research, applied by hand when no script covers them:
 - [ ] Does each session deliver one observable behaviour through every layer it needs, never one layer alone? https://www.humanizingwork.com/the-humanizing-work-guide-to-splitting-user-stories/
 - [ ] Does the riskiest unknown sit in the earliest session, ahead of routine work? https://basecamp.com/shapeup/3.4-chapter-12
 - [ ] Is the first session a thin end-to-end path on real kept code, or a labelled throwaway prototype? https://pragprog.com/tips/
-- [ ] Does each session's `## Left to do` list ~9 files, and is any session past ~15 split? https://code.claude.com/docs/en/best-practices
+- [ ] Does each session's `## Left to do` hold ~9 changes, split past `session_max_changes` and merged below it? https://code.claude.com/docs/en/best-practices
 - [ ] Does each brief end with an acceptance command that exits pass or fail, with the expected result? https://code.claude.com/docs/en/best-practices
 - [ ] Is every `depends` entry explicit and acyclic, with one contract row whose `shape` names exact paths or commands? https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
 - [ ] Do two same-wave sessions in one repo touch disjoint files? https://github.com/github/spec-kit/blob/main/spec-driven.md
@@ -106,8 +108,9 @@ Mechanical checks from the research, applied by hand when no script covers them:
 
 The tier comes from the envelope, per `personas/_shared/planning/README.md`.
 
-- **small** — expect one session. Demand only a runnable acceptance command and a file count near
-  ~9. A second session on a small plan is a MINOR over-split finding unless it carries its own risk.
+- **small** — expect one session. Demand only a runnable acceptance command and a change count under
+  the repo's limit. A second session on a small plan is a BLOCKER over-split finding unless its scope
+  carries a `split:` reason.
 - **medium** — expect two to four vertical sessions. Apply the whole checklist. Demand rollback only
   for sessions that touch data, flags, config or an external service.
 - **large** — expect a first session that builds a thin end-to-end path, then vertical slices in waves.

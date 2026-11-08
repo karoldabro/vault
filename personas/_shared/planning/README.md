@@ -31,7 +31,8 @@ applies to all three.
 | [[security-architect]] | trust boundaries, the authorization model, data classification, secrets, attack surface, abuse cases | a defect visible only in code → `personas/_shared/security.md` at diff review · contract ordering and failure → system-integration · the trust boundary of a product agent run → agent-systems |
 | [[harness-engineer]] | a developer harness plan: deterministic code against model judgement, mechanical verification, context budget, loop and spawn caps, tool contracts, and the untrusted-input check for harness agents | the literal handoff dry run → `personas/_shared/consumer.md` · system structure → solution-architect · an LLM call the product makes for its users → agent-systems |
 | [[agent-systems]] | a product agent: agent shape and caps, the trust boundary of each run, tool and MCP contracts, output validation, knowledge and retrieval, judge calibration, learning gates, run records and erasure | auth and secrets outside an agent run → security-architect · developer tooling → harness-engineer · the literal handoff dry run → consumer |
-| [[delivery-planner]] | the split into sessions: vertical slices, hardest part first, size, dependencies, acceptance commands, rollout and rollback per session | what each session builds → the lenses above · whether a prompt is usable → consumer |
+| [[delivery-planner]] | the split into sessions: vertical slices, hardest part first, size, dependencies, acceptance commands, rollout and rollback per session | what each session builds → the lenses above · whether a prompt is usable → consumer · whether the finished sessions meet the goal → goal-fit |
+| [[goal-fit]] | the whole plan against the operator's goal: every goal case owned by a session, failure paths of the finished plan, runtime against the operator's limit | how the sessions are cut → delivery-planner · whether one session's design is sound → the lenses above |
 
 `consumer` and `skeptic` from `personas/_shared/` sit beside these lenses. On a planning panel
 `skeptic` leaves the simpler-path question to `lazy-dev`.
@@ -58,6 +59,9 @@ the tier from its envelope and demands only what its own `## Scale` section allo
 | small | 1 repo, and no schema, auth, payment, public-contract or new-external-service change | 3 | 1 |
 | medium | every case that is neither small nor large | 4 | 2 |
 | large | 3 or more repos, or 2 repos with a contract change, or a new system | 5 | 2 |
+
+`goal-fit` sits on every plan with `goal_fit: required`, outside any pack's `use_shared`, and raises
+the tier's reviewer cap by one (`personas/_resolution.md` §2.3).
 
 The tier sets the per-run caps. A `team_max_parallel_critics` or `team_max_rounds` key in the repo's
 `VAULT.md` caps the per-run value; the panel never writes those keys.

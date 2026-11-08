@@ -65,6 +65,9 @@ can produce one correct output from the exact text the plan hands it. Drop it on
 creates no handoff at all, and say so in the trail. A triggered lens raises the cap rather than being
 dropped, by the raise rule of `personas/_resolution.md` §2.
 
+**`planning/goal-fit` holds a seat on a plan with `goal_fit: required`, and on a plan whose `session_of`
+master has it** (`_resolution.md` §2). It reviews the plan that holds the goal tables.
+
 ## (b2) Plan-time probes
 
 Runs when the plan names an `arch_spec`. Read `$VAULT_FRAMEWORK_PATH/commands/_shared/plan-probes.md` and follow its order: run
@@ -98,7 +101,7 @@ handoff is not a dry run and grounds nothing.
 
 Also put `_shared/communication.md` in every critic envelope, scoped to the **free-text** fields
 (`issue`, `recommendation`): one sentence, plain words, no restated context. The schema itself is
-machine-read and unaffected — but these strings are what §(e).7 may surface to the user, and a
+machine-read and unaffected — but these strings are what §(e).8 may surface to the user, and a
 subagent inherits neither the output style nor the dispatcher's binding line.
 
 ## (d) Finding schema (each critic returns)
@@ -154,7 +157,12 @@ The synthesizer is itself an LLM-judge, so neutralise its known biases:
    plan itself is **rewritten to the new current state** — a superseded step is deleted, not struck
    through. A critic-assigned `grounding: confirmed` BLOCKER/MAJOR dispositioned anything other than
    **applied** surfaces at the approval gate as a **minority flag** — regardless of relabeling.
-7. **Cap what reaches the user.** The trail is written **to the sidecar**; the panel's own
+7. **Copy the goal block.** When `planning/goal-fit` sat, replace the `runtime estimate` and
+   `failure paths` rows of `## Goal fit` with its `GOAL_FIT:` rows, and every `## Goal cases` row with
+   its `GOAL_CASES:` rows, word for word, whatever their grounding. `bin/goal-trace.sh` and the
+   operator at approval are the only checks on the counts. A
+   `session_of` plan whose change edits master rows rewrites the master's tables the same way.
+8. **Cap what reaches the user.** The trail is written **to the sidecar**; the panel's own
    output is the single largest block of text this command can put in front of the user, and the
    Claude Code output style does **not** reach spawned subagents — so this step is the only place it
    is controlled. To the user, surface **only**: confirmed findings that changed the plan, one plain
@@ -218,7 +226,8 @@ now; exit 2 means a file could not be read, so stop and say so. Step 4 runs the 
 Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh master <plan>`. It is silent for an ordinary plan. For a
 master plan, exit 1 names each defect, such as a dependency that lacks a contract row. For a plan with `session_of`, exit 1
 names each contract whose producer is not `done`. Fix the tables or finish the producer first, and read
-exit 2 as a file that could not be read.
+exit 2 as a file that could not be read. Then run `$VAULT_FRAMEWORK_PATH/bin/gate.sh goal <plan>`: exit 1
+names an unowned goal case, a runtime estimate over the limit, or a missing `## Goal fit` field.
 
 When step (b2) ran, run `$VAULT_FRAMEWORK_PATH/bin/plan-probes.sh verify <out>`, adding `<out>/auditor-<id>.tsv` for every auditor of `commands/_shared/plan-probes.md`'s `## Auditors` table that ran. Exit 1 prints `open:` rows: fix the spec and repeat step (b2), or list each row in the `Open` field so the operator can accept it. Exit 2 means step (b2) did not run.
 
@@ -255,7 +264,7 @@ Panel-specific rules for this layer:
 - **These always surface** (they are exceptions, not status): `CONVERGENCE: capped with N open
   blockers` — stated plainly, e.g. "the reviewers ran out of rounds with N things still open"; any
   **minority flag** (§(e) item 6); any irreconcilable trade-off the synthesizer escalated (§(e) item
-  3); and the `(f2)` skip note (§f2 gating) when test design was skipped, and the `note:` and `open:` lines of the plan-time stage (§(b2)), each in plain words in the `Open` field.
+  3); the goal line of `commands/v-pm.md` Step 4 for a master or `session_of` plan; and the `(f2)` skip note (§f2 gating) when test design was skipped, and the `note:` and `open:` lines of the plan-time stage (§(b2)), each in plain words in the `Open` field.
 - **Say the reviewing happened; do not narrate it.** One line at most — how many reviewers, whether
   anything is still open. Never a round-by-round account.
 

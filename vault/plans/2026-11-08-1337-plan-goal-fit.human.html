@@ -1,0 +1,160 @@
+<title>2026-11-08-1337-plan-goal-fit — plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #f2f5f6;
+  --panel: #ffffff;
+  --ink: #14212b;
+  --muted: #55646f;
+  --line: #d3dde2;
+  --accent: #0f766e;
+  --accent-soft: #dff1ee;
+  --code-bg: #e9eff2;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+    --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0d1418; --panel: #141d23; --ink: #e5edf0; --muted: #94a5af; --line: #263640;
+  --accent: #3dd6c3; --accent-soft: #10312e; --code-bg: #1b2830;
+}
+* { box-sizing: border-box; }
+body { background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  padding-inline: 16px; padding-block: 28px 64px; }
+main { max-width: 940px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 6px; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 22px 0 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 72ch; }
+ul, ol { margin: 0; padding-left: 22px; max-width: 78ch; }
+li { margin-bottom: 5px; }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+strong { font-weight: 600; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font-size: 1rem; }
+.source { color: var(--muted); font-size: 0.85rem; margin-top: 18px; }
+</style>
+
+<main>
+<h1>2026-11-08-1337-plan-goal-fit — plan</h1>
+<h2>Task</h2>
+<p>A multi-session plan is approved only when three things hold. Every case of the operator's goal has an owning session. Its runtime fits the operator's limit. Its sessions are not split smaller than the repo needs. When the plan closes, the goal command runs, and each failing case becomes a new session.</p>
+<p>Two sessions. S1 builds the planning-time checks: the goal table, the goal-case ownership script, the runtime limit, the deferral-phrase block, the session-merge rule, and the <code>goal-fit</code> reviewer. S2 builds the run-time checks: the first and last goal runs, the case status flips, the scope-change recheck, and the gap loop.</p>
+<p>Repairs <code>vault/reports/2026-11-07-1400-plans-pass-gates-without-reaching-the-goal.md</code> and the over-split sessions of <code>~/vault/givore/plans/e2e-coverage-1160/plan.md</code>.</p>
+<h2>Needs your decision</h2>
+<ul>
+<li>needs the operator: after S2 ships, run one <code>/v-pm</code> plan and confirm its approval block prints the goal line with <code>owned 100%</code>. That closes the report.</li>
+<li>needs the operator: 16 existing master plans lack <code>goal_fit: required</code> and get one warning line. Add the key to a plan to put it under the checks.</li>
+<li>needs the operator: set <code>session_max_changes</code> in <code>VAULT.md</code> of a repo whose small changes span many files, such as givore.com. The default is 15.</li>
+</ul>
+<h2>Sessions</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>scope</th><th>depends</th></tr>
+</thead>
+<tbody>
+<tr><td>S1</td><td>planning-time checks: S1-W1 to S1-W31, criteria C1–C4</td><td></td></tr>
+<tr><td>S2</td><td>run-time checks: S2-W1 to S2-W10, criteria C5–C6</td><td>S1</td></tr>
+</tbody>
+</table>
+</div>
+<pre class="mermaid">
+flowchart TD
+    S1["S1 planning-time checks: S1-W1 to S1-W31, criteria"]
+    S2["S2 run-time checks: S2-W1 to S2-W10, criteria C5C6"]
+    S1 --> S2
+</pre>
+<h2>Cross-session contracts</h2>
+<div class="scroll">
+<table>
+<thead>
+<tr><th>id</th><th>contract</th><th>produced by</th><th>consumed by</th><th>shape</th></tr>
+</thead>
+<tbody>
+<tr><td>C-1</td><td>goal tables and their checks</td><td>S1</td><td>S2</td><td><code>## Goal fit</code> rows <code>goal</code>, <code>runtime limit</code>, <code>runtime estimate</code>, <code>failure paths</code>, <code>baseline</code>; <code>## Goal cases</code> columns <code>id</code>, <code>case</code>, <code>count</code>, <code>owner</code>, <code>status</code>; <code>bin/goal-trace.sh &lt;plan&gt;</code> prints <code>owned N/M</code>; <code>lib/goal-check.sh</code> <code>cmd_goal</code>; <code>lib/master-check.sh</code> <code>master_resolve &lt;plan&gt; &lt;session_of&gt;</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2>File tree</h2>
+<pre><code>
+templates/master-plan.md                        existing, owns the goal tables, phrases and change counting
+templates/feature-plan.md                       existing, gains both goal tables
+templates/VAULT.md                              existing, documents session_max_changes
+templates/human-plan-sections.tsv               existing, renders both goal tables
+lib/goal-check.sh                               new, cmd_goal; S2 adds baseline and close modes
+lib/master-check.sh                             existing, gains master_resolve, phrase, merge and split refusals
+bin/goal-trace.sh                               new, prints owned N/M
+bin/gate.sh                                     existing, sources goal-check.sh and dispatches goal
+bin/pm-plan.sh                                  existing, folds goal refusals; S2 adds gap
+commands/v-pm/steps/01-intake.md                existing, asks the goal criterion and runtime limit
+commands/v-pm/steps/03-plan-panel.md            existing, drafts the tables and seats goal-fit
+commands/v-pm/steps/06-reconcile.md             existing, S2 gap loop
+commands/v-pm/steps/07-status.md                existing, S2 shows goal state
+commands/v-pm.md                                existing, prints the goal line
+commands/v-team.md                              existing, runs gate.sh goal
+commands/v-team/steps/03-propose-loop.md        existing, seats goal-fit, copies the block
+commands/v-work/steps/03-propose.md             existing, prints the goal line
+commands/v-work/steps/05-commit-capture.md      existing, S2 close-time goal steps
+commands/_shared/feature-pickup.md              existing, S2 baseline run
+personas/_shared/planning/goal-fit.md           new
+personas/_shared/planning/delivery-planner.md   existing, over-split blocks, sizing counts changes
+personas/_shared/planning/README.md             existing, lists goal-fit
+personas/_resolution.md                         existing, seats goal-fit
+vault/architecture/session-gates.md             existing, lists goal
+vault/check-budget.md                           existing, rows for the new checks
+vault/defect-ledger.md                          existing, rows for the two defects
+tests/fixtures/goal/complete.md                 new
+tests/fixtures/goal/device-sync-tests.md        new
+tests/fixtures/goal/e2e-split.md                new
+tests/unit/gate.bats                            existing
+tests/unit/pm-plan.bats                         existing
+tests/unit/planning-personas.bats               existing
+tests/unit/v-pm.bats                            existing
+tests/unit/v-team.bats                          existing
+tests/unit/goal-run.bats                        new, S2
+tests/unit/v-work.bats                          new, S2
+checks/plan-goal-fit-C1.sh                      new
+checks/plan-goal-fit-C2.sh                      new
+checks/plan-goal-fit-C3.sh                      new
+checks/plan-goal-fit-C4.sh                      new
+checks/plan-goal-fit-C5.sh                      new
+checks/plan-goal-fit-C6.sh                      new
+.claude-plugin/plugin.json                      existing, 1.16.0 then 1.17.0
+</code></pre>
+<h2>Data flow</h2>
+<pre class="mermaid">
+flowchart LR
+    I["v-pm intake"] -->|"goal id, runtime limit"| F["Goal fit table"]
+    R["goal-fit reviewer"] -->|"GOAL_FIT block"| F
+    R -->|"case rows with owners"| C["Goal cases table"]
+    C -->|"rows"| T["bin/goal-trace.sh"]
+    T -->|"owned N/M"| G["lib/goal-check.sh"]
+    F -->|"fields"| G
+    S["Sessions table and briefs"] -->|"scopes, change counts"| M["lib/master-check.sh"]
+    G -->|"exit code"| A["approval step"]
+    M -->|"exit code"| A
+    X["session close"] -->|"case status flips"| C
+    X -->|"last goal run result"| P["v-pm reconcile gap loop"]
+    P -->|"gap rows"| S
+</pre>
+<h2>Interfaces</h2>
+<ul>
+<li><code>bin/gate.sh.goal(plan: path): exit 0 ok or silent, 1 refused, 2 unreadable</code></li>
+<li><code>bin/gate.sh.goal baseline(plan: path): exit 0 recorded, 1 first run passed</code></li>
+<li><code>bin/gate.sh.goal close(plan: path, session: string): exit 0, 1 on a foreign flip or short ownership</code></li>
+<li><code>bin/goal-trace.sh.trace(plan: path): `owned N/M` and unowned rows; exit 0 full, 1 short, 2 unreadable</code></li>
+<li><code>bin/pm-plan.sh.gap(plan: path, groups: string): rows appended, gap_rounds bumped; exit 1 at 3</code></li>
+<li><code>lib/goal-check.sh.cmd_goal(plan: path): `REFUSED goal &lt;plan&gt;:` lines, `goal: ok &lt;plan&gt;`</code>, throws <code>die on unreadable file</code></li>
+<li><code>lib/master-check.sh.master_resolve(plan: path, session_of: string): master path on stdout, 1 when unresolved</code></li>
+</ul>
+<p class="source">Full plan: <code>2026-11-08-1337-plan-goal-fit.md</code> · architecture spec: <code>2026-11-08-1337-plan-goal-fit.arch.md</code></p>
+</main>

@@ -48,6 +48,11 @@ packs default 4** — see §2.2). `/v-cr` uses none of this section, §2.1 or th
   exact text this plan hands it. It takes the seat `correctness` would take, which the next bullet
   already makes optional for plan critique. Drop it only when the change creates no handoff at all —
   no new artifact, field, marker, report, prompt or choice-surface row — and note the drop in the trail.
+- **`planning/goal-fit`: always in on the PROPOSE panel of a plan with `goal_fit: required`, or a plan
+  whose `session_of` master has it** (`_shared/planning/goal-fit.md`). It reviews the plan that holds
+  the goal tables. It raises
+  `team_max_parallel_critics` by one and is never dropped; at the hard max of 5 it takes the seat of
+  the lowest-priority triggered lens, recorded in the trail.
 - **`correctness` (bug-hunter): default-in for diff review** — `/v-team`'s code-review loop
   reviews *existing code's behaviour*, where logic/edge/null/race bugs are the highest-value findings
   (`_shared/correctness.md`). For pure plan critique (no diff yet) it is optional. Decorrelated from
@@ -155,6 +160,8 @@ never from a stack or business pack. The tier from intake sets the cap; the tier
 precedence live in `personas/_shared/planning/README.md`.
 
 1. **Always seated:** `planning/solution-architect`, `planning/lazy-dev`, `consumer`.
+   `planning/goal-fit` also sits on every plan with `goal_fit: required`, which the feature template
+   writes, and raises the tier's cap by one.
 2. **Seated on a trigger, in this priority order:**
    - `planning/agent-systems` when the product makes an LLM call at runtime for its users: a prompt,
      tool, MCP surface, retrieval, judge or learning loop that runs in the product, not in Claude Code;
@@ -169,7 +176,7 @@ precedence live in `personas/_shared/planning/README.md`.
    - `planning/future-scope` when the plan stores new data or exposes a new contract;
    - `skeptic` on the high-risk list of §2.
 3. Over cap → drop from the bottom of the trigger list and note each drop in the trail. Never drop the
-   three always-seated lenses.
+   three always-seated lenses or `planning/goal-fit`.
 
 Record the outcome as `Personas: planning → [solution-architect, lazy-dev, consumer, …]   (skipped: …)`.
 

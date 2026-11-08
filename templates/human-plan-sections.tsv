@@ -5,6 +5,8 @@ plan	Open & deferred	match:status|state:operator	*	Needs your decision
 plan	Open & deferred	match:status|state:user-visible|user visible	*	Users will notice
 plan	Open questions	match:status:defaulted	question answer	Defaults taken for you
 plan	Success criteria	match:how:observed	id criterion check	Checks you run yourself
+plan	Goal fit	all	*	Goal fit
+plan	Goal cases	all	*	Goal cases
 plan	Sessions	all	id scope depends	Sessions
 plan	Cross-session contracts	all	*	Cross-session contracts
 spec	Data model	er	*	Data model

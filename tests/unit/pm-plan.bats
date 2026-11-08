@@ -139,3 +139,21 @@ teardown() { rm -rf "${T}"; }
     run "${PP}" check "${PLAN}"
     [ "$status" -eq 0 ]
 }
+
+@test "T12: check surfaces the goal and deferral refusals of an opted-in plan" {
+    run "${PP}" check "${PLAN}"
+    [ "$status" -eq 0 ]
+    sed -i 's/^tier: medium/tier: medium\ngoal_fit: required/; s/| S2 | \([^|]*\)| export button |/| S2 | \1| a basic version of the export button |/' "${PLAN}"
+    run "${PP}" check "${PLAN}"
+    [ "$status" -eq 1 ]
+    grep -q 'REFUSED pm .*gate.sh goal: .*no ## Goal fit table' <<<"$output"
+    grep -q 'REFUSED pm .*gate.sh master: S2 defers work with `basic version`' <<<"$output"
+}
+
+@test "T12: check refuses a goal gate that exits nonzero without a refusal line" {
+    sed -i 's/^tier: medium/tier: medium\ngoal_fit: required/' "${PLAN}"
+    printf '\n## Goal fit\n\n| field | value | evidence |\n|-------|-------|----------|\n| runtime limit | 1 h | x |\n' >> "${PLAN}"
+    run "${PP}" check "${PLAN}"
+    [ "$status" -eq 1 ]
+    [ "$(grep -c 'pm: ok' <<<"$output")" -eq 0 ]
+}

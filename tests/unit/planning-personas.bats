@@ -7,7 +7,7 @@ load "../helpers/setup.bash"
 setup() {
     export VAULT_ROOT="${VAULT_ROOT:-/code}"
     DIR="${VAULT_ROOT}/personas/_shared/planning"
-    LENSES="solution-architect codebase-fit lazy-dev future-scope system-integration security-architect harness-engineer agent-systems delivery-planner"
+    LENSES="solution-architect codebase-fit lazy-dev future-scope system-integration security-architect harness-engineer agent-systems delivery-planner goal-fit"
 }
 
 @test "planning group has a README with the group key" {
@@ -68,7 +68,7 @@ setup() {
 @test "delivery-planner owns the session sizing rules" {
     local f="${DIR}/delivery-planner.md"
     grep -q '~9' "${f}"
-    grep -q '~15' "${f}"
+    grep -q 'session_max_changes' "${f}"
     grep -q '/v-ask' "${f}"
     grep -q '/v-do' "${f}" && grep -q '/v-work' "${f}" && grep -q '/v-team' "${f}"
 }
@@ -98,4 +98,25 @@ setup() {
             case "${id}" in planning/*) [ -f "${DIR}/${id#planning/}.md" ] || { echo "${f}: ${id} has no file"; return 1; } ;; esac
         done
     done
+}
+
+@test "T13: goal-fit lists cases before failure paths, gives no percentage, and ends with the GOAL_FIT block; delivery-planner blocks over-split" {
+    local f="${DIR}/goal-fit.md" d="${DIR}/delivery-planner.md"
+    awk '/List the goal cases/{a=NR} /Hunt the failure paths/{b=NR} END{exit !(a && b && a < b)}' "${f}"
+    grep -q '^\*\*Unowned work\.\*\*' "${f}"
+    grep -q 'Give no percentage' "${f}"
+    grep -q '^GOAL_FIT:$' "${f}"
+    grep -q '^GOAL_CASES:$' "${f}"
+    grep -q 'bin/goal-trace.sh <plan>' "${f}"
+    grep -qE '^\| over-split \| .* \| BLOCKER \|$' "${d}"
+    grep -q 'session_max_changes' "${d}"
+    grep -q '\[\[goal-fit\]\]' "${DIR}/README.md"
+}
+
+@test "T16: resolution seats goal-fit on multi-session plans, never drops it, and keeps the always-seated line" {
+    local r="${VAULT_ROOT}/personas/_resolution.md"
+    grep -q 'planning/solution-architect`, `planning/lazy-dev`, `consumer`' "${r}"
+    grep -q '`planning/goal-fit` also sits on every plan with `goal_fit: required`' "${r}"
+    grep -q 'three always-seated lenses or `planning/goal-fit`' "${r}"
+    grep -q '`planning/goal-fit`: always in on the PROPOSE panel of a plan with `goal_fit: required`' "${r}"
 }

@@ -5,6 +5,7 @@ slug: {{slug}}
 repos: [{{repos}}]                   # every repo a session runs in
 status: proposed                     # proposed | approved | executed
 tier: {{tier}}                       # small | medium | large — personas/_shared/planning/README.md
+goal_fit: required                   # bin/gate.sh goal checks Goal fit and Goal cases; templates/master-plan.md
 process_record: plan.trail.md        # findings, options considered, research
 tags: [plan, feature-plan]
 ---
@@ -33,6 +34,25 @@ tags: [plan, feature-plan]
 
 | id | criterion | sessions | verdict | evidence |
 |----|-----------|----------|---------|----------|
+
+## Goal fit
+<!-- Field rules: templates/master-plan.md `## Goal fit`. Intake writes `goal` and `runtime limit`;
+     the planning panel fills the rest from the goal-fit reviewer. -->
+
+| field | value | evidence |
+|-------|-------|----------|
+| goal | | |
+| runtime limit | | |
+| runtime estimate | | |
+| failure paths | | |
+| baseline | | |
+
+## Goal cases
+<!-- Column rules: templates/master-plan.md `## Goal cases`. `bin/goal-trace.sh plan.md` prints
+     owned N/M. -->
+
+| id | case | count | owner | status |
+|----|------|-------|-------|--------|
 
 ## Definition of done
 <!-- The four default lines stay; the operator adds rows below them. Each line is decided per

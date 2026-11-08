@@ -9,7 +9,7 @@
 #        `## Next command` run line names another repo, command, plan or id than its row, an empty
 #        success-criteria table, a criterion no session reaches, a missing default done line, a
 #        contract whose consumer does not list its producer in `depends`, or a `depends` cycle. It then
-#        runs `bin/gate.sh master`. Success prints `pm: ok <plan>`.
+#        runs `bin/gate.sh master` and `bin/gate.sh goal`. Success prints `pm: ok <plan>`.
 # order  prints one tab-separated line per session: wave, id, status, readiness, repo, brief. Readiness
 #        is `runnable` (todo, every dependency done), `waits:<ids>`, `blocked:<ids>` (a dependency was
 #        dropped), `running` (doing), `done` or `dropped`. Sessions of one wave may run in parallel.
@@ -167,9 +167,16 @@ cmd_check() {
         done < <(table_rows "$PLAN" '## Cross-session contracts')
     fi
 
-    if ! "$ROOT/bin/gate.sh" master "$PLAN" >/dev/null 2>"$TMPERR"; then
-        while IFS= read -r line; do case "$line" in REFUSED*) pm_refuse "gate.sh master: ${line#REFUSED master * }" ;; esac; done <"$TMPERR"
-    fi
+    local sub
+    for sub in master goal; do
+        local rc=0 any=0
+        "$ROOT/bin/gate.sh" "$sub" "$PLAN" >/dev/null 2>"$TMPERR" || rc=$?
+        [ "$rc" -eq 0 ] && continue
+        while IFS= read -r line; do
+            case "$line" in "REFUSED $sub "*) any=1; line=${line#"REFUSED $sub "}; pm_refuse "gate.sh $sub: ${line#*: }" ;; esac
+        done <"$TMPERR"
+        [ "$any" -eq 1 ] || pm_refuse "gate.sh $sub exited $rc and named no refusal: $(head -n 3 "$TMPERR" | tr '\n' ' ')"
+    done
     [ "$violations" -gt 0 ] || printf 'pm: ok %s\n' "$PLAN"
 }
 

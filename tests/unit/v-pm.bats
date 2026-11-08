@@ -388,3 +388,14 @@ teardown() {
     rm -rf "${TMP}"
 }
 
+
+@test "T14: intake asks for the goal and runtime limit, the template opts in, and step 4 prints the goal line" {
+    grep -q '^\*\*The goal\.\*\*' "${STEPS}/01-intake.md"
+    grep -q 'runtime limit' "${STEPS}/01-intake.md"
+    grep -q '^goal_fit: required' "${VAULT_ROOT}/templates/feature-plan.md"
+    grep -q '^## Goal fit$' "${VAULT_ROOT}/templates/feature-plan.md"
+    grep -q '^## Goal cases$' "${VAULT_ROOT}/templates/feature-plan.md"
+    grep -q 'the goal-block copy of §(e).7 included' "${STEPS}/03-plan-panel.md"
+    grep -q 'runs gate.sh master and gate.sh goal' "${STEPS}/03-plan-panel.md"
+    grep -qF '`Goal: <SC id> · owned N/M · runtime <estimate> of <limit> · first failure path: <text>`' "${PM}"
+}

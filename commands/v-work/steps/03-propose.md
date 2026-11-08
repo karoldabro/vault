@@ -242,7 +242,8 @@ brief, even when everything else is dropped:
 - `research: unavailable` (§3a.0b.4 — the design is weaker and the user must know);
 - a stated safe-default assumption (§3a.0a — it is a guess the user can still correct);
 - a skipped gate or step, and any tool that was down and fell back;
-- any open blocker or unreconciled contradicting consensus (§3a.0b.2).
+- any open blocker or unreconciled contradicting consensus (§3a.0b.2);
+- for a plan with `session_of`, the master's goal line in the form of `commands/v-pm.md` Step 4.
 
 **Never ask for approval without the `Impact` line.** Approving a change means authorizing that blast
 radius; a summary that hides it converts the gate into a rubber stamp.
@@ -257,7 +258,9 @@ Instantiate `$VAULT_FRAMEWORK_PATH/templates/plan.md` into
 
 When Step 0 picked up a feature session, set `session_of: <absolute plan path>#<id>` in the plan's
 frontmatter, and keep the success criteria Step 0 copied into `## Success criteria`. A relative path
-into another vault does not resolve, so the path is always absolute.
+into another vault does not resolve, so the path is always absolute. `/v-work` seats no goal reviewer:
+when `bin/gate.sh goal <plan>` refuses because the master's goal tables are missing or incomplete, stop
+and tell the operator to run `/v-pm reconcile <feature>` on the master to write them.
 
 The artifact carries: research sources + takeaways · Serena memories read · lite-critic findings and
 dispositions · work items (one row per exact file path) · `## Artifact lifecycles` · test plan (type
