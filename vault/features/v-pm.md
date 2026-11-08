@@ -50,6 +50,11 @@ channel (multi-repo coordination stays file-based and async).
 - A plan whose product makes an LLM call at runtime for its users → `planning/agent-systems` takes a
   trigger seat before `planning/harness-engineer`; edge: developer tooling for Claude Code seats
   `harness-engineer` only.
+- A plan with `goal_fit: required` → `bin/gate.sh goal` refuses it until every `## Goal cases` row has a
+  live owning session and the runtime estimate is within the operator's limit; edge: a plan without the
+  key gets one note.
+- Two consecutive todo sessions of one repo whose brief rows fit in `session_max_changes` → refused
+  unless one scope states `split: <reason>`; edge: a glob row counts as one change.
 
 ## Coupling
 - Reuses `commands/v-team/steps/03-propose-loop.md` §(c) to §(f); runs no `(f2)`.
@@ -66,3 +71,4 @@ channel (multi-repo coordination stays file-based and async).
 - [[../sessions/2026-07-03-1559-vpm-business-knowledge-center]] — requirements knowledge center (1+ repos), id chain, ADR-014
 - [[../sessions/2026-10-12-1042-v-pm-planning-loop]] — read-only planner, planning panel, session split, ADR-033
 - [[../sessions/2026-10-20-1934-agent-systems-lens]] — agent-systems planning lens, eight agent skills
+- [[../sessions/2026-11-08-1337-plan-goal-fit]] — goal fit gate, goal-case ownership, session-merge rule, goal-fit lens
