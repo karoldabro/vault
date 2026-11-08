@@ -124,7 +124,7 @@ master_table_check() {
 # The deferral phrases and the split reasons of templates/master-plan.md, which owns both lists.
 MASTER_DEFER=("append rows" "for the rest" "the rest of the" "remaining cases" "remaining rows"
               "basic version" "skip for now" "wired later" "placeholder for")
-MASTER_SPLIT='split:[[:space:]]*(other repo|outside wait|over limit|risk apart)'
+MASTER_SPLIT='split:[[:space:]]*(other repo|outside wait|over limit|risk apart|gap round)'
 
 # master_changes <plan> <id>: the number of rows in the `## Left to do` table of the session's brief.
 # Prints nothing when the session has no brief.
@@ -197,7 +197,7 @@ master_scope_check() {
         n=$((n + 1)); [ "$n" -eq 1 ] && continue
         [ "${status[$id]}" = done ] && continue
         [[ ${scope[$id]} =~ $MASTER_SPLIT ]] && continue
-        master_refuse "$plan" "a small plan is one session, and $id states no reason to stand apart; merge it, or add \`split: <reason>\` with other repo, outside wait, over limit or risk apart" "$id"
+        master_refuse "$plan" "a small plan is one session, and $id states no reason to stand apart; merge it, or add \`split: <reason>\` with other repo, outside wait, over limit, risk apart or gap round" "$id"
     done
     return 0
 }

@@ -52,7 +52,10 @@ cd <repo> && claude --add-dir <plan folder> "<command> <absolute plan path>#<id>
 **Goal tables.** Fill `## Goal cases` with every case the goal command needs, one row per case or per
 group of cases not written yet, each with its owning session. Leave `runtime estimate` and
 `failure paths` of `## Goal fit` for the goal-fit reviewer. A case no session owns gets a session, or
-the goal criterion is narrowed with the operator; it never stays unowned.
+the goal criterion is narrowed with the operator; it never stays unowned. Name the `goal script` row's
+path, such as `checks/<feature>-goal.sh`, and put writing that script in the `## Left to do` of the
+session that first builds the goal command: the script holds the real arguments and the repo the
+command runs in.
 
 ## (c) Seat the panel
 Select reviewers with `$VAULT_FRAMEWORK_PATH/personas/_resolution.md` §2.3, capped by the tier

@@ -1,4 +1,4 @@
-# reconcile mode — `/v-pm reconcile <feature>`
+# reconcile mode — `/v-pm reconcile <feature | plan path>`
 
 > Path note: `$VAULT_FRAMEWORK_PATH` is `${CLAUDE_PLUGIN_ROOT}` when that reads as an absolute path (plugin install), otherwise resolved per `vault-guide.md` §1.1.
 
@@ -11,7 +11,7 @@ convert a workspace planned before `plan.md` existed.
 
 ## R.1 Load
 Resolve the feature and its tracker as `$VAULT_FRAMEWORK_PATH/commands/_shared/feature-pickup.md` §0.1
-does. Read `plan.md`, `contracts.md`, every brief, and the thread filenames under `conversation/`.
+does. A plan path, such as a `/v-team` master, is the plan itself. Read `plan.md`, `contracts.md`, every brief, and the thread filenames under `conversation/`.
 
 ## R.2 Convert a legacy workspace — only when it has no `plan.md`
 Such a workspace holds `generic-plan.md` and shard trackers in `projects/*/plan.md`, and their shapes
@@ -38,6 +38,28 @@ Read each row's `deviation` cell. A deviation that changes a later session's sco
 dependency is written into that session's row and brief. A contract that proved wrong is fixed in
 `contracts.md`, the source of truth, and in every brief that quotes it. Re-run `pm-plan.sh check`.
 
+## R.4a Gap loop — a plan with `goal_fit: required` whose `last run` row failed
+A failed last goal run becomes new sessions, at most three rounds. Rules of the gap row and of a
+passing case group: `templates/master-plan.md` `## Goal fit` and `## Goal cases`.
+
+1. Run `$VAULT_FRAMEWORK_PATH/bin/gate.sh goal failing <plan>`. It prints one failing case id per line
+   from the saved log, and `operator <id>` for a failing case the operator owns.
+   - Exit 1 naming no saved log: the log lives on the machine that ran the last session, or is gone.
+     Print `$VAULT_FRAMEWORK_PATH/bin/gate.sh goal last <plan>` for the operator to run, and stop the loop.
+     Never start the goal run from here.
+   - No ids and a `note`: the run failed and the log shows every case passing. Show the operator the
+     log tail it prints and stop the loop.
+   - A `not run` last run is re-run by the operator, never turned into a gap round.
+2. List each `operator <id>` to the operator as their work.
+3. Run `$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh gap <plan> <case id>...` with the other ids; skip it when
+   only operator cases failed. It appends
+   one row per repo and prints each new id. A refusal naming `gap_rounds is 3` ends the loop: show the
+   operator every failing case and ask whether to narrow the goal or add sessions by hand.
+4. Write one brief per new row, as `03-plan-panel.md` (b) does, naming the failing cases in
+   `## Left to do`.
+5. Run `pm-plan.sh check <plan>`. On a plan whose `## Sessions` table has no `repo` column, run
+   `gate.sh master <plan>` and `gate.sh goal <plan>` instead; `check` requires the column.
+
 ## R.5 Staleness
 An `OPEN` thread older than N session-opens (default 3, tracked in `header.md`), or a `doing` row
 whose `date` is old enough to look abandoned, gets one line: "waiting on `<proj>`, untouched in N
@@ -52,6 +74,7 @@ Read `05-capture.md` and run it: the trail records what changed, ADR candidates,
 Converted: <no legacy layout | n rows → plan.md, operator-confirmed>
 Drained (to: pm): [threads → decisions applied]
 Plan changes: [rows, briefs, contracts that moved]
+Gap round: [n of 3 → new rows and the cases each owns; operator cases]
 Stale: [threads or rows waiting N+ opens]
 Captured: [trail + ADRs + commit]
 ```

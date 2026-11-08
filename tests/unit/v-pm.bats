@@ -399,3 +399,22 @@ teardown() {
     grep -q 'runs gate.sh master and gate.sh goal' "${STEPS}/03-plan-panel.md"
     grep -qF '`Goal: <SC id> · owned N/M · runtime <estimate> of <limit> · first failure path: <text>`' "${PM}"
 }
+
+@test "T30: reconcile runs the gap loop from goal failing with its cap, the planner names the goal script, and status shows the goal" {
+    R=$(awk '/^## R.4a Gap loop/{f=1;next} f && /^## /{exit} f' "${STEPS}/06-reconcile.md")
+    [ -n "$R" ]
+    grep -qF 'bin/gate.sh goal failing <plan>' <<<"$R"
+    grep -qF 'bin/pm-plan.sh gap <plan> <case id>...' <<<"$R"
+    grep -qF 'operator <id>' <<<"$R"
+    grep -q 'gap_rounds is 3' <<<"$R"
+    grep -q 'Never start the goal run from here' <<<"$R"
+    grep -q 'never turned into a gap round' <<<"$R"
+    grep -q 'skip it when' <<<"$R"
+    grep -q 'has no `repo`' <<<"$R"
+    grep -q 'Name the `goal script` row' "${STEPS}/03-plan-panel.md"
+    S="${STEPS}/07-status.md"
+    grep -qF 'bin/goal-trace.sh <plan>' "${S}"
+    grep -q 'owned N/M' "${S}"
+    grep -q 'Gap loop exhausted' "${S}"
+    grep -q 'No baseline' "${S}"
+}

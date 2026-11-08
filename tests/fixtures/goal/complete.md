@@ -31,6 +31,7 @@ Order: S1, S2, S3.
 | runtime limit | 2 h | set by the operator |
 | runtime estimate | 45 min | 30 cases at 1.5 min each, measured on `docs/timing.md:4` |
 | failure paths | 2 | S2 may not parse nested specs, so cases from G-2 fail; `docs/spec.md:12` allows a column the reader drops |
+| goal script | `checks/report-all.sh` | runs `bin/report.sh --all` from the repo root |
 | baseline | | |
 
 ## Goal cases

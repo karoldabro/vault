@@ -31,7 +31,8 @@ This section is the one home of tracker resolution; every other reader reference
 ## 0.2 Pick the session and refuse what may not start
 Run `$VAULT_FRAMEWORK_PATH/bin/pm-plan.sh order <plan>`. With no id given, take the first line whose
 readiness is `runnable` and whose repo is this repo's absolute path; when there is none, print the
-order and end the session.
+order and end the session. A `/v-team` master has no `repo` column; `order` prints `-` there, and
+every row runs in the repo that holds the master.
 
 The named session must read `todo` and `runnable`. Otherwise print its line and end the session:
 - `waits:<ids>` — name the sessions still open.
@@ -55,6 +56,24 @@ multi-repo plan, `contracts.md`.
   session's input is read before PROPOSE.
 - The `/v-work` fast path is off for this session. PROPOSE writes
   `session_of: <absolute plan path>#<id>` into the session plan.
+
+## 0.4a Goal baseline — a plan with `goal_fit: required` only
+While the `baseline` row of the plan's `## Goal fit` is empty, record the first goal run. The run can
+take up to the plan's runtime limit, so start it as a background Bash call (`run_in_background`) and
+wait for its exit notification; a foreground call dies after 10 minutes.
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/gate.sh goal baseline <plan>
+```
+
+- **Exit 0 with `goal: baseline …`** — push the plan's vault with the routine of §0.3,
+  `-m "goal baseline"`.
+- **Exit 0 with a `note`** — nothing was written: the row is set, the plan is not opted in, the goal
+  script is not written yet, or it could not run (exit 2). Go on; the next pickup runs it again.
+- **Exit 1** ends the session. The goal script passes before the open sessions' work exists. Show the
+  operator the refusal; the operator repairs the script named in the `goal script`
+  row, or the plan through `/v-pm reconcile`, and starts the session again.
+- **Exit 2** — the plan could not be read. Stop as an error.
 
 ## 0.5 Threads addressed here — multi-repo only
 For each `conversation/*_OPEN_→<this>.md`: read it, answer or act on it within this session, then

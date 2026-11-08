@@ -28,8 +28,19 @@
      failure paths    — value: the number of paths. evidence: at least two paths separated by `;`,
                         each naming a session id, a criterion id or a `path:line` it rests on. Written
                         as a hunt for how the finished plan still misses the goal; no percentage.
-     baseline         — the first run of the goal command: its date and exit code. Written by the
-                        session that first builds the command; empty until then. -->
+     goal script      — value: the path, from the plan's checks root, of the committed script that
+                        runs the goal command in its own repo with its real arguments. Exit 0 the
+                        goal is met, 1 not met, 2 cannot run. Every goal run executes it under the
+                        runtime limit; no run executes the command text.
+     baseline         — the first goal run that could run: `<date> exit <n>`. `gate.sh goal baseline`
+                        writes it at a session pickup and refuses a run that passes.
+     last run         — `<date> exit <n>` or `<date> not run`; evidence: the machine-local log.
+                        `gate.sh goal last` writes it once every session is done or dropped.
+
+     [goal_fit] Gap loop. A failed last run turns into gap sessions: `gate.sh goal failing` names the
+     failing cases from the log, and `bin/pm-plan.sh gap` appends one row per repo of their owners
+     with scope `gap round <n>: <case ids>; split: gap round`, empty depends, and the owners'
+     command. `gap_rounds` in frontmatter counts the rounds; the fourth is refused. -->
 
 | field | value | evidence |
 |-------|-------|----------|
@@ -37,7 +48,9 @@
 | runtime limit | | |
 | runtime estimate | | |
 | failure paths | | |
+| goal script | | |
 | baseline | | |
+| last run | | |
 
 ## Goal cases
 <!-- [goal_fit] Every case the goal command needs, or one row per group of cases that do not exist
@@ -45,12 +58,16 @@
      100%.
 
      id     — G-<n>, unique.
-     case   — the case or the group, in words the goal command's output uses.
+     case   — the case or the group, in words the goal command's output uses. A group passes when
+              no output line holding these words reads `fail`, `error` or `not ok`, and at least
+              `count` such lines read `pass` or `ok`. No case text contains another, and the goal
+              script prints one line per case.
      count  — how many cases the row stands for; a positive whole number.
      owner  — the session id that builds the row, a row of `## Sessions` whose status is not
               `dropped`. A case the operator does by hand is owned by `operator` and has a row in
               `## Open & deferred`. Empty means unowned.
-     status — `todo` or `pass`. A session changes only the rows it owns. -->
+     status — `todo` or `pass`. Only `gate.sh goal close <plan> <session> <case id>...` writes
+              `pass`, for the closing session's own rows; it stays a claim until a last run passes. -->
 
 | id | case | count | owner | status |
 |----|------|-------|-------|--------|
@@ -86,7 +103,8 @@
      changes add up to at most `session_max_changes` (the repo's `VAULT.md`, default 15): merge them.
      A plan whose frontmatter says `tier: small` and which has two or more sessions is refused unless
      every session after the first carries `split: <reason>` in its scope. The same `split:` text lets
-     a pair pass the merge check. Reasons: `other repo`, `outside wait`, `over limit`, `risk apart`.
+     a pair pass the merge check. Reasons: `other repo`, `outside wait`, `over limit`, `risk apart`,
+     and `gap round` on a row `bin/pm-plan.sh gap` appends.
      Sessions without briefs are not size-checked. -->
 
 | id | scope | command | status | depends | date | evidence |

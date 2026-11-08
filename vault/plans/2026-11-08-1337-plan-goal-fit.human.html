@@ -63,14 +63,14 @@ pre.mermaid { background: transparent; border: 0; font-family: var(--sans); font
 </thead>
 <tbody>
 <tr><td>S1</td><td>planning-time checks: S1-W1 to S1-W31, criteria C1–C4</td><td></td></tr>
-<tr><td>S2</td><td>run-time checks: S2-W1 to S2-W10, criteria C5–C6</td><td>S1</td></tr>
+<tr><td>S2</td><td>run-time checks: S2-W1 to S2-W20, criteria C5–C6</td><td>S1</td></tr>
 </tbody>
 </table>
 </div>
 <pre class="mermaid">
 flowchart TD
     S1["S1 planning-time checks: S1-W1 to S1-W31, criteria"]
-    S2["S2 run-time checks: S2-W1 to S2-W10, criteria C5C6"]
+    S2["S2 run-time checks: S2-W1 to S2-W20, criteria C5C6"]
     S1 --> S2
 </pre>
 <h2>Cross-session contracts</h2>
@@ -90,7 +90,8 @@ templates/master-plan.md                        existing, owns the goal tables, 
 templates/feature-plan.md                       existing, gains both goal tables
 templates/VAULT.md                              existing, documents session_max_changes
 templates/human-plan-sections.tsv               existing, renders both goal tables
-lib/goal-check.sh                               new, cmd_goal; S2 adds baseline and close modes
+lib/goal-check.sh                               new, cmd_goal
+lib/goal-run.sh                                 new, S2 baseline, close, last and failing modes
 lib/master-check.sh                             existing, gains master_resolve, phrase, merge and split refusals
 bin/goal-trace.sh                               new, prints owned N/M
 bin/gate.sh                                     existing, sources goal-check.sh and dispatches goal
@@ -149,10 +150,12 @@ flowchart LR
 <h2>Interfaces</h2>
 <ul>
 <li><code>bin/gate.sh.goal(plan: path): exit 0 ok or silent, 1 refused, 2 unreadable</code></li>
-<li><code>bin/gate.sh.goal baseline(plan: path): exit 0 recorded, 1 first run passed</code></li>
-<li><code>bin/gate.sh.goal close(plan: path, session: string): exit 0, 1 on a foreign flip or short ownership</code></li>
+<li><code>bin/gate.sh.goal baseline(plan: path): exit 0 recorded or note, 1 first run passed or no script</code></li>
+<li><code>bin/gate.sh.goal close(plan: path, session: string, cases: string): exit 0 cases marked pass, 1 on a foreign flip or short ownership</code></li>
+<li><code>bin/gate.sh.goal last(plan: path): `goal: last run passed`, `failed`, `not run`, `waits` or `already running`; exit 0</code></li>
+<li><code>bin/gate.sh.goal failing(plan: path): failing case ids from the saved log; exit 1 without a log</code></li>
 <li><code>bin/goal-trace.sh.trace(plan: path): `owned N/M` and unowned rows; exit 0 full, 1 short, 2 unreadable</code></li>
-<li><code>bin/pm-plan.sh.gap(plan: path, groups: string): rows appended, gap_rounds bumped; exit 1 at 3</code></li>
+<li><code>bin/pm-plan.sh.gap(plan: path, cases: string): one row per repo appended, gap_rounds bumped; exit 1 at 3</code></li>
 <li><code>lib/goal-check.sh.cmd_goal(plan: path): `REFUSED goal &lt;plan&gt;:` lines, `goal: ok &lt;plan&gt;`</code>, throws <code>die on unreadable file</code></li>
 <li><code>lib/master-check.sh.master_resolve(plan: path, session_of: string): master path on stdout, 1 when unresolved</code></li>
 </ul>

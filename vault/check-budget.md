@@ -37,6 +37,9 @@ sets `wrong`; a session never scores its own refusal.
 | human | 0 | 0 | `cmd_human`; the contract is `commands/_shared/human-plan.md` |
 | master | 0 | 0 | `cmd_master`; refuses a dependency with no contract row and a session that consumes an unproduced contract; the contract is `templates/master-plan.md` |
 | goal | 0 | 0 | `cmd_goal`; refuses an opted-in master whose goal cases are not all owned, whose runtime estimate is over the limit, or whose `## Goal fit` field is malformed |
+| goal baseline | 0 | 0 | `cmd_goal_baseline`; refuses a first goal run that passes, and a missing goal script |
+| goal close | 0 | 0 | `cmd_goal_close`; refuses a pass mark on another session's case, a hand edit against the committed copy, and any `cmd_goal` refusal |
+| pm-plan gap | 0 | 0 | `cmd_gap`; refuses a fourth gap round, an unknown case id and an operator case |
 | master deferral | 0 | 0 | `master_scope_check`; refuses an open scope holding a deferral phrase of `templates/master-plan.md` with no named owner |
 | master split | 0 | 0 | `master_scope_check`; refuses two same-repo todo sessions within `session_max_changes`, and a small plan's second session with no `split:` reason |
 | completion-hook | 0 | 0 | |

@@ -14,18 +14,29 @@ tags: [handoff]
 
 ## Left to do
 
+The plan's S2-W1 to S2-W20 rows are the authority; this table names each file once.
+
 | # | action | file (exact path) | done when |
 |---|--------|-------------------|-----------|
-| 1 | Add `goal baseline <plan>` and `goal close <plan> <session>` modes: record the first goal run in the `baseline` row, refuse a first run that exits 0, refuse a `status` flip on a goal case the session does not own, refuse a close that leaves ownership below 100% | /home/kdabrow/workspace/vault/lib/goal-check.sh | T21–T24 pass; the file stays under 260 lines, else the modes move to `lib/goal-run.sh` |
-| 2 | Add `gap <plan> <group ids>`: append one Sessions row per failing goal-case group, bump `gap_rounds` in frontmatter, refuse a fourth round | /home/kdabrow/workspace/vault/bin/pm-plan.sh | T25–T27 pass |
-| 3 | The session that first builds the goal command runs `gate.sh goal baseline` | /home/kdabrow/workspace/vault/commands/_shared/feature-pickup.md | T28 passes |
-| 4 | The close flips the session's own goal cases to `pass`; a close with a deviation or an appended row runs `gate.sh goal` on the master; the last row's close runs the goal command | /home/kdabrow/workspace/vault/commands/v-work/steps/05-commit-capture.md | T29 passes |
-| 5 | Gap loop: a failing last run turns each failing case group into a row through `pm-plan.sh gap`, stopping at `gap_rounds: 3` with the failing cases shown to the operator | /home/kdabrow/workspace/vault/commands/v-pm/steps/06-reconcile.md | T30 passes |
-| 6 | Show owned N/M, the baseline, the last goal run and `gap_rounds` | /home/kdabrow/workspace/vault/commands/v-pm/steps/07-status.md | T30 passes |
-| 7 | Tests T21–T27 | /home/kdabrow/workspace/vault/tests/unit/goal-run.bats | `checks/plan-goal-fit-C5.sh` exits 0 |
-| 8 | Tests T28, T29 (new file) | /home/kdabrow/workspace/vault/tests/unit/v-work.bats | `checks/plan-goal-fit-C6.sh` exits 0 with item 9 |
-| 9 | Test T30 | /home/kdabrow/workspace/vault/tests/unit/v-pm.bats | as item 8 |
-| 10 | Version `1.17.0` | /home/kdabrow/workspace/vault/.claude-plugin/plugin.json | `make release-check` passes |
+| 1 | `goal baseline`, `goal close`, `goal last`, `goal failing` | /home/kdabrow/workspace/vault/lib/goal-run.sh | T21–T24 pass; ≤ 220 lines |
+| 2 | dispatch the modes; `table_set`, `table_append`, `frontmatter_put` | /home/kdabrow/workspace/vault/bin/gate.sh | T21, T25 pass |
+| 3 | `goal script`, `last run`, gap rules, `split: gap round` | /home/kdabrow/workspace/vault/templates/master-plan.md | ≤ 140 lines |
+| 4 | `goal script` and `last run` rows | /home/kdabrow/workspace/vault/templates/feature-plan.md | rows present |
+| 5 | refuse an empty `goal script` row | /home/kdabrow/workspace/vault/lib/goal-check.sh | `checks/plan-goal-fit-C1.sh` and `checks/plan-goal-fit-C4.sh` exit 0 |
+| 6 | `goal script` rows | /home/kdabrow/workspace/vault/tests/fixtures/goal/complete.md, /home/kdabrow/workspace/vault/tests/fixtures/goal/device-sync-tests.md | C1 and C4 exit 0 |
+| 7 | `gap round` split reason | /home/kdabrow/workspace/vault/lib/master-check.sh | T25 passes |
+| 8 | `gap`; `set` through `table_set`; `order` without `repo` | /home/kdabrow/workspace/vault/bin/pm-plan.sh | T25–T27 pass |
+| 9 | the planner names the goal script | /home/kdabrow/workspace/vault/commands/v-pm/steps/03-plan-panel.md | T30 passes |
+| 10 | baseline run at pickup | /home/kdabrow/workspace/vault/commands/_shared/feature-pickup.md | T28 passes |
+| 11 | `goal close` and `goal last` at close | /home/kdabrow/workspace/vault/commands/v-work/steps/05-commit-capture.md | T29 passes |
+| 12 | gap loop | /home/kdabrow/workspace/vault/commands/v-pm/steps/06-reconcile.md | T30 passes |
+| 13 | goal state in the digest | /home/kdabrow/workspace/vault/commands/v-pm/steps/07-status.md | T30 passes |
+| 14 | T21–T27 | /home/kdabrow/workspace/vault/tests/unit/goal-run.bats | `checks/plan-goal-fit-C5.sh` exits 0 |
+| 15 | T28, T29 | /home/kdabrow/workspace/vault/tests/unit/v-work.bats | `checks/plan-goal-fit-C6.sh` exits 0 |
+| 16 | T30 | /home/kdabrow/workspace/vault/tests/unit/v-pm.bats | `checks/plan-goal-fit-C6.sh` exits 0 |
+| 17 | registry rows | /home/kdabrow/workspace/vault/vault/architecture/session-gates.md, /home/kdabrow/workspace/vault/vault/check-budget.md | `gate.sh budget` exits 0 |
+| 18 | `lib/goal-run.sh` rows | /home/kdabrow/workspace/vault/vault/plans/2026-11-08-1337-plan-goal-fit.arch.md | `gate.sh arch` exits 0 |
+| 19 | `1.17.0` | /home/kdabrow/workspace/vault/.claude-plugin/plugin.json | `make release-check` passes |
 
 ## Do not touch
 
@@ -38,7 +49,7 @@ tags: [handoff]
 
 ## Goal
 
-When a plan's last session closes, its goal command runs, and each failing case becomes a new session, at most three rounds.
+When a plan's last session closes, its goal script runs, and the failing cases become new sessions, one per repo, at most three rounds.
 
 ## Task
 

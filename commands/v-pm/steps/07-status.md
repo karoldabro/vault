@@ -27,6 +27,10 @@ Resolve each feature's tracker as `$VAULT_FRAMEWORK_PATH/commands/_shared/featur
 Open only features whose rows are not all `done`. Derive per feature: progress `<done>/<total>` plus
 `dropped`; the runnable sessions; REQ coverage from the `req` cells of `done` rows.
 
+For a plan with `goal_fit: required`, also run `$VAULT_FRAMEWORK_PATH/bin/goal-trace.sh <plan>` for
+`owned N/M`, count the `## Goal cases` rows reading `pass` as claimed `pass N/M` of the counts, and read
+the `baseline` and `last run` rows of `## Goal fit` and `gap_rounds` from frontmatter.
+
 ## S.3 Flag what is wrong, not what is normal
 One line each; everything else stays silent:
 - **Header disagrees with its rows** — `header.md` says one thing, the rows another. Name both.
@@ -34,6 +38,10 @@ One line each; everything else stays silent:
 - **Done without evidence** — a `done` row with an empty `evidence` cell.
 - **Plan defect** — a `REFUSED pm` or `REFUSED master` line, grouped under the repo whose session
   writes the fix.
+- **Goal failed** — a `last run` reading an exit other than 0: `/v-pm reconcile <plan>`, round
+  `gap_rounds` of 3.
+- **Gap loop exhausted** — `gap_rounds: 3` with a failed last run: the operator decides.
+- **No baseline** — a session `done` and the `baseline` row empty: the goal script never ran red.
 
 ## S.4 Close the feature's done lines
 When every row of a `plan.md` is `done` or `dropped`, fill the `state` and `evidence` of DD-2 to DD-4
@@ -48,6 +56,7 @@ Age each OPEN thread and each `doing` row by its `date` cell (fall back to file 
 ```
 FEATURE            PROGRESS   RUNNABLE   WAITING ON   THREAD / FLAG                        AGE
 csv-export         1/3        S2         api          admin: pagination fields missing     2 opens
+device-sync        9/9        —          pm           goal: owned 600/600 · pass 410/600 · last run exit 1 · gap 1/3   1 day
 csv-export         —          —          pm           contract: enum values?               1 open
 public-events      0/4        S1         —            never started                        14 days
 saved-filters      —          —          —            legacy layout: /v-pm reconcile       —

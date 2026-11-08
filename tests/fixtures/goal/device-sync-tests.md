@@ -51,6 +51,7 @@ Before every release, one command proves that tablet data reaches the API and de
 | runtime limit | 70 min | REQ-22 release limit |
 | runtime estimate | 64 min | `## Runtime budget` of the source plan: about 45 device cases at 2.4–3 min on two devices |
 | failure paths | 2 | S7a0: the step grammar may not parse most written cases; S11: the full tier may need more than two nights per APK |
+| goal script | `checks/device-sync-goal.sh` | runs `pnpm release:gate` with the release APK path in the device-tests repo |
 | baseline | | |
 
 ## Goal cases

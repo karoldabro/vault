@@ -45,7 +45,9 @@ tags: [plan, feature-plan]
 | runtime limit | | |
 | runtime estimate | | |
 | failure paths | | |
+| goal script | | |
 | baseline | | |
+| last run | | |
 
 ## Goal cases
 <!-- Column rules: templates/master-plan.md `## Goal cases`. `bin/goal-trace.sh plan.md` prints

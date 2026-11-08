@@ -4,6 +4,7 @@
 # Usage:  bin/pm-plan.sh check <plan>
 #         bin/pm-plan.sh order <plan>
 #         bin/pm-plan.sh set   <plan> <id> <column>=<value>...
+#         bin/pm-plan.sh gap   <plan> <case id>...
 #
 # check  refuses a plan that is not normalized: a Sessions row without exactly one brief, a brief whose
 #        `## Next command` run line names another repo, command, plan or id than its row, an empty
@@ -15,6 +16,9 @@
 #        dropped), `running` (doing), `done` or `dropped`. Sessions of one wave may run in parallel.
 # set    rewrites cells of one Sessions row under an exclusive lock, so two sessions closing at once
 #        both land.
+# gap    appends the gap sessions of one round for failing goal cases; the row shape and the cap are
+#        templates/master-plan.md `## Goal fit` (Gap loop). Refuses an unknown case id and an `operator`
+#        case. `order` and `gap` read a table without `repo`; `check` does not.
 #
 # Contract: templates/feature-plan.md (the plan), templates/handoff.md (the brief),
 # templates/master-plan.md (the Sessions and contracts columns).
@@ -35,8 +39,10 @@ realp() { realpath -m -- "$(expand "$1")"; }
 # Load the Sessions table into arrays keyed by id, in table order.
 declare -a IDS=()
 declare -A REPO=() CMD=() STATUS=() DEPS=()
+# load_sessions [<required column>...]: default id repo command status depends.
 load_sessions() {
-    local header row id
+    local header row id req=("$@")
+    [ ${#req[@]} -gt 0 ] || req=(id repo command status depends)
     header=$(table_header "$PLAN" '## Sessions' || true)
     [ -n "$header" ] || { pm_refuse "the plan has no ## Sessions table"; return 1; }
     local c_id c_repo c_cmd c_st c_dep
@@ -44,7 +50,7 @@ load_sessions() {
     c_cmd=$(col_index "$header" command); c_st=$(col_index "$header" status)
     c_dep=$(col_index "$header" depends)
     local name missing=0
-    for name in id repo command status depends; do
+    for name in "${req[@]}"; do
         [ -n "$(col_index "$header" "$name")" ] || { pm_refuse "the ## Sessions table has no $name column" "$name"; missing=1; }
     done
     [ "$missing" -eq 0 ] || return 1
@@ -52,7 +58,8 @@ load_sessions() {
         id=$(cell "$row" "$c_id"); [ -n "$id" ] || continue
         if [ -n "${STATUS[$id]+x}" ]; then pm_refuse "session id $id appears twice" "$id"; continue; fi
         IDS+=("$id")
-        REPO[$id]=$(cell "$row" "$c_repo"); CMD[$id]=$(cell "$row" "$c_cmd")
+        REPO[$id]=-; [ -z "$c_repo" ] || REPO[$id]=$(cell "$row" "$c_repo")
+        CMD[$id]=$(cell "$row" "$c_cmd")
         STATUS[$id]=$(cell "$row" "$c_st"); DEPS[$id]=$(cell "$row" "$c_dep" | tr ',;' '  ')
     done < <(table_rows "$PLAN" '## Sessions')
 }
@@ -181,7 +188,7 @@ cmd_check() {
 }
 
 cmd_order() {
-    load_sessions || return 0
+    load_sessions id command status depends || return 0
     waves || return 0
     local id brief
     for id in "${IDS[@]}"; do
@@ -193,41 +200,70 @@ cmd_order() {
 cmd_set() {
     local id=${1:-}; shift || true
     [ -n "$id" ] && [ $# -gt 0 ] || die "set needs <plan> <id> <column>=<value>..."
+    local header assign col
+    for assign in "$@"; do
+        col=${assign%%=*}
+        [ "$col" != "$assign" ] || die "set takes <column>=<value>, got '$assign'"
+        [ "$col" != id ] || die "set cannot change a row's id"
+    done
     exec 9<"$PLAN"; flock 9
-    local header assign col val idx args=()
     header=$(table_header "$PLAN" '## Sessions' || true)
     [ -n "$header" ] || { pm_refuse "the plan has no ## Sessions table"; return 0; }
     for assign in "$@"; do
-        col=${assign%%=*}; val=${assign#*=}
-        [ "$col" != "$assign" ] || die "set takes <column>=<value>, got '$assign'"
-        idx=$(col_index "$header" "$col"); [ -n "$idx" ] || { pm_refuse "the ## Sessions table has no $col column" "$col"; return 0; }
-        [ "$col" != id ] || die "set cannot change a row's id"
-        args+=("$idx=${val//|/\\|}")
+        col=${assign%%=*}
+        [ -n "$(col_index "$header" "$col")" ] || { pm_refuse "the ## Sessions table has no $col column" "$col"; return 0; }
     done
-    local tmp; tmp=$(mktemp)
-    PM_SPECS="$(printf '%s\n' "${args[@]}")" awk -v want="$id" '
-        function unprotect(s,   out, i) { out = ""; while ((i = index(s, "\001")) > 0) { out = out substr(s, 1, i - 1) "\\|"; s = substr(s, i + 1) } return out s }
-        BEGIN { specs = ENVIRON["PM_SPECS"]; n = split(specs, sp, "\n"); for (i = 1; i <= n; i++) { k = sp[i]; sub(/=.*/, "", k); v = sp[i]; sub(/^[^=]*=/, "", v); set[k + 0] = v } }
-        $0 == "## Sessions" { s = 1; print; next }
-        s && /^## / { s = 0 }
-        s && /^\|/ && !/^\|[- |:]*\|$/ {
-            line = $0; gsub(/\\\|/, "\001", line)
-            m = split(line, c, "|"); id = c[2]; gsub(/^[ \t]+|[ \t]+$/, "", id)
-            if (id == want) {
-                out = ""
-                for (i = 2; i < m; i++) { v = (i - 1) in set ? " " set[i - 1] " " : unprotect(c[i]); out = out "|" v }
-                print out "|"; hit = 1; next
-            }
-        }
-        { print }
-        END { exit !hit }' "$PLAN" >"$tmp" || { rm -f "$tmp"; pm_refuse "the ## Sessions table has no row $id" "$id"; return 0; }
-    cat "$tmp" >"$PLAN"; rm -f "$tmp"
+    table_set "$PLAN" '## Sessions' id "$id" "$@" || { pm_refuse "the ## Sessions table has no row $id" "$id"; return 0; }
     printf 'pm: set %s %s\n' "$id" "$*"
+}
+
+# cmd_gap <case id>...: the gap rows of one round; the rules are in the header above.
+cmd_gap() {
+    [ $# -gt 0 ] || die "gap needs <plan> <case id>..."
+    [ "$(arch_fm_value "$PLAN" goal_fit)" = required ] || { pm_refuse "the plan has no goal_fit: required, so it has no gap loop"; return 0; }
+    exec 9<"$PLAN"; flock 9
+    load_sessions id command status depends || return 0
+    local rounds gh g_id g_own row cid own r n=0 id new
+    rounds=$(arch_fm_value "$PLAN" gap_rounds); rounds=${rounds:-0}
+    [[ $rounds =~ ^[0-9]+$ ]] || { pm_refuse "gap_rounds '$rounds' is not a whole number" gap_rounds; return 0; }
+    [ "$rounds" -lt 3 ] || { pm_refuse "gap_rounds is $rounds; the loop stops at 3, so show the operator the failing cases" gap_rounds; return 0; }
+    gh=$(table_header "$PLAN" '## Goal cases' || true)
+    g_id=$(col_index "$gh" id); g_own=$(col_index "$gh" owner)
+    [ -n "$g_id" ] && [ -n "$g_own" ] || { pm_refuse "## Goal cases needs id and owner columns"; return 0; }
+    declare -A owner=() group=() seen=()
+    while IFS= read -r row; do cid=$(cell "$row" "$g_id"); [ -n "$cid" ] && owner[$cid]=$(cell "$row" "$g_own"); done < <(table_rows "$PLAN" '## Goal cases')
+    local -a order=()
+    for cid in "$@"; do
+        [ -z "${seen[$cid]+x}" ] || continue; seen[$cid]=1
+        if [ -z "${owner[$cid]+x}" ]; then pm_refuse "## Goal cases has no row $cid" "$cid"; continue; fi
+        own=${owner[$cid]}
+        if [ -z "$own" ]; then pm_refuse "$cid has no owner; give it one in ## Goal cases before a gap round" "$cid"; continue; fi
+        if [ "$own" = operator ]; then pm_refuse "$cid is the operator's case; list it to the operator instead of a gap session" "$cid"; continue; fi
+        r=${REPO[$own]:--}
+        [ -n "${group[$r]+x}" ] || order+=("$r")
+        group[$r]+="${group[$r]:+, }$cid"
+    done
+    [ "$violations" -eq 0 ] || return 0
+    for id in "${IDS[@]}"; do [[ $id =~ ^S([0-9]+)$ ]] && [ "$((10#${BASH_REMATCH[1]}))" -gt "$n" ] && n=$((10#${BASH_REMATCH[1]})); done
+    rounds=$((rounds + 1))
+    local hdr cmdcol; hdr=$(table_header "$PLAN" '## Sessions')
+    for r in "${order[@]}"; do
+        n=$((n + 1)); new="S$n"
+        cid=${group[$r]%%,*}; cmdcol=${CMD[${owner[$cid]}]:-/v-team}
+        local -a cells=("id=$new" "scope=gap round $rounds: ${group[$r]}; split: gap round" "command=$cmdcol" "status=todo")
+        [ "$r" = - ] || [ -z "$(col_index "$hdr" repo)" ] || cells+=("repo=$r")
+        table_append "$PLAN" '## Sessions' "${cells[@]}" || { pm_refuse "could not append a row to ## Sessions"; return 0; }
+        for cid in ${group[$r]//,/ }; do
+            table_set "$PLAN" '## Goal cases' id "$cid" "owner=$new" status=todo || pm_refuse "could not re-own $cid" "$cid"
+        done
+        printf 'pm: gap round %s: %s owns %s\n' "$rounds" "$new" "${group[$r]}"
+    done
+    frontmatter_put "$PLAN" gap_rounds "$rounds" || pm_refuse "could not write gap_rounds; the plan has no frontmatter"
 }
 
 sub=${1:-}; PLAN=${2:-}
 case "$sub" in
-    -h|--help|"") sed -n '2,24p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; [ -n "$sub" ]; exit $? ;;
+    -h|--help|"") sed -n '2,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; [ -n "$sub" ]; exit $? ;;
 esac
 [ -n "$PLAN" ] || die "$sub needs a plan"
 { [ -f "$PLAN" ] && [ -r "$PLAN" ]; } || die "cannot read: $PLAN"
@@ -237,7 +273,9 @@ shift 2
 case "$sub" in
     check) [ $# -eq 0 ] || die "check takes one plan"; cmd_check ;;
     order) [ $# -eq 0 ] || die "order takes one plan"; cmd_order ;;
-    set)   cmd_set "$@" ;;
+    set|gap)
+        if grep -q $'\r' "$PLAN"; then pm_refuse "the plan has CRLF line endings, which set and gap cannot edit; convert it with sed -i 's/\\r\$//' $PLAN"
+        elif [ "$sub" = set ]; then cmd_set "$@"; else cmd_gap "$@"; fi ;;
     *) die "unknown subcommand: $sub" ;;
 esac
 if [ "$violations" -gt 0 ]; then

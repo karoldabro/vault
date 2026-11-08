@@ -35,7 +35,7 @@ second state file exists. `/v-do` writes a stub plan carrying only `## Open ques
 | `config <repo>` | ANALYZE, before any context load | `VAULT.md` declares no `dod_profile`, or a profile line has neither a command nor an `absent: <reason>` |
 | `budget [file]` | staging | a row in `vault/check-budget.md` shows a check firing wrongly more than one time in ten |
 | `recurrence [file]` | staging | a `vault/defect-ledger.md` row's `test` cell names no path |
-| `goal <plan>` | the approval gate, and the propose phase | an opted-in master plan (`goal_fit: required`) has a goal case no session owns, a runtime estimate over its limit, or a malformed `## Goal fit` field; `templates/master-plan.md` owns the rules |
+| `goal <plan>`, `goal baseline\|close\|last\|failing` | approval and propose; pickup (`baseline`); close (`close`, `last`); `/v-pm reconcile` (`failing`) | an opted-in master plan (`goal_fit: required`) has a goal case no session owns, a runtime estimate over its limit, or a malformed `## Goal fit` field; the first goal run passes; a session marks another session's case `pass`; `templates/master-plan.md` owns the rules |
 
 Six further checks are specified and not built. They live in
 `vault/architecture/session-gates-unbuilt.md`, one row each with an owner and the command that

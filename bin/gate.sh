@@ -26,6 +26,10 @@
 #                                              templates/master-plan.md
 #         bin/gate.sh goal     <plan>          an opted-in master plan's sessions own every goal case,
 #                                              within the runtime limit; templates/master-plan.md
+#         bin/gate.sh goal baseline <plan>     record the first goal run; refuse one that passes
+#         bin/gate.sh goal close <plan> <session> <case id>...   flip the session's own cases to pass
+#         bin/gate.sh goal last <plan>         run the goal once every session is done or dropped
+#         bin/gate.sh goal failing <plan>      print the case ids the saved last-run log shows failing
 #         bin/gate.sh all     <plan> --phase <propose|approve|close> [--repo <root>]
 #         bin/gate.sh --help
 #
@@ -85,6 +89,11 @@ if [ -r "${GATE_VAULT_ROOT}/lib/goal-check.sh" ]; then
     # shellcheck source=../lib/goal-check.sh
     . "${GATE_VAULT_ROOT}/lib/goal-check.sh"
 fi
+# `goal baseline|close|last|failing`: the goal runs a session makes at pickup and close.
+if [ -r "${GATE_VAULT_ROOT}/lib/goal-run.sh" ]; then
+    # shellcheck source=../lib/goal-run.sh
+    . "${GATE_VAULT_ROOT}/lib/goal-run.sh"
+fi
 
 US=$'\037'          # cell separator for parsed rows; never appears in markdown
 violations=0
@@ -97,7 +106,7 @@ note()   { printf '  note     %s\n' "$*" >&2; notes=$((notes + 1)); }
 die()    { printf 'gate: %s\n' "$*" >&2; exit 2; }
 
 usage() {
-    sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,44p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 # ---------------------------------------------------------------------------- parsing
@@ -180,6 +189,86 @@ col_index() {
 cell() {
     local row=$1 idx=$2
     awk -v us="$US" -v i="$idx" 'BEGIN { split(ARGV[1], c, us); print c[i] }' "$row"
+}
+
+# ---------------------------------------------------------------------------- writing
+# The writers below never lock. A command that writes takes `exec 9<"$file"; flock 9` once, around
+# all of its writes, because a second flock on the same file in the same process blocks on itself.
+# Each rewrites the file in place (`cat tmp > file`), so the inode and the caller's lock survive.
+
+# table_set <file> <heading> <key column> <key> <column>=<value>...: rewrite cells of the one row whose
+# <key column> cell is <key>. Returns 1 when the table, a column or the row is missing.
+table_set() {
+    local file=$1 heading=$2 keycol=$3 key=$4 header ki assign col idx specs="" tmp
+    shift 4
+    header=$(table_header "$file" "$heading" || true)
+    [ -n "$header" ] || return 1
+    ki=$(col_index "$header" "$keycol"); [ -n "$ki" ] || return 1
+    for assign in "$@"; do
+        col=${assign%%=*}
+        idx=$(col_index "$header" "$col"); [ -n "$idx" ] || return 1
+        specs+="$idx=${assign#*=}"$'\n'
+    done
+    tmp=$(mktemp)
+    TS_SPECS="$specs" awk -v h="$heading" -v want="$key" -v ki="$ki" '
+        function unprotect(s,   out, i) { out = ""; while ((i = index(s, "\001")) > 0) { out = out substr(s, 1, i - 1) "\\|"; s = substr(s, i + 1) } return out s }
+        BEGIN { n = split(ENVIRON["TS_SPECS"], sp, "\n"); for (i = 1; i <= n; i++) { if (sp[i] == "") continue; k = sp[i]; sub(/=.*/, "", k); v = sp[i]; sub(/^[^=]*=/, "", v); gsub(/\|/, "\\|", v); set[k + 0] = v } }
+        $0 == h { s = 1; print; next }
+        s && /^## / { s = 0 }
+        s && /^\|/ && !/^\|[- |:]*\|$/ && !hit {
+            line = $0; gsub(/\\\|/, "\001", line)
+            m = split(line, c, "|"); id = c[ki + 1]; gsub(/^[ \t]+|[ \t]+$/, "", id); gsub(/\001/, "|", id)
+            if (id == want) {
+                out = ""
+                for (i = 2; i < m; i++) { v = (i - 1) in set ? " " set[i - 1] " " : unprotect(c[i]); out = out "|" v }
+                print out "|"; hit = 1; next
+            }
+        }
+        { print }
+        END { exit !hit }' "$file" >"$tmp" || { rm -f "$tmp"; return 1; }
+    cat "$tmp" >"$file"; rm -f "$tmp"
+}
+
+# table_append <file> <heading> <column>=<value>...: append one row after the table's last line,
+# built from the header; a column not named stays empty. Returns 1 when the table or a column is missing.
+table_append() {
+    local file=$1 heading=$2 header assign col idx n i row v tmp
+    shift 2
+    header=$(table_header "$file" "$heading" || true)
+    [ -n "$header" ] || return 1
+    n=$(awk -v us="$US" 'BEGIN { print split(ARGV[1], c, us) }' "$header")
+    local -a cells=()
+    for ((i = 1; i <= n; i++)); do cells[i]=""; done
+    for assign in "$@"; do
+        col=${assign%%=*}
+        idx=$(col_index "$header" "$col"); [ -n "$idx" ] || return 1
+        v=${assign#*=}; cells[idx]=${v//|/\\|}
+    done
+    row="|"
+    for ((i = 1; i <= n; i++)); do row+=" ${cells[i]} |"; done
+    tmp=$(mktemp)
+    TA_ROW="$row" awk -v h="$heading" '
+        { line[NR] = $0 }
+        $0 == h { s = 1; next }
+        s && /^## / { s = 0 }
+        s && /^\|/ { last = NR; t = 1; next }
+        s && t { s = 0 }
+        END { for (i = 1; i <= NR; i++) { print line[i]; if (i == last) print ENVIRON["TA_ROW"] } exit !last }' "$file" >"$tmp" || { rm -f "$tmp"; return 1; }
+    cat "$tmp" >"$file"; rm -f "$tmp"
+}
+
+# frontmatter_put <file> <key> <value>: set a frontmatter key, adding it before the closing `---`.
+# Returns 1 when the file has no frontmatter.
+frontmatter_put() {
+    local file=$1 key=$2 val=$3 tmp
+    tmp=$(mktemp)
+    FP_VAL="$val" awk -v k="$key" '
+        NR == 1 && $0 == "---" { inside = 1; fm = 1; print; next }
+        inside && index($0, k ":") == 1 { print k ": " ENVIRON["FP_VAL"]; done = 1; next }
+        inside && $0 == "---" { if (!done) print k ": " ENVIRON["FP_VAL"]; inside = 0; done = 1; print; next }
+        { print }
+        END { exit !(fm && done) }' "$file" >"$tmp" || { rm -f "$tmp"; return 1; }
+    cat "$tmp" >"$file"; rm -f "$tmp"
 }
 
 # A checkable reference: a backticked span, or something that reads as a path.
@@ -823,7 +912,14 @@ main() {
         arch)     cmd_arch "$@" ;;
         human)    cmd_human "$@" ;;
         master)   cmd_master "$@" ;;
-        goal)     cmd_goal "$@" ;;
+        goal)
+            case "${1:-}" in
+                baseline) shift; cmd_goal_baseline "$@" ;;
+                close)    shift; cmd_goal_close "$@" ;;
+                last)     shift; cmd_goal_last "$@" ;;
+                failing)  shift; cmd_goal_failing "$@" ;;
+                *)        cmd_goal "$@" ;;
+            esac ;;
         all)
             local plan=${1:-} phase="" archargs=()
             shift || true

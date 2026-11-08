@@ -118,6 +118,9 @@ cmd_goal() {
 
     goal_paths_check "$file" "$file" "$(goal_field "$file" 'failure paths' evidence)"
 
+    [ -n "$(goal_field "$file" 'goal script' value)" ] ||
+        goal_refuse "$file" "the goal script row is empty; name the committed script that runs the goal command with its real arguments" 'goal script'
+
     if [ -z "$(table_header <(master_src "$file") '## Goal cases' || true)" ]; then
         goal_refuse "$file" "the plan has goal_fit: required and no ## Goal cases table; list every case the goal command needs, with its owning session"
     else

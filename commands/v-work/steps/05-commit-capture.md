@@ -72,8 +72,21 @@ move the Jira ticket to In Review" (it never transitions anything itself; instru
 ## 5.1a Close the master-plan row (when the plan names `session_of`)
 
 `done` means committed, so this runs after §5.1. Open the plan named before `#` in `session_of` (an
-absolute path, or one beside the session plan) and close the row whose id follows `#`. One routine
-writes a master row; `commands/_shared/feature-pickup.md` §0.3 claims a row with the same one:
+absolute path, or one beside the session plan) and close the row whose id follows `#`. A `/v-team`
+master that is its own session plan is closed the same way, with the master as `<master>`.
+
+**Goal cases first — a master with `goal_fit: required` only.** Before the row is set `done`, mark the
+goal cases this session owns and built as passing. `pass` is the session's claim until the last run:
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/gate.sh goal close <master> <id> <case id>...
+```
+
+It refuses a case another session owns, a hand edit of another session's status, and any refusal of
+`gate.sh goal`, such as a case row this session appended with no owner. **Exit 1 stops the close**: fix
+the table, then run it again. Exit 2 means the master could not be read; stop as an error.
+
+One routine writes a master row; `commands/_shared/feature-pickup.md` §0.3 claims a row with the same one:
 
 ```bash
 $VAULT_FRAMEWORK_PATH/bin/vault-sync.sh pull <master's vault>
@@ -93,6 +106,25 @@ Act on the push exit code; the routine never halts the close (`commands/_shared/
 - **5** — the vault has no upstream. Commit it locally and say once that the row stayed on this machine.
 
 A legacy shard row (no `plan.md`) is updated in the same way, by hand, in the shard.
+
+**Last goal run — a master with `goal_fit: required` only.** After every close push, run the
+command below; it decides whether this was the last open row, so never skip it on your own reading.
+The run can take up to the plan's runtime limit, so start it as a background Bash call
+(`run_in_background`) and wait for its exit notification; a foreground call dies after 10 minutes.
+
+```bash
+$VAULT_FRAMEWORK_PATH/bin/gate.sh goal last <master>
+```
+
+Act on its line:
+- `goal: last run waits` or `goal: last run already running` — nothing was written; go on.
+- `goal: last run passed` — the goal is met; say so in the completion report.
+- `goal: last run failed` — put `/v-pm reconcile <master>` in the completion report's Follow-up: its
+  gap loop turns the failing cases into new sessions.
+- `goal: last run not run` — the goal script exited 2; put its repair and the same command in Follow-up.
+
+After `passed`, `failed` or `not run`, the `last run` row changed: push it with the routine above,
+`-m "goal last run" <master>`, and act on the push exit code as listed there.
 
 ## 5.2 Vault sync (if applicable)
 
